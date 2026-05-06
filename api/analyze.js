@@ -25,9 +25,9 @@ module.exports = async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         
-        // 3. 모델 설정 (Vercel 환경에 최적화된 flash 모델 사용)
-        // 기존 server.js의 gemini-2.5-flash는 오타일 가능성이 높아 안정적인 gemini-1.5-flash로 설정합니다.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // 모델 설정을 더 명확한 'gemini-1.5-flash-latest'로 변경해 봅니다.
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        console.log('Using model: gemini-1.5-flash-latest');
 
         const prompt = `
             너는 심리 상담가야. 사용자가 작성한 일기 내용을 읽고, 
