@@ -25,9 +25,9 @@ module.exports = async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         
-        // 모델 설정을 더 명확한 'gemini-1.5-flash-latest'로 변경해 봅니다.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        console.log('Using model: gemini-1.5-flash-latest');
+        // 사용자 요청에 따라 최신 모델인 gemini-3-flash를 사용합니다.
+        const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+        console.log('Using model: gemini-3-flash');
 
         const prompt = `
             너는 심리 상담가야. 사용자가 작성한 일기 내용을 읽고, 
