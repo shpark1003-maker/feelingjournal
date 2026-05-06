@@ -25,7 +25,7 @@ const port = process.env.PORT || 3000;
 // 미들웨어 설정
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, './'))); // 정적 파일(HTML, CSS, JS) 서빙
+app.use(express.static(path.join(__dirname, 'public'))); // public 폴더의 정적 파일 서빙
 
 // Gemini AI 설정
 const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : '';
