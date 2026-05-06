@@ -40,8 +40,8 @@ app.post('/api/analyze', async (req, res) => {
             return res.status(400).json({ error: '일기 내용이 없습니다.' });
         }
 
-        // Vercel 서버리스 함수와 동일하게 gemini-1.5-flash 모델을 사용합니다.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // 사용자 요청에 따라 모델을 gemini-2.0-flash로 변경합니다.
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
             너는 심리 상담가야. 사용자가 작성한 일기 내용을 읽고, 
