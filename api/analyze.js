@@ -1,4 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Redis = require('ioredis');
+
+// Redis 클라이언트 초기화 (Vercel Serverless 환경에서 재사용을 위해 핸들러 외부에서 선언)
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 module.exports = async (req, res) => {
     // Vercel serverless function handler
@@ -16,7 +20,7 @@ module.exports = async (req, res) => {
             return res.status(400).json({ error: '일기 내용이 없습니다.' });
         }
 
-        // 2. 환경 변수에서 API 키 가져오기 (Vercel 설정 필요)
+        // 2. 환경 변수에서 API 키 가져오기
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             console.error('GEMINI_API_KEY is not defined in environment variables.');
@@ -25,9 +29,8 @@ module.exports = async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         
-        // 로그 분석 결과 권한이 확인된 gemini-2.5-flash 모델을 사용합니다.
+        // 최신 모델 gemini-2.5-flash 사용 (사용자 요청 사항 반영)
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        console.log('Using model: gemini-2.5-flash');
 
         const prompt = `
             너는 심리 상담가야. 사용자가 작성한 일기 내용을 읽고, 
@@ -47,12 +50,41 @@ module.exports = async (req, res) => {
         const response = await result.response;
         const text = response.text();
 
+        // 6. Redis에 데이터 저장
+        if (redis) {
+            try {
+                // 현재 시간을 YYYYMMDDHHMMSS 형식으로 생성
+                const now = new Date();
+                const timestamp = now.getFullYear().toString() +
+                    (now.getMonth() + 1).toString().padStart(2, '0') +
+                    now.getDate().toString().padStart(2, '0') +
+                    now.getHours().toString().padStart(2, '0') +
+                    now.getMinutes().toString().padStart(2, '0') +
+                    now.getSeconds().toString().padStart(2, '0');
+                
+                const key = `diary-${timestamp}`;
+                
+                // 데이터 저장 (원본 내용과 AI 답변)
+                await redis.set(key, JSON.stringify({
+                    originalContent: content,
+                    aiResponse: text,
+                    createdAt: now.toISOString()
+                }));
+                
+                console.log(`Saved to Redis with key: ${key}`);
+            } catch (redisError) {
+                console.error('Redis Storage Error:', redisError);
+                // Redis 저장 실패가 사용자 응답에 영향을 주지 않도록 에러만 기록
+            }
+        } else {
+            console.warn('Redis client not initialized. Skipping storage.');
+        }
+
         // 5. 결과 반환
         return res.status(200).json({ answer: text });
     } catch (error) {
         console.error('Gemini API Serverless Error:', error);
         
-        // 에러 타입에 따른 세부 처리
         if (error.message && error.message.includes('API key')) {
             return res.status(401).json({ error: 'API 키가 유효하지 않습니다.' });
         }

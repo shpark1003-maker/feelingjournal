@@ -6,17 +6,106 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyze-btn');
     const responseBox = document.getElementById('ai-response-box');
     const responseText = document.getElementById('response-text');
+    const historyList = document.getElementById('history-list');
+    const sortNewestBtn = document.getElementById('sort-newest');
+    const sortOldestBtn = document.getElementById('sort-oldest');
     
-    // [추가] 로컬 스토리지에서 이전 기록 불러오기
+    let diaryHistory = [];
+    let currentSort = 'newest';
+
+    // 로컬 스토리지에서 이전 기록 불러오기 (초기 화면용)
     const savedDiary = localStorage.getItem('lastDiary');
     const savedResponse = localStorage.getItem('lastResponse');
+    if (savedDiary) diaryInput.value = savedDiary;
+    if (savedResponse) responseText.innerHTML = savedResponse.replace(/\n/g, '<br>');
 
-    if (savedDiary) {
-        diaryInput.value = savedDiary;
-    }
-    if (savedResponse) {
-        responseText.innerHTML = savedResponse.replace(/\n/g, '<br>');
-    }
+    // 히스토리 불러오기 함수
+    const loadHistory = async () => {
+        try {
+            const response = await fetch('/api/history');
+            const data = await response.json();
+            
+            if (data.history) {
+                diaryHistory = data.history;
+                renderHistory();
+            }
+        } catch (error) {
+            console.error('History Load Error:', error);
+        }
+    };
+
+    // 히스토리 렌더링 함수
+    const renderHistory = () => {
+        if (!historyList) return;
+        
+        historyList.innerHTML = '';
+        
+        // 정렬
+        const sorted = [...diaryHistory].sort((a, b) => {
+            const timeA = new Date(a.createdAt).getTime();
+            const timeB = new Date(b.createdAt).getTime();
+            return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
+        });
+
+        if (sorted.length === 0) {
+            historyList.innerHTML = '<p class="empty-msg">아직 기록된 일기가 없습니다. 첫 일기를 작성해 보세요! ✍️</p>';
+            return;
+        }
+
+        sorted.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            
+            const emotion = extractEmotion(item.aiResponse);
+            const dateStr = formatDate(item.createdAt);
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="card-date">${dateStr}</span>
+                    <span class="card-emotion">${emotion}</span>
+                </div>
+                <p class="card-content">${item.originalContent}</p>
+                <div class="card-ai">${item.aiResponse.split('\n').filter(l => l.trim()).slice(-1)[0] || ''}</div>
+            `;
+            
+            card.addEventListener('click', () => {
+                diaryInput.value = item.originalContent;
+                responseText.innerHTML = item.aiResponse.replace(/\n/g, '<br>');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                responseBox.classList.add('highlight');
+                setTimeout(() => responseBox.classList.remove('highlight'), 1000);
+            });
+            
+            historyList.appendChild(card);
+        });
+    };
+
+    // 감정 추출 유틸리티
+    const extractEmotion = (text) => {
+        const match = text.match(/감정:\[(.*?)\]/);
+        return match ? match[1] : '분석완료';
+    };
+
+    // 날짜 포맷 유틸리티
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    };
+
+    // 정렬 버튼 이벤트
+    sortNewestBtn.addEventListener('click', () => {
+        currentSort = 'newest';
+        sortNewestBtn.classList.add('active');
+        sortOldestBtn.classList.remove('active');
+        renderHistory();
+    });
+
+    sortOldestBtn.addEventListener('click', () => {
+        currentSort = 'oldest';
+        sortOldestBtn.classList.add('active');
+        sortNewestBtn.classList.remove('active');
+        renderHistory();
+    });
 
     // 분석 요청 버튼 클릭 이벤트
     analyzeBtn.addEventListener('click', async () => {
@@ -27,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 로딩 상태 표시
         responseText.textContent = 'AI가 당신의 일기를 정성껏 읽고 있습니다... 잠시만 기다려 주세요. ✨';
         responseBox.classList.add('loading');
         analyzeBtn.disabled = true;
@@ -43,26 +131,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (data.error) throw new Error(data.error);
 
-            // 결과 표시
             const formattedAnswer = data.answer.replace(/\n/g, '<br>');
             responseText.innerHTML = formattedAnswer;
 
-            // [추가] 로컬 스토리지에 저장
             localStorage.setItem('lastDiary', content);
             localStorage.setItem('lastResponse', data.answer);
+            
+            // 히스토리 즉시 갱신
+            setTimeout(loadHistory, 1000); 
         } catch (error) {
             console.error('Analysis Error:', error);
             responseText.textContent = '죄송합니다. 분석 중에 오류가 발생했습니다. 다시 시도해 주세요.';
         } finally {
             responseBox.classList.remove('loading');
             analyzeBtn.disabled = false;
-            responseText.style.color = '#2d3436';
         }
     });
+
+    // 앱 시작 시 히스토리 로드
+    loadHistory();
 
     // 음성 인식 설정
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -74,38 +163,27 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.lang = 'ko-KR';
         recognition.continuous = true;
         recognition.interimResults = true;
-        console.log('✅ 음성 인식 시스템 준비 완료 (ko-KR)');
 
         let initialText = '';
 
         recognition.onstart = () => {
             isRecording = true;
-            initialText = diaryInput.value + (diaryInput.value ? ' ' : ''); // 기존 텍스트 저장 및 공백 처리
+            initialText = diaryInput.value + (diaryInput.value ? ' ' : '');
             voiceBtn.innerHTML = '<span class="icon">🛑</span> 녹음 중지하기';
             voiceBtn.classList.add('recording');
             diaryInput.placeholder = '말씀해 주세요...';
-            console.log('Recognition started. Initial text saved.');
         };
 
         recognition.onresult = (event) => {
             let finalTranscript = '';
             let interimTranscript = '';
-
             for (let i = 0; i < event.results.length; ++i) {
                 const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
-                }
+                if (event.results[i].isFinal) finalTranscript += transcript;
+                else interimTranscript += transcript;
             }
-
-            // 전체 텍스트 업데이트: 시작 전 텍스트 + 인식 완료된 텍스트 + 인식 중인 텍스트
             diaryInput.value = initialText + finalTranscript + interimTranscript;
-            
-            // 입력창 하단으로 자동 스크롤
             diaryInput.scrollTop = diaryInput.scrollHeight;
-            console.log('Transcript updated:', diaryInput.value);
         };
 
         recognition.onend = () => {
@@ -113,65 +191,23 @@ document.addEventListener('DOMContentLoaded', () => {
             voiceBtn.innerHTML = '<span class="icon">🎙️</span> 음성으로 입력하기';
             voiceBtn.classList.remove('recording');
             diaryInput.placeholder = '여기에 일기를 작성해 주세요...';
-            console.log('Recognition ended.');
         };
-
-        // 소리 감지 이벤트 추가
-        recognition.onsoundstart = () => console.log('🔊 소리가 감지되었습니다.');
-        recognition.onspeechstart = () => console.log('🗣️ 음성 인식이 시작되었습니다.');
-        recognition.onaudiostart = () => console.log('🎙️ 오디오 캡처가 시작되었습니다.');
 
         recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
-            if (event.error === 'no-speech') {
-                console.warn('인식된 목소리가 없습니다. 마이크 설정을 확인해 주세요.');
-            } else if (event.error === 'not-allowed') {
-                alert('마이크 사용 권한이 거부되었습니다. 주소창의 자물쇠 아이콘을 클릭하여 마이크를 허용해 주세요.');
-            } else {
-                alert('음성 인식 중 오류가 발생했습니다: ' + event.error);
-            }
             recognition.stop();
         };
     }
 
-    // 음성 입력 버튼 클릭 이벤트
     voiceBtn.addEventListener('click', () => {
-        console.log('Voice button clicked. Current recording state:', isRecording);
-        
         if (!recognition) {
-            console.error('SpeechRecognition API not supported in this browser.');
-            alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해 주세요.');
+            alert('이 브라우저는 음성 인식을 지원하지 않습니다.');
             return;
         }
-
-        if (isRecording) {
-            try {
-                recognition.stop();
-                console.log('Recognition stop requested.');
-            } catch (e) {
-                console.error('Error stopping recognition:', e);
-            }
-        } else {
-            try {
-                recognition.start();
-                console.log('Recognition start requested.');
-            } catch (e) {
-                console.error('Error starting recognition:', e);
-                // 이미 시작된 경우 등의 오류 처리
-                if (e.name === 'InvalidStateError') {
-                    recognition.stop();
-                    setTimeout(() => recognition.start(), 100);
-                }
-            }
-        }
+        if (isRecording) recognition.stop();
+        else recognition.start();
     });
 
-    // 입력창 애니메이션 효과
-    diaryInput.addEventListener('focus', () => {
-        responseBox.style.opacity = '0.7';
-    });
-
-    diaryInput.addEventListener('blur', () => {
-        responseBox.style.opacity = '1';
-    });
+    diaryInput.addEventListener('focus', () => responseBox.style.opacity = '0.7');
+    diaryInput.addEventListener('blur', () => responseBox.style.opacity = '1');
 });
