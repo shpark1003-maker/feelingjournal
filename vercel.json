@@ -1,4 +1,12 @@
 {
   "version": 2,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/style.css", "destination": "/public/style.css" },
+    { "source": "/manifest.json", "destination": "/public/manifest.json" },
+    { "source": "/sw.js", "destination": "/public/sw.js" }
+  ]
 }
