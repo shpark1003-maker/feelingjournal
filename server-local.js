@@ -13,12 +13,17 @@ dotenv.config({
     override: true
 });
 
-// [알람 시스템] VAPID 설정
-webpush.setVapidDetails(
-    process.env.VAPID_EMAIL || 'mailto:shpark1003@gmail.com',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-);
+// [알람 시스템] VAPID 설정 (방어 코드 적용)
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        process.env.VAPID_SUBJECT || process.env.VAPID_EMAIL || 'mailto:shpark1003@gmail.com',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+    console.log('--- [PUSH] VAPID configuration loaded. ---');
+} else {
+    console.warn('--- [WARNING] VAPID keys missing. Push notifications disabled. ---');
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
