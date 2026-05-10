@@ -13,6 +13,92 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 document.addEventListener('DOMContentLoaded', () => {
     console.log('App initialization started...');
 
+    const loadBriefing = async () => {
+        const briefingCard = document.getElementById('briefing-card');
+        const briefingContent = document.getElementById('briefing-content');
+        if (!briefingCard || !briefingContent) return;
+
+        console.log('--- [DEBUG] loadBriefing started ---');
+        briefingCard.classList.remove('hidden');
+        briefingContent.textContent = '비서가 밤새 작성한 브리핑을 가져오고 있습니다... ✨';
+
+        try {
+            const token = userSession?.access_token;
+            const providerToken = getProviderToken();
+            
+            if (!token) {
+                console.warn('--- [DEBUG] No user session for briefing ---');
+                briefingCard.classList.add('hidden');
+                return;
+            }
+
+            const response = await fetch('/api/briefing', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-provider-token': providerToken || ''
+                }
+            });
+            
+            const data = await safeJson(response);
+            console.log('--- [DEBUG] Briefing Response:', data);
+
+            if (data.success && data.briefing) {
+                briefingContent.textContent = data.briefing;
+            } else {
+                console.warn('--- [DEBUG] Briefing success: false or empty ---');
+                briefingContent.textContent = '현재 브리핑을 준비할 데이터가 부족하거나 AI가 바쁩니다. 🎩';
+            }
+        } catch (error) {
+            console.error('--- [DEBUG] Briefing Load Error:', error);
+            briefingContent.textContent = '브리핑 로딩 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+        }
+    };
+
+    const loadCalendar = async () => {
+        if (!userSession || isCalendarLoading) return;
+
+        const container = document.getElementById('calendar-container');
+        if (!container) return;
+
+        isCalendarLoading = true;
+        container.textContent = 'AI 비서가 구글 캘린더 일정을 분석 중입니다... ✨';
+
+        try {
+            const providerToken = userSession?.provider_token || localStorage.getItem('google_provider_token');
+
+            if (!providerToken) {
+                container.textContent = '구글 계정 연결이 필요합니다. 다시 로그인해주세요.';
+                return;
+            }
+
+            const response = await fetch('/api/calendar', {
+                headers: {
+                    Authorization: `Bearer ${userSession.access_token}`,
+                    'x-provider-token': providerToken
+                }
+            });
+
+            const data = await (async (res) => {
+                try { return await res.json(); } catch { throw new Error('응답 해석 실패'); }
+            })(response);
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || '캘린더 로딩 실패');
+            }
+
+            if (data.events && data.events.length > 0) {
+                if (typeof renderCalendar === 'function') renderCalendar(data.events);
+            } else {
+                container.textContent = '가져올 일정이 없습니다. 구글 캘린더를 확인해 주세요. 📅';
+            }
+        } catch (error) {
+            console.error('Calendar Load Error:', error);
+            container.textContent = `일정을 불러오는 중 오류가 발생했습니다. ${error.message}`;
+        } finally {
+            isCalendarLoading = false;
+        }
+    };
+
     // 1. [알람 시스템] 서비스 워커 등록 및 알림 권한 요청
     const publicVapidKey = 'BFaiQCVuphAhi6QmLixXjsuPcxpSVi5ktV0lrRgGqXPwmhqOKxrwc3nzJcGQvebhG38JMBbayFeMjjoG9wbDehg';
 
@@ -31,10 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(reg => {
                 console.log('Service Worker registered');
-                // 알림 권한이 있으면 자동 구독 시도
-                if (Notification.permission === 'granted') {
-                    subscribeToPush(reg);
-                }
+                // 알림 권한이 있어도 여기서 바로 구독하지 않고, 
+                // updateAuthState에서 세션 확인 후 시도하도록 함.
             })
             .catch(err => console.error('SW Registration Error:', err));
 
@@ -174,12 +258,17 @@ document.addEventListener('DOMContentLoaded', () => {
             window.loadHistory();
             subscribeToMessages();
             // [브리핑 기능] 로그인 직후 AI 브리핑 로드
-            if (typeof loadBriefing === 'function') loadBriefing();
+            loadBriefing();
 
             // [문제 4, 5 해결] 로그인 직후 캘린더 자동 로드 (DOM 안정화 대기)
             setTimeout(() => {
-                if (typeof loadCalendar === 'function') loadCalendar();
+                loadCalendar();
             }, 200);
+
+            // [알람 시스템] 세션 확인 후 푸시 구독 시도
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(reg => subscribeToPush(reg));
+            }
         } else {
             console.log('Signed Out');
 
@@ -326,48 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getCalendarContainer = () => document.getElementById('calendar-container');
 
-    const loadCalendar = async () => {
-        if (!userSession || isCalendarLoading) return;
-
-        const container = getCalendarContainer();
-        if (!container) return;
-
-        isCalendarLoading = true;
-        container.textContent = 'AI 비서가 구글 캘린더 일정을 분석 중입니다... ✨';
-
-        try {
-            const providerToken = getProviderToken();
-
-            if (!providerToken) {
-                container.textContent = '구글 계정 연결이 필요합니다. 다시 로그인해주세요.';
-                return;
-            }
-
-            const response = await fetch('/api/calendar', {
-                headers: {
-                    Authorization: `Bearer ${userSession.access_token}`,
-                    'x-provider-token': providerToken
-                }
-            });
-
-            const data = await safeJson(response);
-
-            if (!response.ok || data.error) {
-                throw new Error(data.error || '캘린더 로딩 실패');
-            }
-
-            if (data.events && data.events.length > 0) {
-                renderCalendar(data.events);
-            } else {
-                container.textContent = '가져올 일정이 없습니다. 구글 캘린더를 확인해 주세요. 📅';
-            }
-        } catch (error) {
-            console.error('Calendar Load Error:', error);
-            container.textContent = `일정을 불러오는 중 오류가 발생했습니다. ${error.message}`;
-        } finally {
-            isCalendarLoading = false;
-        }
-    };
 
     const renderCalendar = (events) => {
         const container = getCalendarContainer();
@@ -897,33 +944,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else recognition.start();
     });
 
-    const loadBriefing = async () => {
-        const briefingCard = document.getElementById('briefing-card');
-        const briefingContent = document.getElementById('briefing-content');
-        if (!briefingCard || !briefingContent) return;
-
-        briefingCard.classList.remove('hidden');
-        briefingContent.textContent = '비서가 밤새 작성한 브리핑을 가져오고 있습니다...';
-
-        try {
-            const response = await fetch('/api/briefing', {
-                headers: {
-                    'Authorization': `Bearer ${userSession?.access_token || ''}`,
-                    'x-provider-token': getProviderToken() || ''
-                }
-            });
-            const data = await safeJson(response);
-            if (data.success) {
-                briefingContent.textContent = data.briefing;
-            } else {
-                console.warn('Briefing failed, hiding card.');
-                briefingCard.classList.add('hidden');
-            }
-        } catch (error) {
-            console.error('Briefing Load Error:', error);
-            briefingCard.classList.add('hidden');
-        }
-    };
 
     // [설정 기능] 설정 저장 버튼 클릭 이벤트
     const saveSettingsBtn = document.getElementById('save-settings-btn');

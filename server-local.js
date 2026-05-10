@@ -76,6 +76,7 @@ console.log(`GEMINI_API_KEY verified: YES (Length: ${cleanApiKey.length})`);
 console.log('SUPABASE connected: YES');
 console.log('REDIS_URL found: YES');
 console.log(`GEMINI_MODEL: ${GEMINI_MODEL}`);
+console.log(`PUSH Notifications: ${pushEnabled ? 'ENABLED' : 'DISABLED (Keys missing)'}`);
 console.log('-------------------------');
 
 app.use(cors({
@@ -377,11 +378,10 @@ ${content}
 
         if (!geminiResponse.ok || result.error) {
             console.error('Google API Full Error:', JSON.stringify(result.error, null, 2));
-            return sendError(
-                res,
-                500,
-                `[Google API Error] ${result?.error?.message || geminiResponse.statusText}`
-            );
+            return res.json({
+                success: false,
+                answer: '죄송합니다. 현재 AI 서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.'
+            });
         }
 
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -435,11 +435,10 @@ ${content}
         return res.json(finalResult);
     } catch (error) {
         console.error('Critical Analyze Error:', error);
-        return sendError(
-            res,
-            500,
-            'AI 분석 중 오류가 발생했습니다: ' + error.message
-        );
+        return res.json({
+            success: false,
+            answer: '분석 중 문제가 발생했습니다. 조금만 기다려 주시겠어요?'
+        });
     }
 });
 
@@ -581,16 +580,19 @@ app.get('/api/calendar', verifyUser, async (req, res) => {
 
             if (diaryContent) {
                 const extractionPrompt = `
-다음은 사용자의 최근 일기들이다. 사용자가 언급한 미래에 해야 할 일이나 계획을 JSON 배열로 추출하라.
+너는 사용자의 일기를 분석하여 미래의 할 일(Task)을 추출하는 전문가다.
+아래 일기들을 읽고, 사용자가 언급한 미래의 약속, 마감일, 계획을 모두 찾아내어 JSON 배열로 리턴하라.
 
-오늘 날짜/시간: ${currentTimeStr}
+[분석 기준]
+1. 오늘 날짜/시간: ${currentTimeStr}
+2. "내일", "이번주 금요일", "다음주" 등의 상대적 시간을 오늘 날짜 기준으로 절대적 ISO 시간으로 변환하라.
+3. 명확한 계획이 아니더라도 "조만간 ~해야지", "~하고 싶다" 같은 의지도 할 일(task)로 간주하라.
 
-출력 형식:
+[출력 형식]
 [
-  {"id":"task-1","title":"내용","start":"ISO8601","end":"ISO8601","allDay":false,"type":"task","advice":"조언"}
+  {"id":"task-1","title":"내용","start":"ISO8601","end":"ISO8601","allDay":false,"type":"task","advice":"AI 비서의 조언"}
 ]
-
-다른 말은 하지 말고 오직 JSON 배열만 출력하라.
+(오직 JSON 배열만 출력하고 다른 설명은 하지 마라.)
 
 [일기 데이터]
 ${diaryContent}
@@ -909,19 +911,18 @@ app.get('/api/briefing', verifyUser, async (req, res) => {
         });
 
         const briefingPrompt = `
-너는 사용자의 하루를 관리하는 완벽한 수석 비서다. 아래 정보를 바탕으로 데일리 브리핑을 작성하라.
+너는 사용자의 하루를 책임지는 완벽하고 꼼꼼한 수석 비서다. 아래 정보를 바탕으로 품격 있는 데일리 브리핑을 작성하라.
 
 [분석 데이터]
-- 현재 시간: ${currentTimeStr}
-- 어제~오늘 일정:
-${contextEvents}
-- 최근 사용자의 생각:
-${recentDiaries}
+1. 현재 시간: ${currentTimeStr}
+2. 구글 일정: ${contextEvents}
+3. 최근 생각(Diary): ${recentDiaries}
 
 [수행 지시]
-1. 어제 요약 1문장, 오늘 핵심 1문장으로 최대 2~3문장 작성하라.
-2. 가장 중요한 포인트는 **텍스트**로 강조하라.
-3. 바쁜 상사에게 핵심만 보고하는 비서처럼 간결하게 작성하라.
+1. **가장 중요**: 최근 생각(Diary) 데이터에서 사용자가 계획했거나 언급했던 '미래의 할 일'이 있다면 반드시 언급하며 리마인드하라. (예: "상사님, 어제 일기에서 말씀하신 ~를 오늘 확인해 보시는 건 어떨까요?")
+2. 어제 요약 1문장, 오늘 핵심 1문장으로 최대 3문장 이내로 작성하라.
+3. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
+4. 말투는 정중하고 전문적인 비서의 어투를 유지하라.
 `;
 
         const geminiRes = await fetchWithTimeout(
@@ -939,28 +940,24 @@ ${recentDiaries}
                     ]
                 })
             },
-            20000
         );
 
         const result = await geminiRes.json();
 
-        if (!geminiRes.ok || result.error) {
-            throw new Error(
-                result?.error?.message || 'Gemini 브리핑 생성 실패'
-            );
-        }
-
         const briefing =
             result.candidates?.[0]?.content?.parts?.[0]?.text ||
-            '비서가 브리핑을 준비하지 못했습니다.';
+            '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
 
         return res.json({
             success: true,
             briefing
         });
     } catch (error) {
-        console.error('Briefing Error:', error);
-        return sendError(res, 500, '브리핑 생성 실패');
+        console.error('Briefing Error:', error.message);
+        return res.json({
+            success: true,
+            briefing: '비서가 지금 조금 바쁘네요. 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩'
+        });
     }
 });
 
