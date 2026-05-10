@@ -7,7 +7,11 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/(style.css|app.js|manifest.json|sw.js|icon-512.png)",
       "destination": "/public/$1"
     }
   ]
