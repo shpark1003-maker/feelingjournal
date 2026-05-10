@@ -1,36 +1,52 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createClient } = require('@supabase/supabase-js');
 const Redis = require('ioredis');
+const ws = require('ws');
 
-// Redis 클라이언트 초기화 (Vercel Serverless 환경에서 재사용을 위해 핸들러 외부에서 선언)
-const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+// Supabase 클라이언트 초기화 (Service Role 사용)
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false },
+    realtime: { transport: ws }
+});
+
+// Redis 초기화
+const redis = new Redis(process.env.REDIS_URL);
 
 module.exports = async (req, res) => {
-    // Vercel serverless function handler
-    
-    // 1. POST 요청만 허용
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
         return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
     }
 
+    // 1. 인증 토큰 확인
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: '인증 정보가 필요합니다.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
     try {
         const { content } = req.body;
-
         if (!content) {
             return res.status(400).json({ error: '일기 내용이 없습니다.' });
         }
 
-        // 2. 환경 변수에서 API 키 가져오기
+        // 2. 사용자 인증 확인 (Supabase Service Role Client 사용)
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return res.status(401).json({ error: '유효하지 않은 토큰입니다.' });
+        }
+
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            console.error('GEMINI_API_KEY is not defined in environment variables.');
             return res.status(500).json({ error: '서버 설정 오류: API 키가 없습니다.' });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        
-        // 최신 모델 gemini-2.5-flash 사용 (사용자 요청 사항 반영)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
             너는 심리 상담가야. 사용자가 작성한 일기 내용을 읽고, 
@@ -45,50 +61,35 @@ module.exports = async (req, res) => {
             사용자 일기 내용: "${content}"
         `;
 
-        // 4. Gemini API 호출
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        // 6. Redis에 데이터 저장
-        if (redis) {
-            try {
-                // 현재 시간을 YYYYMMDDHHMMSS 형식으로 생성
-                const now = new Date();
-                const timestamp = now.getFullYear().toString() +
-                    (now.getMonth() + 1).toString().padStart(2, '0') +
-                    now.getDate().toString().padStart(2, '0') +
-                    now.getHours().toString().padStart(2, '0') +
-                    now.getMinutes().toString().padStart(2, '0') +
-                    now.getSeconds().toString().padStart(2, '0');
-                
-                const key = `diary-${timestamp}`;
-                
-                // 데이터 저장 (원본 내용과 AI 답변)
-                await redis.set(key, JSON.stringify({
-                    originalContent: content,
-                    aiResponse: text,
-                    createdAt: now.toISOString()
-                }));
-                
-                console.log(`Saved to Redis with key: ${key}`);
-            } catch (redisError) {
-                console.error('Redis Storage Error:', redisError);
-                // Redis 저장 실패가 사용자 응답에 영향을 주지 않도록 에러만 기록
-            }
-        } else {
-            console.warn('Redis client not initialized. Skipping storage.');
-        }
+        // 감정 추출
+        const emotionMatch = text.match(/감정:\[(.*?)\]/);
+        const emotion = emotionMatch ? emotionMatch[1] : '평온';
 
-        // 5. 결과 반환
+        // 3. Redis에 사용자 ID를 포함한 키로 데이터 저장
+        const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+        const redisKey = `user:${user.id}:diary-${timestamp}`;
+        
+        const diaryData = {
+            content: content,
+            response: text,
+            emotion: emotion,
+            createdAt: new Date().toISOString(),
+            userId: user.id
+        };
+
+        await redis.set(redisKey, JSON.stringify(diaryData));
+        console.log('Saved to Redis for user:', user.id, 'Key:', redisKey);
+
         return res.status(200).json({ answer: text });
     } catch (error) {
-        console.error('Gemini API Serverless Error:', error);
-        
-        if (error.message && error.message.includes('API key')) {
-            return res.status(401).json({ error: 'API 키가 유효하지 않습니다.' });
-        }
-        
+        console.error('Gemini API/Redis Error:', error);
         return res.status(500).json({ error: 'AI 분석 중 오류가 발생했습니다.' });
     }
 };
+
+
+

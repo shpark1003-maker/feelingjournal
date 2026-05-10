@@ -36,13 +36,13 @@ body {
 
 .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 1100px; /* 600px에서 1100px로 대폭 확장 */
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius);
-    padding: 40px;
+    padding: 30px;
     box-shadow: var(--shadow-soft);
     animation: fadeIn 0.8s ease-out;
 }
@@ -303,9 +303,431 @@ footer {
     text-overflow: ellipsis;
 }
 
+/* Auth Section Styles */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    animation: fadeIn 1s ease-out;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+}
+
+.auth-card h1 {
+    margin-bottom: 8px;
+    font-size: 2.5rem;
+}
+
+.auth-card .subtitle {
+    margin-bottom: 30px;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #edf2f7;
+    background: #fdfdfd;
+    font-size: 1rem;
+    transition: var(--transition);
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: var(--accent-color);
+    background: #fff;
+}
+
+.auth-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.divider {
+    margin: 25px 0;
+    position: relative;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.divider span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 0 15px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.google-btn {
+    background: white !important;
+    color: #444 !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    width: 100%;
+}
+
+.google-btn img {
+    width: 18px;
+    height: 18px;
+}
+
+.google-btn:hover {
+    background: #f8f9fa !important;
+    transform: translateY(-2px);
+}
+
+.kakao-btn {
+    background: #FEE500 !important;
+    color: #000000 !important;
+    border: none !important;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.kakao-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.kakao-btn:hover {
+    background: #FADA0A !important;
+    transform: translateY(-2px);
+}
+
+/* User Nav */
+.user-nav {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#user-email {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    transition: color 0.3s ease;
+}
+
+.btn-text:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+/* Tabs */
+.tab-nav {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 30px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 5px;
+    border-radius: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--accent-color);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.tab-content {
+    display: none;
+    width: 100% !important;
+    min-height: 1px;
+}
+
+.tab-content.active {
+    display: block !important;
+}
+
+#calendar-container {
+    width: 100%;
+    min-height: 650px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Calendar View */
+.calendar-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.calendar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.calendar-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.calendar-item:hover {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.event-time {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.event-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.event-ai-advice {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(108, 92, 231, 0.1);
+    padding: 10px;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 5px;
+}
+
+/* --- [캘린더 반응형 및 호버 고도화] --- */
+#calendar-container {
+    transition: var(--transition);
+}
+
+/* 이벤트 호버 효과: 전체 제목 가독성 확보 */
+.fc-event {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    z-index: 100 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+/* 할 일(Task)은 정열적인 레드 컬러로 강조 */
+.event-task {
+    background-color: #ff4757 !important;
+    border-color: #ff4757 !important;
+}
+
+.fc-event-title {
+    font-weight: 600 !important;
+}
+
+/* 모바일 화면 대응 */
+@media (max-width: 768px) {
+    #calendar-container {
+        min-height: 450px !important;
+    }
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .fc-toolbar-title {
+        font-size: 1.1rem !important;
+    }
+}
+/* ------------------------------------ */
+
+/* --- [캘린더 반응형 및 호버 강화] --- */
+#calendar-container {
+    transition: var(--transition);
+}
+
+/* 이벤트 호버 시 전체 내용 표시 및 강조 */
+.fc-event {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    z-index: 100 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+/* 툴팁 효과를 위한 타이틀 가독성 */
+.fc-event-title {
+    font-weight: 600 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 할 일(Task) 전용 레드 테마 */
+.event-task {
+    background-color: #ff4757 !important;
+    border-color: #ff4757 !important;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    #calendar-container {
+        min-height: 500px !important;
+    }
+    
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .fc-button {
+        padding: 5px 10px !important;
+        font-size: 0.8rem !important;
+    }
+}
+/* ---------------------------------- */
+
+/* Chat View */
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message {
+    max-width: 80%;
+    padding: 12px 18px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.received {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-bottom-left-radius: 4px;
+}
+
+.message-info {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 10px;
+}
+
+#chat-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 20px;
+    color: white;
+    outline: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.logout-link {
+    background: none;
+    border: none;
+    color: #ff4757;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: var(--transition);
+}
+
+.logout-link:hover {
+    background: rgba(255, 71, 87, 0.1);
+}
+
 /* Mobile Responsiveness Updates */
 @media (max-width: 480px) {
-    .container {
+    .container, .auth-card {
         padding: 25px;
     }
     
@@ -314,7 +736,7 @@ footer {
     }
     
     h1 {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
     }
 
     .history-header {
@@ -330,4 +752,130 @@ footer {
     .sort-btn {
         flex: 1;
     }
+}
+
+/* Event Confirmation Box */
+.confirm-box {
+    margin-top: 20px;
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: 15px;
+    padding: 20px;
+    animation: slideUp 0.4s ease-out;
+}
+
+.confirm-content p {
+    margin-bottom: 10px;
+    color: var(--text-main);
+}
+
+.time-info {
+    font-size: 0.85rem;
+    color: var(--accent-color) !important;
+}
+
+.confirm-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn.sm {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+}
+
+.success-msg {
+    color: #2ecc71 !important;
+    text-align: center;
+    font-weight: 600;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .confirm-btns {
+        flex-direction: column;
+    }
+}
+
+
+/* AI Briefing Card Styles */
+.briefing-card {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.08) 0%, rgba(162, 155, 254, 0.08) 100%);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    animation: slideDown 0.6s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.briefing-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    color: var(--accent-color);
+    font-size: 1rem;
+}
+
+.briefing-text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-main);
+    font-weight: 400;
+}
+
+.briefing-card.hidden {
+    display: none;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Settings Section */
+.settings-section {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+    margin-top: 20px;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.checkbox-item:hover {
+    background: rgba(108, 92, 231, 0.05);
+}
+
+.checkbox-item input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent-color);
 }

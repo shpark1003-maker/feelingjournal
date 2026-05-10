@@ -1,62 +1,196 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 감성일기 - 당신의 하루를 기록하세요</title>
     <meta name="description" content="AI가 분석하는 감성 일기 서비스입니다. 당신의 하루를 기록하고 위로와 조언을 받아보세요.">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4.2.0">
+    <!-- PWA 및 모바일 설정 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Feeling Journal">
+    <!-- FullCalendar v6.1.15 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;700&display=swap"
+        rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1 id="main-title">오늘 하루 어땠어요?</h1>
-            <p class="subtitle">당신의 소중한 감정을 기록으로 남겨보세요.</p>
-        </header>
 
-        <main>
-            <section class="input-section">
-                <textarea id="diary-input" placeholder="여기에 일기를 작성해 주세요..." aria-label="일기 입력창"></textarea>
-                
+<body>
+    <div id="auth-container" class="auth-container">
+
+        <div class="auth-card">
+            <h1>AI 감성일기</h1>
+            <p class="subtitle">마음을 기록하는 공간에 오신 것을 환영합니다.</p>
+
+            <form id="auth-form">
+                <div class="input-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" placeholder="example@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="auth-button-group">
+                    <button type="submit" id="login-btn" class="btn primary">로그인</button>
+                    <button type="button" id="signup-btn" class="btn secondary">회원가입</button>
+                </div>
+            </form>
+
+            <div class="divider">
+                <span>또는</span>
+            </div>
+
+            <button id="google-login-btn" class="btn google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Google로 로그인
+            </button>
+            <button id="kakao-login-btn" class="btn kakao-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/KakaoTalk_logo.svg" alt="Kakao">
+                카카오로 로그인
+            </button>
+
+        </div>
+    </div>
+
+    <div id="journal-app" class="container" style="display: none;">
+        <!-- User Nav (로그아웃 등) -->
+        <div class="user-nav">
+            <span id="user-email"></span>
+            <button id="logout-btn" class="btn-text">로그아웃</button>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="journal">하루 메모</button>
+            <button class="tab-btn" data-tab="calendar">감성 캘린더</button>
+            <button class="tab-btn" data-tab="chat">실시간 채팅</button>
+            <button class="tab-btn" data-tab="settings">비서 설정</button>
+        </div>
+
+        <!-- 설정 뷰 (NEW) -->
+        <div id="settings-view" class="tab-content">
+            <div class="settings-section">
+                <h3>🔔 알람 타이밍 설정</h3>
+                <p class="subtitle">일정 시작 전 언제 알려드릴까요?</p>
+                <div class="settings-grid">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="alarm-60" value="60"> 1시간 전
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="alarm-30" value="30" checked> 30분 전
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="alarm-10" value="10" checked> 10분 전
+                    </label>
+                </div>
+                <button id="save-settings-btn" class="btn primary">설정 저장하기</button>
+            </div>
+        </div>
+
+        <!-- 감성 일기 뷰 -->
+        <div id="journal-view" class="tab-content active">
+            <!-- AI 데일리 브리핑 -->
+            <div id="briefing-card" class="briefing-card hidden">
+                <div class="briefing-header">
+                    <span class="icon">✨</span> <span>오늘의 비서 브리핑</span>
+                </div>
+                <div id="briefing-content" class="briefing-text">비서가 어제의 일정을 정리하고 오늘의 계획을 세우는 중입니다...</div>
+            </div>
+
+            <div class="input-section">
+                <textarea id="diary-input" placeholder="오늘 하루는 어땠나요? 당신의 감정을 자유롭게 기록해 보세요..."></textarea>
                 <div class="button-group">
                     <button id="voice-btn" class="btn secondary">
                         <span class="icon">🎙️</span> 음성으로 입력하기
                     </button>
-                    <button id="analyze-btn" class="btn primary">
-                        분석요청하기
-                    </button>
+                    <button id="analyze-btn" class="btn primary">AI 조언</button>
                 </div>
-            </section>
+            </div>
 
-            <section class="result-section">
-                <h2 id="result-title">AI 답변</h2>
-                <div id="ai-response-box" class="response-box">
-                    <p id="response-text">여기에 AI의 답변이 표시됩니다</p>
-                </div>
-            </section>
+            <div id="ai-response-box" class="response-section">
+                <h3>참고하세요</h3>
+                <p id="response-text">메모를 작성하고 AI 조언을 요청하면 AI의 답변이 여기에 나타납니다.</p>
+            </div>
 
-            <section class="history-section">
+            <div class="history-section">
                 <div class="history-header">
-                    <h2>나의 일기 히스토리</h2>
-                    <div class="sort-buttons">
-                        <button id="sort-newest" class="sort-btn active">최신순</button>
-                        <button id="sort-oldest" class="sort-btn">첫 작성순</button>
+                    <h3>메모 기록</h3>
+                    <div class="sort-options">
+                        <button id="sort-newest" class="active">최신순</button>
+                        <button id="sort-oldest">오래된순</button>
                     </div>
                 </div>
-                <div id="history-list" class="history-grid">
-                    <!-- 히스토리 카드가 여기에 동적으로 추가됩니다 -->
+                <div id="history-list" class="history-list">
+                    <!-- 기록 카드들이 여기에 동적으로 추가됩니다 -->
                 </div>
-            </section>
-        </main>
+            </div>
+        </div>
+
+        <!-- 라이프 캘린더 뷰 -->
+        <div id="calendar-view" class="tab-content">
+            <div class="calendar-header">
+                <h3>📅 감성 캘린더</h3>
+                <p class="subtitle">AI가 일정을 정리하고 준비를 도와줍니다.</p>
+            </div>
+            <div id="calendar-container"
+                style="height: 650px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            </div>
+        </div>
+
+        <!-- 실시간 채팅 뷰 -->
+        <div id="chat-view" class="tab-content">
+            <div class="chat-header">
+                <h3>💬 감성 채팅</h3>
+                <p class="subtitle">지인과 감성을 공유하고 대화해 보세요.</p>
+            </div>
+            <div id="chat-messages" class="chat-messages">
+                <!-- 메시지들이 여기에 추가됩니다 -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="메시지를 입력하세요...">
+                <button id="send-chat-btn" class="btn primary">전송</button>
+            </div>
+        </div>
 
         <footer>
             <p>&copy; 2026 AI 감성일기. All rights reserved.</p>
         </footer>
     </div>
-    <script src="app.js?v=2.0.0"></script>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FullCalendar v6.1.15 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>console.log('--- Feeling Journal UI Version: 4.1.0 (Stable) ---');</script>
+    <script src="app.js?v=4.1.0"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
+
 </html>
