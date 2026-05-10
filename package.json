@@ -2,10 +2,10 @@
   "name": "feeling-journal",
   "version": "1.0.0",
   "description": "AI Emotion Journal with Gemini API",
-  "main": "server.js",
+  "main": "server-local.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node server-local.js",
+    "dev": "node --watch server-local.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
