@@ -1,19 +1,8 @@
-const { createClient } = require('@supabase/supabase-js');
-const Redis = require('ioredis');
-
-const redis = new Redis(process.env.REDIS_URL);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-const scanRedisKeys = async (pattern) => {
-    let cursor = '0';
-    const keys = [];
-    do {
-        const result = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
-        cursor = result[0];
-        keys.push(...result[1]);
-    } while (cursor !== '0');
-    return keys;
-};
+const { 
+    supabase, 
+    redis, 
+    scanRedisKeys 
+} = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -32,18 +21,40 @@ module.exports = async (req, res) => {
         const sortedKeys = allKeys.sort().reverse().slice(0, 50);
         const values = await redis.mget(sortedKeys);
 
-        const history = values.filter(Boolean).map((v, i) => {
+        const notebooksKey = `user:${user.id}:notebooks`;
+        const notebooksData = await redis.get(notebooksKey);
+        const notebooks = notebooksData ? JSON.parse(notebooksData) : [];
+        const firstNotebookId = notebooks.length > 0 ? notebooks[0].id : null;
+
+        const history = [];
+
+        for (let i = 0; i < values.length; i++) {
+            if (!values[i]) continue;
+
             try {
-                const item = JSON.parse(v);
-                return {
+                const item = JSON.parse(values[i]);
+
+                // 필기장 정보가 없거나 기본값('nb-1')인 경우 새 필기장으로 임시 배정
+                if (firstNotebookId && (!item.notebookId || item.notebookId === 'nb-1')) {
+                    item.notebookId = firstNotebookId;
+                    await redis.set(sortedKeys[i], JSON.stringify(item), 'KEEPTTL');
+                }
+
+                history.push({
                     id: sortedKeys[i],
+                    title: item.title || '제목 없는 메모',
                     originalContent: item.content,
+                    richContent: item.richContent || null,
                     aiResponse: item.response,
                     createdAt: item.createdAt,
-                    emotion: item.emotion
-                };
-            } catch (e) { return null; }
-        }).filter(Boolean);
+                    emotion: item.emotion,
+                    mediaId: item.mediaId || null,
+                    notebookId: item.notebookId || 'nb-1'
+                });
+            } catch (e) {
+                console.error('History Parse Error:', e.message);
+            }
+        }
 
         return res.json({ success: true, history });
     } catch (error) {

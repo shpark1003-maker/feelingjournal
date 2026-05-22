@@ -14,13 +14,18 @@ module.exports = async (req, res) => {
         if (!user) return res.status(401).json({ error: 'Invalid user' });
 
         const { subscription, settings } = req.body;
-        if (!subscription || !settings) return res.status(400).json({ error: 'Missing subscription data' });
+        if (!settings) return res.status(400).json({ error: 'Missing alert settings' });
+
+        const providerToken = req.headers['x-provider-token'] || '';
+        if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
+            await redis.set(`user:${user.id}:google_provider_token`, providerToken);
+        }
 
         const subKey = `user:${user.id}:push-config`;
         await redis.set(subKey, JSON.stringify({
             subscription,
             settings,
-            providerToken: req.headers['x-provider-token'] || '',
+            providerToken,
             email: user.email
         }));
 

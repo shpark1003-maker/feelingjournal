@@ -22,8 +22,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
         body: data.body,
-        icon: '/icon-192.png', // 아이콘 경로가 있다면
-        badge: '/icon-192.png',
+        icon: '/icon-512.png', // 실제 존재하는 아이콘 경로로 수정
+        badge: '/icon-512.png',
         vibrate: [200, 100, 200],
         data: {
             url: self.location.origin

@@ -1,56 +1,10 @@
-const { createClient } = require('@supabase/supabase-js');
-const Redis = require('ioredis');
-
-const GEMINI_MODEL = 'gemini-2.0-flash';
-const redis = new Redis(process.env.REDIS_URL);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 10000) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timeout);
-    }
-};
-
-const getGeminiUrl = () => {
-    const apiKey = (process.env.GEMINI_API_KEY || '').replace(/["']/g, '').trim();
-    return `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-};
-
-const sanitizeContent = (content) => {
-    return String(content || '').replace(/```/g, '').slice(0, 5000).trim();
-};
-
-const extractEventJson = (text) => {
-    try {
-        if (!text.includes('EVENT_JSON_START') || !text.includes('EVENT_JSON_END')) return null;
-        const startIndex = text.indexOf('EVENT_JSON_START') + 'EVENT_JSON_START'.length;
-        const endIndex = text.indexOf('EVENT_JSON_END');
-        if (endIndex <= startIndex) return null;
-        const jsonStr = text.slice(startIndex, endIndex).trim();
-        const event = JSON.parse(jsonStr);
-        if (!event.summary || !event.start) return null;
-        if (!event.end) {
-            const start = new Date(event.start);
-            if (!isNaN(start.getTime())) {
-                start.setHours(start.getHours() + 1);
-                event.end = start.toISOString();
-            }
-        }
-        return event;
-    } catch (e) {
-        return null;
-    }
-};
-
-const verifyUser = async (token) => {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) throw new Error('Invalid user');
-    return user;
-};
+const { 
+    supabase, 
+    redis, 
+    callGemini, 
+    sanitizeContent, 
+    extractEventJson 
+} = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -58,13 +12,22 @@ module.exports = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
-        const user = await verifyUser(authHeader.split(' ')[1]);
+        
+        // supabaseAdmin이 있으면 bypass 가능하므로 static verify 대신 get user 진행
+        const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.split(' ')[1]);
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid user' });
+        }
 
+        const { image, title, mediaId, notebookId, richContent } = req.body;
         const content = sanitizeContent(req.body.content);
-        if (!content) return res.status(400).json({ error: 'Empty content' });
+        
+        if (!content && !image && !richContent) {
+            return res.status(400).json({ error: '분석할 내용이나 이미지가 없습니다.' });
+        }
 
         const providerToken = req.headers['x-provider-token'];
-        const contentHash = Buffer.from(content).toString('base64').slice(0, 50);
+        const contentHash = Buffer.from(content || image || '').toString('base64').slice(0, 50);
         const cacheKey = `user:${user.id}:last-analyze-cache`;
 
         const cached = await redis.get(cacheKey);
@@ -93,44 +56,104 @@ module.exports = async (req, res) => {
         }
 
         const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        
+        // 사용자 호칭 조회 (Redis에 없으면 이메일 ID 사용)
+        const nicknameKey = `user:${user.id}:nickname`;
+        const storedNickname = await redis.get(nicknameKey);
+        const userNickname = storedNickname || user.email.split('@')[0];
+
         const prompt = `너는 사용자의 감정을 분석하고 일정을 조율하며, 생활 전반을 챙겨주는 품격 있는 수석 비서다.
+사용자의 호칭은 "${userNickname}"이다. 응답 시 반드시 이 호칭으로 불러라.
+첨부된 이미지가 있다면 그 안의 텍스트(영수증, 메모, 안내문 등)를 스캔(OCR)하고 내용을 분석하라.
+
 [사용자의 현재 일정 리스트]
 ${existingEventsStr}
+
 [현재 시간]
 ${currentTimeStr}
+
 [수행 지시]
-1. 사용자의 메모를 기존 일정과 대조하여 충돌 여부를 확인하라.
-2. 할 일을 캘린더 일정 후보로 제안하라.
-3. 상대적 시간은 현재 시간 기준 정확한 날짜로 계산하라.
-4. 첫 줄에 감정:[단어] 형식으로 작성하라.
-5. 일정이 있으면 EVENT_JSON_START/END 형식으로 JSON을 출력하라.
+1. 이미지 속 텍스트와 사용자의 메모를 종합 분석하라.
+2. 기존 일정과 대조하여 충돌 여부를 확인하라.
+3. 할 일이 발견되면 EVENT_JSON_START/END 형식으로 제안하라.
+4. "내일", "다음주" 등 상대 시간은 현재 시간을 기준으로 계산하라.
+5. 첫 줄에 감정:[단어] 형식으로 작성하라.
+6. 분석 결과에 따라 따뜻한 위로나 조언을 제공하되, 반드시 "${userNickname}"님이라고 호칭하라.
+
 EVENT_JSON_START
-{"summary":"일정 제목","start":"ISO8601 시작시간","end":"ISO8601 종료시간","type":"task 또는 event"}
+{"summary":"일정 제목","start":"ISO8601 시작시간","end":"ISO8601 종료시간","type":"task"}
 EVENT_JSON_END
-사용자 메모: """${content}"""`;
 
-        const geminiRes = await fetchWithTimeout(getGeminiUrl(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        }, 20000);
+사용자 입력:
+"""
+${content || '(이미지 분석 요청)'}
+"""`;
 
-        const data = await geminiRes.json();
+        let inlineData = null;
+        if (image) {
+            inlineData = {
+                mimeType: image.split(';')[0].split(':')[1],
+                data: image.split(',')[1]
+            };
+        }
+
+        const data = await callGemini(prompt, {}, 3, inlineData);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (!text) {
+            throw new Error('Gemini 응답이 비어 있습니다.');
+        }
+
         const emotionMatch = text.match(/감정:\[(.*?)\]/);
         const emotion = emotionMatch ? emotionMatch[1].trim() : '평온';
         const detectedEvent = extractEventJson(text);
 
         const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
         const diaryKey = `user:${user.id}:diary-${timestamp}`;
-        const diaryData = { content, response: text, emotion, createdAt: new Date().toISOString(), userId: user.id };
-        await redis.set(diaryKey, JSON.stringify(diaryData), 'EX', 60 * 60 * 24 * 30);
+        
+        // server-local.js의 완벽한 데이터 규격과 완전히 정렬
+        const diaryData = {
+            title: title || '제목 없는 메모',
+            content,
+            richContent: richContent || null,
+            response: text,
+            createdAt: new Date().toISOString(),
+            emotion,
+            mediaId: mediaId || null,
+            notebookId: notebookId || 'nb-1'
+        };
+        await redis.set(diaryKey, JSON.stringify(diaryData), 'EX', 3600 * 24 * 30);
 
-        const finalResult = { success: true, answer: text, event: detectedEvent };
+        // 프로필 감정 상태 동기화 (1촌 공유용) 추가
+        try {
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({ 
+                    id: user.id, 
+                    current_emotion: emotion, 
+                    emotion_updated_at: new Date().toISOString() 
+                }, { onConflict: 'id' });
+            
+            if (profileError) console.error('Profile Emotion Sync Error:', profileError);
+        } catch (e) {
+            console.error('Profile DB Error:', e);
+        }
+
+        const finalResult = {
+            success: true,
+            answer: text,
+            emotion,
+            event: detectedEvent,
+            id: diaryKey,
+            title: diaryData.title
+        };
         await redis.set(cacheKey, JSON.stringify({ hash: contentHash, result: finalResult }), 'EX', 3600);
 
         return res.json(finalResult);
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Critical Analyze Error:', error);
+        return res.json({
+            success: false,
+            answer: '분석 중 문제가 발생했습니다. 조금만 기다려 주시겠어요?'
+        });
     }
 };
