@@ -488,16 +488,24 @@ export async function loadContacts() {
                     btn.innerText = '초대 중...';
 
                     const sessionToken = await store.getSessionToken();
-                    const inviteRes = await fetch(`${API_URL}/invite`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-                        body: JSON.stringify({ email, name })
-                    });
-                    if ((await inviteRes.json()).success) {
-                        alert(`${name}님에게 초대 메일을 보냈습니다.`);
-                        btn.innerText = '초대됨';
-                    } else {
-                        alert('초대 실패');
+                    try {
+                        const inviteRes = await fetch(`${API_URL}/invite`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+                            body: JSON.stringify({ email, name })
+                        });
+                        const resData = await inviteRes.json();
+                        if (resData.success) {
+                            alert(`✨ ${name}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                            btn.innerText = '초대됨';
+                        } else {
+                            alert(`❌ 초대장 발송 실패: ${resData.error || '이메일 발송 중 일시적인 오류가 발생했습니다.'}`);
+                            btn.disabled = false;
+                            btn.innerText = '초대';
+                        }
+                    } catch (err) {
+                        console.error('Invite API Error:', err);
+                        alert('❌ 시스템 연동 오류로 초대장을 발송하지 못했습니다. 설정 정보를 확인해주세요.');
                         btn.disabled = false;
                         btn.innerText = '초대';
                     }

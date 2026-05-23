@@ -47,14 +47,16 @@ if (pushEnabled) {
 }
 
 // 5. Nodemailer SMTP Transporter 설정
-const emailConfigured = !!process.env.EMAIL_USER && !!process.env.EMAIL_PASS && process.env.EMAIL_PASS !== 'your-google-app-password-here';
+const rawPass = process.env.EMAIL_PASS || '';
+const cleanPass = rawPass.replace(/\s+/g, '').trim();
+const emailConfigured = !!process.env.EMAIL_USER && !!cleanPass && cleanPass !== 'your-google-app-password-here';
 let transporter = null;
 if (emailConfigured) {
     transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+            pass: cleanPass
         }
     });
 }
