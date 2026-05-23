@@ -187,6 +187,7 @@ export async function deleteNotebook() {
 
     store.currentNotebookId = 'nb-1';
     await loadNotebooks();
+    addNewPage();
 }
 
 export async function addNewPage() {

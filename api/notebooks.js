@@ -13,9 +13,14 @@ module.exports = async (req, res) => {
 
         if (req.method === 'GET') {
             const data = await redis.get(key);
+            let notebooks = data ? JSON.parse(data) : [];
+            if (notebooks.length === 0) {
+                notebooks = [{ id: 'nb-1', name: '내 일기장', color: '#6366f1' }];
+                await redis.set(key, JSON.stringify(notebooks), 'EX', 3600 * 24 * 365);
+            }
             return res.json({
                 success: true,
-                notebooks: data ? JSON.parse(data) : []
+                notebooks
             });
         }
 

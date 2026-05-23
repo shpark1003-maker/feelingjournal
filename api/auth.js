@@ -49,10 +49,16 @@ router.post('/logout', async (req, res) => {
 // 5. [OAuth] 구글 로그인 리디렉션
 router.get('/google', async (req, res) => {
     try {
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers.host || 'localhost:3000';
+        const redirectUrl = `${protocol}://${host}/api/auth/callback`;
+        
+        console.log(`--- [OAuth Google] Redirecting to dynamic URL: ${redirectUrl} ---`);
+        
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/callback`,
+                redirectTo: redirectUrl,
                 scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                 queryParams: {
                     access_type: 'offline',
@@ -71,10 +77,14 @@ router.get('/google', async (req, res) => {
 // 6. [OAuth] 카카오 로그인 리디렉션
 router.get('/kakao', async (req, res) => {
     try {
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers.host || 'localhost:3000';
+        const redirectUrl = `${protocol}://${host}/api/auth/callback`;
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'kakao',
             options: {
-                redirectTo: `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/callback`
+                redirectTo: redirectUrl
             }
         });
         if (error) throw error;
