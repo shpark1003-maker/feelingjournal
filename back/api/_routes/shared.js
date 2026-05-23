@@ -429,7 +429,7 @@ const scanRedisKeys = async (pattern) => {
         const result = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
         cursor = result[0];
         keys.push(...result[1]);
-    } while (cursor !== '0');
+    } while (String(cursor) !== '0');
 
     return keys;
 };

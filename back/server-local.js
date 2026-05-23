@@ -361,7 +361,7 @@ const scanRedisKeys = async (pattern) => {
 
         cursor = result[0];
         keys.push(...result[1]);
-    } while (cursor !== '0');
+    } while (String(cursor) !== '0');
 
     return keys;
 };
