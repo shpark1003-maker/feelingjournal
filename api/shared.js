@@ -11,8 +11,6 @@ const { createClient } = require('@supabase/supabase-js');
 const Redis = require('ioredis');
 const webpush = require('web-push');
 const nodemailer = require('nodemailer');
-const puppeteer = require('puppeteer');
-const ws = require('ws');
 
 // 2. 핵심 설정 정보 추출
 const PORT = process.env.PORT || 3000;
@@ -62,38 +60,103 @@ if (emailConfigured) {
 }
 
 // 6. DB 및 캐시 인스턴스 싱글톤 초기화
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false },
-    realtime: { transport: ws }
-});
+let supabase;
+let supabaseAdmin;
+let redis;
 
-const supabaseAdmin = supabaseServiceKey 
-    ? createClient(supabaseUrl, supabaseServiceKey, { 
+if (process.env.VERCEL) {
+    if (!global.supabaseInstance) {
+        global.supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: false },
+            realtime: { transport: require('ws') },
+            global: {
+                fetch: (url, options) => fetchWithTimeout(url, options, 10000, 1)
+            }
+        });
+    }
+    supabase = global.supabaseInstance;
+
+    if (supabaseServiceKey) {
+        if (!global.supabaseAdminInstance) {
+            global.supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey, {
+                auth: { persistSession: false },
+                realtime: { transport: require('ws') },
+                global: {
+                    fetch: (url, options) => fetchWithTimeout(url, options, 10000, 1)
+                }
+            });
+        }
+        supabaseAdmin = global.supabaseAdminInstance;
+    } else {
+        supabaseAdmin = null;
+    }
+
+    if (!global.redisInstance) {
+        global.redisInstance = new Redis(process.env.REDIS_URL, {
+            connectTimeout: 5000,
+            maxRetriesPerRequest: 1
+        });
+        global.redisInstance.on('error', (err) => {
+            console.error('Redis Client Error:', err);
+        });
+    }
+    redis = global.redisInstance;
+} else {
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: { persistSession: false },
-        realtime: { transport: ws }
-      })
-    : null;
+        realtime: { transport: require('ws') },
+        global: {
+            fetch: (url, options) => fetchWithTimeout(url, options, 10000, 1)
+        }
+    });
+    supabaseAdmin = supabaseServiceKey 
+        ? createClient(supabaseUrl, supabaseServiceKey, { 
+            auth: { persistSession: false },
+            realtime: { transport: require('ws') },
+            global: {
+                fetch: (url, options) => fetchWithTimeout(url, options, 10000, 1)
+            }
+          })
+        : null;
+    redis = new Redis(process.env.REDIS_URL, {
+        connectTimeout: 5000,
+        maxRetriesPerRequest: 1
+    });
+    redis.on('error', (err) => {
+        console.error('Redis Client Error:', err);
+    });
+}
 
-const redis = new Redis(process.env.REDIS_URL);
-redis.on('error', (err) => {
-    console.error('Redis Client Error:', err);
-});
-
-// 7. Puppeteer 브라우저 인스턴스 재사용 헬퍼 (Browser Pool)
+// 7. Puppeteer 브라우저 인스턴스 재사용 헬퍼 (Browser Pool & Serverless 스위칭)
 let sharedBrowser = null;
 async function getBrowserInstance() {
     if (!sharedBrowser || !sharedBrowser.connected) {
         console.log('--- [PUPPETEER] Launching new browser instance ---');
-        sharedBrowser = await puppeteer.launch({
-            headless: 'new',
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--disable-gpu'
-            ]
-        });
+        if (process.env.VERCEL) {
+            console.log('--- [PUPPETEER] Running on Vercel Serverless ---');
+            const chromium = require('@sparticuz/chromium');
+            const puppeteerCore = require('puppeteer-core');
+            sharedBrowser = await puppeteerCore.launch({
+                args: chromium.args,
+                defaultViewport: chromium.defaultViewport,
+                executablePath: await chromium.executablePath(),
+                headless: chromium.headless,
+                ignoreHTTPSErrors: true,
+            });
+        } else {
+            console.log('--- [PUPPETEER] Running on Local Environment ---');
+            const puppeteer = require('puppeteer');
+            sharedBrowser = await puppeteer.launch({
+                headless: 'new',
+                args: [
+                    '--no-sandbox', 
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu'
+                ]
+            });
+        }
     }
     return sharedBrowser;
 }

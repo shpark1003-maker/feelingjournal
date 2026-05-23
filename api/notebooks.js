@@ -29,6 +29,38 @@ module.exports = async (req, res) => {
             await redis.set(key, JSON.stringify(notebooks), 'EX', 3600 * 24 * 365); // 1 year TTL
             return res.json({ success: true });
         }
+ 
+        if (req.method === 'DELETE') {
+            const { notebookId } = req.query;
+            if (!notebookId) return res.status(400).json({ error: 'Missing notebookId' });
+
+            const keys = await scanRedisKeys(`user:${user.id}:diary-*`);
+            for (const key of keys) {
+                try {
+                    const val = await redis.get(key);
+                    if (val) {
+                        const item = JSON.parse(val);
+                        if (item.notebookId === notebookId) {
+                            await redis.del(key);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Redis delete orphan diary err:', e);
+                }
+            }
+
+            try {
+                await supabase
+                    .from('diaries')
+                    .delete()
+                    .eq('notebook_id', notebookId)
+                    .eq('user_id', user.id);
+            } catch (dbErr) {
+                console.warn('Supabase diaries table deletion bypass/offline:', dbErr.message);
+            }
+
+            return res.json({ success: true });
+        }
 
         return res.status(404).json({ error: 'Method Not Found' });
     } catch (error) {

@@ -170,7 +170,8 @@ export function setupCamera() {
             cameraModal.style.display = 'flex';
         } catch (err) {
             console.error('Camera Access Error:', err);
-            alert('카메라 접근 권한이 필요합니다. 설정에서 허용해 주세요.');
+            alert('카메라 하드웨어 권한 획득에 실패하여, 카메라 스냅 기능을 실행할 수 없습니다. 설정에서 권한을 확인해 주세요.');
+            closeCamera();
         }
     });
 

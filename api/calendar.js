@@ -207,7 +207,9 @@ ${diaryContent}`;
         const isFallback = analyzedEvents.some(e => e.advice?.includes('AI 분석 생략됨'));
         const cacheTTL = isFallback ? 15 : 3600;
         await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', cacheTTL);
-        return res.json({ success: true, events: analyzedEvents });
+        
+        const isUnlinked = !providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined';
+        return res.json({ success: true, events: analyzedEvents, unlinked: isUnlinked });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

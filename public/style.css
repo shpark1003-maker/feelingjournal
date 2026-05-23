@@ -1278,19 +1278,84 @@ footer {
     }
 }
 
+/* [HOTFIX] 모바일 드로워 격리 레이아웃 및 겹침 방지 */
 @media (max-width: 768px) {
     .journal-3-column-layout {
-        display: block !important;
-        height: auto;
+        position: relative !important;
+        display: flex !important;
+        height: calc(100vh - 120px) !important;
+        overflow: hidden !important;
     }
-    .notebook-sidebar, .pages-sidebar {
-        display: none !important;
+    
+    .resizer {
+        display: none !important; /* resizer는 모바일에서 물리적 0% 소멸 */
     }
+
+    /* 1단 & 2단 사이드바를 absolute 오버레이로 전환 */
+    .notebook-sidebar {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 240px !important;
+        height: 100% !important;
+        z-index: 1010 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    .pages-sidebar {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 280px !important;
+        height: 100% !important;
+        z-index: 1009 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* 드로워 열림(Active) 클래스 */
+    .notebook-sidebar.active-drawer {
+        transform: translateX(0) !important;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.3) !important;
+    }
+    
+    .pages-sidebar.active-drawer {
+        transform: translateX(0) !important;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.15) !important;
+    }
+
     .note-content-area {
-        padding: 20px;
+        width: 100% !important;
+        padding: 15px !important;
+        min-width: 100% !important;
     }
+    
     .note-title-input-large {
-        font-size: 1.6rem;
+        font-size: 1.5rem !important;
+    }
+
+    /* 모바일용 드로워 여닫기 트리거 버튼 */
+    .mobile-drawer-toggle-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        background: #f1f2f6;
+        border: 1px solid #dfe4ea;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: #2f3542;
+        margin-right: 10px;
+    }
+}
+
+/* 데스크탑 및 태블릿 해상도에서는 모바일 드로워 토글 버튼을 숨김 */
+@media (min-width: 769px) {
+    .mobile-drawer-toggle-btn {
+        display: none !important;
     }
 }
 

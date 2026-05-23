@@ -888,7 +888,10 @@ export async function startCall(mode) {
 
     } catch (err) {
         console.error('Call Start Error:', err);
-        alert('카메라 또는 마이크 권한이 필요합니다.');
+        isCallActive = false;
+        if (overlay) overlay.classList.add('hidden');
+        alert('카메라 또는 마이크 하드웨어 권한 획득에 실패하여, 일반 음성/정적 비서 대화방 모드로 안전하게 전환합니다.');
+        endCall();
     }
 }
 

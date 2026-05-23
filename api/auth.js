@@ -1,113 +1,111 @@
-const express = require('express');
-const router = express.Router();
-const { supabase, verifyUser, sendError } = require('./shared');
+const { supabase, sendError } = require('./shared');
 
-// 1. 회원가입 엔드포인트
-router.post('/signup', async (req, res) => {
+module.exports = async (req, res) => {
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
     try {
-        const { email, password } = req.body;
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) return sendError(res, 400, error.message);
-        return res.json({ success: true, user: data.user });
-    } catch (err) {
-        return sendError(res, 500, '회원가입 중 서버 오류가 발생했습니다.');
-    }
-});
+        const url = req.url;
+        const path = url.split('?')[0];
 
-// 2. 로그인 엔드포인트
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return sendError(res, 400, error.message);
-        return res.json({ 
-            success: true, 
-            session: data.session, 
-            user: data.user,
-            provider_token: data.session?.provider_token
-        });
-    } catch (err) {
-        return sendError(res, 500, '로그인 중 서버 오류가 발생했습니다.');
-    }
-});
-
-// 3. 내 정보 조회 엔드포인트
-router.get('/me', verifyUser, (req, res) => {
-    return res.json({ success: true, user: req.user });
-});
-
-// 4. 로그아웃 엔드포인트
-router.post('/logout', async (req, res) => {
-    try {
-        await supabase.auth.signOut();
-        return res.json({ success: true });
-    } catch (err) {
-        return sendError(res, 500, '로그아웃 실패');
-    }
-});
-
-// 5. [OAuth] 구글 로그인 리디렉션
-router.get('/google', async (req, res) => {
-    try {
-        const protocol = req.headers['x-forwarded-proto'] || 'http';
-        const host = req.headers.host || 'localhost:3000';
-        const redirectUrl = `${protocol}://${host}/api/auth/callback`;
-        
-        console.log(`--- [OAuth Google] Redirecting to dynamic URL: ${redirectUrl} ---`);
-        
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: redirectUrl,
-                scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
-            }
-        });
-        if (error) throw error;
-        res.redirect(data.url);
-    } catch (err) {
-        console.error('Google OAuth Error:', err.message);
-        res.redirect('/?error=' + encodeURIComponent(err.message));
-    }
-});
-
-// 6. [OAuth] 카카오 로그인 리디렉션
-router.get('/kakao', async (req, res) => {
-    try {
-        const protocol = req.headers['x-forwarded-proto'] || 'http';
-        const host = req.headers.host || 'localhost:3000';
-        const redirectUrl = `${protocol}://${host}/api/auth/callback`;
-
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'kakao',
-            options: {
-                redirectTo: redirectUrl
-            }
-        });
-        if (error) throw error;
-        res.redirect(data.url);
-    } catch (err) {
-        console.error('Kakao OAuth Error:', err.message);
-        res.redirect('/?error=' + encodeURIComponent(err.message));
-    }
-});
-
-// 7. [OAuth] 콜백 처리 엔드포인트
-router.get('/callback', async (req, res) => {
-    try {
-        const { code } = req.query;
-        if (code) {
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) throw error;
+        // 1. 회원가입 엔드포인트
+        if (req.method === 'POST' && path.includes('/signup')) {
+            const { email, password } = req.body;
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) return sendError(res, 400, error.message);
+            return res.json({ success: true, user: data.user });
         }
-        res.redirect('/');
-    } catch (err) {
-        console.error('OAuth Callback Error:', err.message);
-        res.redirect('/?error=callback_failed');
-    }
-});
 
-module.exports = router;
+        // 2. 로그인 엔드포인트
+        if (req.method === 'POST' && path.includes('/login')) {
+            const { email, password } = req.body;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) return sendError(res, 400, error.message);
+            return res.json({ 
+                success: true, 
+                session: data.session, 
+                user: data.user,
+                provider_token: data.session?.provider_token
+            });
+        }
+
+        // 3. 내 정보 조회 엔드포인트
+        if (req.method === 'GET' && path.includes('/me')) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+            
+            const token = authHeader.split(' ')[1];
+            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            if (authError || !user) return res.status(401).json({ error: 'Invalid user' });
+            
+            return res.json({ success: true, user });
+        }
+
+        // 4. 로그아웃 엔드포인트
+        if (req.method === 'POST' && path.includes('/logout')) {
+            await supabase.auth.signOut();
+            return res.json({ success: true });
+        }
+
+        // 5. [OAuth] 구글 로그인 리디렉션
+        if (req.method === 'GET' && path.includes('/google')) {
+            const protocol = req.headers['x-forwarded-proto'] || 'http';
+            const host = req.headers.host || 'localhost:3000';
+            const redirectUrl = `${protocol}://${host}/api/auth/callback`;
+            
+            console.log(`--- [OAuth Google] Redirecting to dynamic URL: ${redirectUrl} ---`);
+            
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl,
+                    scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                }
+            });
+            if (error) throw error;
+            res.redirect(data.url);
+            return;
+        }
+
+        // 6. [OAuth] 카카오 로그인 리디렉션
+        if (req.method === 'GET' && path.includes('/kakao')) {
+            const protocol = req.headers['x-forwarded-proto'] || 'http';
+            const host = req.headers.host || 'localhost:3000';
+            const redirectUrl = `${protocol}://${host}/api/auth/callback`;
+
+            console.log(`--- [OAuth Kakao] Redirecting to dynamic URL: ${redirectUrl} ---`);
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'kakao',
+                options: {
+                    redirectTo: redirectUrl
+                }
+            });
+            if (error) throw error;
+            res.redirect(data.url);
+            return;
+        }
+
+        // 7. [OAuth] 콜백 처리 엔드포인트
+        if (req.method === 'GET' && path.includes('/callback')) {
+            const { code } = req.query;
+            if (code) {
+                const { error } = await supabase.auth.exchangeCodeForSession(code);
+                if (error) throw error;
+            }
+            res.redirect('/');
+            return;
+        }
+
+        return res.status(404).json({ error: 'Endpoint Not Found' });
+    } catch (err) {
+        console.error('Auth API Error:', err.message);
+        if (req.method === 'GET' && (req.url.includes('/google') || req.url.includes('/kakao') || req.url.includes('/callback'))) {
+            return res.redirect('/?error=' + encodeURIComponent(err.message));
+        }
+        return sendError(res, 500, err.message);
+    }
+};

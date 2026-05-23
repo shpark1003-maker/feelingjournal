@@ -56,11 +56,16 @@ export async function loadNotebooks() {
             const newPageBtn = document.getElementById('new-page-btn');
             if (newPageBtn) newPageBtn.innerText = `📝 페이지 추가`;
 
+            // [HOTFIX] 모바일 드로워 조작 - 일기 목록을 확인해야 하므로 1단 폴더만 수축
+            if (window.innerWidth <= 768) {
+                document.querySelector('.notebook-sidebar')?.classList.remove('active-drawer');
+            }
+
             loadPages();
         });
     });
 
-    loadPages();
+    await loadPages();
 }
 
 export async function loadPages() {
@@ -93,6 +98,12 @@ export async function loadPages() {
     list.querySelectorAll('.page-item').forEach(item => {
         item.addEventListener('click', () => {
             selectPage(item.dataset.id, data.history);
+
+            // [HOTFIX] 모바일 드로워 조작 - 일기 선택 완료 시 1단 및 2단 모두 닫음
+            if (window.innerWidth <= 768) {
+                document.querySelector('.notebook-sidebar')?.classList.remove('active-drawer');
+                document.querySelector('.pages-sidebar')?.classList.remove('active-drawer');
+            }
         });
     });
 }
@@ -182,12 +193,33 @@ export async function deleteNotebook() {
     const data = await res.json();
     let notebooks = data.notebooks || [];
 
-    notebooks = notebooks.filter(n => n.id !== store.currentNotebookId);
+    const deletedId = store.currentNotebookId;
+    notebooks = notebooks.filter(n => n.id !== deletedId);
+
+    // 1. 노트북 리스트를 안전하게 대기 업데이트
     await saveNotebooks(notebooks);
 
+    // 2. 백엔드에서 삭제된 노트북에 속했던 고아 일기 기록들 일괄 영구 소독 삭제
+    try {
+        await fetch(`${API_URL}/notebooks?notebookId=${deletedId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+    } catch (err) {
+        console.warn('Failed to clean up associated diaries on database:', err);
+    }
+
+    // 3. 기본 폴더로 복구 및 갱신
     store.currentNotebookId = 'nb-1';
-    await loadNotebooks();
-    addNewPage();
+    await loadNotebooks(); // <-- 이제 100% 비동기 렌더링이 완료될 때까지 안전하게 대기합니다!
+
+    // 4. [UX INNOVATION] 비동기 대기 완료 후 첫 일기를 오차 없이 즉각 스마트 로드!
+    const pageItems = document.querySelectorAll('#page-list .page-item');
+    if (pageItems.length > 0) {
+        pageItems[0].click();
+    } else {
+        addNewPage();
+    }
 }
 
 export async function addNewPage() {
@@ -213,7 +245,35 @@ export function setupNotebooksAndPages() {
     document.getElementById('remove-notebook-btn')?.addEventListener('click', deleteNotebook);
     document.getElementById('new-page-btn')?.addEventListener('click', addNewPage);
 
-    // 2. 노트북 이름 blur 실시간 반영
+    // 2. [HOTFIX] 모바일 드로워 여닫기 및 자동 닫힘 핫픽스 스크립트
+    const drawerToggle = document.getElementById('mobile-drawer-toggle');
+    const sidebar1 = document.querySelector('.notebook-sidebar');
+    const sidebar2 = document.querySelector('.pages-sidebar');
+    const noteArea = document.querySelector('.note-content-area');
+
+    if (drawerToggle && sidebar1 && sidebar2) {
+        drawerToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = sidebar1.classList.contains('active-drawer');
+            if (isOpen) {
+                sidebar1.classList.remove('active-drawer');
+                sidebar2.classList.remove('active-drawer');
+            } else {
+                sidebar1.classList.add('active-drawer');
+                sidebar2.classList.add('active-drawer');
+            }
+        });
+
+        // 에디터 영역 터치/클릭 시 드로워 자동 닫기
+        noteArea?.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar1.classList.remove('active-drawer');
+                sidebar2.classList.remove('active-drawer');
+            }
+        });
+    }
+
+    // 3. 노트북 이름 blur 실시간 반영
     document.getElementById('sidebar-notebook-title')?.addEventListener('blur', async (e) => {
         const newName = e.target.value.trim();
         if (!newName) return;
@@ -239,7 +299,7 @@ export function setupNotebooksAndPages() {
         }
     });
 
-    // 3. 사이드바 Resizers 이벤트 바인딩
+    // 4. 사이드바 Resizers 이벤트 바인딩
     setupResizers();
 }
 
@@ -254,6 +314,7 @@ function setupResizers() {
     let isResizing = false;
 
     resizer1.addEventListener('mousedown', () => {
+        if (window.innerWidth <= 768) return; // 모바일 가드
         isResizing = true;
         document.addEventListener('mousemove', handleResize1);
         document.addEventListener('mouseup', () => {
@@ -263,6 +324,7 @@ function setupResizers() {
     });
 
     resizer2.addEventListener('mousedown', () => {
+        if (window.innerWidth <= 768) return; // 모바일 가드
         isResizing = true;
         document.addEventListener('mousemove', handleResize2);
         document.addEventListener('mouseup', () => {
@@ -272,13 +334,13 @@ function setupResizers() {
     });
 
     function handleResize1(e) {
-        if (!isResizing) return;
+        if (!isResizing || window.innerWidth <= 768) return;
         const width = e.clientX - sidebar1.getBoundingClientRect().left;
         if (width > 100 && width < 400) sidebar1.style.width = width + 'px';
     }
 
     function handleResize2(e) {
-        if (!isResizing) return;
+        if (!isResizing || window.innerWidth <= 768) return;
         const width = e.clientX - sidebar2.getBoundingClientRect().left;
         if (width > 150 && width < 500) sidebar2.style.width = width + 'px';
     }
