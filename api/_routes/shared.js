@@ -294,7 +294,7 @@ const callLocalLLM = async (prompt) => {
     throw new Error('All Local LLM endpoints failed.');
 };
 
-const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData = null, failFast = false) => {
+const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData = null, failFast = false, timeoutMs = 25000) => {
     // 1. .env에 USE_LOCAL_LLM=true로 명시되어 있으면 로컬 AI를 우선 사용합니다.
     if (process.env.USE_LOCAL_LLM === 'true') {
         try {
@@ -331,7 +331,7 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
                     }),
                     failFast
                 },
-                25000,
+                timeoutMs,
                 retries
             );
 

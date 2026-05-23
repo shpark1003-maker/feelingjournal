@@ -165,7 +165,7 @@ module.exports = async (req, res) => {
 데이터:
 ${diaryContent}`;
                 try {
-                    const data = await callGemini(prompt, { response_mime_type: 'application/json' }, 3, null, true);
+                    const data = await callGemini(prompt, { response_mime_type: 'application/json' }, 0, null, true, 3500);
                     const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
                     const diaryTasks = safeParseJsonArray(rawJson);
                     events = [...events, ...diaryTasks.map(t => ({ 
@@ -191,7 +191,7 @@ ${diaryContent}`;
 
             let adviceList = [];
             try {
-                const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' }, 3, null, true);
+                const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' }, 0, null, true, 3500);
                 const rawAdvice = batchData.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
                 adviceList = safeParseJsonArray(rawAdvice);
             } catch (geminiErr) {
