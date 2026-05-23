@@ -184,6 +184,7 @@ export async function loadCalendar() {
         }
 
         if (fullCalendar) fullCalendar.destroy();
+        container.innerHTML = '';
 
         fullCalendar = new FullCalendar.Calendar(container, {
             initialView: 'dayGridMonth',
