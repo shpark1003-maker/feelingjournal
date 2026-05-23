@@ -6,6 +6,23 @@ let callRecognition = null;
 
 export async function initializeChat() {
     console.log('--- [CHAT] Initializing Chat - Defaulting to AI Secretary ---');
+    
+    try {
+        const token = await store.getSessionToken();
+        if (token) {
+            const res = await fetch(`${API_URL}/persona`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success && data.persona) {
+                store.currentAvatarUrl = data.persona.avatarUrl || '';
+                store.currentAvatarName = data.persona.name || '원이';
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to prefetch AI persona for chat:', e);
+    }
+
     await openChatWithAi();
 }
 
@@ -59,7 +76,9 @@ export function appendMessage(msg) {
             ? `<img class="chat-msg-avatar" src="${myAvatarUrl}?t=${Date.now()}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-color); margin-right: 8px;">`
             : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #dfe4ea; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1.5px solid var(--accent-color); margin-right: 8px;">👤</div>`)
         : (isAi 
-            ? `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #e3d9fc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1.5px solid #a29bfe; margin-right: 8px;">🤖</div>`
+            ? (store.currentAvatarUrl
+                ? `<img class="chat-msg-avatar" src="${store.currentAvatarUrl}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #a29bfe; margin-right: 8px;">`
+                : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #e3d9fc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1.5px solid #a29bfe; margin-right: 8px;">🤖</div>`)
             : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #ffeaa7; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1.5px solid #ffa502; margin-right: 8px;">👥</div>`);
 
     // [NEW] 만약 메시지 본문이 ![image](url) 형식이면 이미지 카드로 아름답게 렌더링
@@ -572,11 +591,15 @@ export async function checkFriendSos() {
     const list = document.getElementById('friend-status-list');
     if (list) {
 
+        const aiAvatarHtml = store.currentAvatarUrl
+            ? `<img class="friend-avatar" src="${store.currentAvatarUrl}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; flex-shrink:0; border: 1.5px solid var(--accent-color);">`
+            : `<div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✨</div>`;
+
         const aiFriendHtml = `
             <div class="friend-item ai-friend" onclick="window.openChatWithAi()" style="cursor:pointer; border-left: 4px solid var(--accent-color); margin-bottom: 10px;">
-                <div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✨</div>
+                ${aiAvatarHtml}
                 <div class="friend-info" style="min-width:0; flex-grow:1;">
-                    <div class="friend-name" id="friend-list-ai-name" style="font-weight: 600; white-space:normal; word-break:keep-all; overflow-wrap:break-word; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${document.getElementById('ai-name')?.value || '원이'} 비서</div>
+                    <div class="friend-name" id="friend-list-ai-name" style="font-weight: 600; white-space:normal; word-break:keep-all; overflow-wrap:break-word; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${store.currentAvatarName || '원이'} 비서</div>
                     <div class="friend-emotion" style="font-size:0.75rem; color:#2bcbba; display:flex; align-items:center; gap:4px; white-space:nowrap;">
                         <span style="display:inline-block; width:6px; height:6px; background:#2bcbba; border-radius:50%; box-shadow:0 0 6px #2bcbba;"></span> 실시간 상담 대기중
                     </div>
