@@ -531,6 +531,55 @@ export async function loadContacts() {
         if (searchInput) searchInput.focus();
         renderContacts();
 
+        // [NEW HOTFIX] 직접 이메일 입력창의 수동 초대 버튼(#manual-invite-btn) 이벤트 바인딩 신설
+        const manualEmailInput = document.getElementById('manual-email-input');
+        const manualInviteBtn = document.getElementById('manual-invite-btn');
+
+        if (manualInviteBtn && manualEmailInput) {
+            // 중복 클릭 리스너 오버랩 방지를 위한 교체 바인딩
+            const newInviteBtn = manualInviteBtn.cloneNode(true);
+            manualInviteBtn.parentNode.replaceChild(newInviteBtn, manualInviteBtn);
+
+            newInviteBtn.addEventListener('click', async () => {
+                const email = manualEmailInput.value.trim();
+                if (!email) {
+                    alert('초대할 이메일 주소를 입력해주세요.');
+                    return;
+                }
+                if (!email.includes('@')) {
+                    alert('올바른 이메일 형식이 아닙니다.');
+                    return;
+                }
+
+                newInviteBtn.disabled = true;
+                newInviteBtn.innerText = '발송 중...';
+
+                const sessionToken = await store.getSessionToken();
+                try {
+                    const inviteRes = await fetch(`${API_URL}/invite`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+                        body: JSON.stringify({ email, name: email.split('@')[0] })
+                    });
+                    const resData = await inviteRes.json();
+                    if (resData.success) {
+                        alert(`✨ ${email}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                        newInviteBtn.innerText = '초대됨';
+                        manualEmailInput.value = '';
+                    } else {
+                        alert(`❌ 초대장 발송 실패: ${resData.error || '이메일 발송 중 오류가 발생했습니다.'}`);
+                        newInviteBtn.disabled = false;
+                        newInviteBtn.innerText = '초대장 발송';
+                    }
+                } catch (err) {
+                    console.error('Manual Invite API Error:', err);
+                    alert('❌ 시스템 연동 오류로 초대장을 발송하지 못했습니다.');
+                    newInviteBtn.disabled = false;
+                    newInviteBtn.innerText = '초대장 발송';
+                }
+            });
+        }
+
     } catch (e) {
         console.error('loadContacts Error:', e);
         const container = document.getElementById('contact-items-container');
