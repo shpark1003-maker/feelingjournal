@@ -1,44 +1,33 @@
-// Feeling Journal Service Worker (sw.js)
+// Feeling Journal Service Worker - Self-Unregister Kill Switch (sw.js)
+// 강력한 로컬 브라우저 캐시 감옥을 분쇄하고 강제 최신 릴리즈 v5.0.1 새로고침을 단행합니다.
 
 self.addEventListener('install', (event) => {
-    console.log('[SW] Service Worker installed');
+    console.log('[SW] Kill Switch Activated. Installing...');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Service Worker activated');
-});
-
-// 서버에서 보낸 푸시 알림 처리
-self.addEventListener('push', (event) => {
-    let data = { title: 'Feeling Journal', body: '기록할 시간입니다!' };
-    try {
-        if (event.data) {
-            data = event.data.json();
-        }
-    } catch (e) {
-        data.body = event.data.text();
-    }
-
-    const options = {
-        body: data.body,
-        icon: '/icon-512.png', // 실제 존재하는 아이콘 경로로 수정
-        badge: '/icon-512.png',
-        vibrate: [200, 100, 200],
-        data: {
-            url: self.location.origin
-        }
-    };
-
+    console.log('[SW] Kill Switch Activated. Unregistering and clearing caches...');
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
-});
-
-// 알림 클릭 시 앱으로 이동
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        self.registration.unregister()
+            .then(() => {
+                return caches.keys().then((cacheNames) => {
+                    return Promise.all(
+                        cacheNames.map((cacheName) => {
+                            console.log('[SW] Deleting cache:', cacheName);
+                            return caches.delete(cacheName);
+                        })
+                    );
+                });
+            })
+            .then(() => self.clients.matchAll())
+            .then((clients) => {
+                clients.forEach((client) => {
+                    if (client.url && 'navigate' in client) {
+                        console.log('[SW] Force reloading client to grab V1.0 v5.0.1 assets...');
+                        client.navigate(client.url);
+                    }
+                });
+            })
     );
 });
