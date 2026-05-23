@@ -112,6 +112,66 @@ export async function loadCalendar() {
         const token = await store.getSessionToken();
         const providerToken = await store.getProviderToken();
 
+        let banner = document.getElementById('google-calendar-link-banner');
+        if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'google-calendar-link-banner';
+                banner.style.cssText = `
+                    background: linear-gradient(135deg, rgba(255, 234, 167, 0.25) 0%, rgba(255, 118, 117, 0.08) 100%);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 234, 167, 0.45);
+                    border-radius: 16px;
+                    padding: 16px 20px;
+                    margin-bottom: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    box-shadow: 0 8px 32px rgba(255, 118, 117, 0.04);
+                    gap: 15px;
+                `;
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.5rem;">💡</span>
+                        <div style="text-align: left;">
+                            <strong style="color: #e17055; font-size: 0.95rem; display: block; margin-bottom: 2px;">구글 캘린더 양방향 연동이 필요한가요?</strong>
+                            <span style="color: #636e72; font-size: 0.85rem;">현재 일반/카카오 로그인 상태입니다. 구글 계정을 추가 연동하시면 실시간 캘린더 동기화가 활성화됩니다.</span>
+                        </div>
+                    </div>
+                    <a href="/api/auth/google" style="
+                        background: white; 
+                        color: #2d3436; 
+                        border: 1px solid rgba(0,0,0,0.1); 
+                        border-radius: 20px; 
+                        padding: 8px 18px; 
+                        font-size: 0.85rem; 
+                        font-weight: 700; 
+                        cursor: pointer; 
+                        display: flex; 
+                        align-items: center; 
+                        gap: 6px; 
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                        text-decoration: none;
+                        transition: all 0.2s;
+                        white-space: nowrap;
+                    " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.05)';">
+                        <svg viewBox="0 0 24 24" width="16" height="16" style="display: inline-block; vertical-align: middle;">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.62-.62-1.07-1.37-1.42-2.15z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        구글 계정 연동
+                    </a>
+                `;
+                container.parentNode.insertBefore(banner, container);
+            }
+        } else {
+            if (banner) {
+                banner.remove();
+            }
+        }
+
         const res = await fetch(`${API_URL}/calendar`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
