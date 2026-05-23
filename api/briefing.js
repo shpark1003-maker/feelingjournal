@@ -293,7 +293,7 @@ module.exports = async (req, res) => {
         console.error('Briefing Error:', error.message);
         return res.json({
             success: true,
-            briefing: '비서가 지금 조금 바쁘네요. 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩'
+            briefing: `비서가 지금 조금 바쁘네요. (원인: ${error.message}) 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩`
         });
     }
 };
