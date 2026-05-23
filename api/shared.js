@@ -155,6 +155,11 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 20000, retries = 
                     }
                 } catch (e) { /* ignore parse error */ }
 
+                if (options.failFast && delay > 3000) {
+                    console.log(`--- [RETRY BYPASS] 429 Detected but retry delay (${delay}ms) is too long for real-time request. Skipping retry. ---`);
+                    break;
+                }
+
                 console.log(`--- [RETRY] 429 Detected. Waiting ${delay}ms... (Attempt ${i + 1}/${retries})`);
                 clearTimeout(timeout);
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -224,7 +229,7 @@ const callLocalLLM = async (prompt) => {
     throw new Error('All Local LLM endpoints failed.');
 };
 
-const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData = null) => {
+const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData = null, failFast = false) => {
     // 1. .env에 USE_LOCAL_LLM=true로 명시되어 있으면 로컬 AI를 우선 사용합니다.
     if (process.env.USE_LOCAL_LLM === 'true') {
         try {
@@ -258,7 +263,8 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
                     body: JSON.stringify({
                         contents: [{ parts }],
                         generationConfig
-                    })
+                    }),
+                    failFast
                 },
                 25000,
                 retries
@@ -457,6 +463,43 @@ async function getEconomicHeadlines() {
     }
 }
 
+const crypto = require('crypto');
+
+function encrypt(text, masterKey) {
+    if (!text) return text;
+    if (!masterKey) return text;
+    try {
+        const key = crypto.createHash('sha256').update(masterKey).digest();
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        let encrypted = cipher.update(text, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return `e2e:${iv.toString('hex')}:${encrypted}`;
+    } catch (e) {
+        console.error('Encryption Error:', e.message);
+        return text;
+    }
+}
+
+function decrypt(encryptedText, masterKey) {
+    if (!encryptedText) return encryptedText;
+    if (!encryptedText.startsWith('e2e:')) return encryptedText;
+    if (!masterKey) return '[Encrypted Document - Please Enter Password]';
+    try {
+        const parts = encryptedText.split(':');
+        const iv = Buffer.from(parts[1], 'hex');
+        const encrypted = parts[2];
+        const key = crypto.createHash('sha256').update(masterKey).digest();
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } catch (e) {
+        console.error('Decryption Error:', e.message);
+        return '[Decryption Failed - Invalid Password]';
+    }
+}
+
 module.exports = {
     PORT,
     DEFAULT_MODEL,
@@ -479,5 +522,7 @@ module.exports = {
     scanRedisKeys,
     verifyUser,
     getLiveWeather,
-    getEconomicHeadlines
+    getEconomicHeadlines,
+    encrypt,
+    decrypt
 };

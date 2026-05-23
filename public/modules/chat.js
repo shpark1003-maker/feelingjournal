@@ -574,14 +574,14 @@ export async function checkFriendSos() {
 
         const aiFriendHtml = `
             <div class="friend-item ai-friend" onclick="window.openChatWithAi()" style="cursor:pointer; border-left: 4px solid var(--accent-color); margin-bottom: 10px;">
-                <div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center;">✨</div>
-                <div class="friend-info">
-                    <div class="friend-name" id="friend-list-ai-name" style="font-weight: 600;">${document.getElementById('ai-name')?.value || '원이'} 비서</div>
-                    <div class="friend-emotion" style="font-size:0.75rem; color:#2bcbba; display:flex; align-items:center; gap:4px;">
+                <div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✨</div>
+                <div class="friend-info" style="min-width:0; flex-grow:1;">
+                    <div class="friend-name" id="friend-list-ai-name" style="font-weight: 600; white-space:normal; word-break:keep-all; overflow-wrap:break-word; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${document.getElementById('ai-name')?.value || '원이'} 비서</div>
+                    <div class="friend-emotion" style="font-size:0.75rem; color:#2bcbba; display:flex; align-items:center; gap:4px; white-space:nowrap;">
                         <span style="display:inline-block; width:6px; height:6px; background:#2bcbba; border-radius:50%; box-shadow:0 0 6px #2bcbba;"></span> 실시간 상담 대기중
                     </div>
                 </div>
-                <span class="sos-badge" style="background: #2bcbba; color:white; font-size:10px;">Partner</span>
+                <span class="sos-badge" style="background: #2bcbba; color:white; font-size:10px; flex-shrink:0;">Partner</span>
             </div>
         `;
 
@@ -594,23 +594,23 @@ export async function checkFriendSos() {
             return `
             <div class="friend-item-wrapper" style="border-bottom: 1px solid #f1f1f1; padding: 10px 0;">
                 <div class="friend-item ${isSos ? 'sos' : ''}" style="display: flex; align-items: center; justify-content: space-between;">
-                    <div onclick="window.openChatWithFriend('${f.id}', '${f.nickname}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; flex-grow:1; padding: 4px 0;">
-                        <div class="friend-avatar" style="position:relative; background:#888; color:white; font-weight:600; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                    <div onclick="window.openChatWithFriend('${f.id}', '${f.nickname}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; flex-grow:1; min-width:0; padding: 4px 0;">
+                        <div class="friend-avatar" style="position:relative; background:#888; color:white; font-weight:600; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                             ${f.nickname?.[0] || '👤'}
                         </div>
-                        <div class="friend-info">
-                            <div class="friend-name" style="font-weight:600; display:flex; align-items:center; gap:6px; color:#2f3542;">
-                                ${f.nickname || '익명'}
-                                <span style="font-size:0.72rem; color:#747d8c; display:flex; align-items:center; font-weight:normal;">
+                        <div class="friend-info" style="min-width:0; flex-grow:1;">
+                            <div class="friend-name" style="font-weight:600; display:flex; align-items:center; gap:6px; color:#2f3542; flex-wrap:wrap;">
+                                <span style="white-space:normal; word-break:keep-all; overflow-wrap:break-word; min-width:60px; flex-grow:1; max-width:120px; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${f.nickname || '익명'}">${f.nickname || '익명'}</span>
+                                <span style="font-size:0.72rem; color:#747d8c; display:flex; align-items:center; font-weight:normal; white-space:nowrap;">
                                     ${onlineDot}
                                 </span>
                             </div>
-                            <div class="friend-emotion" style="font-size:0.85rem; color:#57606f; margin-top:2px;">
+                            <div class="friend-emotion" style="font-size:0.85rem; color:#57606f; margin-top:2px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
                                 ${f.current_emotion}
                             </div>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                         ${isSos ? '<span class="sos-badge" style="background:#ff4757; color:white; font-size:10px; padding:2px 6px; border-radius:4px; animation: pulse 1.5s infinite;">🚨 위로 필요</span>' : ''}
                         <button onclick="window.toggleFriendSettings('${f.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem; padding:4px;" title="1촌 설정">⚙️</button>
                     </div>
@@ -1067,63 +1067,136 @@ export function updateEmotionThermometer(friendNickname, emotionStr) {
 }
 
 function getEmotionMetrics(emotionStr) {
-    // 기본값: 평온
-    let temp = "36.5°C";
-    let statusText = "평온";
-    let emoji = "😊";
-    let fillPercent = "50%";
-    let color = "#2ed573"; // green
-    let advice = "💡 비서 조언: 상대방이 차분하고 평화로운 평온 기온을 유지하고 있습니다. 편안하게 안부를 묻는 일상 대화가 좋습니다.";
+    const defaultMetrics = {
+        temp: "36.5°C",
+        statusText: "평온",
+        emoji: "😊",
+        fillPercent: "50%",
+        color: "#2ed573", // Premium Green/Teal
+        advice: "💡 비서 조언: 상대방이 차분하고 평화로운 평온 기온을 유지하고 있습니다. 편안하게 안부를 묻는 일상 대화가 좋습니다."
+    };
 
-    if (!emotionStr || emotionStr === '비공개 감정') {
+    const privateMetrics = {
+        temp: "비공개",
+        statusText: "비공개",
+        emoji: "🤫",
+        fillPercent: "0%",
+        color: "#a4b0be", // Cool Muted Grey
+        advice: "💡 비서 조언: 상대방이 감정 공유를 비활성화했거나 스텔스 모드 상태입니다. 자연스럽게 인사를 건네보세요."
+    };
+
+    // null 또는 undefined 입력 방어
+    if (emotionStr === null || emotionStr === undefined) {
+        return defaultMetrics;
+    }
+
+    // 문자열 타입 변환 및 특수타입(객체, 배열 등) 문자열화 방어
+    let targetStr = "";
+    if (typeof emotionStr !== 'string') {
+        try {
+            targetStr = String(emotionStr).trim();
+        } catch (e) {
+            return defaultMetrics;
+        }
+    } else {
+        targetStr = emotionStr.trim();
+    }
+
+    // 빈 문자열 방어
+    if (targetStr.length === 0) {
+        return defaultMetrics;
+    }
+
+    // 비공개 감정 명시적 처리
+    if (targetStr === '비공개 감정' || targetStr === '비공개') {
+        return privateMetrics;
+    }
+
+    const lower = targetStr.toLowerCase();
+    
+    // [우울 / 슬픔 / 절망 / 무기력 / 힘듦 / 고통] -> 낮은 기온 (Blue Theme)
+    if (
+        lower.includes('우울') || 
+        lower.includes('슬픔') || 
+        lower.includes('절망') || 
+        lower.includes('무기력') || 
+        lower.includes('힘들') || 
+        lower.includes('고통') || 
+        lower.includes('슬픈') || 
+        lower.includes('😭') || 
+        lower.includes('😔') || 
+        lower.includes('😢')
+    ) {
         return {
-            temp: "비공개",
-            statusText: "비공개",
-            emoji: "🤫",
-            fillPercent: "0%",
-            color: "#a4b0be",
-            advice: "💡 비서 조언: 상대방이 감정 공유를 비활성화했거나 스텔스 모드 상태입니다. 자연스럽게 인사를 건네보세요."
+            temp: "18.5°C",
+            statusText: "우울/슬픔",
+            emoji: "😭",
+            fillPercent: "18%",
+            color: "#0984e3", // Elegant Cobalt Blue
+            advice: targetStr.length > 5 && !targetStr.startsWith('오늘 하루도') && !targetStr.startsWith('조금 슬픔')
+                ? `💡 비서 조언: 상대방의 현재 상태는 "${targetStr}"입니다. 따뜻한 위로와 경청으로 그 마음을 헤아려 주세요.`
+                : "💡 비서 조언: 상대방이 심리적 우울감이나 지침을 겪고 있습니다. 가벼운 위로와 따뜻한 마음을 나누어주세요."
+        };
+    }
+    
+    // [분노 / 화남 / 스트레스 / 짜증 / 예민] -> 높은 기온 (Red Theme)
+    if (
+        lower.includes('화') || 
+        lower.includes('분노') || 
+        lower.includes('스트레스') || 
+        lower.includes('짜증') || 
+        lower.includes('예민') ||
+        lower.includes('😡') || 
+        lower.includes('🤬')
+    ) {
+        return {
+            temp: "39.5°C",
+            statusText: "스트레스/화남",
+            emoji: "😡",
+            fillPercent: "85%",
+            color: "#ff4757", // Premium Soft Crimson Red
+            advice: targetStr.length > 5 && !targetStr.startsWith('오늘 하루도') && !targetStr.startsWith('조금 슬픔')
+                ? `💡 비서 조언: 상대방의 현재 상태는 "${targetStr}"입니다. 불필요한 마찰을 피하고 공감의 태도를 추천합니다.`
+                : "💡 비서 조언: 상대방이 다소 예민하거나 스트레스를 받은 상태입니다. 경청하고 공감해 주는 부드러운 대화가 필요합니다."
+        };
+    }
+    
+    // [기쁨 / 행복 / 보람 / 설렘 / 신남 / 즐거움] -> 따뜻하고 포근한 기온 (Orange/Gold Theme)
+    if (
+        lower.includes('기쁨') || 
+        lower.includes('행복') || 
+        lower.includes('보람') || 
+        lower.includes('설렘') || 
+        lower.includes('🥰') || 
+        lower.includes('🥳') || 
+        lower.includes('신남') || 
+        lower.includes('즐겁')
+    ) {
+        return {
+            temp: "37.2°C",
+            statusText: "행복/설렘",
+            emoji: "🥰",
+            fillPercent: "72%",
+            color: "#ffa502", // Premium warm Gold/Orange
+            advice: targetStr.length > 5 && !targetStr.startsWith('오늘 하루도') && !targetStr.startsWith('보람찬 하루를')
+                ? `💡 비서 조언: 상대방의 현재 상태는 "${targetStr}"입니다. 그 긍정적인 기운을 담아 기쁨을 함께 나눠보세요!`
+                : "💡 비서 조언: 상대방이 매우 긍정적이고 활기찬 감정을 느끼고 있습니다. 함께 기쁨을 공유하고 축하해 주세요!"
         };
     }
 
-    const lower = emotionStr.toLowerCase();
-    
-    if (lower.includes('우울') || lower.includes('슬픔') || lower.includes('절망') || lower.includes('무기력') || lower.includes('힘들') || lower.includes('고통') || lower.includes('슬픈') || lower.includes('😭') || lower.includes('😔') || lower.includes('😢')) {
-        temp = "18.5°C";
-        statusText = "우울/슬픔";
-        emoji = "😭";
-        fillPercent = "18%";
-        color = "#0984e3"; // blue
-        advice = "💡 비서 조언: 상대방이 심리적 우울감이나 지침을 겪고 있습니다. 가벼운 위로와 따뜻한 마음을 나누어주세요.";
-    } else if (lower.includes('화') || lower.includes('분노') || lower.includes('스트레스') || lower.includes('짜증') || lower.includes('😡') || lower.includes('🤬')) {
-        temp = "39.5°C";
-        statusText = "스트레스/화남";
-        emoji = "😡";
-        fillPercent = "85%";
-        color = "#ff4757"; // red
-        advice = "💡 비서 조언: 상대방이 다소 예민하거나 스트레스를 받은 상태입니다. 경청하고 공감해 주는 부드러운 대화가 필요합니다.";
-    } else if (lower.includes('기쁨') || lower.includes('행복') || lower.includes('보람') || lower.includes('설렘') || lower.includes('🥰') || lower.includes('🥳') || lower.includes('신남') || lower.includes('즐겁')) {
-        temp = "37.2°C";
-        statusText = "행복/설렘";
-        emoji = "🥰";
-        fillPercent = "72%";
-        color = "#ffa502"; // orange/gold
-        advice = "💡 비서 조언: 상대방이 매우 긍정적이고 활기찬 감정을 느끼고 있습니다. 함께 기쁨을 공유하고 축하해 주세요!";
-    } else if (lower.includes('평온') || lower.includes('파이팅') || lower.includes('힘내') || lower.includes('😊') || lower.includes('🙂')) {
-        temp = "36.5°C";
-        statusText = "평온/보통";
-        emoji = "😊";
-        fillPercent = "50%";
-        color = "#2ed573"; // green
-        advice = "💡 비서 조언: 상대방이 차분하고 평화로운 평온 기온을 유지하고 있습니다. 편안하게 안부를 묻는 일상 대화가 좋습니다.";
+    // 기본 매칭이 안 되는 기타 임의의 상태 텍스트 처리
+    if (targetStr.length > 5 && !targetStr.startsWith('오늘 하루도') && !targetStr.startsWith('보람찬 하루를') && !targetStr.startsWith('조금 슬픔')) {
+        return {
+            temp: "36.5°C",
+            statusText: "평온",
+            emoji: "😊",
+            fillPercent: "50%",
+            color: "#2ed573",
+            advice: `💡 비서 조언: 상대방의 현재 상태는 "${targetStr}"입니다. 이를 배려한 다정한 소통을 추천합니다.`
+        };
     }
 
-    // 디테일한 상태 텍스트에 맞춰 조언 고도화
-    if (emotionStr && !lower.includes('비공개') && emotionStr.length > 5 && !emotionStr.startsWith('오늘 하루도') && !emotionStr.startsWith('보람찬 하루를') && !emotionStr.startsWith('조금 슬픔')) {
-        advice = `💡 비서 조언: 상대방의 현재 상태는 "${emotionStr}"입니다. 이를 배려한 다정한 소통을 추천합니다.`;
-    }
-
-    return { temp, statusText, emoji, fillPercent, color, advice };
+    return defaultMetrics;
 }
 
 // [NEW] 내 프로필 이미지 변경 및 Supabase Storage 업로드 연동

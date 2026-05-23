@@ -27,13 +27,16 @@ module.exports = async (req, res) => {
         if (!providerToken) {
             providerToken = req.headers['x-provider-token'];
         }
-        if (!providerToken) return res.status(400).json({ error: 'Provider token required' });
 
         // Handle POST (Create Event)
         if (req.method === 'POST') {
             const { summary, startTime, endTime, description } = req.body;
             if (!summary || !startTime || !endTime) {
                 return res.status(400).json({ error: 'Missing summary, startTime, or endTime' });
+            }
+
+            if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+                return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
             }
 
             const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events`;
@@ -48,7 +51,8 @@ module.exports = async (req, res) => {
                     description: description || '',
                     start: { dateTime: new Date(startTime).toISOString() },
                     end: { dateTime: new Date(endTime).toISOString() }
-                })
+                }),
+                failFast: true
             });
 
             const insertData = await insertRes.json();
@@ -68,12 +72,17 @@ module.exports = async (req, res) => {
             const { id } = req.query;
             if (!id) return res.status(400).json({ error: 'Missing event id' });
 
+            if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+                return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
+            }
+
             const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(id)}`;
             const deleteRes = await fetchWithTimeout(calendarUrl, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${providerToken}`
-                }
+                },
+                failFast: true
             });
 
             if (deleteRes.status !== 204 && deleteRes.status !== 200) {
@@ -89,27 +98,43 @@ module.exports = async (req, res) => {
         }
 
         const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        // Fetch events from 30 days ago to 90 days in the future to keep a complete view
-        const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&maxResults=100&singleEvents=true&orderBy=startTime`;
-        const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` } });
-        const calData = await calRes.json();
+        
+        let googleEvents = [];
+        if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
+            try {
+                // Fetch events from 30 days ago to 90 days in the future to keep a complete view
+                const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+                const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&maxResults=100&singleEvents=true&orderBy=startTime`;
+                const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
+                const calData = await calRes.json();
+                
+                if (calRes.ok) {
+                    googleEvents = (calData.items || []).map(item => {
+                        const isShared = (item.organizer && item.organizer.email && item.organizer.email !== user.email) || (item.attendees && item.attendees.length > 1);
+                        return {
+                            id: item.id,
+                            title: item.summary || '제목 없음',
+                            start: item.start?.dateTime || item.start?.date,
+                            end: item.end?.dateTime || item.end?.date,
+                            allDay: !item.start?.dateTime,
+                            type: isShared ? 'shared' : 'event',
+                            advice: isShared ? '공유된 일정입니다.' : '구글 캘린더 일정입니다.',
+                            backgroundColor: isShared ? 'rgba(251, 113, 133, 0.12)' : 'rgba(56, 189, 248, 0.12)',
+                            borderColor: isShared ? '#fb7185' : '#38bdf8',
+                            textColor: isShared ? '#e11d48' : '#0284c7'
+                        };
+                    });
+                } else {
+                    console.warn('--- [CALENDAR] Google API returned non-OK status. Falling back to empty Google events. Error:', calData.error?.message);
+                }
+            } catch (err) {
+                console.warn('--- [CALENDAR] Google Contacts API Failed, falling back to mock contacts. Error:', err.message);
+            }
+        } else {
+            console.log('--- [CALENDAR] Google OAuth token missing or mock. Bypassing Google Calendar fetch. ---');
+        }
 
-        let events = (calData.items || []).map(item => {
-            const isShared = (item.organizer && item.organizer.email && item.organizer.email !== user.email) || (item.attendees && item.attendees.length > 1);
-            return {
-                id: item.id,
-                title: item.summary || '제목 없음',
-                start: item.start?.dateTime || item.start?.date,
-                end: item.end?.dateTime || item.end?.date,
-                allDay: !item.start?.dateTime,
-                type: isShared ? 'shared' : 'event',
-                advice: isShared ? '공유된 일정입니다.' : '구글 캘린더 일정입니다.',
-                backgroundColor: isShared ? 'rgba(251, 113, 133, 0.12)' : 'rgba(56, 189, 248, 0.12)',
-                borderColor: isShared ? '#fb7185' : '#38bdf8',
-                textColor: isShared ? '#e11d48' : '#0284c7'
-            };
-        });
+        let events = [...googleEvents];
 
         const currentFingerprint = events.map(e => `${e.id}-${e.title}-${e.start}-${e.end}`).join('|');
         const cacheKey = `user:${user.id}:calendar-advice-cache`;
@@ -139,34 +164,49 @@ module.exports = async (req, res) => {
 형식: [{"title": "내용", "start": "ISO", "end": "ISO", "type": "task", "advice": "조언"}]
 데이터:
 ${diaryContent}`;
-                const data = await callGemini(prompt, { response_mime_type: 'application/json' });
-                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-                const diaryTasks = safeParseJsonArray(rawJson);
-                events = [...events, ...diaryTasks.map(t => ({ 
-                    ...t, 
-                    type: 'task',
-                    backgroundColor: 'rgba(129, 140, 248, 0.12)',
-                    borderColor: '#818cf8',
-                    textColor: '#4f46e5'
-                }))];
+                try {
+                    const data = await callGemini(prompt, { response_mime_type: 'application/json' }, 3, null, true);
+                    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+                    const diaryTasks = safeParseJsonArray(rawJson);
+                    events = [...events, ...diaryTasks.map(t => ({ 
+                        ...t, 
+                        type: 'task',
+                        backgroundColor: 'rgba(129, 140, 248, 0.12)',
+                        borderColor: '#818cf8',
+                        textColor: '#4f46e5'
+                    }))];
+                } catch (geminiErr) {
+                    console.error('--- [CALENDAR] Failed to extract tasks from diaries via Gemini:', geminiErr.message);
+                }
             }
         }
 
-        const eventsSummary = events.map((e, i) => `${i + 1}. 제목: ${e.title}, 시간: ${e.start}`).join('\n');
-        const batchPrompt = `너는 수석 비서다. 각 일정별로 전문적인 조언을 JSON 배열로 작성하라.
+        let analyzedEvents = [...events];
+
+        if (events.length > 0) {
+            const eventsSummary = events.map((e, i) => `${i + 1}. 제목: ${e.title}, 시간: ${e.start}`).join('\n');
+            const batchPrompt = `너는 수석 비서다. 각 일정별로 전문적인 조언을 JSON 배열로 작성하라.
 [{"id": 1, "advice": "AI 조언..."}]
 일정 리스트: ${eventsSummary}`;
 
-        const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' });
-        const rawAdvice = batchData.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        const adviceList = safeParseJsonArray(rawAdvice);
+            let adviceList = [];
+            try {
+                const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' }, 3, null, true);
+                const rawAdvice = batchData.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+                adviceList = safeParseJsonArray(rawAdvice);
+            } catch (geminiErr) {
+                console.error('--- [CALENDAR] Failed to fetch calendar advice via Gemini:', geminiErr.message);
+            }
 
-        const analyzedEvents = events.map((e, i) => {
-            const found = adviceList.find(a => Number(a.id) === i + 1);
-            return { ...e, advice: found?.advice || e.advice || '일정을 확인했습니다.' };
-        });
+            analyzedEvents = events.map((e, i) => {
+                const found = adviceList.find(a => Number(a.id) === i + 1);
+                return { ...e, advice: found?.advice || e.advice || '일정을 확인했습니다. (AI 분석 생략됨)' };
+            });
+        }
 
-        await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', 3600);
+        const isFallback = analyzedEvents.some(e => e.advice?.includes('AI 분석 생략됨'));
+        const cacheTTL = isFallback ? 15 : 3600;
+        await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', cacheTTL);
         return res.json({ success: true, events: analyzedEvents });
     } catch (error) {
         return res.status(500).json({ error: error.message });

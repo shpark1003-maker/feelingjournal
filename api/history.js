@@ -1,7 +1,8 @@
 const { 
     supabase, 
     redis, 
-    scanRedisKeys 
+    scanRedisKeys,
+    decrypt
 } = require('./shared');
 
 module.exports = async (req, res) => {
@@ -12,6 +13,8 @@ module.exports = async (req, res) => {
         if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
         const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1]);
         if (!user) return res.status(401).json({ error: 'Invalid user' });
+
+        const e2eKey = req.headers['x-e2e-key'] || null;
 
         const pattern = `user:${user.id}:diary-*`;
         const allKeys = await scanRedisKeys(pattern);
@@ -43,9 +46,9 @@ module.exports = async (req, res) => {
                 history.push({
                     id: sortedKeys[i],
                     title: item.title || '제목 없는 메모',
-                    originalContent: item.content,
-                    richContent: item.richContent || null,
-                    aiResponse: item.response,
+                    originalContent: decrypt(item.content, e2eKey),
+                    richContent: item.richContent ? decrypt(item.richContent, e2eKey) : null,
+                    aiResponse: decrypt(item.response, e2eKey),
                     createdAt: item.createdAt,
                     emotion: item.emotion,
                     mediaId: item.mediaId || null,

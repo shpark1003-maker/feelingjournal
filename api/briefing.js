@@ -6,20 +6,25 @@ const {
     scanRedisKeys,
     getLiveWeather,
     getEconomicHeadlines,
-    supabaseAdmin
+    supabaseAdmin,
+    decrypt
 } = require('./shared');
 
-// [MODULAR] ⏰ 데일리 브리핑 코어 스케줄러 & API 공용 엔진
-async function generateBriefing(userId, providerToken, regionOverride) {
+// [MODULAR] ⏰ 데일리 브리핑 코어 스케줄러 & 과거 회상(Reminiscence) 공용 엔진
+async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
     const cacheKey = `user:${userId}:briefing-cache`;
-    try {
-        const cachedBriefing = await redis.get(cacheKey);
-        if (cachedBriefing) {
-            console.log('--- [CACHE] Returning cached briefing from core.');
-            return cachedBriefing;
+    
+    // E2E 활성화 모드가 아닐 때만 기존 일반 캐시 사용
+    if (!e2eKey) {
+        try {
+            const cachedBriefing = await redis.get(cacheKey);
+            if (cachedBriefing) {
+                console.log('--- [CACHE] Returning cached briefing from core.');
+                return cachedBriefing;
+            }
+        } catch (error) {
+            console.error('Briefing Cache Error:', error.message);
         }
-    } catch (error) {
-        console.error('Briefing Cache Error:', error.message);
     }
 
     // 사용자 예보 지역 설정 조회
@@ -87,7 +92,7 @@ async function generateBriefing(userId, providerToken, regionOverride) {
     if (providerToken) {
         try {
             const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(yesterday.toISOString())}&timeMax=${encodeURIComponent(tomorrow.toISOString())}&singleEvents=true&orderBy=startTime`;
-            const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` } });
+            const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
             const calData = await calRes.json();
             if (calData.items) {
                 contextEvents = calData.items
@@ -123,24 +128,92 @@ async function generateBriefing(userId, providerToken, regionOverride) {
     const pattern = `user:${userId}:diary-*`;
     const keys = await scanRedisKeys(pattern);
     let recentDiaries = '일기 기록 없음';
+    let reminiscenceMemory = '특별한 과거 회상 없음';
 
     if (keys.length > 0) {
-        const latestKeys = keys.sort().reverse().slice(0, 3);
+        const sortedKeys = keys.sort().reverse();
+        
+        // 1. 최근 3일의 일기 데이터 요약 (E2E 복호화 적용)
+        const latestKeys = sortedKeys.slice(0, 3);
         const values = await redis.mget(latestKeys);
         recentDiaries = values
             .filter(Boolean)
             .map((value) => {
                 try {
                     const item = JSON.parse(value);
-                    if (!item.content) return '';
+                    const plainContent = decrypt(item.content, e2eKey);
+                    if (!plainContent) return '';
                     const dateStr = new Date(item.createdAt || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-                    return `[일기 작성일: ${dateStr}]\n내용: ${item.content}`;
+                    return `[일기 작성일: ${dateStr}]\n내용: ${plainContent}`;
                 } catch {
                     return '';
                 }
             })
             .filter(Boolean)
             .join('\n---\n') || '일기 기록 없음';
+
+        // 2. [과거 회상 엔진] 일정이나 중요 키워드와 연계된 15개 이전 일기 검색
+        const historyKeys = sortedKeys.slice(0, 15);
+        const historyValues = await redis.mget(historyKeys);
+        let foundMemory = null;
+        const upcomingEventLower = contextEvents.toLowerCase();
+
+        // 2-1. 키워드 매칭 우선 기법 (캘린더 키워드가 과거 일기에 있는지 스캔)
+        for (let i = 3; i < historyValues.length; i++) {
+            if (!historyValues[i]) continue;
+            try {
+                const item = JSON.parse(historyValues[i]);
+                const plainContent = decrypt(item.content, e2eKey) || '';
+                if (!plainContent || plainContent.length < 10) continue;
+
+                const words = upcomingEventLower.match(/[가-힣a-zA-Z0-9]{2,}/g) || [];
+                const matchedWord = words.find(w => w !== '일정' && w !== '제목' && w !== '시간' && w !== '생일' && w !== '회의' && plainContent.toLowerCase().includes(w));
+
+                if (matchedWord) {
+                    const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+                    foundMemory = {
+                        date: dateStr,
+                        content: plainContent,
+                        emotion: item.emotion || '평온',
+                        type: 'keyword',
+                        keyword: matchedWord
+                    };
+                    break;
+                }
+            } catch (e) {}
+        }
+
+        // 2-2. 차선책: 감정이 매우 긍정적이었던 과거 다이어리 기억 소환
+        if (!foundMemory) {
+            for (let i = 3; i < historyValues.length; i++) {
+                if (!historyValues[i]) continue;
+                try {
+                    const item = JSON.parse(historyValues[i]);
+                    const plainContent = decrypt(item.content, e2eKey) || '';
+                    if (!plainContent || plainContent.length < 10) continue;
+
+                    const emo = item.emotion || '';
+                    if (emo.includes('행복') || emo.includes('기쁨') || emo.includes('설렘') || emo.includes('보람') || emo.includes('🥰') || emo.includes('😊')) {
+                        const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+                        foundMemory = {
+                            date: dateStr,
+                            content: plainContent,
+                            emotion: emo,
+                            type: 'happy'
+                        };
+                        break;
+                    }
+                } catch (e) {}
+            }
+        }
+
+        if (foundMemory) {
+            if (foundMemory.type === 'keyword') {
+                reminiscenceMemory = `[${foundMemory.date}의 추억 (다가올 일정 관련 단어 '${foundMemory.keyword}' 연계)]\n당시 감정 상태: ${foundMemory.emotion}\n내용: ${foundMemory.content}`;
+            } else {
+                reminiscenceMemory = `[${foundMemory.date}의 눈부셨던 과거의 기록 (당시 감정: ${foundMemory.emotion})]\n내용: ${foundMemory.content}`;
+            }
+        }
     }
 
     const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -163,6 +236,8 @@ ${recentDiaries}
 4. 실시간 기상 예보: ${weatherStr}
 5. 전날 주요 경제 헤드라인 뉴스: 
 ${newsStr}
+6. 연계된 과거의 기억(Reminiscence): 
+${reminiscenceMemory}
 
 [수행 지시]
 1. **내일 일정 최우선**: 구글 일정 중 '내일' 예정된 일정을 가장 먼저 언급하며 준비 사항을 비서의 어조로 따뜻하게 조언하라.
@@ -170,16 +245,19 @@ ${newsStr}
 3. **경제 헤드라인 1줄 요약**: 전날 경제 헤드라인 리스트를 한눈에 훑어보고, 가장 중요하거나 상징적인 시사적 흐름을 비서의 안목으로 간략히 1줄 요약하여 생활 밀착형 인사이트로 알려주십시오.
 4. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 예를 들어, [일기 작성일: 2026-05-18]인 일기에 '내일 마트 가야지'라고 써있다면, 마트 가는 날은 2026-05-19(오늘)입니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일(2026-05-20)로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
 5. **오늘 일정 생략**: 오늘 이미 알고 있는 일정 리스트를 나열하지 마라. 대신 일기 내용 중 오늘 꼭 챙겨야 할 '태도'나 '감정' 한 가지만 언급하라.
-6. 전체 브리핑은 5~6문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하라.
-7. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
+6. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 "그때의 기쁨/보람을 떠올리며 힘을 내보세요" 또는 "과거의 소중한 기억이 이번 활동에도 좋은 영감이 되길 바랍니다"라는 뉘앙스로 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
+7. 전체 브리핑은 5~6문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하라.
+8. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
 `;
 
-    const data = await callGemini(briefingPrompt);
+    const data = await callGemini(briefingPrompt, {}, 3, null, true);
     const briefing = data.candidates?.[0]?.content?.parts?.[0]?.text || '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
 
-    // 성공적인 브리핑 생성 시 Redis 캐시 저장 (5분)
-    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        await redis.set(cacheKey, briefing, 'EX', 300);
+    // 성공적인 브리핑 생성 시 Redis 캐시 저장 (E2E가 아닐 때만)
+    if (!e2eKey && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        const isFallback = briefing.includes('API 할당량 초과');
+        const cacheTTL = isFallback ? 15 : 300;
+        await redis.set(cacheKey, briefing, 'EX', cacheTTL);
     }
 
     return briefing;
@@ -206,8 +284,10 @@ module.exports = async (req, res) => {
             providerToken = req.headers['x-provider-token'];
         }
 
+        const e2eKey = req.headers['x-e2e-key'] || null;
         const regionOverride = req.query.region || null;
-        const briefing = await generateBriefing(user.id, providerToken, regionOverride);
+        
+        const briefing = await generateBriefing(user.id, providerToken, regionOverride, e2eKey);
         return res.json({ success: true, briefing });
     } catch (error) {
         console.error('Briefing Error:', error.message);

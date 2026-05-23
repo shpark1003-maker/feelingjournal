@@ -8,5 +8,11 @@
     { "source": "/style.css", "destination": "/public/style.css" },
     { "source": "/manifest.json", "destination": "/public/manifest.json" },
     { "source": "/sw.js", "destination": "/public/sw.js" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron-push",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }

@@ -38,7 +38,8 @@ module.exports = async (req, res) => {
         // Retrieve names, emailAddresses, and phoneNumbers
         const url = 'https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses,phoneNumbers&pageSize=100';
         const response = await fetchWithTimeout(url, {
-            headers: { Authorization: `Bearer ${providerToken}` }
+            headers: { Authorization: `Bearer ${providerToken}` },
+            failFast: true
         }, 10000);
 
         const data = await response.json();
@@ -71,7 +72,13 @@ module.exports = async (req, res) => {
 
         res.json({ success: true, contacts });
     } catch (error) {
-        console.error('Contacts API Error:', error.message);
-        res.status(500).json({ error: error.message });
+        console.warn('--- [CONTACTS] Google Contacts API Failed, falling back to mock contacts. Error:', error.message);
+        const mockContacts = [
+            { name: '다정한 영희 (데모)', email: 'younghee@example.com', phone: '010-1234-5678' },
+            { name: '든든한 철수 (데모)', email: 'chulsoo@example.com', phone: '010-2345-6789' },
+            { name: '행복한 민수 (데모)', email: 'minsu@example.com', phone: '010-3456-7890' },
+            { name: '빛나는 수지 (데모)', email: 'suji@example.com', phone: '010-4567-8901' }
+        ];
+        return res.json({ success: true, contacts: mockContacts, isMock: true, warning: error.message });
     }
 };

@@ -3,7 +3,9 @@ const {
     redis, 
     callGemini, 
     sanitizeContent, 
-    extractEventJson 
+    extractEventJson,
+    fetchWithTimeout,
+    encrypt
 } = require('./shared');
 
 module.exports = async (req, res) => {
@@ -27,20 +29,25 @@ module.exports = async (req, res) => {
         }
 
         const providerToken = req.headers['x-provider-token'];
+        const e2eKey = req.headers['x-e2e-key'] || null;
+        
         const contentHash = Buffer.from(content || image || '').toString('base64').slice(0, 50);
         const cacheKey = `user:${user.id}:last-analyze-cache`;
 
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-            const { hash, result } = JSON.parse(cached);
-            if (hash === contentHash) return res.json(result);
+        // E2E 암호화가 활성화되지 않은 경우에만 일반 평문 캐시 작동
+        if (!e2eKey) {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                const { hash, result } = JSON.parse(cached);
+                if (hash === contentHash) return res.json(result);
+            }
         }
 
         let existingEventsStr = '현재 등록된 일정이 없습니다.';
         if (providerToken) {
             try {
                 const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(new Date().toISOString())}&maxResults=15&singleEvents=true&orderBy=startTime`;
-                const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` } });
+                const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
                 const calData = await calRes.json();
                 if (calData.items && calData.items.length > 0) {
                     existingEventsStr = calData.items.map(e => {
@@ -62,7 +69,7 @@ module.exports = async (req, res) => {
         const storedNickname = await redis.get(nicknameKey);
         const userNickname = storedNickname || user.email.split('@')[0];
 
-        const prompt = `너는 사용자의 감정을 분석하고 일정을 조율하며, 생활 전반을 챙겨주는 품격 있는 수석 비서다.
+        const prompt = `너는 사용자의 감정을 분석하고 일정을 조율하며, 생활 전반을 챙겨주는 품격 있는 수석 비서이자 전문 인지행동치료(CBT) 상담사다.
 사용자의 호칭은 "${userNickname}"이다. 응답 시 반드시 이 호칭으로 불러라.
 첨부된 이미지가 있다면 그 안의 텍스트(영수증, 메모, 안내문 등)를 스캔(OCR)하고 내용을 분석하라.
 
@@ -78,7 +85,7 @@ ${currentTimeStr}
 3. 할 일이 발견되면 EVENT_JSON_START/END 형식으로 제안하라.
 4. "내일", "다음주" 등 상대 시간은 현재 시간을 기준으로 계산하라.
 5. 첫 줄에 감정:[단어] 형식으로 작성하라.
-6. 분석 결과에 따라 따뜻한 위로나 조언을 제공하되, 반드시 "${userNickname}"님이라고 호칭하라.
+6. 전문 인지행동치료(CBT)의 임상적 노하우를 고도로 적용하되, 결코 기계적인 상담 용어(예: 'CBT', '인지오류', '치료' 등)를 드러내어 사용자가 상담실에 앉아있는 느낌을 주지 마십시오. 대신 사용자의 지친 부정적 감정이나 생각 속 편향(흑백논리, 자책, 미래 비관 등)이 감지될 때, 수석비서의 지적이고 극진한 존대 어조를 유지하면서 깊은 공감과 함께 건강하고 유연한 대안적 관점(Cognitive Restructuring)을 자연스러운 비즈니스적/생활밀착형 제안으로 깨달을 수 있게 유도하는 품격 있는 단락을 반드시 포함하십시오. 항상 "${userNickname}"님을 따뜻하게 지지하고 위로하는 비서의 태도를 견지하십시오.
 
 EVENT_JSON_START
 {"summary":"일정 제목","start":"ISO8601 시작시간","end":"ISO8601 종료시간","type":"task"}
@@ -97,7 +104,7 @@ ${content || '(이미지 분석 요청)'}
             };
         }
 
-        const data = await callGemini(prompt, {}, 3, inlineData);
+        const data = await callGemini(prompt, {}, 3, inlineData, true);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         if (!text) {
             throw new Error('Gemini 응답이 비어 있습니다.');
@@ -110,12 +117,12 @@ ${content || '(이미지 분석 요청)'}
         const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
         const diaryKey = `user:${user.id}:diary-${timestamp}`;
         
-        // server-local.js의 완벽한 데이터 규격과 완전히 정렬
+        // E2E 영지식 암호화 적용 (x-e2e-key가 유효한 경우 content, richContent, response 필드 암호화 저장)
         const diaryData = {
             title: title || '제목 없는 메모',
-            content,
-            richContent: richContent || null,
-            response: text,
+            content: encrypt(content, e2eKey),
+            richContent: richContent ? encrypt(richContent, e2eKey) : null,
+            response: encrypt(text, e2eKey),
             createdAt: new Date().toISOString(),
             emotion,
             mediaId: mediaId || null,
@@ -146,7 +153,11 @@ ${content || '(이미지 분석 요청)'}
             id: diaryKey,
             title: diaryData.title
         };
-        await redis.set(cacheKey, JSON.stringify({ hash: contentHash, result: finalResult }), 'EX', 3600);
+
+        // E2E 암호화 모드가 아닐 때만 Redis 캐시 등록
+        if (!e2eKey) {
+            await redis.set(cacheKey, JSON.stringify({ hash: contentHash, result: finalResult }), 'EX', 3600);
+        }
 
         return res.json(finalResult);
     } catch (error) {
