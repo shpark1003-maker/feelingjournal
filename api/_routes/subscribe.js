@@ -1,8 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-const Redis = require('ioredis');
-
-const redis = new Redis(process.env.REDIS_URL);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { supabase, redis } = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();

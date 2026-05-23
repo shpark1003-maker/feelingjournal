@@ -220,6 +220,54 @@ module.exports = async (req, res) => {
             return res.json({ success: true });
         }
 
+        // 4. POST /api/friends/accept-invite - 초대 링크 수락
+        if (req.method === 'POST' && path.includes('/accept-invite')) {
+            const { inviterId } = req.body;
+            if (!inviterId) {
+                return sendError(res, 400, 'inviterId가 필요합니다.');
+            }
+            if (inviterId === user.id) {
+                return res.json({ success: true, message: '본인의 초대 링크입니다.' });
+            }
+
+            const client = supabaseAdmin || supabase;
+
+            // 이미 관계가 있는지 확인
+            const { data: existing, error: checkError } = await client
+                .from('friendships')
+                .select('*')
+                .or(`and(user_id.eq.${user.id},friend_id.eq.${inviterId}),and(user_id.eq.${inviterId},friend_id.eq.${user.id})`)
+                .maybeSingle();
+
+            if (checkError) throw checkError;
+
+            if (existing) {
+                if (existing.status !== 'confirmed') {
+                    const { error: updateError } = await client
+                        .from('friendships')
+                        .update({ status: 'confirmed' })
+                        .eq('id', existing.id);
+                    if (updateError) throw updateError;
+                }
+                return res.json({ success: true, message: '이미 1촌 관계로 등록되어 있습니다.' });
+            }
+
+            // 신규 1촌 관계 생성
+            const { error: insertError } = await client
+                .from('friendships')
+                .insert([{
+                    user_id: inviterId,
+                    friend_id: user.id,
+                    status: 'confirmed',
+                    user_share_emotion: true,
+                    friend_share_emotion: true
+                }]);
+
+            if (insertError) throw insertError;
+
+            return res.json({ success: true, message: '1촌 관계가 즉시 성립되었습니다!' });
+        }
+
         return res.status(404).json({ error: 'Endpoint Not Found' });
     } catch (error) {
         console.error('Friends API Error:', error);

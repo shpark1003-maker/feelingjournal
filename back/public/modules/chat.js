@@ -171,6 +171,22 @@ export function setupChatUI() {
         if (modal) modal.style.display = 'none';
     });
 
+    document.getElementById('copy-share-link-btn')?.addEventListener('click', async () => {
+        try {
+            const user = store.currentUser || (await store.supabaseClient.auth.getUser()).data.user;
+            if (!user) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+            const shareLink = `${window.location.origin}/?invite_code=${user.id}`;
+            await navigator.clipboard.writeText(shareLink);
+            alert(`📋 1촌 초대 링크가 클립보드에 성공적으로 복사되었습니다!\n\n${shareLink}\n\n이 링크를 카카오톡이나 문자로 친구에게 공유해 보세요.`);
+        } catch (err) {
+            console.error('Failed to copy share link:', err);
+            alert('초대 링크 복사에 실패했습니다.');
+        }
+    });
+
     // Chat input event list
     document.getElementById('send-chat-btn-tab')?.addEventListener('click', async () => {
         const input = document.getElementById('chat-input-tab');
@@ -496,10 +512,21 @@ export async function loadContacts() {
                         });
                         const resData = await inviteRes.json();
                         if (resData.success) {
-                            alert(`✨ ${name}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                            if (resData.emailSent) {
+                                alert(`✨ ${name}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                            } else {
+                                const copyLink = confirm(`💡 이메일 서버 미설정으로, 대신 친구와 직접 공유할 수 있는 초대 링크가 생성되었습니다.\n\n확인 버튼을 누르시면 아래의 초대 링크가 클립보드에 자동으로 복사됩니다:\n\n${resData.shareLink}`);
+                                if (copyLink) {
+                                    navigator.clipboard.writeText(resData.shareLink).then(() => {
+                                        alert('📋 초대 링크가 클립보드에 복사되었습니다! 카카오톡이나 문자로 친구에게 공유해 보세요.');
+                                    }).catch(() => {
+                                        alert(`링크를 직접 복사해 주세요:\n${resData.shareLink}`);
+                                    });
+                                }
+                            }
                             btn.innerText = '초대됨';
                         } else {
-                            alert(`❌ 초대장 발송 실패: ${resData.error || '이메일 발송 중 일시적인 오류가 발생했습니다.'}`);
+                            alert(`❌ 초대장 발송 실패: ${resData.error || '일시적인 오류가 발생했습니다.'}`);
                             btn.disabled = false;
                             btn.innerText = '초대';
                         }
@@ -563,7 +590,18 @@ export async function loadContacts() {
                     });
                     const resData = await inviteRes.json();
                     if (resData.success) {
-                        alert(`✨ ${email}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                        if (resData.emailSent) {
+                            alert(`✨ ${email}님에게 초대 메일을 성공적으로 발송했습니다!`);
+                        } else {
+                            const copyLink = confirm(`💡 이메일 서버 미설정으로, 대신 친구와 직접 공유할 수 있는 초대 링크가 생성되었습니다.\n\n확인 버튼을 누르시면 아래의 초대 링크가 클립보드에 자동으로 복사됩니다:\n\n${resData.shareLink}`);
+                            if (copyLink) {
+                                navigator.clipboard.writeText(resData.shareLink).then(() => {
+                                    alert('📋 초대 링크가 클립보드에 복사되었습니다! 카카오톡이나 문자로 친구에게 공유해 보세요.');
+                                }).catch(() => {
+                                    alert(`링크를 직접 복사해 주세요:\n${resData.shareLink}`);
+                                });
+                            }
+                        }
                         newInviteBtn.innerText = '초대됨';
                         manualEmailInput.value = '';
                     } else {

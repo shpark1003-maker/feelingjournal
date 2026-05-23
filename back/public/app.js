@@ -126,6 +126,33 @@ async function onUserAuthenticated(session) {
     // Check/Prompt Nickname
     await checkNickname();
 
+    // Check for invite code in query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('invite_code');
+    if (inviteCode) {
+        // Clear the query parameter from URL to keep it clean
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        console.log(`--- [INVITE] Processing invitation code: ${inviteCode} ---`);
+        fetch(`${API_URL}/friends/accept-invite`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ inviterId: inviteCode })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(`🎉 1촌 초대를 성공적으로 수락하여 실시간 연결되었습니다!`);
+                checkFriendSos();
+            }
+        })
+        .catch(err => console.error('Failed to accept invite:', err));
+    }
+
     // Load Data
     await populateGuardianSelect(); // 1촌 보호자 목록 가져오기 선행
     await loadNotebooks();

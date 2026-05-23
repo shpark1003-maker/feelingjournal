@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 // 1. 환경 변수 초기화 (.env 로드)
 dotenv.config({
-    path: path.join(__dirname, '../.env'),
+    path: path.join(__dirname, '../../.env'),
     override: true
 });
 
