@@ -144,6 +144,9 @@ module.exports = async (req, res) => {
             let senderEmail = 'ai@feeling.journal';
             let prompt = '';
 
+            let tools = null;
+            let searchPromptAddition = '';
+
             if (room_title && room_title.includes('님과의 대화')) {
                 const friendName = room_title.replace('💬 ', '').replace('님과의 대화', '').trim();
                 const isMock = friendName.includes('영희') || friendName.includes('철수') || friendName.includes('민수') || friendName.includes('데모');
@@ -241,6 +244,18 @@ ${friendDiaryStr}
                 let roleInstruction = '';
 
                 if (rel === '수석비서' || rel === '비서') {
+                    const searchKeywords = ['검색', '부동산', '전세', '상담', '기관', '대출', '추천', '뉴스', '가격', '위치', '날씨', '정보', '최신', '피해', '대비'];
+                    if (searchKeywords.some(k => message.includes(k))) {
+                        console.log('--- [CHAT] Enabling Google Search grounding for real-time secretary request. ---');
+                        tools = [{ google_search: {} }];
+                        searchPromptAddition = `
+[구글 실시간 검색 Grounding 활성화됨]
+- 부동산 고민(전세피해, 월세/전세 안심제도, 주거 복지), 주택 대출(청년 버팀목 등), 최신 부동산 뉴스에 대한 질문이 감지되었습니다.
+- 사용자를 위해 실시간 검색 결과를 바탕으로 매우 구체적이고 전문적인 솔루션, 예방 대책, 상담 기관 및 추천 서비스를 안내하십시오.
+- 예: HUG 안심전세포털, 서울시 전세피해지원센터, 대한법률구조공단(무료 법률 상담), 한국주택금융공사 청년 버팀목 대출 등 신뢰할 수 있는 기관명, 지원 요건, 상담 절차를 친절하고 꼼꼼하게 정리해 주십시오.
+`;
+                    }
+
                     roleInstruction = `
 [수석비서/비서 역할 지침]
 - 당신은 품격 있고 매우 유능한 전문 수석 비서입니다.
@@ -280,6 +295,7 @@ ${friendDiaryStr}
 - 성격: ${p.personality || '다정하고 사려 깊음'}
 
 ${roleInstruction}
+${searchPromptAddition}
 
 [사용자의 최근 상태 정보]
 - 최근 분석된 실시간 감정 상태: ${currentEmotion}
@@ -297,7 +313,7 @@ ${latestDiaryStr}
 `;
             }
 
-            const result = await callGemini(prompt, {}, 2);
+            const result = await callGemini(prompt, {}, 2, null, false, 25000, tools);
             const answer = (result.candidates?.[0]?.content?.parts?.[0]?.text || '잠시 생각에 잠겼어요. 다시 전송해주세요! ✨').trim();
 
             const client = supabaseAdmin || supabase;
