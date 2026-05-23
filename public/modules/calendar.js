@@ -205,6 +205,12 @@ export async function loadCalendar() {
                 modal.style.display = 'flex';
             },
             eventDidMount: (info) => {
+                const eventEnd = info.event.end || info.event.start;
+                if (eventEnd && new Date(eventEnd) < new Date()) {
+                    info.el.style.opacity = '0.45'; // 지난 일정은 글자색과 투명도 반감
+                    info.el.style.filter = 'grayscale(15%)'; // 세련된 은은한 그레이스케일
+                }
+
                 const title = info.event.title || '제목 없음';
                 const desc = info.event.extendedProps.description || '';
                 const advice = info.event.extendedProps.advice || '';
