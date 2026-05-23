@@ -1,4 +1,4 @@
-const { supabaseAdmin, supabase } = require('../api/shared');
+const { supabaseAdmin, supabase } = require('../api/_routes/shared');
 
 /**
  * Supabase Storage 'chat-images' 버킷의 고아 파일(Orphaned Files) 자동 소거 유틸리티

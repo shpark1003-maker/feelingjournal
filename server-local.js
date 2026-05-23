@@ -23,7 +23,7 @@ const {
     extractEventJson,
     scanRedisKeys,
     verifyUser
-} = require('./api/shared');
+} = require('./api/_routes/shared');
 
 const app = express();
 const upload = multer({ 
@@ -47,27 +47,27 @@ app.get('/favicon.ico', (req, res) => {
 });
 
 // 3. 모듈형 Express API 라우터 연동
-const authRoute = require('./api/auth');
-const scrapRoute = require('./api/scrap');
-const { router: pushRouter, startPushDispatcher } = require('./api/push');
+const authRoute = require('./api/_routes/auth');
+const scrapRoute = require('./api/_routes/scrap');
+const { router: pushRouter, startPushDispatcher } = require('./api/_routes/push');
 
 app.all('/api/auth*', authRoute);
 app.all('/api/scrap*', scrapRoute);
 app.use('/api', pushRouter);
 
 // 4. 단일 Serverless 핸들러 모듈 바인딩 (Vercel 로컬 매핑 호환)
-const calendarRoute = require('./api/calendar');
-const analyzeRoute = require('./api/analyze');
-const historyRoute = require('./api/history');
-const briefingRoute = require('./api/briefing');
-const contactsRoute = require('./api/contacts');
-const chatRoute = require('./api/chat');
-const personaRoute = require('./api/persona');
-const notebooksRoute = require('./api/notebooks');
-const nicknameRoute = require('./api/nickname');
-const friendsRoute = require('./api/friends');
-const inviteRoute = require('./api/invite');
-const presenceRoute = require('./api/presence');
+const calendarRoute = require('./api/_routes/calendar');
+const analyzeRoute = require('./api/_routes/analyze');
+const historyRoute = require('./api/_routes/history');
+const briefingRoute = require('./api/_routes/briefing');
+const contactsRoute = require('./api/_routes/contacts');
+const chatRoute = require('./api/_routes/chat');
+const personaRoute = require('./api/_routes/persona');
+const notebooksRoute = require('./api/_routes/notebooks');
+const nicknameRoute = require('./api/_routes/nickname');
+const friendsRoute = require('./api/_routes/friends');
+const inviteRoute = require('./api/_routes/invite');
+const presenceRoute = require('./api/_routes/presence');
 
 app.get('/api/calendar', verifyUser, calendarRoute);
 app.post('/api/calendar', verifyUser, calendarRoute);
