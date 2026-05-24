@@ -3644,4 +3644,113 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
+/* ==========================================================================
+   [In-App Browser Outlink Overlay - Glassmorphic Modal]
+   ========================================================================== */
+.inapp-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85); /* Sleek dark slate overlay */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 100000; /* Ensure it is above all modals */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.4s ease;
+}
+
+.inapp-overlay.hidden {
+    display: none !important;
+}
+
+.inapp-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    padding: 35px 25px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+    animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.inapp-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.inapp-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+}
+
+.inapp-desc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0 0 25px 0;
+    word-break: keep-all;
+}
+
+.inapp-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.inapp-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.inapp-btn.primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+}
+
+.inapp-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+}
+
+.inapp-btn.secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.inapp-btn.secondary:hover {
+    background: #e2e8f0;
+}
+
+
 

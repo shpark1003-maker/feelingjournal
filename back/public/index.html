@@ -662,6 +662,22 @@
         </div>
     </div>
 
+    <!-- 인앱 브라우저 제한 안내 오버레이 -->
+    <div id="inapp-browser-overlay" class="inapp-overlay hidden">
+        <div class="inapp-card">
+            <span class="inapp-icon">🔒</span>
+            <h3 class="inapp-title">안전한 브라우저로 이동합니다</h3>
+            <p class="inapp-desc">
+                Google 로그인 보안 정책으로 인해 카카오톡, 인스타그램 등 인앱 웹뷰에서의 로그인이 불가능합니다.<br><br>
+                정상적인 이용을 위해 <strong>Chrome, Safari</strong> 등 전용 웹 브라우저에서 열어주시길 바랍니다.
+            </p>
+            <div class="inapp-button-group">
+                <button id="btn-inapp-open-external" class="inapp-btn primary">외부 브라우저로 열기</button>
+                <button id="btn-inapp-copy-link" class="inapp-btn secondary">링크 복사하기</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>

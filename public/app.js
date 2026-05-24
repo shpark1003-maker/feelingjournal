@@ -9,10 +9,92 @@ import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './m
 console.log('App.js is loading as a modern ES Module...');
 
 /* ==========================================================================
+   [IN-APP BROWSER DETECTION & OUTLINK]
+   ========================================================================== */
+function detectAndHandleInAppBrowser() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isKakao = /kakaotalk/i.test(userAgent);
+    const isInstagram = /instagram/i.test(userAgent);
+    const isFacebook = /fban|fbav/i.test(userAgent);
+    const isLine = /line/i.test(userAgent);
+    const isInApp = isKakao || isInstagram || isFacebook || isLine || /inapp|webview/i.test(userAgent);
+
+    if (isInApp) {
+        console.log('--- [DETECT] In-App Browser Environment Detected! ---');
+        
+        // Auto-redirect KakaoTalk
+        if (isKakao) {
+            const externalUrl = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
+            window.location.href = externalUrl;
+        }
+        
+        // Auto-redirect LINE
+        if (isLine && !window.location.search.includes('openExternalBrowser=1')) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('openExternalBrowser', '1');
+            window.location.href = url.toString();
+        }
+
+        // Show the beautiful glassmorphic overlay
+        const overlay = document.getElementById('inapp-browser-overlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            
+            const btnOpenExternal = document.getElementById('btn-inapp-open-external');
+            const btnCopyLink = document.getElementById('btn-inapp-copy-link');
+
+            btnOpenExternal?.addEventListener('click', () => {
+                if (isKakao) {
+                    window.location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
+                } else {
+                    // Try general android intent redirect or fallback to copying link
+                    const isAndroid = /android/i.test(userAgent);
+                    if (isAndroid) {
+                        const urlWithoutScheme = window.location.href.replace(/^https?:\/\//, '');
+                        window.location.href = `intent://${urlWithoutScheme}#Intent;scheme=https;package=com.android.chrome;end`;
+                    } else {
+                        // iOS fallback: copy link
+                        copyToClipboard(window.location.href);
+                        alert('링크가 복사되었습니다. Safari나 Chrome 브라우저에 붙여넣어 주세요!');
+                    }
+                }
+            });
+
+            btnCopyLink?.addEventListener('click', () => {
+                copyToClipboard(window.location.href);
+                alert('링크가 성공적으로 복사되었습니다. 브라우저 주소창에 붙여넣어 주세요!');
+            });
+        }
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Failed to copy', err);
+        }
+        document.body.removeChild(textarea);
+    }
+}
+
+/* ==========================================================================
    [INITIALIZATION]
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('--- [INIT] Feeling Journal Application Started ---');
+
+    // Run in-app browser environment handler
+    detectAndHandleInAppBrowser();
 
     // Initialize all modular subsystems
     setupTabs();

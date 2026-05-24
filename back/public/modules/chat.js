@@ -1212,7 +1212,7 @@ function getEmotionMetrics(emotionStr) {
     }
 
     // 문자열 타입 변환 및 특수타입(객체, 배열 등) 문자열화 방어
-    let targetStr = "";
+    let targetStr = ""; // 안전한 문자열 가공을 위해 초기값을 빈 문자열로 명확히 표시
     if (typeof emotionStr !== 'string') {
         try {
             targetStr = String(emotionStr).trim();

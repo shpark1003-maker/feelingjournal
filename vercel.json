@@ -50,7 +50,8 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/index.html", "destination": "/api/index" },
     { "source": "/app.js", "destination": "/public/app.js" },
     { "source": "/style.css", "destination": "/public/style.css" },
     { "source": "/manifest.json", "destination": "/public/manifest.json" },
