@@ -3752,5 +3752,223 @@ body {
     background: #e2e8f0;
 }
 
+/* ==========================================================================
+   [Premium Mobile Responsive Design Overrides]
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* 1. Global Page Layout & Containers */
+    body {
+        padding: 8px !important;
+        background-attachment: scroll !important;
+        align-items: flex-start !important;
+    }
+    .container {
+        padding: 12px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+        margin-top: 5px !important;
+    }
+    
+    /* 2. Authentication Container */
+    .auth-container {
+        padding: 10px !important;
+    }
+    .auth-card {
+        padding: 25px 20px !important;
+        width: 100% !important;
+        border-radius: 18px !important;
+    }
+    
+    /* 3. Tab Navigation & Header */
+    .user-nav {
+        margin-bottom: 12px !important;
+        gap: 10px !important;
+    }
+    .tab-nav {
+        gap: 4px !important;
+        margin-bottom: 15px !important;
+    }
+    .tab-btn {
+        padding: 10px 6px !important;
+        font-size: 0.82rem !important;
+        border-radius: 10px !important;
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    /* 4. Journal 3-Column Layout */
+    .journal-3-column-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+    .resizer {
+        display: none !important;
+    }
+    .notebook-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+        max-height: 180px !important;
+        overflow-y: auto !important;
+    }
+    .sidebar-header {
+        padding: 12px 10px !important;
+    }
+    .pages-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+        max-height: 220px !important;
+        overflow-y: auto !important;
+    }
+    .pages-sidebar .sidebar-header {
+        padding: 12px 10px !important;
+    }
+    .note-content-area {
+        width: 100% !important;
+        padding: 15px 8px !important;
+    }
+
+    /* 5. General Typography, Buttons & Lists */
+    .btn {
+        padding: 10px 14px !important;
+        font-size: 0.85rem !important;
+        border-radius: 10px !important;
+    }
+    .btn.sm {
+        padding: 6px 12px !important;
+        font-size: 0.78rem !important;
+    }
+    .notebook-list li, .page-list .page-item {
+        font-size: 0.85rem !important;
+        padding: 8px 12px !important;
+    }
+    .notebook-list li.active, .page-list .page-item.active {
+        font-weight: 700 !important;
+    }
+    h1 {
+        font-size: 1.6rem !important;
+    }
+
+    /* 6. Editor & Input Fields */
+    .note-title-input-large {
+        font-size: 1.35rem !important;
+    }
+    .note-toolbar {
+        padding: 12px 10px !important;
+    }
+    #quill-toolbar {
+        padding: 8px 10px !important;
+    }
+    #quill-editor {
+        height: 300px !important;
+        min-height: 220px !important;
+        padding: 12px 10px !important;
+        font-size: 0.95rem !important;
+        line-height: 1.6 !important;
+    }
+    textarea {
+        min-height: 150px !important;
+        padding: 12px !important;
+        font-size: 0.92rem !important;
+    }
+
+    /* 7. FullCalendar Mobile Layout Overrides */
+    .fc {
+        font-size: 0.72rem !important;
+    }
+    .fc .fc-toolbar {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        align-items: center !important;
+        margin-bottom: 10px !important;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.05rem !important;
+        margin: 5px 0 !important;
+    }
+    .fc .fc-button {
+        padding: 4px 6px !important;
+        font-size: 0.72rem !important;
+    }
+    .fc-col-header-cell-cushion {
+        padding: 4px 1px !important;
+    }
+    .fc-daygrid-day-number {
+        padding: 3px !important;
+        font-size: 0.75rem !important;
+    }
+    .fc-daygrid-day-frame {
+        min-height: 52px !important;
+    }
+    .fc-daygrid-day-events {
+        margin-top: 1px !important;
+    }
+    .fc-event {
+        margin: 1px 0.5px !important;
+        padding: 0.5px 2px !important;
+        border-radius: 3px !important;
+        border: none !important;
+    }
+    .fc-event-title {
+        font-size: 8.5px !important;
+        font-weight: 700 !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+        display: block !important;
+        word-break: break-all !important;
+    }
+    .calendar-legend {
+        flex-wrap: wrap !important;
+        gap: 6px 10px !important;
+        padding: 8px 10px !important;
+        justify-content: center !important;
+    }
+    .calendar-legend > div {
+        font-size: 0.72rem !important;
+    }
+
+    /* 8. Chat & Sidebar */
+    .chat-view-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+    }
+    .chat-sidebar {
+        width: 100% !important;
+        max-height: 200px !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+        overflow-y: auto !important;
+    }
+    .chat-main {
+        width: 100% !important;
+        height: 480px !important;
+    }
+    .chat-scroll-area {
+        height: 340px !important;
+        padding: 10px !important;
+    }
+    .friend-banner {
+        margin: 8px 10px 0 10px !important;
+        padding: 10px !important;
+        border-radius: 12px !important;
+    }
+    .banner-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.4rem !important;
+    }
+    .banner-info h4 {
+        font-size: 0.85rem !important;
+    }
+    .banner-info p {
+        font-size: 0.75rem !important;
+    }
+}
+
+
 
 
