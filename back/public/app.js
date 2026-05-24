@@ -96,6 +96,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Run in-app browser environment handler
     detectAndHandleInAppBrowser();
 
+    // Check for invite code in query parameters and store it immediately
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('invite_code');
+    if (inviteCode) {
+        localStorage.setItem('pending_invite_code', inviteCode);
+        // Clear the query parameter from URL to keep it clean
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        console.log(`--- [INVITE] Stored pending invite code: ${inviteCode} ---`);
+    }
+
     // Initialize all modular subsystems
     setupTabs();
     setupAuth();
@@ -208,22 +219,17 @@ async function onUserAuthenticated(session) {
     // Check/Prompt Nickname
     await checkNickname();
 
-    // Check for invite code in query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const inviteCode = urlParams.get('invite_code');
-    if (inviteCode) {
-        // Clear the query parameter from URL to keep it clean
-        const newUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-        
-        console.log(`--- [INVITE] Processing invitation code: ${inviteCode} ---`);
+    // Check for pending invite code in localStorage
+    const pendingInvite = localStorage.getItem('pending_invite_code');
+    if (pendingInvite) {
+        console.log(`--- [INVITE] Processing stored invitation code: ${pendingInvite} ---`);
         fetch(`${API_URL}/friends/accept-invite`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`
             },
-            body: JSON.stringify({ inviterId: inviteCode })
+            body: JSON.stringify({ inviterId: pendingInvite })
         })
         .then(res => res.json())
         .then(data => {
@@ -231,8 +237,12 @@ async function onUserAuthenticated(session) {
                 alert(`🎉 1촌 초대를 성공적으로 수락하여 실시간 연결되었습니다!`);
                 checkFriendSos();
             }
+            localStorage.removeItem('pending_invite_code');
         })
-        .catch(err => console.error('Failed to accept invite:', err));
+        .catch(err => {
+            console.error('Failed to accept invite:', err);
+            localStorage.removeItem('pending_invite_code');
+        });
     }
 
     // Load Data
