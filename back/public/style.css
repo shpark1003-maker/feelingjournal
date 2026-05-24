@@ -3837,11 +3837,11 @@ body {
     text-decoration: none !important;
 }
 .fc-day-today {
-    background-color: rgba(79, 70, 229, 0.04) !important;
+    background-color: rgba(91, 62, 49, 0.04) !important;
 }
 .fc-day-today .fc-daygrid-day-number {
-    color: #4f46e5 !important;
-    background: rgba(79, 70, 229, 0.1) !important;
+    color: #ffffff !important;
+    background: #5b3e31 !important;
     border-radius: 50% !important;
     display: inline-block !important;
     width: 24px !important;
@@ -3870,18 +3870,18 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
 }
 .fc-event.event-personal, .fc-daygrid-dot-event.event-personal {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
     color: white !important;
 }
 .fc-event.event-shared, .fc-daygrid-dot-event.event-shared {
-    background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
+    background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%) !important;
     color: white !important;
 }
 .fc-event.event-task, .fc-daygrid-dot-event.event-task {
-    background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%) !important;
+    background: linear-gradient(135deg, #ff8a65 0%, #f4511e 100%) !important;
     color: white !important;
 }
-.fc-daygrid-event-dot {
+.fc-daygrid-event-dot, .fc-event-time {
     display: none !important;
 }
 .fc-list-event {

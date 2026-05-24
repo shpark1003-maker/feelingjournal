@@ -191,6 +191,7 @@ export async function loadCalendar() {
             locale: 'ko',
             height: 'auto',
             selectable: true,
+            eventDisplay: 'block',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
