@@ -3851,7 +3851,7 @@ body {
     text-align: center !important;
     margin: 6px 8px 0 0 !important;
 }
-.fc-event {
+.fc-event, .fc-daygrid-dot-event {
     margin: 2px 4px !important;
     padding: 4px 8px !important;
     border-radius: 6px !important;
@@ -3860,22 +3860,29 @@ body {
     font-size: 0.78rem !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    text-decoration: none !important;
 }
-.fc-event:hover {
+.fc-event:hover, .fc-daygrid-dot-event:hover {
     transform: translateY(-1px) scale(1.01);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
 }
-.fc-event.event-personal {
+.fc-event.event-personal, .fc-daygrid-dot-event.event-personal {
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
     color: white !important;
 }
-.fc-event.event-shared {
+.fc-event.event-shared, .fc-daygrid-dot-event.event-shared {
     background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
     color: white !important;
 }
-.fc-event.event-task {
+.fc-event.event-task, .fc-daygrid-dot-event.event-task {
     background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%) !important;
     color: white !important;
+}
+.fc-daygrid-event-dot {
+    display: none !important;
 }
 .fc-list-event {
     cursor: pointer !important;
