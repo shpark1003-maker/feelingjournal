@@ -267,6 +267,15 @@ export async function loadCalendar() {
                 modal.style.display = 'flex';
             },
             eventDidMount: (info) => {
+                const type = info.event.extendedProps.type;
+                if (type === 'task') {
+                    info.el.classList.add('event-task');
+                } else if (type === 'shared') {
+                    info.el.classList.add('event-shared');
+                } else {
+                    info.el.classList.add('event-personal');
+                }
+
                 const eventEnd = info.event.end || info.event.start;
                 if (eventEnd && new Date(eventEnd) < new Date()) {
                     info.el.style.opacity = '0.45'; // 지난 일정은 글자색과 투명도 반감
