@@ -271,10 +271,12 @@
                 </aside>
                 <main class="chat-main">
                     <header class="chat-main-header">
+                        <button id="mobile-chat-drawer-toggle" class="mobile-drawer-toggle-btn">👥 1촌 목록</button>
                         <h3 id="chat-room-title-text">채팅방</h3>
                         <div class="chat-header-actions">
                             <button id="voice-call-btn" class="btn-icon-circle" title="음성 통화">📞</button>
                             <button id="video-call-btn" class="btn-icon-circle" title="영상 통화">📹</button>
+                            <button id="chat-friend-settings-btn" class="btn-icon-circle" title="1촌 설정" style="display: none;">⚙️</button>
                         </div>
                     </header>
                     <!-- [NEW] 1촌 감성 온도계 & 예보 배너 -->
@@ -600,6 +602,37 @@
                     <button type="submit" id="save-calendar-event-btn" class="btn primary">저장</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- [MODAL] 1촌 상세 설정 모달 (모바일 대응) -->
+    <div id="friend-settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 400px; padding: 20px;">
+            <div class="modal-header-premium">
+                <h3 id="friend-settings-modal-title">👥 1촌 설정</h3>
+                <button onclick="document.getElementById('friend-settings-modal').style.display = 'none';" class="close-btn-round">✕</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                <div class="setting-item-premium" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #2d3436; font-size: 0.95rem;">🤫 스텔스 모드</div>
+                        <div style="font-size: 0.75rem; color: #636e72; margin-top: 2px;">상대방에게 내 온라인 접속 및 감정 기온을 숨깁니다.</div>
+                    </div>
+                    <button id="modal-stealth-btn" class="btn sm" style="padding: 6px 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">설정</button>
+                </div>
+                <div class="setting-item-premium" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #2d3436; font-size: 0.95rem;">🧠 감정 공유</div>
+                        <div style="font-size: 0.75rem; color: #636e72; margin-top: 2px;">상대방과 최근 감정 요약 및 분석을 서로 실시간 공유합니다.</div>
+                    </div>
+                    <button id="modal-share-btn" class="btn sm" style="padding: 6px 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">설정</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="modal-delete-btn" class="btn" style="flex: 1; padding: 12px; border-radius: 12px; background: #dfe4ea; color: #ff4757; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;">❌ 1촌 삭제</button>
+                    <button id="modal-block-btn" class="btn" style="flex: 1; padding: 12px; border-radius: 12px; background: #ff4757; color: white; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;">🚫 1촌 차단</button>
+                </div>
+            </div>
         </div>
     </div>
 

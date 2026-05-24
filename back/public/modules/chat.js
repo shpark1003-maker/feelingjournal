@@ -325,9 +325,32 @@ export function setupChatUI() {
             attachInput.value = ''; // Input 초기화
         }
     });
-    
     // Call systems setup
     setupCallSystem();
+
+    // [NEW] 모바일 드로워 여닫기 및 자동 닫힘 핫픽스 스크립트 (1촌 목록용)
+    const chatDrawerToggle = document.getElementById('mobile-chat-drawer-toggle');
+    const chatSidebar = document.querySelector('.chat-sidebar');
+    const chatMain = document.querySelector('.chat-main');
+
+    if (chatDrawerToggle && chatSidebar) {
+        chatDrawerToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = chatSidebar.classList.contains('active-drawer');
+            if (isOpen) {
+                chatSidebar.classList.remove('active-drawer');
+            } else {
+                chatSidebar.classList.add('active-drawer');
+            }
+        });
+
+        // 에디터 영역 터치/클릭 시 드로워 자동 닫기
+        chatMain?.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                chatSidebar.classList.remove('active-drawer');
+            }
+        });
+    }
 }
 
 export async function openChatWithAi() {
@@ -387,9 +410,15 @@ export async function switchChatRoom(roomId, title) {
     const titleEl = document.getElementById('chat-room-title-text');
     if (titleEl) titleEl.innerText = title;
 
+    // Close mobile chat drawer on switching room
+    if (window.innerWidth <= 768) {
+        document.querySelector('.chat-sidebar')?.classList.remove('active-drawer');
+    }
+
     // [NEW] 1촌 감성 온도계 & 예보 배너 다이내믹 렌더링
     try {
         const isFriendRoom = title.includes('님과의 대화');
+        const settingsBtn = document.getElementById('chat-friend-settings-btn');
         if (isFriendRoom) {
             const friendNickname = title.replace('💬 ', '').replace('님과의 대화', '').trim();
             const friend = (store.allFriends || []).find(f => 
@@ -398,9 +427,14 @@ export async function switchChatRoom(roomId, title) {
             );
             const emotion = friend ? friend.current_emotion : '평온';
             updateEmotionThermometer(friendNickname, emotion);
+            if (settingsBtn && friend) {
+                settingsBtn.style.display = 'block';
+                settingsBtn.onclick = () => window.openFriendSettingsModal(friend);
+            }
         } else {
             // AI 비서방이거나 비밀 대화 등인 경우 감성 배너 숨김
             updateEmotionThermometer(null, null);
+            if (settingsBtn) settingsBtn.style.display = 'none';
         }
     } catch (err) {
         console.error('Failed to update emotional thermometer banner:', err);
@@ -693,77 +727,141 @@ export async function checkFriendSos() {
 
     const list = document.getElementById('friend-status-list');
     if (list) {
-
         const aiAvatarHtml = store.currentAvatarUrl
-            ? `<img class="friend-avatar" src="${store.currentAvatarUrl}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; flex-shrink:0; border: 1.5px solid var(--accent-color);">`
-            : `<div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✨</div>`;
+            ? `<img class="friend-avatar" src="${store.currentAvatarUrl}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; flex-shrink:0;">`
+            : `<div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0; width:34px; height:34px; border-radius:50%; font-size: 0.95rem;">✨</div>`;
 
         const aiFriendHtml = `
-            <div class="friend-item ai-friend" onclick="window.openChatWithAi()" style="cursor:pointer; border-left: 4px solid var(--accent-color); margin-bottom: 10px;">
-                ${aiAvatarHtml}
-                <div class="friend-info" style="min-width:0; flex-grow:1;">
-                    <div class="friend-name" id="friend-list-ai-name" style="font-weight: 600; white-space:normal; word-break:keep-all; overflow-wrap:break-word; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${store.currentAvatarName || '원이'} 비서</div>
-                    <div class="friend-emotion" style="font-size:0.75rem; color:#2bcbba; display:flex; align-items:center; gap:4px; white-space:nowrap;">
-                        <span style="display:inline-block; width:6px; height:6px; background:#2bcbba; border-radius:50%; box-shadow:0 0 6px #2bcbba;"></span> 실시간 상담 대기중
-                    </div>
+        <div class="page-item friend-item ai-friend ${store.currentRoomId && store.currentRoomId.startsWith('Private-AI-') ? 'active' : ''}" onclick="window.openChatWithAi()" style="display:flex; align-items:center; gap:12px;">
+            ${aiAvatarHtml}
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                <div class="page-item-title" style="margin:0; font-weight:700; font-size:0.95rem; color:#323130; display:flex; align-items:center; gap:8px;">
+                    <span>✨ ${store.currentAvatarName || '원이'} 비서</span>
                 </div>
-                <span class="sos-badge" style="background: #2bcbba; color:white; font-size:10px; flex-shrink:0;">Partner</span>
+                <div class="page-item-meta" style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#605e5c;">
+                    <span class="emotion-tag" style="background:#f0f4ff; color:#667eea; border:1px solid #e1e4ff; padding:2px 6px; border-radius:4px; font-size:0.72rem;">실시간 상담 대기</span>
+                </div>
             </div>
+        </div>
         `;
 
-        list.innerHTML = aiFriendHtml + friends.map(f => {
+        let htmlContent = aiFriendHtml + friends.map(f => {
             const isSos = data.sosList?.some(s => s.id === f.id);
             const onlineDot = f.is_online
-                ? `<span style="display:inline-block; width:8px; height:8px; background:#2ed573; border-radius:50%; margin-right:4px; box-shadow: 0 0 8px #2ed573;"></span> 접속 중`
-                : `<span style="display:inline-block; width:8px; height:8px; background:#a4b0be; border-radius:50%; margin-right:4px;"></span> 오프라인`;
+                ? `<span style="display:inline-block; width:8px; height:8px; background:#2ed573; border-radius:50%; margin-right:4px; box-shadow: 0 0 8px #2ed573;"></span>`
+                : `<span style="display:inline-block; width:8px; height:8px; background:#a4b0be; border-radius:50%; margin-right:4px;"></span>`;
 
             return `
-            <div class="friend-item-wrapper" style="border-bottom: 1px solid #f1f1f1; padding: 10px 0;">
-                <div class="friend-item ${isSos ? 'sos' : ''}" style="display: flex; align-items: center; justify-content: space-between;">
-                    <div onclick="window.openChatWithFriend('${f.id}', '${f.nickname}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; flex-grow:1; min-width:0; padding: 4px 0;">
-                        <div class="friend-avatar" style="position:relative; background:#888; color:white; font-weight:600; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            ${f.nickname?.[0] || '👤'}
-                        </div>
-                        <div class="friend-info" style="min-width:0; flex-grow:1;">
-                            <div class="friend-name" style="font-weight:600; display:flex; align-items:center; gap:6px; color:#2f3542; flex-wrap:wrap;">
-                                <span style="white-space:normal; word-break:keep-all; overflow-wrap:break-word; min-width:60px; flex-grow:1; max-width:120px; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${f.nickname || '익명'}">${f.nickname || '익명'}</span>
-                                <span style="font-size:0.72rem; color:#747d8c; display:flex; align-items:center; font-weight:normal; white-space:nowrap;">
-                                    ${onlineDot}
-                                </span>
-                            </div>
-                            <div class="friend-emotion" style="font-size:0.85rem; color:#57606f; margin-top:2px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
-                                ${f.current_emotion}
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                        ${isSos ? '<span class="sos-badge" style="background:#ff4757; color:white; font-size:10px; padding:2px 6px; border-radius:4px; animation: pulse 1.5s infinite;">🚨 위로 필요</span>' : ''}
-                        <button onclick="window.toggleFriendSettings('${f.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem; padding:4px;" title="1촌 설정">⚙️</button>
-                    </div>
+            <div class="page-item friend-item ${isSos ? 'sos' : ''} ${store.currentRoomId === f.id ? 'active' : ''}" onclick="window.openChatWithFriend('${f.id}', '${f.nickname}')" style="display:flex; align-items:center; gap:12px;">
+                <div class="friend-avatar" style="position:relative; background:#888; color:white; font-weight:600; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; flex-shrink:0;">
+                    ${f.nickname?.[0] || '👤'}
                 </div>
-                <div id="tray-${f.id}" class="friend-settings-tray" style="display: none; gap: 6px; margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; justify-content: space-around; flex-wrap: wrap;">
-                    <button onclick="window.toggleFriendStealth('${f.id}', ${f.my_stealth})" class="btn sm" style="font-size: 0.75rem; background: ${f.my_stealth ? '#667eea' : '#f1f2f6'}; color: ${f.my_stealth ? 'white' : '#2f3542'}; padding: 4px 8px; border-radius: 6px; border:none; cursor:pointer;">
-                        ${f.my_stealth ? '🤫 스텔스 중' : '🤫 스텔스'}
-                    </button>
-                    <button onclick="window.toggleFriendShare('${f.id}', ${f.my_share})" class="btn sm" style="font-size: 0.75rem; background: ${f.my_share ? '#2bcbba' : '#f1f2f6'}; color: ${f.my_share ? 'white' : '#2f3542'}; padding: 4px 8px; border-radius: 6px; border:none; cursor:pointer;">
-                        ${f.my_share ? '🧠 공유 중' : '🧠 공유 꺼짐'}
-                    </button>
-                    <button onclick="window.deleteFriend('${f.id}')" class="btn sm" style="font-size: 0.75rem; background: #dfe4ea; color: #ff4757; padding: 4px 8px; border-radius: 6px; border:none; cursor:pointer;">❌ 삭제</button>
-                    <button onclick="window.blockFriend('${f.id}')" class="btn sm" style="font-size: 0.75rem; background: #ff4757; color: white; padding: 4px 8px; border-radius: 6px; border:none; cursor:pointer;">🚫 차단</button>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                    <div class="page-item-title" style="margin:0; font-weight:700; font-size:0.95rem; color:#323130; display:flex; align-items:center; justify-content:space-between;">
+                        <span style="display:flex; align-items:center; gap:6px;">
+                            <span>${f.nickname || '익명'}</span>
+                            ${onlineDot}
+                        </span>
+                        <button onclick="event.stopPropagation(); window.toggleFriendSettings('${f.id}')" class="friend-settings-btn-icon" style="background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0; display:flex; align-items:center; justify-content:center; color:#888; transition:color 0.2s;" title="1촌 설정">⚙️</button>
+                    </div>
+                    <div class="page-item-meta" style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#605e5c;">
+                        <span class="emotion-tag" style="padding:2px 6px; border-radius:4px; font-size:0.72rem; background:rgba(0,0,0,0.05); color:#444;">${f.current_emotion || '평온'}</span>
+                        ${isSos ? '<span class="sos-badge" style="background:#ff4757; color:white; font-size:10px; padding:2px 6px; border-radius:4px; animation: pulse-border 1.5s infinite; font-weight:700;">🚨 위로 필요</span>' : ''}
+                    </div>
                 </div>
             </div>
             `;
         }).join('');
+
+        // Append Invite button (via CSS .mobile-only-item)
+        htmlContent += `
+        <div class="page-item friend-item mobile-only-item" onclick="window.openInviteModal()" style="display:flex; align-items:center; gap:12px;">
+            <div class="friend-avatar" style="background: #f1f2f6; border: 1.5px dashed #ccc; color: #555; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; flex-shrink:0;">
+                ➕
+            </div>
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                <div class="page-item-title" style="margin:0; color:var(--accent-color); font-weight:700; font-size:0.95rem;">
+                    <span>초대하기</span>
+                </div>
+                <div class="page-item-meta" style="font-size:0.75rem; color:var(--accent-color);">
+                    <span>친구와 온도 공유하기</span>
+                </div>
+            </div>
+        </div>
+        `;
+
+        list.innerHTML = htmlContent;
     }
 }
 
 // 1촌 소셜 설정 및 전역 제어 함수 바인딩
 window.toggleFriendSettings = function(friendId) {
-    const tray = document.getElementById(`tray-${friendId}`);
-    if (tray) {
-        tray.style.display = tray.style.display === 'none' ? 'flex' : 'none';
+    const friend = (store.allFriends || []).find(f => f.id === friendId);
+    if (friend) {
+        window.openFriendSettingsModal(friend);
     }
 };
+
+window.openFriendSettingsModal = function(friend) {
+    const modal = document.getElementById('friend-settings-modal');
+    if (!modal) return;
+
+    document.getElementById('friend-settings-modal-title').innerText = `👥 1촌 설정 (${friend.nickname})`;
+
+    const stealthBtn = document.getElementById('modal-stealth-btn');
+    const shareBtn = document.getElementById('modal-share-btn');
+    const deleteBtn = document.getElementById('modal-delete-btn');
+    const blockBtn = document.getElementById('modal-block-btn');
+
+    if (stealthBtn) {
+        stealthBtn.innerText = friend.my_stealth ? '🤫 스텔스 중' : '🤫 스텔스 꺼짐';
+        stealthBtn.style.background = friend.my_stealth ? '#667eea' : '#f1f2f6';
+        stealthBtn.style.color = friend.my_stealth ? 'white' : '#2f3542';
+        stealthBtn.onclick = async () => {
+            await window.toggleFriendStealth(friend.id, friend.my_stealth);
+            friend.my_stealth = !friend.my_stealth;
+            window.openFriendSettingsModal(friend);
+        };
+    }
+
+    if (shareBtn) {
+        shareBtn.innerText = friend.my_share ? '🧠 공유 중' : '🧠 공유 꺼짐';
+        shareBtn.style.background = friend.my_share ? '#2bcbba' : '#f1f2f6';
+        shareBtn.style.color = friend.my_share ? 'white' : '#2f3542';
+        shareBtn.onclick = async () => {
+            await window.toggleFriendShare(friend.id, friend.my_share);
+            friend.my_share = !friend.my_share;
+            window.openFriendSettingsModal(friend);
+        };
+    }
+
+    if (deleteBtn) {
+        deleteBtn.onclick = async () => {
+            await window.deleteFriend(friend.id);
+            modal.style.display = 'none';
+        };
+    }
+
+    if (blockBtn) {
+        blockBtn.onclick = async () => {
+            await window.blockFriend(friend.id);
+            modal.style.display = 'none';
+        };
+    }
+
+    modal.style.display = 'flex';
+};
+
+window.openInviteModal = function() {
+    const modal = document.getElementById('invite-modal');
+    if (modal) modal.style.display = 'flex';
+    if (window.innerWidth <= 768) {
+        document.querySelector('.chat-sidebar')?.classList.remove('active-drawer');
+    }
+    loadContacts();
+};
+
+
 
 window.toggleFriendStealth = async function(friendId, currentStealth) {
     try {
