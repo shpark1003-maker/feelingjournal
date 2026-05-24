@@ -243,6 +243,14 @@ export function setupChatUI() {
         }
     });
 
+    // Send chat on pressing Enter (without Shift)
+    document.getElementById('chat-input-tab')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('send-chat-btn-tab')?.click();
+        }
+    });
+
     // [NEW] 이미지 파일 첨부 버튼 이벤트 및 업로드 처리
     const attachBtn = document.getElementById('chat-attach-btn');
     const attachInput = document.getElementById('chat-image-attach-input');

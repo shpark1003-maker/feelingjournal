@@ -709,6 +709,13 @@ ${content || '(이미지 분석 요청)'}
 
         await redis.set(redisKey, JSON.stringify(diaryData), 'EX', 3600 * 24 * 30);
 
+        // 새 일기 작성 시 캘린더 분석 캐시 초기화
+        try {
+            await redis.del(`user:${user.id}:calendar-advice-cache`);
+        } catch (cacheErr) {
+            console.error('Failed to clear calendar advice cache:', cacheErr);
+        }
+
         // [추가] 사용자 프로필에 최신 감정 상태 동기화 (1촌 공유용)
         try {
             const { error: profileError } = await supabase
