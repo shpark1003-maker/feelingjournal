@@ -3879,1448 +3879,488 @@ body {
 }
 
 /* ==========================================================================
-   [Ghibli Theme Custom Rules]
+   [Digital Sanctuary - Stitch Premium Theme Custom Rules]
    ========================================================================== */
 .ghibli-theme {
-    --ghibli-primary: #7a9e7e;
-    --ghibli-secondary: #d4a373;
-    --ghibli-dark: #5d574d;
-    --ghibli-cream-bg: #fdf6e3;
-    --ghibli-cream-card: #fffef0;
-    --ghibli-cream-dim: #f9f1d7;
-    --ghibli-text: #433e37;
-    --ghibli-border: #e8e4d3;
+    --primary: #8B5CF6 !important;
+    --on-primary: #FFFFFF !important;
+    --primary-container: #F3E8FF !important;
+    --on-primary-container: #5B21B6 !important;
+    --secondary: #718096 !important;
+    --on-secondary: #FFFFFF !important;
+    --tertiary: #FB7185 !important;
+    --surface: #FDFCF7 !important;
+    --on-surface: #4A3728 !important;
+    --on-surface-variant: #7C6A5A !important;
+    --surface-container-low: #FFFFFF !important;
+    --surface-dim: #F5F1E9 !important;
+    --primary-fixed: #A78BFA !important;
+    --primary-fixed-dim: #C4B5FD !important;
+    --sanctuary-bg-1: #FFF9F2 !important;
+    --sanctuary-bg-2: #F3E8FF !important;
+    --font-sans: 'Public Sans', 'Noto Sans KR', sans-serif !important;
+    --border-radius-card: 24px !important;
+    --border-radius-btn: 16px !important;
+    --shadow-premium: 0 10px 25px -5px rgba(139, 92, 246, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
 }
 
-/* Background & Main elements */
-.ghibli-theme.chat-view-layout {
-    background-color: var(--ghibli-cream-bg) !important;
-}
-
-.ghibli-theme .chat-bg {
-    background-color: var(--ghibli-cream-bg) !important;
-    background-image: radial-gradient(var(--ghibli-cream-dim) 1px, transparent 1px) !important;
-    background-size: 20px 20px !important;
-}
-
-/* Sidebar Styling */
-.ghibli-theme .chat-sidebar {
-    background: var(--ghibli-cream-dim) !important;
-    border-right: 2.5px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-text) !important;
-}
-
-.ghibli-theme .chat-sidebar-header {
-    border-bottom: 2.5px solid var(--ghibli-dark) !important;
-    background: transparent !important;
-    padding: 15px !important;
-}
-
-.ghibli-theme .chat-sidebar-header h3 {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800;
-    font-size: 1.15rem;
-}
-
-.ghibli-theme .friend-item {
-    background: rgba(255, 255, 240, 0.5) !important;
-    border: 2px solid var(--ghibli-border) !important;
-    border-radius: 12px !important;
-    margin: 8px 12px !important;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.ghibli-theme .friend-item:hover {
-    background: var(--ghibli-cream-card) !important;
-    border-color: var(--ghibli-secondary) !important;
-    transform: translateY(-1px);
-}
-
-.ghibli-theme .friend-item.active {
-    background: var(--ghibli-cream-card) !important;
-    border-color: var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-}
-
-.ghibli-theme .sidebar-footer {
-    border-top: 2px solid var(--ghibli-dark) !important;
-    padding: 12px 15px !important;
-    background: transparent !important;
-}
-
-.ghibli-theme .sidebar-footer #invite-friend-btn {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 12px !important;
-    padding: 10px !important;
-    font-weight: 700;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-    transition: transform 0.1s;
-}
-
-.ghibli-theme .sidebar-footer #invite-friend-btn:active {
-    transform: scale(0.97);
-}
-
-/* Chat Main Header */
-.ghibli-theme .chat-main-header {
-    background: var(--ghibli-cream-dim) !important;
-    border-bottom: 2px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-dark) !important;
-    padding: 12px 20px !important;
-}
-
-.ghibli-theme #chat-room-title-text {
-    font-weight: 800;
-    color: var(--ghibli-dark);
-}
-
-/* Custom Ghibli Buttons */
-.ghibli-theme .btn-icon-circle {
-    background: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
-    transition: transform 0.1s !important;
-}
-
-.ghibli-theme .btn-icon-circle:hover {
-    background: var(--ghibli-cream-dim) !important;
-}
-
-.ghibli-theme .btn-icon-circle:active {
-    transform: scale(0.9) !important;
-}
-
-/* Paper notes & bubble */
-.ghibli-theme .paper-note {
-    background: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-}
-
-.ghibli-theme .bubble-right { border-radius: 12px 2px 12px 12px !important; }
-.ghibli-theme .bubble-left { border-radius: 2px 12px 12px 12px !important; }
-
-/* Hand painted gauge */
-.ghibli-theme .hand-painted-gauge {
-    background: linear-gradient(90deg, #a7d8de 0%, #f9d976 50%, #f7a8a8 100%) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 999px !important;
-    height: 12px !important;
-    position: relative !important;
-}
-
-.ghibli-theme .gauge-needle {
-    width: 6px !important;
-    height: 20px !important;
-    background: var(--ghibli-dark) !important;
-    position: absolute !important;
-    top: -5px !important;
-    border-radius: 3px !important;
-    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
-}
-
-/* Floating AI assistant panel */
-.ghibli-theme .chat-ai-floating-controls {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 15px !important;
-    padding: 10px 0 !important;
-    background: transparent !important;
-    z-index: 20 !important;
-    flex-shrink: 0 !important;
-}
-
-.ghibli-theme .ghibli-btn-summon {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    font-weight: 700 !important;
-    font-size: 0.8rem !important;
-    padding: 8px 16px !important;
-    border-radius: 999px !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.15) !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    transition: transform 0.2s, opacity 0.2s !important;
-}
-
-.ghibli-theme .ghibli-btn-summon:hover {
-    opacity: 0.95 !important;
-}
-
-.ghibli-theme .ghibli-btn-guidance {
-    background: white !important;
-    color: var(--ghibli-secondary) !important;
-    font-weight: 700 !important;
-    font-size: 0.8rem !important;
-    padding: 8px 16px !important;
-    border-radius: 999px !important;
-    border: 2px solid #e8e4d3 !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    transition: transform 0.2s, background 0.2s !important;
-}
-
-.ghibli-theme .ghibli-btn-guidance:hover {
-    background: var(--ghibli-cream-dim) !important;
-}
-
-.ghibli-theme .floating-assistant {
-    animation: float-ai 4s ease-in-out infinite !important;
-}
-
-@keyframes float-ai {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-8px) rotate(3deg); }
-}
-
-/* Footer & Kakao input wrapper overrides */
-.ghibli-theme .chat-footer-kakaostyle {
-    background: rgba(249, 241, 215, 0.8) !important;
-    border-top: 2px solid var(--ghibli-dark) !important;
-    padding: 12px 18px 16px 18px !important;
-    flex-shrink: 0 !important;
-}
-
-.ghibli-theme .chat-input-wrapper {
-    background: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 16px !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
-    padding: 6px 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.ghibli-theme .chat-textarea {
-    flex: 1 !important;
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    resize: none !important;
-    color: var(--ghibli-text) !important;
-    font-size: 0.9rem !important;
-    line-height: 1.5 !important;
-    box-shadow: none !important;
-    padding: 6px 0 !important;
-}
-
-.ghibli-theme .chat-footer-attach-btn {
-    border: none !important;
-    background: none !important;
-    font-size: 1.35rem !important;
-    cursor: pointer !important;
-    color: var(--ghibli-dark) !important;
-    padding: 0 4px !important;
-    transition: transform 0.2s !important;
-}
-
-.ghibli-theme .chat-footer-attach-btn:hover {
-    transform: scale(1.1);
-}
-
-.ghibli-theme .chat-footer-send-btn {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 10px !important;
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.1) !important;
-    transition: transform 0.1s !important;
-}
-
-.ghibli-theme .chat-footer-send-btn:active {
-    transform: scale(0.9) !important;
-}
-
-/* Chat Scroll Messages Style overrides */
-.ghibli-theme .chat-scroll-area {
-    padding: 18px !important;
-    background: transparent !important;
-}
-
-.ghibli-theme .message-sender {
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-}
-
-.ghibli-theme .message-info {
-    color: #8b8273 !important;
-}
-
-/* ==========================================================================
-   [Premium Mobile Responsive Design Overrides]
-   ========================================================================== */
-@media (max-width: 768px) {
-    /* 1. Global Page Layout & Containers */
-    body {
-        display: block !important;
-        padding: 8px !important;
-        background-attachment: scroll !important;
-    }
-    .container {
-        padding: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        margin-top: 0 !important;
-        background: transparent !important;
-    }
-    .tab-content {
-        background: #ffffff !important;
-        border-radius: 16px !important;
-        padding: 15px 12px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-        border: 1px solid rgba(0,0,0,0.03) !important;
-        margin-bottom: 15px !important;
-    }
-    .user-nav {
-        margin-bottom: 12px !important;
-        gap: 8px !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-    }
-    #user-email {
-        font-size: 0.85rem !important;
-    }
-    .tab-nav {
-        gap: 4px !important;
-        margin-bottom: 15px !important;
-        padding: 4px !important;
-        border-radius: 12px !important;
-    }
-    .tab-btn {
-        padding: 8px 4px !important;
-        font-size: 0.8rem !important;
-        border-radius: 8px !important;
-        min-width: unset !important;
-    }
-
-    /* 2. Journal 3-Column Layout */
-    .journal-3-column-layout {
-        display: flex !important;
-        flex-direction: row !important;
-        position: relative !important;
-        overflow: hidden !important;
-    }
-    .resizer {
-        display: none !important;
-    }
-    /* Adjust notebook strip contents on mobile */
-    .notebook-sidebar .sidebar-header {
-        flex-direction: column !important;
-        gap: 8px !important;
-        padding: 15px 5px !important;
-        align-items: center !important;
-        background: #1e1e1e !important;
-    }
-    .notebook-sidebar #sidebar-notebook-title {
-        display: none !important; /* Hide rename input on mobile folder strip */
-    }
-    .notebook-sidebar .sidebar-actions {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 6px !important;
-    }
-    .notebook-sidebar .notebook-list {
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    .notebook-sidebar .notebook-item {
-        justify-content: center !important;
-        padding: 12px 0 !important;
-        border-radius: 8px !important;
-        margin: 4px 6px !important;
-    }
-    .notebook-sidebar .notebook-item .folder-icon {
-        font-size: 1.4rem !important;
-        margin: 0 !important;
-    }
-    .notebook-sidebar .notebook-item .name {
-        display: none !important; /* Hide name inside small strip */
-    }
-    .pages-sidebar .sidebar-header {
-        padding: 10px 12px !important;
-    }
-    .note-content-area {
-        width: 100% !important;
-        padding: 10px 5px !important;
-    }
-
-    /* 3. General Typography & Lists */
-    .btn {
-        padding: 8px 12px !important;
-        font-size: 0.82rem !important;
-        border-radius: 8px !important;
-    }
-    .btn.sm {
-        padding: 6px 10px !important;
-        font-size: 0.76rem !important;
-    }
-    .notebook-list li, .page-list .page-item {
-        font-size: 0.82rem !important;
-        padding: 8px 10px !important;
-    }
-    h1 {
-        font-size: 1.45rem !important;
-    }
-
-    /* 4. Editor & Input Fields */
-    .note-title-input-large {
-        font-size: 1.25rem !important;
-    }
-    .note-toolbar {
-        padding: 12px 10px !important;
-    }
-    #quill-toolbar {
-        padding: 6px 8px !important;
-    }
-    #quill-editor {
-        height: 260px !important;
-        min-height: 200px !important;
-        padding: 10px !important;
-        font-size: 0.92rem !important;
-    }
-    textarea {
-        min-height: 120px !important;
-        padding: 10px !important;
-        font-size: 0.88rem !important;
-    }
-    .briefing-card {
-        padding: 15px 18px !important;
-        margin-bottom: 15px !important;
-    }
-    .briefing-header {
-        font-size: 1.05rem !important;
-    }
-    .briefing-text {
-        font-size: 0.9rem !important;
-        line-height: 1.6 !important;
-    }
-
-    /* 5. Calendar Layout (Google Calendar Style Mobile Adjustments) */
-    .calendar-card-premium {
-        margin: 0 !important;
-        padding: 10px 8px !important;
-        border-radius: 12px !important;
-        box-shadow: none !important;
-        border: none !important;
-    }
-    .calendar-header-premium {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        margin-bottom: 12px !important;
-        padding: 5px 0 !important;
-    }
-    .calendar-header-premium h3 {
-        font-size: 1.2rem !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        white-space: nowrap !important;
-    }
-    .calendar-legend {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        gap: 8px 12px !important;
-        padding: 8px 12px !important;
-        border-radius: 10px !important;
-        font-size: 0.72rem !important;
-        width: 100% !important;
-        box-shadow: none !important;
-        background: #f8fafc !important;
-        border: 1px solid #edf2f7 !important;
-    }
-    .fc .fc-toolbar {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        align-items: center !important;
-        margin-bottom: 12px !important;
-    }
-    .fc .fc-toolbar-title {
-        font-size: 1.1rem !important;
-        margin: 4px 0 !important;
-    }
-    .fc .fc-button {
-        padding: 6px 10px !important;
-        font-size: 0.75rem !important;
-        border-radius: 15px !important;
-    }
-    .fc-button-group {
-        width: 100% !important;
-        display: flex !important;
-        justify-content: center !important;
-    }
-    .fc-button-group > .fc-button {
-        flex: 1 !important;
-        text-align: center !important;
-    }
-    .fc-theme-standard th {
-        padding: 6px 0 !important;
-    }
-    .fc-col-header-cell-cushion {
-        font-size: 0.75rem !important;
-    }
-    .fc-daygrid-day-number {
-        font-size: 0.75rem !important;
-        padding: 4px 6px !important;
-    }
-    .fc-day-today .fc-daygrid-day-number {
-        margin: 2px 4px 0 0 !important;
-        padding: 2px 6px !important;
-        border-radius: 12px !important;
-        background: #e17055 !important;
-        color: #ffffff !important;
-        font-weight: bold !important;
-        display: inline-block !important;
-        text-align: center !important;
-    }
-    .fc-daygrid-day-frame {
-        min-height: 85px !important; /* Increased for mobile visibility */
-    }
-    .fc-event {
-        margin: 1px 1px !important;
-        padding: 2px 3px !important;
-        border-radius: 6px !important;
-    }
-    .fc-event-title {
-        font-size: 11px !important; /* Make it readable */
-        font-weight: 700 !important;
-        line-height: 1.2 !important;
-        white-space: normal !important;
-        word-break: break-all !important;
-    }
-
-    /* 6. Settings & Atelier Mobile Grid Layout */
-    .settings-container {
-        padding: 10px 5px !important;
-    }
-    .settings-header-premium {
-        flex-direction: column !important;
-        gap: 12px !important;
-        align-items: center !important;
-        text-align: center !important;
-        margin-bottom: 18px !important;
-    }
-    .settings-header-premium h3 {
-        font-size: 1.3rem !important;
-    }
-    .persona-layout {
-        grid-template-columns: 1fr !important;
-        gap: 20px !important;
-    }
-    .persona-avatar-section {
-        padding: 20px !important;
-    }
-    .avatar-preview-box {
-        width: 150px !important;
-        height: 150px !important;
-        border-radius: 15px !important;
-    }
-    .config-grid {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-    }
-    .radio-group label {
-        padding: 8px !important;
-        font-size: 0.85rem !important;
-    }
-    .learning-header {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 6px !important;
-        margin-bottom: 15px !important;
-    }
-    .learning-header h4 {
-        font-size: 0.95rem !important;
-    }
-    .learning-header p {
-        font-size: 0.75rem !important;
-    }
-    .learning-body {
-        flex-direction: column !important;
-        gap: 15px !important;
-        align-items: stretch !important;
-    }
-    .video-dropzone {
-        height: 100px !important;
-    }
-    #dropzone-text {
-        font-size: 0.8rem !important;
-    }
-    .learning-actions {
-        width: 100% !important;
-    }
-
-    /* 7. Chat View Layout - Collapsible Dropdown Friends list on Mobile */
-    .chat-view-layout {
-        display: flex !important;
-        flex-direction: row !important;
-        position: relative !important;
-        height: calc(100dvh - 150px) !important; /* Premium responsive dynamic height */
-        border-radius: 16px !important;
-        overflow: hidden !important;
-    }
-    .chat-sidebar {
-        position: absolute !important;
-        top: 54px !important;
-        left: 0;
-        width: 100% !important;
-        height: auto !important;
-        max-height: 320px !important;
-        z-index: 1008 !important;
-        background: #f3f2f1 !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-        border-right: none !important;
-        transform: translateY(-100%) !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
-        display: flex !important;
-        flex-direction: column !important;
-        padding: 0 !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-        overflow: hidden !important;
-    }
-    .ghibli-theme .chat-sidebar {
-        background: var(--ghibli-cream-dim) !important;
-        border-bottom: 2.5px solid var(--ghibli-dark) !important;
-        border-right: none !important;
-        border-top: none !important;
-        box-shadow: 0 8px 24px rgba(93,87,77,0.2) !important;
-    }
-    .chat-sidebar.active-drawer {
-        transform: translateY(0) !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-    .chat-sidebar .user-profile-section {
-        display: none !important;
-    }
-    .chat-sidebar-header {
-        display: none !important;
-    }
-    .friend-list-container {
-        display: block !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        max-height: 320px !important;
-    }
-    .friend-item {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 12px !important;
-        padding: 12px 20px !important;
-        width: 100% !important;
-        background: transparent !important;
-        border-bottom: 1px solid #e1e1e1 !important;
-        margin: 0 !important;
-    }
-    .friend-item:hover {
-        background: #edebe9 !important;
-    }
-    .friend-item.active {
-        background: white !important;
-        box-shadow: -4px 0 0 var(--accent-color) inset !important;
-    }
-    .chat-sidebar .sidebar-footer {
-        display: none !important;
-    }
-    .mobile-only-item {
-        display: flex !important;
-    }
-    
-    .chat-main {
-        width: 100% !important;
-        flex: 1 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow: hidden !important;
-    }
-    .chat-main-header {
-        padding: 10px 15px !important;
-        position: relative !important;
-        z-index: 1009 !important;
-        background: #ffffff !important;
-    }
-    .chat-scroll-area {
-        flex: 1 !important;
-        height: auto !important; /* Dynamically fill remaining height */
-        min-height: 0 !important;
-        padding: 12px 10px !important;
-        overflow-y: auto !important;
-    }
-    .chat-footer-kakaostyle {
-        flex-shrink: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        background: #ffffff !important;
-        padding: 10px 12px !important;
-    }
-    
-    /* Transparent Chat Bubble Wrapper Fix */
-    .message {
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        max-width: 100% !important;
-        margin: 8px 0 !important;
-        display: flex !important;
-    }
-    .message::after {
-        display: none !important;
-    }
-    .message.sent {
-        background: transparent !important;
-        box-shadow: none !important;
-        justify-content: flex-end !important;
-    }
-    .message.received {
-        background: transparent !important;
-        box-shadow: none !important;
-        justify-content: flex-start !important;
-    }
-    .message-content {
-        max-width: 75% !important;
-        font-size: 0.9rem !important;
-        line-height: 1.5 !important;
-    }
-    
-    .friend-banner {
-        margin: 8px 10px 0 10px !important;
-        padding: 10px !important;
-        border-radius: 12px !important;
-    }
-    .banner-avatar {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 1.4rem !important;
-    }
-    .banner-info h4 {
-        font-size: 0.85rem !important;
-    }
-    .banner-info p {
-        font-size: 0.75rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .tab-btn {
-        font-size: 0.72rem !important;
-        padding: 6px 2px !important;
-    }
-    .fc .fc-toolbar-title {
-        font-size: 0.95rem !important;
-    }
-    .fc .fc-button {
-        padding: 4px 6px !important;
-        font-size: 0.7rem !important;
-    }
-    .fc-daygrid-day-frame {
-        min-height: 80px !important;
-    }
-    .fc-event-title {
-        font-size: 10.5px !important;
-    }
-}
-
-
-/* ==========================================================================
-   [Ghibli Theme Global Overrides]
-   ========================================================================== */
+/* Background & Global layout */
 body.ghibli-theme {
-    background-color: var(--ghibli-cream-bg) !important;
-    background-image: radial-gradient(#d3cbb4 0.8px, transparent 0.8px) !important;
-    background-size: 24px 24px !important;
+    font-family: var(--font-sans) !important;
+    background: linear-gradient(135deg, var(--sanctuary-bg-1) 0%, var(--sanctuary-bg-2) 100%) !important;
     background-attachment: fixed !important;
-    color: var(--ghibli-text) !important;
+    color: var(--on-surface) !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    padding: 24px 16px !important;
 }
 
 body.ghibli-theme .container {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.15) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-width: 1280px !important;
+    padding: 0 !important;
 }
 
-/* User Email & Logout text */
-.ghibli-theme #user-email {
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-}
-.ghibli-theme .btn-text {
-    color: var(--ghibli-secondary) !important;
-    font-weight: 700 !important;
-    font-family: inherit !important;
-}
-.ghibli-theme .btn-text:hover {
-    color: var(--ghibli-primary) !important;
-    text-decoration: underline !important;
+/* Header (Top Bar) */
+.ghibli-theme .user-nav {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 24px !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(139, 92, 246, 0.1) !important;
+    border-radius: 20px !important;
+    margin-bottom: 24px !important;
+    box-shadow: var(--shadow-premium) !important;
 }
 
-/* Tab Nav Bar */
-.ghibli-theme .tab-nav {
-    background: var(--ghibli-cream-dim) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    border-radius: 14px !important;
-    padding: 4px !important;
+/* Responsive Columns Layout */
+@media (min-width: 1024px) {
+    body.ghibli-theme #journal-app {
+        display: none;
+    }
+    body.ghibli-theme #journal-app:not([style*="display: none"]):not([style*="display:none"]) {
+        display: grid !important;
+        grid-template-columns: 280px 1fr !important;
+        grid-template-rows: auto 1fr !important;
+        gap: 24px !important;
+    }
+    .ghibli-theme .user-nav {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 !important;
+    }
+    .ghibli-theme .tab-nav {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: fit-content !important;
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 2px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        gap: 8px !important;
+        box-shadow: var(--shadow-premium) !important;
+    }
+    .ghibli-theme .tab-content {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+    }
 }
+
+/* Sidebar Navigation Items */
 .ghibli-theme .tab-btn {
-    color: rgba(93,87,77,0.7) !important;
-    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    border-radius: 16px !important;
     font-size: 0.95rem !important;
-    border-radius: 10px !important;
+    font-weight: 600 !important;
+    color: var(--on-surface-variant) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
     transition: all 0.2s ease !important;
+    text-align: left !important;
+    width: 100% !important;
+}
+.ghibli-theme .tab-btn:hover {
+    background: rgba(139, 92, 246, 0.05) !important;
+    color: var(--primary) !important;
 }
 .ghibli-theme .tab-btn.active {
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-dark) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-}
-
-/* Global Watercolor Border utility */
-.ghibli-theme .watercolor-border {
-    position: relative;
-    background: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 3px 3px 0px rgba(93,87,77,0.1) !important;
-}
-
-/* ==========================================================================
-   [Phase 2: Notebook & Pages Sidebar Ghibli Theme]
-   ========================================================================== */
-.ghibli-theme .journal-3-column-layout {
-    background-color: var(--ghibli-cream-bg) !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-}
-
-/* Notebook Sidebar */
-.ghibli-theme .notebook-sidebar {
-    background-color: var(--ghibli-cream-dim) !important;
-    border-right: none !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .notebook-sidebar .sidebar-header {
-    background-color: var(--ghibli-cream-dim) !important;
-    border-bottom: 2.5px solid var(--ghibli-dark) !important;
-}
-.ghibli-theme .notebook-sidebar #sidebar-notebook-title {
-    color: var(--ghibli-text) !important;
-    font-family: inherit !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .notebook-sidebar #sidebar-notebook-title::placeholder {
-    color: #8b8273 !important;
-}
-.ghibli-theme .notebook-sidebar .sidebar-actions button {
-    color: var(--ghibli-dark) !important;
-    transition: transform 0.2s ease !important;
-}
-.ghibli-theme .notebook-sidebar .sidebar-actions button:hover {
-    color: var(--ghibli-secondary) !important;
-    transform: scale(1.1) !important;
-}
-
-/* Notebook Items */
-.ghibli-theme .notebook-list .notebook-item {
-    margin: 8px 12px !important;
-    padding: 10px 14px !important;
-    border-radius: 12px !important;
-    border: 2px solid transparent !important;
-    transition: all 0.2s ease !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .notebook-list .notebook-item:hover {
-    background: rgba(212, 163, 115, 0.1) !important;
-    border-color: var(--ghibli-secondary) !important;
-}
-.ghibli-theme .notebook-list .notebook-item.active {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
+    background: rgba(139, 92, 246, 0.1) !important;
+    color: var(--primary) !important;
     font-weight: 700 !important;
 }
-.ghibli-theme .notebook-list .notebook-item .folder-icon {
-    color: var(--ghibli-secondary) !important;
+.ghibli-theme .tab-btn .material-symbols-outlined {
+    font-size: 1.3rem !important;
+    color: inherit !important;
 }
 
-/* Pages Sidebar */
-.ghibli-theme .pages-sidebar {
-    background-color: var(--ghibli-cream-bg) !important;
-    border-right: none !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .pages-sidebar .sidebar-header {
-    border-bottom: 2.5px solid var(--ghibli-dark) !important;
-}
-.ghibli-theme .pages-sidebar #current-notebook-display-title {
-    color: var(--ghibli-dark) !important;
-    font-family: inherit !important;
-    font-weight: 800 !important;
-}
-
-/* Page Add Button */
-.ghibli-theme #new-page-btn {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    border-radius: 12px !important;
-    font-weight: 800 !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-    transition: transform 0.15s, box-shadow 0.15s !important;
-}
-.ghibli-theme #new-page-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 3px 3px 0px rgba(93,87,77,0.2) !important;
-}
-.ghibli-theme #new-page-btn:active {
-    transform: translateY(1px) !important;
-    box-shadow: 1px 1px 0px rgba(93,87,77,0.1) !important;
-}
-
-/* Page list items */
-.ghibli-theme .page-list .page-item {
-    margin: 8px 12px !important;
-    padding: 12px 14px !important;
-    border-radius: 12px !important;
-    border: 2px solid transparent !important;
-    background: transparent !important;
-    transition: all 0.2s ease !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .page-list .page-item:hover {
-    background: rgba(122, 158, 126, 0.1) !important;
-    border-color: var(--ghibli-primary) !important;
-}
-.ghibli-theme .page-list .page-item.active {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-    font-weight: 700 !important;
-}
-.ghibli-theme .page-list .page-item .page-title {
-    color: var(--ghibli-text) !important;
-    font-weight: 600 !important;
-}
-.ghibli-theme .page-list .page-item .page-date {
-    color: #8b8273 !important;
-}
-
-/* Resizer lines as solid borders */
-.ghibli-theme .resizer {
-    background-color: var(--ghibli-dark) !important;
-    width: 2.5px !important;
-    z-index: 10 !important;
-    transition: background-color 0.2s !important;
-}
-.ghibli-theme .resizer:hover,
-.ghibli-theme .resizer:active {
-    background-color: var(--ghibli-secondary) !important;
-}
-
-/* Specific overrides for notebook active items in Ghibli Theme to bypass old default styling */
-.ghibli-theme .notebook-list .notebook-item {
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .notebook-list .notebook-item .name {
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .notebook-list .notebook-item:hover .name {
-    color: var(--ghibli-dark) !important;
-}
-.ghibli-theme .notebook-list .notebook-item.active {
-    background: var(--ghibli-cream-card) !important;
-    border-color: var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-}
-.ghibli-theme .notebook-list .notebook-item.active .name {
-    color: var(--ghibli-dark) !important;
-}
-.ghibli-theme .notebook-list .notebook-item.active .folder-icon {
-    color: var(--ghibli-secondary) !important;
-}
-
-/* ==========================================================================
-   [Phase 3: Editor, Action Buttons, Briefing & Analysis Cards Ghibli Theme]
-   ========================================================================== */
-/* Briefing Card */
-.ghibli-theme .briefing-card {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2.5px dashed var(--ghibli-secondary) !important;
-    border-radius: 16px !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.05) !important;
-    padding: 18px 22px !important;
-}
-.ghibli-theme .briefing-header {
-    color: var(--ghibli-secondary) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .briefing-text {
-    color: var(--ghibli-text) !important;
-    font-size: 0.95rem !important;
-    line-height: 1.65 !important;
-}
-
-/* Editor Main Card */
-.ghibli-theme .editor-section-premium {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.15) !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-}
-
-/* Page Title input block */
-.ghibli-theme .note-toolbar {
-    border-bottom: 2.5px solid var(--ghibli-dark) !important;
-    background: var(--ghibli-cream-dim) !important;
-    padding: 16px 20px !important;
-}
-.ghibli-theme .note-title-input-large {
-    color: var(--ghibli-text) !important;
-    font-family: inherit !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .note-meta {
-    color: #8b8273 !important;
-    font-weight: 600 !important;
-}
-
-/* Quill Toolbar & Editor */
-.ghibli-theme #quill-toolbar {
-    background: var(--ghibli-cream-dim) !important;
-    border-bottom: 2px solid var(--ghibli-dark) !important;
-    padding: 8px 16px !important;
-}
-.ghibli-theme #quill-editor {
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .ql-container.ql-snow {
-    border: none !important;
-}
-
-/* Image/Video Preview Container */
-.ghibli-theme #image-preview-container {
-    background: var(--ghibli-cream-dim) !important;
-    border-top: 2px dashed var(--ghibli-dark) !important;
-}
-
-/* Action Footer */
-.ghibli-theme .editor-footer {
-    background: var(--ghibli-cream-dim) !important;
-    border-top: 2.5px solid var(--ghibli-dark) !important;
-    padding: 15px 20px !important;
-}
-
-/* Ghibli style for all premium action buttons */
-.ghibli-theme .editor-footer .btn.secondary {
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-dark) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.1) !important;
-    font-weight: 700 !important;
-    transition: transform 0.15s, box-shadow 0.15s !important;
-}
-.ghibli-theme .editor-footer .btn.secondary:hover {
-    background: var(--ghibli-cream-dim) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 3px 3px 0px rgba(93,87,77,0.15) !important;
-}
-.ghibli-theme .editor-footer .btn.secondary:active {
-    transform: translateY(1px) !important;
-    box-shadow: 1px 1px 0px rgba(93,87,77,0.05) !important;
-}
-
-.ghibli-theme .editor-footer .btn.secondary.outline {
-    border: 2px solid var(--ghibli-dark) !important;
-}
-
-.ghibli-theme .editor-footer .btn.primary {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-    font-weight: 800 !important;
-    transition: transform 0.15s, box-shadow 0.15s !important;
-}
-.ghibli-theme .editor-footer .btn.primary:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 3px 3px 0px rgba(93,87,77,0.2) !important;
-}
-.ghibli-theme .editor-footer .btn.primary:active {
-    transform: translateY(1px) !important;
-    box-shadow: 1px 1px 0px rgba(93,87,77,0.1) !important;
-}
-
-/* AI Analysis Card */
-.ghibli-theme .analysis-card {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    border-left: 8px solid var(--ghibli-primary) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.1) !important;
-    border-radius: 12px !important;
-}
-.ghibli-theme .analysis-header h4 {
-    color: var(--ghibli-primary) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme #analysis-content {
-    color: var(--ghibli-text) !important;
-    line-height: 1.75 !important;
-}
-
-/* ==========================================================================
-   [Phase 4: Calendar View & Modals Ghibli Theme]
-   ========================================================================== */
-/* Calendar Header */
-.ghibli-theme .calendar-header-premium h3 {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .calendar-header-premium p {
-    color: #8b8273 !important;
-}
-
-/* Calendar Card Container */
-.ghibli-theme .calendar-card-premium {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.1) !important;
-    border-radius: 16px !important;
-}
-
-/* Legend Area Overrides */
-.ghibli-theme .calendar-legend {
-    background: var(--ghibli-cream-dim) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-text) !important;
-    box-shadow: none !important;
-}
-
-/* FullCalendar styling overrides */
-.ghibli-theme .fc .fc-toolbar-title {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800 !important;
-    font-size: 1.5rem !important;
-}
-.ghibli-theme .fc .fc-button-primary {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.1) !important;
-    transition: transform 0.1s, background-color 0.1s !important;
-    text-shadow: none !important;
-}
-.ghibli-theme .fc .fc-button-primary:hover {
-    background-color: var(--ghibli-cream-dim) !important;
-}
-.ghibli-theme .fc .fc-button-primary:active {
-    transform: scale(0.95) !important;
-}
-.ghibli-theme .fc .fc-button-primary:disabled {
-    background-color: #f3eedd !important;
-    opacity: 0.6 !important;
-    color: #8b8273 !important;
-}
-
-/* Days and cells */
-.ghibli-theme .fc-theme-standard td, 
-.ghibli-theme .fc-theme-standard th {
-    border: 1px solid #e2dbbe !important;
-}
-.ghibli-theme .fc-col-header-cell {
-    background: var(--ghibli-cream-dim) !important;
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-}
-.ghibli-theme .fc-daygrid-day-number {
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-}
-.ghibli-theme .fc-day-today {
-    background: rgba(122, 158, 126, 0.15) !important;
-}
-
-/* Modals & Dialog Popups */
-.ghibli-theme .modal-card {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 6px 6px 0px rgba(93,87,77,0.15) !important;
-    border-radius: 16px !important;
-}
-.ghibli-theme .modal-header-premium h3 {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .modal-card label {
-    color: var(--ghibli-dark) !important;
-    font-weight: 700 !important;
-}
-.ghibli-theme .modal-card input,
-.ghibli-theme .modal-card textarea,
-.ghibli-theme .modal-card select {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 10px !important;
-    color: var(--ghibli-text) !important;
-}
-.ghibli-theme .modal-card input:focus,
-.ghibli-theme .modal-card textarea:focus,
-.ghibli-theme .modal-card select:focus {
-    border-color: var(--ghibli-secondary) !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.15) !important;
-}
-
-.ghibli-theme .modal-card .btn {
-    border-radius: 10px !important;
-}
-.ghibli-theme .modal-card .btn.secondary {
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-dark) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-}
-.ghibli-theme .modal-card .btn.primary {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-}
-
-/* Close round button overlay */
-.ghibli-theme .close-btn-round {
-    background: var(--ghibli-cream-dim) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    color: var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
-}
-.ghibli-theme .close-btn-round:hover {
-    background: var(--ghibli-cream-card) !important;
-    transform: rotate(90deg) !important;
-}
-
-/* ==========================================================================
-   [Phase 5: Settings & Atelier Ghibli Theme]
-   ========================================================================== */
-.ghibli-theme .settings-header-premium h3 {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .settings-header-premium p {
-    color: #8b8273 !important;
-}
-
-/* Inner Card Boxes */
-.ghibli-theme .card-inner-premium {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.1) !important;
-    border-radius: 16px !important;
-    padding: 24px !important;
-}
-.ghibli-theme .card-inner-premium h4 {
-    color: var(--ghibli-dark) !important;
-    font-weight: 800 !important;
-    border-bottom: 2px solid var(--ghibli-dark) !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 20px !important;
-}
-
-/* Avatar Preview */
-.ghibli-theme .avatar-preview-box {
-    border: 2px solid var(--ghibli-dark) !important;
-    background: var(--ghibli-cream-dim) !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
-}
-
-/* Inputs and Selects */
-.ghibli-theme .input-premium,
-.ghibli-theme .select-premium,
-.ghibli-theme .textarea-premium {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 10px !important;
-    color: var(--ghibli-text) !important;
-    font-family: inherit !important;
-}
-.ghibli-theme .input-premium:focus,
-.ghibli-theme .select-premium:focus,
-.ghibli-theme .textarea-premium:focus {
-    border-color: var(--ghibli-secondary) !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.15) !important;
-}
-
-/* Learning Video Dropzone */
-.ghibli-theme .video-dropzone {
-    background: var(--ghibli-cream-dim) !important;
-    border: 2.5px dashed var(--ghibli-dark) !important;
-    border-radius: 12px !important;
-}
-.ghibli-theme #dropzone-text {
-    color: var(--ghibli-dark) !important;
-    font-weight: 600 !important;
-}
-
-/* Atelier Buttons */
-.ghibli-theme .card-inner-premium .btn.primary {
-    background: var(--ghibli-primary) !important;
-    color: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.1) !important;
-    font-weight: 800 !important;
-}
-.ghibli-theme .card-inner-premium .btn.secondary {
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-dark) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.05) !important;
-    font-weight: 700 !important;
-}
-
-/* Avatar Option Selection Grid */
-.ghibli-theme .avatar-option {
-    border: 2px solid var(--ghibli-dark) !important;
-    background: var(--ghibli-cream-card) !important;
-    border-radius: 12px !important;
-    padding: 5px !important;
-    transition: all 0.2s ease !important;
-}
-.ghibli-theme .avatar-option:hover {
-    border-color: var(--ghibli-secondary) !important;
-    transform: scale(1.05) !important;
-}
-.ghibli-theme .avatar-option.selected {
-    border-color: var(--ghibli-primary) !important;
-    box-shadow: 0 0 0 4px rgba(122, 158, 126, 0.25) !important;
-}
-
-/* Card containers inside Settings & Atelier */
+/* Cards & Panels */
+.ghibli-theme .ghibli-panel,
+.ghibli-theme .card,
+.ghibli-theme .editor-section-premium,
+.ghibli-theme .settings-container,
 .ghibli-theme #persona-view .card {
-    background: var(--ghibli-cream-card) !important;
-    border: 2.5px solid var(--ghibli-dark) !important;
-    box-shadow: 4px 4px 0px rgba(93,87,77,0.1) !important;
-    border-radius: 16px !important;
-    padding: 24px !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 28px !important;
+    box-shadow: var(--shadow-premium) !important;
+    padding: 28px !important;
+    margin-bottom: 24px !important;
 }
 
-/* Save / Action buttons inside settings */
+/* Buttons */
+.ghibli-theme button.primary,
+.ghibli-theme .btn.primary,
 .ghibli-theme #save-persona-btn,
 .ghibli-theme #save-settings-btn,
 .ghibli-theme #save-care-settings-btn,
-.ghibli-theme #start-learning-btn {
-    background: var(--ghibli-primary) !important;
+.ghibli-theme #new-page-btn {
+    background: var(--primary) !important;
     color: white !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
-    font-weight: 800 !important;
-    border-radius: 12px !important;
-    padding: 10px 24px !important;
+    border: none !important;
+    border-radius: var(--border-radius-btn) !important;
+    padding: 12px 24px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2) !important;
     cursor: pointer !important;
-    transition: transform 0.15s, box-shadow 0.15s !important;
+    transition: all 0.2s ease !important;
 }
+.ghibli-theme button.primary:hover,
+.ghibli-theme .btn.primary:hover,
 .ghibli-theme #save-persona-btn:hover,
 .ghibli-theme #save-settings-btn:hover,
 .ghibli-theme #save-care-settings-btn:hover,
-.ghibli-theme #start-learning-btn:hover {
+.ghibli-theme #new-page-btn:hover {
+    background: #7c3aed !important;
     transform: translateY(-1px) !important;
-    box-shadow: 3px 3px 0px rgba(93,87,77,0.2) !important;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3) !important;
 }
-.ghibli-theme #save-persona-btn:disabled,
-.ghibli-theme #save-settings-btn:disabled,
-.ghibli-theme #save-care-settings-btn:disabled,
-.ghibli-theme #start-learning-btn:disabled {
-    background-color: #f3eedd !important;
-    opacity: 0.6 !important;
-    color: #8b8273 !important;
-    cursor: not-allowed !important;
-    box-shadow: none !important;
-}
-
-/* Secondary/Text buttons inside Settings */
+.ghibli-theme button.secondary,
+.ghibli-theme .btn.secondary,
 .ghibli-theme #generate-avatar-btn,
 .ghibli-theme #upload-avatar-btn,
 .ghibli-theme #test-voice-btn {
-    background: var(--ghibli-cream-dim) !important;
-    color: var(--ghibli-dark) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.05) !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
-    padding: 8px 16px !important;
+    background: white !important;
+    color: var(--primary) !important;
+    border: 2px solid var(--primary-container) !important;
+    border-radius: var(--border-radius-btn) !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
     cursor: pointer !important;
-    transition: transform 0.15s !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
 }
+.ghibli-theme button.secondary:hover,
+.ghibli-theme .btn.secondary:hover,
 .ghibli-theme #generate-avatar-btn:hover,
 .ghibli-theme #upload-avatar-btn:hover,
 .ghibli-theme #test-voice-btn:hover {
-    background: var(--ghibli-cream-card) !important;
+    background: var(--primary-container) !important;
 }
 
-/* Time input field */
-.ghibli-theme #briefing-time-input {
-    background-color: var(--ghibli-cream-card) !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 10px !important;
-    color: var(--ghibli-text) !important;
+/* Form Fields */
+.ghibli-theme input[type="text"],
+.ghibli-theme input[type="time"],
+.ghibli-theme select,
+.ghibli-theme textarea {
+    width: 100% !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 2px solid var(--primary-container) !important;
+    border-radius: 16px !important;
+    padding: 12px 20px !important;
+    color: var(--on-surface) !important;
+    outline: none !important;
     font-family: inherit !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme input[type="text"]:focus,
+.ghibli-theme input[type="time"]:focus,
+.ghibli-theme select:focus,
+.ghibli-theme textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1) !important;
 }
 
-/* Radio Group inside Persona Config */
+/* Gender Selection radio group */
 .ghibli-theme .radio-group {
     display: flex !important;
-    gap: 10px !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    padding: 4px !important;
+    border-radius: 16px !important;
+    border: 2px solid var(--primary-container) !important;
+    gap: 4px !important;
+    width: fit-content !important;
 }
 .ghibli-theme .radio-group input[type="radio"] {
     display: none !important;
 }
 .ghibli-theme .radio-group label {
-    display: inline-block !important;
-    padding: 10px 20px !important;
-    border: 2px solid var(--ghibli-dark) !important;
-    border-radius: 10px !important;
-    background: var(--ghibli-cream-card) !important;
-    color: var(--ghibli-dark) !important;
-    cursor: pointer !important;
-    font-weight: 700 !important;
+    flex: 1 !important;
     text-align: center !important;
+    padding: 8px 20px !important;
+    border-radius: 12px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: var(--on-surface-variant) !important;
+    cursor: pointer !important;
+    background: transparent !important;
+    border: none !important;
     transition: all 0.2s ease !important;
+    display: inline-block !important;
 }
 .ghibli-theme .radio-group input[type="radio"]:checked + label {
-    background: var(--ghibli-primary) !important;
+    background: var(--primary) !important;
     color: white !important;
 }
 
+/* Avatar Preview Section */
+.ghibli-theme .avatar-preview-box {
+    width: 180px !important;
+    height: 180px !important;
+    border-radius: 40px !important;
+    border: 4px solid var(--primary-container) !important;
+    box-shadow: var(--shadow-premium) !important;
+    overflow: hidden !important;
+    margin: 0 auto 16px auto !important;
+}
+.ghibli-theme .avatar-option {
+    border-radius: 20px !important;
+    border: 3px solid transparent !important;
+    padding: 4px !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme .avatar-option.selected {
+    border-color: var(--primary) !important;
+    background: var(--primary-container) !important;
+}
 
+/* AI Garden Learning Dropzone */
+.ghibli-theme .video-dropzone {
+    border: 3px dashed var(--primary-container) !important;
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    padding: 48px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme .video-dropzone:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-color: var(--primary) !important;
+}
 
+/* Settings List Checkboxes & Bells */
+.ghibli-theme input[type="checkbox"] {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 8px !important;
+    border: 2px solid var(--primary-container) !important;
+    color: var(--primary) !important;
+    cursor: pointer !important;
+}
+.ghibli-theme input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Circle of Care */
+.ghibli-theme .guardian-item-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px !important;
+    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid var(--primary-container) !important;
+    margin-bottom: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme .guardian-item-btn.selected {
+    background: rgba(139, 92, 246, 0.05) !important;
+    border-color: var(--primary) !important;
+}
+
+/* Notebook 3-Column Layout */
+.ghibli-theme .journal-3-column-layout {
+    background: rgba(255, 255, 255, 0.45) !important;
+    border-radius: 24px !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: var(--shadow-premium) !important;
+    overflow: hidden !important;
+}
+.ghibli-theme .notebook-sidebar {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-right: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .notebook-sidebar .sidebar-header {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border-bottom: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .notebook-list .notebook-item {
+    border-radius: 16px !important;
+    border: 2px solid transparent !important;
+    margin: 8px 12px !important;
+    padding: 12px 14px !important;
+    color: var(--on-surface) !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme .notebook-list .notebook-item:hover {
+    background: rgba(139, 92, 246, 0.05) !important;
+}
+.ghibli-theme .notebook-list .notebook-item.active {
+    background: white !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .notebook-list .notebook-item .folder-icon {
+    color: var(--primary) !important;
+}
+.ghibli-theme .pages-sidebar {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-right: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .pages-sidebar .sidebar-header {
+    border-bottom: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .page-list .page-item {
+    border-radius: 16px !important;
+    border: 2px solid transparent !important;
+    margin: 8px 12px !important;
+    padding: 12px 14px !important;
+    transition: all 0.2s ease !important;
+}
+.ghibli-theme .page-list .page-item:hover {
+    background: rgba(139, 92, 246, 0.05) !important;
+}
+.ghibli-theme .page-list .page-item.active {
+    background: white !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .resizer {
+    background-color: var(--primary-container) !important;
+    width: 2px !important;
+}
+
+/* Briefing & Editor */
+.ghibli-theme .briefing-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%) !important;
+    border: 2px solid rgba(139, 92, 246, 0.15) !important;
+    border-radius: 24px !important;
+    padding: 24px !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .briefing-header {
+    color: var(--primary) !important;
+    font-weight: 800 !important;
+}
+.ghibli-theme .note-toolbar {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-bottom: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme #quill-toolbar {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-bottom: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme #quill-editor {
+    background: white !important;
+    padding: 24px !important;
+    color: var(--on-surface) !important;
+}
+.ghibli-theme .editor-footer {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-top: 1px solid var(--primary-container) !important;
+}
+
+/* FullCalendar styling */
+.ghibli-theme .fc {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 28px !important;
+    padding: 24px !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .fc .fc-button-primary {
+    background: white !important;
+    color: var(--primary) !important;
+    border: 2px solid var(--primary-container) !important;
+    border-radius: 12px !important;
+}
+.ghibli-theme .fc .fc-button-primary:hover {
+    background: var(--primary-container) !important;
+}
+.ghibli-theme .fc .fc-button-primary:disabled {
+    background: #f8fafc !important;
+    color: #cbd5e1 !important;
+}
+.ghibli-theme .fc-theme-standard td, 
+.ghibli-theme .fc-theme-standard th {
+    border: 1px solid var(--primary-container) !important;
+}
+
+/* Chat UI Styling */
+.ghibli-theme .chat-sidebar {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-right: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .friend-item {
+    background: white !important;
+    border: 2px solid var(--primary-container) !important;
+    border-radius: 16px !important;
+    margin: 6px 12px !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .friend-item.active {
+    border-color: var(--primary) !important;
+    background: var(--primary-container) !important;
+}
+.ghibli-theme .chat-main-header {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-bottom: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .bubble-left {
+    background: linear-gradient(135deg, #FFF9F2 0%, #FEEFDD 100%) !important;
+    border: 1px solid rgba(246, 222, 201, 0.5) !important;
+    border-radius: 20px 20px 20px 4px !important;
+    color: var(--on-surface) !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .bubble-right {
+    background: #3D5644 !important; /* Premium Forest Green */
+    border: none !important;
+    border-radius: 20px 20px 4px 20px !important;
+    color: white !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+.ghibli-theme .chat-footer-kakaostyle {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-top: 1px solid var(--primary-container) !important;
+}
+.ghibli-theme .chat-input-wrapper {
+    border: 2px solid var(--primary-container) !important;
+    border-radius: 20px !important;
+}

@@ -69,17 +69,45 @@
 
     <!-- 메인 앱 화면 -->
     <div id="journal-app" class="container" style="display: none;">
-        <div class="user-nav" style="display: flex; align-items: center; gap: 15px; justify-content: flex-end;">
-            <button id="care-mode-start-btn" class="btn sm" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; border: none; border-radius: 20px; font-size: 0.85rem; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.25); transition: transform 0.2s;">🎙️ 케어모드 시작</button>
-            <span id="user-email"></span>
-            <button id="logout-btn" class="btn-text">로그아웃</button>
+        <div class="user-nav" style="display: flex; align-items: center; justify-content: space-between; gap: 15px; width: 100%;">
+            <div class="brand-logo-section" style="display: flex; align-items: center; gap: 12px;">
+                <span class="material-symbols-outlined text-primary" style="color: #8B5CF6; font-size: 1.6rem; font-weight: 800;">tempest</span>
+                <h1 style="font-size: 1.25rem; font-weight: 800; bg-clip-text: text; background: linear-gradient(135deg, #8B5CF6 0%, #FB7185 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; font-family: 'Public Sans', sans-serif;">Digital Sanctuary</h1>
+            </div>
+            <div class="user-actions-section" style="display: flex; align-items: center; gap: 16px;">
+                <button id="care-mode-start-btn" class="btn sm care-mode-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); color: white; border: none; border-radius: 20px; font-size: 0.85rem; font-weight: 700; padding: 6px 14px; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25); transition: transform 0.2s;">🎙️ 케어모드 시작</button>
+                <span id="user-email" style="font-weight: 500; color: #7C6A5A; font-size: 0.9rem;"></span>
+                <button id="logout-btn" class="btn-text" style="color: #7C6A5A; font-weight: 700; background: none; border: none; cursor: pointer; font-size: 0.9rem;">로그아웃</button>
+            </div>
         </div>
 
         <div class="tab-nav">
-            <button class="tab-btn active" data-tab="journal">노트</button>
-            <button class="tab-btn" data-tab="calendar">캘린더</button>
-            <button class="tab-btn" data-tab="chat">채팅</button>
-            <button class="tab-btn" data-tab="persona">⚙️ 설정 & 아틀리에</button>
+            <div class="sidebar-user-card" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 8px; width: 100%;">
+                <div class="bg-primary-container rounded-2xl" style="width: 48px; height: 48px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #8B5CF6; flex-shrink: 0;">
+                    <span class="material-symbols-outlined">cloud</span>
+                </div>
+                <div>
+                    <p class="font-bold" style="font-weight: 700; color: #4A3728; margin: 0; font-size: 0.95rem;">Cloud Friend</p>
+                    <p class="text-xs" style="font-size: 0.75rem; color: #7C6A5A; margin: 0;">Beta Explorer</p>
+                </div>
+            </div>
+            
+            <button class="tab-btn active" data-tab="journal">
+                <span class="material-symbols-outlined">forest</span>
+                <span>My Journal</span>
+            </button>
+            <button class="tab-btn" data-tab="chat">
+                <span class="material-symbols-outlined">spa</span>
+                <span>AI Spirit</span>
+            </button>
+            <button class="tab-btn" data-tab="calendar">
+                <span class="material-symbols-outlined">calendar_month</span>
+                <span>Calendar</span>
+            </button>
+            <button class="tab-btn" data-tab="persona">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </button>
         </div>
 
         <!-- [1] 노트 뷰 -->
