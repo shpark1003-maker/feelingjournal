@@ -3882,33 +3882,33 @@ body {
    [Digital Sanctuary - Stitch Premium Theme Custom Rules]
    ========================================================================== */
 .ghibli-theme {
-    --primary: #8B5CF6 !important;
+    --primary: #7da1cc !important; /* Sky Blue */
     --on-primary: #FFFFFF !important;
-    --primary-container: #F3E8FF !important;
-    --on-primary-container: #5B21B6 !important;
-    --secondary: #718096 !important;
+    --primary-container: #d7e3f5 !important;
+    --on-primary-container: #2c4a70 !important;
+    --secondary: #f2a7b3 !important; /* Rose */
     --on-secondary: #FFFFFF !important;
-    --tertiary: #FB7185 !important;
-    --surface: #FDFCF7 !important;
-    --on-surface: #4A3728 !important;
-    --on-surface-variant: #7C6A5A !important;
-    --surface-container-low: #FFFFFF !important;
-    --surface-dim: #F5F1E9 !important;
-    --primary-fixed: #A78BFA !important;
-    --primary-fixed-dim: #C4B5FD !important;
-    --sanctuary-bg-1: #FFF9F2 !important;
-    --sanctuary-bg-2: #F3E8FF !important;
+    --tertiary: #c3a6d1 !important; /* Lavender */
+    --surface: #fffcf2 !important; /* Creamy Paper */
+    --on-surface: #4a3f35 !important; /* Warm Charcoal */
+    --on-surface-variant: #8c7e6d !important;
+    --surface-container-low: #faf3e0 !important;
+    --surface-dim: #fdf8e1 !important;
+    --primary-fixed: #7da1cc !important;
+    --primary-fixed-dim: #d7e3f5 !important;
     --font-sans: 'Public Sans', 'Noto Sans KR', sans-serif !important;
     --border-radius-card: 24px !important;
     --border-radius-btn: 16px !important;
-    --shadow-premium: 0 10px 25px -5px rgba(139, 92, 246, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    --shadow-premium: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
 }
 
 /* Background & Global layout */
 body.ghibli-theme {
     font-family: var(--font-sans) !important;
-    background: linear-gradient(135deg, var(--sanctuary-bg-1) 0%, var(--sanctuary-bg-2) 100%) !important;
+    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCrf4AeXUU0Fh9e-m3XjfrKmuL4FFRO1ISO3UvzEyZKE3YRoMdEu9J76dqCo8VhZRPM944gR272HxanqwAQLMXVkamVpeNtuBfFD3bAkGS_0YBd6u1vFCb0YEDQBPvTrxNiCN66FoeJ8ngva4SnG_KZQnq7FQWKi-VCcOK3DP787hHTsqB9n9DXjwjHwzppilpDbf1jD_bgUUxOLX-7J2AC9ZHc-j0pD-d7Bgz3FW6l1GymJcYncL_7fNTu1sb_JK243LKqCaV1rLgo') !important;
+    background-size: cover !important;
     background-attachment: fixed !important;
+    background-position: center !important;
     color: var(--on-surface) !important;
     min-height: 100vh !important;
     display: flex !important;
@@ -3931,10 +3931,10 @@ body.ghibli-theme .container {
     justify-content: space-between !important;
     align-items: center !important;
     padding: 16px 24px !important;
-    background: rgba(255, 255, 255, 0.65) !important;
+    background: rgba(255, 252, 242, 0.85) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(139, 92, 246, 0.1) !important;
+    border: 1px solid rgba(125, 161, 204, 0.15) !important;
     border-radius: 20px !important;
     margin-bottom: 24px !important;
     box-shadow: var(--shadow-premium) !important;
@@ -3961,10 +3961,10 @@ body.ghibli-theme .container {
         display: flex !important;
         flex-direction: column !important;
         height: fit-content !important;
-        background: rgba(255, 255, 255, 0.7) !important;
+        background: rgba(255, 252, 242, 0.9) !important;
         backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
-        border: 2px solid rgba(255, 255, 255, 0.5) !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
         border-radius: 24px !important;
         padding: 24px !important;
         gap: 8px !important;
@@ -3995,11 +3995,11 @@ body.ghibli-theme .container {
     width: 100% !important;
 }
 .ghibli-theme .tab-btn:hover {
-    background: rgba(139, 92, 246, 0.05) !important;
+    background: rgba(125, 161, 204, 0.08) !important;
     color: var(--primary) !important;
 }
 .ghibli-theme .tab-btn.active {
-    background: rgba(139, 92, 246, 0.1) !important;
+    background: rgba(125, 161, 204, 0.15) !important;
     color: var(--primary) !important;
     font-weight: 700 !important;
 }
@@ -4014,14 +4014,34 @@ body.ghibli-theme .container {
 .ghibli-theme .editor-section-premium,
 .ghibli-theme .settings-container,
 .ghibli-theme #persona-view .card {
-    background: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 252, 242, 0.95) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
     border-radius: 28px !important;
     box-shadow: var(--shadow-premium) !important;
     padding: 28px !important;
     margin-bottom: 24px !important;
+}
+
+/* Paper texture & watercolor details */
+.ghibli-theme .paper-texture {
+    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfQ7-XYlnDaTbB8_Yz3Sg81dzDRWRyWweAaYxBU7kkReXHAn3yrZYCbiHtbM3rR_kN4CoT6tnX276zkhx7ajrJD-EY2hy71TIk6OlDM9dCxoxKenSGyjAOwFK4W18eEPqYxEKEJQh-QK79MhimZEkotOL0K6x2XRW6uN4KmqmTvgNYhz-m3H6X9LDWcTPWNjVGdO4_6dTWyoZwog_zdwa3DW8wpt-h_0GTDhDoVybcQoJ_80_dzN1VCQzr3z9cn2dJEuiKReVlqHdO') !important;
+}
+.ghibli-theme .watercolor-border {
+    border-style: solid !important;
+    border-color: rgba(74, 63, 53, 0.15) !important;
+}
+.ghibli-theme .floating-cloud {
+    animation: float 6s ease-in-out infinite !important;
+}
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
 }
 
 /* Buttons */
@@ -4037,7 +4057,7 @@ body.ghibli-theme .container {
     border-radius: var(--border-radius-btn) !important;
     padding: 12px 24px !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(125, 161, 204, 0.2) !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
@@ -4047,9 +4067,9 @@ body.ghibli-theme .container {
 .ghibli-theme #save-settings-btn:hover,
 .ghibli-theme #save-care-settings-btn:hover,
 .ghibli-theme #new-page-btn:hover {
-    background: #7c3aed !important;
+    background: #648bb8 !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(125, 161, 204, 0.3) !important;
 }
 .ghibli-theme button.secondary,
 .ghibli-theme .btn.secondary,
@@ -4095,7 +4115,7 @@ body.ghibli-theme .container {
 .ghibli-theme select:focus,
 .ghibli-theme textarea:focus {
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(125, 161, 204, 0.1) !important;
 }
 
 /* Gender Selection radio group */
@@ -4180,7 +4200,7 @@ body.ghibli-theme .container {
     cursor: pointer !important;
 }
 .ghibli-theme input[type="checkbox"]:focus {
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(125, 161, 204, 0.1) !important;
 }
 
 /* Circle of Care */
@@ -4198,24 +4218,24 @@ body.ghibli-theme .container {
     transition: all 0.2s ease !important;
 }
 .ghibli-theme .guardian-item-btn.selected {
-    background: rgba(139, 92, 246, 0.05) !important;
+    background: rgba(125, 161, 204, 0.05) !important;
     border-color: var(--primary) !important;
 }
 
 /* Notebook 3-Column Layout */
 .ghibli-theme .journal-3-column-layout {
-    background: rgba(255, 255, 255, 0.45) !important;
+    background: rgba(255, 252, 242, 0.8) !important;
     border-radius: 24px !important;
-    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
     box-shadow: var(--shadow-premium) !important;
     overflow: hidden !important;
 }
 .ghibli-theme .notebook-sidebar {
-    background: rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 252, 242, 0.6) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
 .ghibli-theme .notebook-sidebar .sidebar-header {
-    background: rgba(255, 255, 255, 0.4) !important;
+    background: rgba(255, 252, 242, 0.4) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
 .ghibli-theme .notebook-list .notebook-item {
@@ -4227,7 +4247,7 @@ body.ghibli-theme .container {
     transition: all 0.2s ease !important;
 }
 .ghibli-theme .notebook-list .notebook-item:hover {
-    background: rgba(139, 92, 246, 0.05) !important;
+    background: rgba(125, 161, 204, 0.05) !important;
 }
 .ghibli-theme .notebook-list .notebook-item.active {
     background: white !important;
@@ -4238,7 +4258,7 @@ body.ghibli-theme .container {
     color: var(--primary) !important;
 }
 .ghibli-theme .pages-sidebar {
-    background: rgba(255, 255, 255, 0.5) !important;
+    background: rgba(255, 252, 242, 0.5) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
 .ghibli-theme .pages-sidebar .sidebar-header {
@@ -4252,7 +4272,7 @@ body.ghibli-theme .container {
     transition: all 0.2s ease !important;
 }
 .ghibli-theme .page-list .page-item:hover {
-    background: rgba(139, 92, 246, 0.05) !important;
+    background: rgba(125, 161, 204, 0.05) !important;
 }
 .ghibli-theme .page-list .page-item.active {
     background: white !important;
@@ -4266,8 +4286,8 @@ body.ghibli-theme .container {
 
 /* Briefing & Editor */
 .ghibli-theme .briefing-card {
-    background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%) !important;
-    border: 2px solid rgba(139, 92, 246, 0.15) !important;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F5F7FA 100%) !important;
+    border: 2px solid rgba(125, 161, 204, 0.15) !important;
     border-radius: 24px !important;
     padding: 24px !important;
     box-shadow: var(--shadow-premium) !important;
@@ -4296,10 +4316,10 @@ body.ghibli-theme .container {
 
 /* FullCalendar styling */
 .ghibli-theme .fc {
-    background: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 252, 242, 0.95) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
     border-radius: 28px !important;
     padding: 24px !important;
     box-shadow: var(--shadow-premium) !important;
@@ -4309,22 +4329,49 @@ body.ghibli-theme .container {
     color: var(--primary) !important;
     border: 2px solid var(--primary-container) !important;
     border-radius: 12px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
 }
 .ghibli-theme .fc .fc-button-primary:hover {
     background: var(--primary-container) !important;
 }
 .ghibli-theme .fc .fc-button-primary:disabled {
-    background: #f8fafc !important;
+    background: #fdf8e1 !important;
     color: #cbd5e1 !important;
 }
 .ghibli-theme .fc-theme-standard td, 
 .ghibli-theme .fc-theme-standard th {
-    border: 1px solid var(--primary-container) !important;
+    border: 1px solid rgba(125, 161, 204, 0.15) !important;
+}
+
+/* Calendar Event Color Overrides matching Ghibli Custom design */
+.ghibli-theme .fc-event.event-personal {
+    background: #d7e3f5 !important;
+    color: #2c4a70 !important;
+    border: 1px solid rgba(125, 161, 204, 0.3) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
+}
+.ghibli-theme .fc-event.event-shared {
+    background: #fde2e4 !important;
+    color: #f2a7b3 !important;
+    border: 1px solid rgba(242, 167, 179, 0.3) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
+}
+.ghibli-theme .fc-event.event-task {
+    background: #f0e6f6 !important;
+    color: #c3a6d1 !important;
+    border: 1px solid rgba(195, 166, 209, 0.3) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
 }
 
 /* Chat UI Styling */
 .ghibli-theme .chat-sidebar {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 252, 242, 0.8) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
 .ghibli-theme .friend-item {
@@ -4339,18 +4386,18 @@ body.ghibli-theme .container {
     background: var(--primary-container) !important;
 }
 .ghibli-theme .chat-main-header {
-    background: rgba(255, 255, 255, 0.85) !important;
+    background: rgba(255, 252, 242, 0.85) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
 .ghibli-theme .bubble-left {
-    background: linear-gradient(135deg, #FFF9F2 0%, #FEEFDD 100%) !important;
-    border: 1px solid rgba(246, 222, 201, 0.5) !important;
+    background: linear-gradient(135deg, #fffcf2 0%, #faf3e0 100%) !important;
+    border: 1px solid rgba(184, 166, 142, 0.25) !important;
     border-radius: 20px 20px 20px 4px !important;
     color: var(--on-surface) !important;
     box-shadow: var(--shadow-premium) !important;
 }
 .ghibli-theme .bubble-right {
-    background: #3D5644 !important; /* Premium Forest Green */
+    background: var(--primary) !important;
     border: none !important;
     border-radius: 20px 20px 4px 20px !important;
     color: white !important;
@@ -4364,3 +4411,70 @@ body.ghibli-theme .container {
     border: 2px solid var(--primary-container) !important;
     border-radius: 20px !important;
 }
+
+/* Cozy Calendar Layout Tailwind Utilities */
+.ghibli-theme .flex { display: flex !important; }
+.ghibli-theme .flex-col { display: flex !important; flex-direction: column !important; }
+.ghibli-theme .flex-row { display: flex !important; flex-direction: row !important; }
+.ghibli-theme .items-center { align-items: center !important; }
+.ghibli-theme .justify-between { justify-content: space-between !important; }
+.ghibli-theme .gap-2 { gap: 8px !important; }
+.ghibli-theme .gap-3 { gap: 12px !important; }
+.ghibli-theme .gap-4 { gap: 16px !important; }
+.ghibli-theme .mb-6 { margin-bottom: 24px !important; }
+.ghibli-theme .mb-8 { margin-bottom: 32px !important; }
+.ghibli-theme .w-10 { width: 40px !important; }
+.ghibli-theme .h-10 { height: 40px !important; }
+.ghibli-theme .w-full { width: 100% !important; }
+.ghibli-theme .text-2xl { font-size: 1.5rem !important; }
+.ghibli-theme .text-3xl { font-size: 1.875rem !important; }
+.ghibli-theme .font-bold { font-weight: 700 !important; }
+.ghibli-theme .font-headline { font-family: var(--font-sans) !important; }
+.ghibli-theme .text-on-surface { color: var(--on-surface) !important; }
+.ghibli-theme .text-on-surface-variant { color: var(--on-surface-variant) !important; }
+.ghibli-theme .rounded-full { border-radius: 9999px !important; }
+.ghibli-theme .rounded-2xl { border-radius: 16px !important; }
+.ghibli-theme .rounded-\[1\.5rem\] { border-radius: 24px !important; }
+.ghibli-theme .rounded-\[2\.5rem\] { border-radius: 40px !important; }
+.ghibli-theme .bg-surface { background-color: var(--surface) !important; }
+.ghibli-theme .bg-white { background-color: #ffffff !important; }
+.ghibli-theme .bg-primary\/10 { background-color: rgba(125, 161, 204, 0.1) !important; }
+.ghibli-theme .bg-secondary\/10 { background-color: rgba(242, 167, 179, 0.1) !important; }
+.ghibli-theme .bg-tertiary\/10 { background-color: rgba(195, 166, 209, 0.1) !important; }
+.ghibli-theme .bg-primary\/5 { background-color: rgba(125, 161, 204, 0.05) !important; }
+.ghibli-theme .text-primary { color: var(--primary) !important; }
+.ghibli-theme .text-secondary { color: var(--secondary) !important; }
+.ghibli-theme .text-tertiary { color: var(--tertiary) !important; }
+.ghibli-theme .border-2 { border-width: 2px !important; }
+.ghibli-theme .border-4 { border-width: 4px !important; }
+.ghibli-theme .border-white { border-color: #ffffff !important; }
+.ghibli-theme .border-primary\/20 { border-color: rgba(125, 161, 204, 0.2) !important; }
+.ghibli-theme .border-secondary\/20 { border-color: rgba(242, 167, 179, 0.2) !important; }
+.ghibli-theme .border-tertiary\/20 { border-color: rgba(195, 166, 209, 0.2) !important; }
+.ghibli-theme .border-on-surface\/5 { border-color: rgba(74, 63, 53, 0.05) !important; }
+.ghibli-theme .border-on-surface\/10 { border-color: rgba(74, 63, 53, 0.1) !important; }
+.ghibli-theme .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
+.ghibli-theme .shadow-lg { box-shadow: 0 10px 15px -3px rgba(125, 161, 204, 0.1), 0 4px 6px -2px rgba(125, 161, 204, 0.05) !important; }
+.ghibli-theme .px-4 { padding-left: 16px !important; padding-right: 16px !important; }
+.ghibli-theme .py-2 { padding-top: 8px !important; padding-bottom: 8px !important; }
+.ghibli-theme .px-5 { padding-left: 20px !important; padding-right: 20px !important; }
+.ghibli-theme .py-4 { padding-top: 16px !important; padding-bottom: 16px !important; }
+.ghibli-theme .p-5 { padding: 20px !important; }
+.ghibli-theme .p-6 { padding: 24px !important; }
+.ghibli-theme .p-8 { padding: 32px !important; }
+.ghibli-theme .pt-4 { padding-top: 16px !important; }
+.ghibli-theme .mt-4 { margin-top: 16px !important; }
+.ghibli-theme .text-sm { font-size: 0.875rem !important; }
+.ghibli-theme .text-lg { font-size: 1.125rem !important; }
+.ghibli-theme .text-xs { font-size: 0.75rem !important; }
+.ghibli-theme .uppercase { text-transform: uppercase !important; }
+.ghibli-theme .tracking-widest { letter-spacing: 0.1em !important; }
+.ghibli-theme .tracking-tight { letter-spacing: -0.025em !important; }
+.ghibli-theme .font-semibold { font-weight: 600 !important; }
+.ghibli-theme .font-medium { font-weight: 500 !important; }
+.ghibli-theme .space-y-5 > * + * { margin-top: 20px !important; }
+.ghibli-theme .flex-1 { flex: 1 1 0% !important; }
+.ghibli-theme .w-1\/3 { width: 33.333333% !important; }
+.ghibli-theme .transition-all { transition-property: all !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; transition-duration: 150ms !important; }
+.ghibli-theme .shadow-\[0_32px_64px_-16px_rgba\(0\2c 0\2c 0\2c 0\.2\)\] { box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.2) !important; }
+.ghibli-theme .watercolor-border { border-style: solid !important; }
