@@ -3879,6 +3879,294 @@ body {
 }
 
 /* ==========================================================================
+   [Ghibli Theme Custom Rules]
+   ========================================================================== */
+.ghibli-theme {
+    --ghibli-primary: #7a9e7e;
+    --ghibli-secondary: #d4a373;
+    --ghibli-dark: #5d574d;
+    --ghibli-cream-bg: #fdf6e3;
+    --ghibli-cream-card: #fffef0;
+    --ghibli-cream-dim: #f9f1d7;
+    --ghibli-text: #433e37;
+    --ghibli-border: #e8e4d3;
+}
+
+/* Background & Main elements */
+.ghibli-theme.chat-view-layout {
+    background-color: var(--ghibli-cream-bg) !important;
+}
+
+.ghibli-theme .chat-bg {
+    background-color: var(--ghibli-cream-bg) !important;
+    background-image: radial-gradient(var(--ghibli-cream-dim) 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+}
+
+/* Sidebar Styling */
+.ghibli-theme .chat-sidebar {
+    background: var(--ghibli-cream-dim) !important;
+    border-right: 2.5px solid var(--ghibli-dark) !important;
+    color: var(--ghibli-text) !important;
+}
+
+.ghibli-theme .chat-sidebar-header {
+    border-bottom: 2.5px solid var(--ghibli-dark) !important;
+    background: transparent !important;
+    padding: 15px !important;
+}
+
+.ghibli-theme .chat-sidebar-header h3 {
+    color: var(--ghibli-dark) !important;
+    font-weight: 800;
+    font-size: 1.15rem;
+}
+
+.ghibli-theme .friend-item {
+    background: rgba(255, 255, 240, 0.5) !important;
+    border: 2px solid var(--ghibli-border) !important;
+    border-radius: 12px !important;
+    margin: 8px 12px !important;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.ghibli-theme .friend-item:hover {
+    background: var(--ghibli-cream-card) !important;
+    border-color: var(--ghibli-secondary) !important;
+    transform: translateY(-1px);
+}
+
+.ghibli-theme .friend-item.active {
+    background: var(--ghibli-cream-card) !important;
+    border-color: var(--ghibli-dark) !important;
+    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
+}
+
+.ghibli-theme .sidebar-footer {
+    border-top: 2px solid var(--ghibli-dark) !important;
+    padding: 12px 15px !important;
+    background: transparent !important;
+}
+
+.ghibli-theme .sidebar-footer #invite-friend-btn {
+    background: var(--ghibli-primary) !important;
+    color: white !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    border-radius: 12px !important;
+    padding: 10px !important;
+    font-weight: 700;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    transition: transform 0.1s;
+}
+
+.ghibli-theme .sidebar-footer #invite-friend-btn:active {
+    transform: scale(0.97);
+}
+
+/* Chat Main Header */
+.ghibli-theme .chat-main-header {
+    background: var(--ghibli-cream-dim) !important;
+    border-bottom: 2px solid var(--ghibli-dark) !important;
+    color: var(--ghibli-dark) !important;
+    padding: 12px 20px !important;
+}
+
+.ghibli-theme #chat-room-title-text {
+    font-weight: 800;
+    color: var(--ghibli-dark);
+}
+
+/* Custom Ghibli Buttons */
+.ghibli-theme .btn-icon-circle {
+    background: white !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    color: var(--ghibli-dark) !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
+    transition: transform 0.1s !important;
+}
+
+.ghibli-theme .btn-icon-circle:hover {
+    background: var(--ghibli-cream-dim) !important;
+}
+
+.ghibli-theme .btn-icon-circle:active {
+    transform: scale(0.9) !important;
+}
+
+/* Paper notes & bubble */
+.ghibli-theme .paper-note {
+    background: var(--ghibli-cream-card) !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    box-shadow: 2px 2px 0px rgba(93,87,77,0.15) !important;
+}
+
+.ghibli-theme .bubble-right { border-radius: 12px 2px 12px 12px !important; }
+.ghibli-theme .bubble-left { border-radius: 2px 12px 12px 12px !important; }
+
+/* Hand painted gauge */
+.ghibli-theme .hand-painted-gauge {
+    background: linear-gradient(90deg, #a7d8de 0%, #f9d976 50%, #f7a8a8 100%) !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    border-radius: 999px !important;
+    height: 12px !important;
+    position: relative !important;
+}
+
+.ghibli-theme .gauge-needle {
+    width: 6px !important;
+    height: 20px !important;
+    background: var(--ghibli-dark) !important;
+    position: absolute !important;
+    top: -5px !important;
+    border-radius: 3px !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+}
+
+/* Floating AI assistant panel */
+.ghibli-theme .chat-ai-floating-controls {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 15px !important;
+    padding: 10px 0 !important;
+    background: transparent !important;
+    z-index: 20 !important;
+    flex-shrink: 0 !important;
+}
+
+.ghibli-theme .ghibli-btn-summon {
+    background: var(--ghibli-primary) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s, opacity 0.2s !important;
+}
+
+.ghibli-theme .ghibli-btn-summon:hover {
+    opacity: 0.95 !important;
+}
+
+.ghibli-theme .ghibli-btn-guidance {
+    background: white !important;
+    color: var(--ghibli-secondary) !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+    border: 2px solid #e8e4d3 !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s, background 0.2s !important;
+}
+
+.ghibli-theme .ghibli-btn-guidance:hover {
+    background: var(--ghibli-cream-dim) !important;
+}
+
+.ghibli-theme .floating-assistant {
+    animation: float-ai 4s ease-in-out infinite !important;
+}
+
+@keyframes float-ai {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+/* Footer & Kakao input wrapper overrides */
+.ghibli-theme .chat-footer-kakaostyle {
+    background: rgba(249, 241, 215, 0.8) !important;
+    border-top: 2px solid var(--ghibli-dark) !important;
+    padding: 12px 18px 16px 18px !important;
+    flex-shrink: 0 !important;
+}
+
+.ghibli-theme .chat-input-wrapper {
+    background: white !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.ghibli-theme .chat-textarea {
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    resize: none !important;
+    color: var(--ghibli-text) !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    box-shadow: none !important;
+    padding: 6px 0 !important;
+}
+
+.ghibli-theme .chat-footer-attach-btn {
+    border: none !important;
+    background: none !important;
+    font-size: 1.35rem !important;
+    cursor: pointer !important;
+    color: var(--ghibli-dark) !important;
+    padding: 0 4px !important;
+    transition: transform 0.2s !important;
+}
+
+.ghibli-theme .chat-footer-attach-btn:hover {
+    transform: scale(1.1);
+}
+
+.ghibli-theme .chat-footer-send-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    background: var(--ghibli-primary) !important;
+    color: white !important;
+    border: 2px solid var(--ghibli-dark) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.1) !important;
+    transition: transform 0.1s !important;
+}
+
+.ghibli-theme .chat-footer-send-btn:active {
+    transform: scale(0.9) !important;
+}
+
+/* Chat Scroll Messages Style overrides */
+.ghibli-theme .chat-scroll-area {
+    padding: 18px !important;
+    background: transparent !important;
+}
+
+.ghibli-theme .message-sender {
+    color: var(--ghibli-dark) !important;
+    font-weight: 700 !important;
+}
+
+.ghibli-theme .message-info {
+    color: #8b8273 !important;
+}
+
+/* ==========================================================================
    [Premium Mobile Responsive Design Overrides]
    ========================================================================== */
 @media (max-width: 768px) {
@@ -4215,6 +4503,13 @@ body {
         box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
         overflow: hidden !important;
     }
+    .ghibli-theme .chat-sidebar {
+        background: var(--ghibli-cream-dim) !important;
+        border-bottom: 2.5px solid var(--ghibli-dark) !important;
+        border-right: none !important;
+        border-top: none !important;
+        box-shadow: 0 8px 24px rgba(93,87,77,0.2) !important;
+    }
     .chat-sidebar.active-drawer {
         transform: translateY(0) !important;
         opacity: 1 !important;
@@ -4357,6 +4652,7 @@ body {
         font-size: 10.5px !important;
     }
 }
+
 
 
 

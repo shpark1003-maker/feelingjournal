@@ -147,13 +147,31 @@ module.exports = async (req, res) => {
             return await presence(req, res);
         }
         if (path === '/api/push' || path.startsWith('/api/push/')) {
-            return await push(req, res);
+            const originalUrl = req.url;
+            req.url = req.url.replace(/^\/api\/push/, '');
+            return push.router(req, res, () => {
+                req.url = originalUrl;
+                res.status(404).json({ error: `Not Found: ${path}` });
+            });
         }
-        if (path === '/api/scrap' || path.startsWith('/api/scrap/')) {
+        if (path === '/api/schedule-message') {
+            const originalUrl = req.url;
+            req.url = req.url.replace(/^\/api/, '');
+            return push.router(req, res, () => {
+                req.url = originalUrl;
+                res.status(404).json({ error: `Not Found: ${path}` });
+            });
+        }
+        if (path === '/api/scrap' || path.startsWith('/api/scrap/') || path.startsWith('/api/scrap-')) {
             return await scrap(req, res);
         }
         if (path === '/api/subscribe' || path.startsWith('/api/subscribe/')) {
-            return await subscribe(req, res);
+            const originalUrl = req.url;
+            req.url = req.url.replace(/^\/api/, '');
+            return push.router(req, res, () => {
+                req.url = originalUrl;
+                res.status(404).json({ error: `Not Found: ${path}` });
+            });
         }
 
         return res.status(404).json({ error: `Not Found: ${path}` });

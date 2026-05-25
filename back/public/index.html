@@ -22,6 +22,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
@@ -249,70 +250,89 @@
 
         <!-- [3] 채팅 뷰 -->
         <div id="chat-view" class="tab-content">
-            <div class="chat-view-layout">
+            <div class="chat-view-layout ghibli-theme">
                 <aside class="chat-sidebar">
                     <!-- [NEW] 내 프로필 사진 변경 섹션 -->
-                    <div class="user-profile-section" style="padding: 22px 15px; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.015);">
+                    <div class="user-profile-section" style="padding: 22px 15px; border-bottom: 2.5px solid #5d574d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.015);">
                         <div style="position: relative;">
-                            <img id="chat-my-avatar" src="" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 2.5px solid var(--accent-color); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: none;">
-                            <div id="chat-my-avatar-fallback" style="width: 75px; height: 75px; border-radius: 50%; background: #dfe4ea; display: flex; align-items: center; justify-content: center; font-size: 2.3rem; cursor: pointer; border: 2.5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.08);">👤</div>
+                            <img id="chat-my-avatar" src="" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 2.5px solid #5d574d; cursor: pointer; box-shadow: 2px 2px 0px rgba(0,0,0,0.05); display: none;">
+                            <div id="chat-my-avatar-fallback" style="width: 75px; height: 75px; border-radius: 50%; background: #dfe4ea; display: flex; align-items: center; justify-content: center; font-size: 2.3rem; cursor: pointer; border: 2.5px solid #5d574d; box-shadow: 2px 2px 0px rgba(0,0,0,0.05);">👤</div>
                             <input type="file" id="chat-avatar-upload-input" accept="image/*" style="display: none;">
                         </div>
-                        <button id="chat-change-photo-btn" class="btn-text" style="font-size: 0.8rem; color: var(--accent-color); font-weight: 700; background: none; border: none; cursor: pointer; padding: 2px 8px; transition: opacity 0.2s; font-family: inherit;">사진 변경</button>
+                        <button id="chat-change-photo-btn" class="btn-text" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; background: none; border: none; cursor: pointer; padding: 2px 8px; transition: opacity 0.2s; font-family: inherit;">사진 변경</button>
                     </div>
 
                     <div class="chat-sidebar-header">
                         <h3 id="friend-list-title-text">👥 1촌</h3>
                     </div>
-                    <div id="friend-status-list" class="friend-list-container"></div>
+                    <div id="friend-status-list" class="friend-list-container no-scrollbar"></div>
                     <div class="sidebar-footer">
                         <button id="invite-friend-btn" class="btn-text-icon w-100">➕ 친구 초대하기</button>
                     </div>
                 </aside>
-                <main class="chat-main">
+                <main class="chat-main chat-bg">
                     <header class="chat-main-header">
                         <button id="mobile-chat-drawer-toggle" class="mobile-drawer-toggle-btn">👥 1촌 목록</button>
-                        <h3 id="chat-room-title-text">채팅방</h3>
+                        <h3 id="chat-room-title-text" class="italic">채팅방</h3>
                         <div class="chat-header-actions">
                             <button id="voice-call-btn" class="btn-icon-circle" title="음성 통화">📞</button>
                             <button id="video-call-btn" class="btn-icon-circle" title="영상 통화">📹</button>
                             <button id="chat-friend-settings-btn" class="btn-icon-circle" title="1촌 설정" style="display: none;">⚙️</button>
                         </div>
                     </header>
-                    <!-- [NEW] 1촌 감성 온도계 & 예보 배너 -->
-                    <div id="friend-emotion-banner" class="friend-banner card" style="display: none; padding: 15px; margin: 12px 18px 0 18px; border-radius: 16px; position: relative; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px 0 rgba(31,38,135,0.05);">
-                        <div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 10;">
-                            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                                <div class="banner-avatar" id="friend-banner-avatar" style="font-size: 1.8rem; background: rgba(255,255,255,0.8); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">😭</div>
-                                <div class="banner-info" style="flex: 1;">
-                                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #2d3436; display: flex; align-items: center; gap: 6px;">
-                                        <span id="friend-banner-name">상대방</span>님의 감성 기온: 
-                                        <strong id="friend-banner-temp" style="color: #6c5ce7; font-size: 1.05rem;">18°C</strong>
-                                    </h4>
-                                    <p id="friend-banner-advice" style="margin: 4px 0 0 0; font-size: 0.8rem; color: #636e72; line-height: 1.45; font-weight: 400;"></p>
-                                </div>
+                    <!-- [Ghibli Redesign] 1촌 감성 온도계 & 예보 배너 -->
+                    <div id="friend-emotion-banner" class="friend-banner paper-note" style="display: none; padding: 15px; margin: 12px 18px 0 18px; border-radius: 12px; border: 2px solid #5d574d; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px;">
+                            <div class="banner-avatar" id="friend-banner-avatar" style="font-size: 1.8rem; background: #fffef0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #5d574d; box-shadow: 2px 2px 0px rgba(0,0,0,0.05);">😭</div>
+                            <div class="banner-info" style="flex: 1;">
+                                <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; color: #433e37; display: flex; justify-content: space-between; align-items: center;">
+                                    <span><span id="friend-banner-name">상대방</span>님의 감성 기온</span>
+                                    <strong id="friend-banner-temp" style="color: #d4a373; font-size: 0.95rem;">18°C</strong>
+                                </h4>
+                                <p id="friend-banner-advice" style="margin: 4px 0 0 0; font-size: 0.8rem; color: #7c7267; line-height: 1.45; font-weight: 400;"></p>
                             </div>
                         </div>
-                        <div class="thermometer-bar" style="width: 100%; height: 8px; background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden; margin-top: 12px; position: relative; z-index: 10; border: 1.5px solid rgba(255,255,255,0.6);">
-                            <div id="friend-banner-fill" class="thermometer-fill" style="width: 50%; height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px;"></div>
+                        <div class="hand-painted-gauge-container" style="width: 100%; margin-top: 12px;">
+                            <div class="hand-painted-gauge">
+                                <div id="friend-banner-fill" class="gauge-needle" style="left: 50%;"></div>
+                            </div>
                         </div>
                     </div>
-                    <div id="chat-messages-tab" class="chat-scroll-area"></div>
-                    <div class="chat-footer-kakaostyle">
-                        <div class="chat-ai-toolbar"
-                            style="padding: 8px 15px; display: flex; gap: 12px; background: rgba(0,0,0,0.02); border-top: 1px solid rgba(0,0,0,0.05);">
-                            <button id="ai-summon-btn" class="btn sm"
-                                style="background: var(--accent-color); color: white; border: none; border-radius: 20px; font-size: 0.85rem; padding: 5px 12px; cursor: pointer; transition: transform 0.2s;">✨
-                                비서 참여</button>
-                            <button id="ai-secret-btn" class="btn sm"
-                                style="background: #2bcbba; color: white; border: none; border-radius: 20px; font-size: 0.85rem; padding: 5px 12px; cursor: pointer; transition: transform 0.2s;">🤫
-                                비서 조언</button>
+
+                    <!-- [Ghibli Redesign] Spirit Whispers (AI Insight Box) -->
+                    <div id="ghibli-spirit-whispers" class="spirit-whispers-card" style="display: none; margin: 12px 18px 0 18px; padding: 15px; background: rgba(255, 254, 240, 0.85); border: 2px dashed #d4a373; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px; position: relative;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #7a9e7e; display: flex; align-items: center; justify-content: center; border: 2px solid #5d574d; flex-shrink: 0; box-shadow: 2px 2px 0px rgba(0,0,0,0.05);">
+                            <span class="material-symbols-outlined" style="color: white; font-size: 1.6rem;">spa</span>
                         </div>
-                        <div class="chat-input-wrapper" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #ffffff; border-radius: 24px; border: 1.5px solid rgba(0,0,0,0.06); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                            <textarea id="chat-input-tab" placeholder="마음을 나눠보세요..." class="chat-textarea" style="flex: 1; border: none; outline: none; resize: none; background: transparent; font-family: inherit; font-size: 0.95rem; height: 36px; padding: 6px 0; line-height: 24px;"></textarea>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; font-size: 0.75rem; font-weight: 800; color: #d4a373; letter-spacing: 0.1em; text-transform: uppercase;">Spirit Whispers</p>
+                            <p id="spirit-whispers-text" style="margin: 3px 0 0 0; font-size: 0.82rem; color: #433e37; font-style: italic; font-weight: 500; line-height: 1.4;"></p>
+                        </div>
+                        <button onclick="document.getElementById('ghibli-spirit-whispers').style.display='none'" style="background: none; border: none; cursor: pointer; color: #7c7267; font-size: 1rem; padding: 2px; position: absolute; top: 10px; right: 10px;">✕</button>
+                    </div>
+
+                    <div id="chat-messages-tab" class="chat-scroll-area no-scrollbar"></div>
+                    
+                    <!-- [Ghibli Redesign] AI Assistant Floating Controls -->
+                    <div class="chat-ai-floating-controls">
+                        <button id="ai-summon-btn" class="ghibli-btn-summon floating-assistant" title="비서 참여">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            <span>Summon Spirit</span>
+                        </button>
+                        <button id="ai-secret-btn" class="ghibli-btn-guidance" title="비서 조언">
+                            <span class="material-symbols-outlined">chat_bubble</span>
+                            <span>Guidance</span>
+                        </button>
+                    </div>
+
+                    <div class="chat-footer-kakaostyle">
+                        <div class="chat-input-wrapper">
+                            <button id="chat-attach-btn" class="chat-footer-attach-btn" title="이미지 첨부">📎</button>
+                            <textarea id="chat-input-tab" placeholder="Write a note..." class="chat-textarea" style="height: 36px;"></textarea>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <button id="chat-attach-btn" class="btn-icon-circle" title="이미지 첨부" style="width: 36px; height: 36px; border-radius: 50%; border: none; background: #f1f2f6; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; cursor: pointer; transition: all 0.2s;">📎</button>
-                                <button id="send-chat-btn-tab" class="btn-icon-circle" title="전송" style="width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; cursor: pointer; transition: all 0.2s;">✈️</button>
+                                <button id="send-chat-btn-tab" class="chat-footer-send-btn" title="전송">
+                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">send</span>
+                                </button>
                                 <input type="file" id="chat-image-attach-input" accept="image/*" style="display: none;">
                             </div>
                         </div>
@@ -555,8 +575,8 @@
             <div class="manual-invite-section card-inner" style="margin-bottom: 15px;">
                 <p class="section-desc">초대할 친구의 이메일을 직접 입력하거나 초대 링크를 복사하세요.</p>
                 <div class="input-with-button" style="margin-bottom: 10px;">
-                     <input type="email" id="manual-email-input" placeholder="example@email.com" class="input-premium">
-                     <button id="manual-invite-btn" class="btn primary">초대장 발송</button>
+                    <input type="email" id="manual-email-input" placeholder="example@email.com" class="input-premium">
+                    <button id="manual-invite-btn" class="btn primary">초대장 발송</button>
                 </div>
                 <button id="copy-share-link-btn" class="btn secondary" style="width: 100%; border-radius: 12px; background: linear-gradient(135deg, #10ac84 0%, #2ed573 100%); color: white; border: none; font-weight: 700; padding: 10px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(46, 213, 115, 0.25);">🔗 나만의 1촌 초대 링크 복사하기</button>
             </div>

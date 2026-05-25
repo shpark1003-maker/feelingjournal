@@ -69,17 +69,17 @@ export function appendMessage(msg) {
         }
     }
 
-    // [NEW] 사용자별 프로필 이미지 동적 결합
+    // [NEW] 사용자별 프로필 이미지 동적 결합 (Ghibli Theme)
     const myAvatarUrl = store.currentUser?.user_metadata?.avatar_url || '';
     const avatarHtml = isMe 
         ? (myAvatarUrl 
-            ? `<img class="chat-msg-avatar" src="${myAvatarUrl}?t=${Date.now()}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-color); margin-right: 8px;">`
-            : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #dfe4ea; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1.5px solid var(--accent-color); margin-right: 8px;">👤</div>`)
+            ? `<img class="chat-msg-avatar" src="${myAvatarUrl}?t=${Date.now()}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #5d574d; margin-right: 8px; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">`
+            : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #e8f0e0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">👤</div>`)
         : (isAi 
             ? (store.currentAvatarUrl
-                ? `<img class="chat-msg-avatar" src="${store.currentAvatarUrl}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #a29bfe; margin-right: 8px;">`
-                : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #e3d9fc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1.5px solid #a29bfe; margin-right: 8px;">🤖</div>`)
-            : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #ffeaa7; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 1.5px solid #ffa502; margin-right: 8px;">👥</div>`);
+                ? `<img class="chat-msg-avatar" src="${store.currentAvatarUrl}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #5d574d; margin-right: 8px; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">`
+                : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #f9d976; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">🤖</div>`)
+            : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #fdf2b5; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">👥</div>`);
 
     // [NEW] 만약 메시지 본문이 ![image](url) 형식이면 이미지 카드로 아름답게 렌더링
     const imgMatch = msg.content && msg.content.trim().match(/^!\[image\]\((.*?)\)$/);
@@ -88,16 +88,26 @@ export function appendMessage(msg) {
 
     // 이미지가 로드 실패(onerror)할 경우, 경고 카드 형태의 UI로 안전하게 대체 처리
     const contentHtml = isImage 
-        ? `<img class="chat-inline-photo" src="${imageUrl}" style="max-width: 250px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); cursor: pointer; display: block; margin-top: 4px; border: 1.5px solid rgba(0,0,0,0.05);" onclick="window.open('${imageUrl}', '_blank')" onerror="this.onerror=null; this.outerHTML='<div class=&quot;image-load-failed&quot; style=&quot;padding: 10px 14px; background: #ffebee; color: #d63031; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border: 1px solid #ff8181; font-weight: 500;&quot;>⚠️ 이미지를 불러올 수 없습니다.</div>';">`
+        ? `<img class="chat-inline-photo" src="${imageUrl}" style="max-width: 250px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); cursor: pointer; display: block; margin-top: 4px; border: 2px solid #5d574d;" onclick="window.open('${imageUrl}', '_blank')" onerror="this.onerror=null; this.outerHTML='<div class=&quot;image-load-failed&quot; style=&quot;padding: 10px 14px; background: #ffebee; color: #d63031; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border: 1.5px solid #5d574d; font-weight: 500;&quot;>⚠️ 이미지를 불러올 수 없습니다.</div>';">`
         : msg.content;
+
+    // [Ghibli Theme Redesign Style mapping]
+    let messageContentStyle = '';
+    if (isMe) {
+        // Alternating background colors for user messages matching the prototype design
+        const isAlternate = msg.content && msg.content.length % 2 === 0;
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: 0.92rem; max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+    } else {
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: 0.92rem; max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+    }
 
     div.innerHTML = `
         <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%;">
             ${avatarHtml}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
-                <span class="message-sender" style="font-size: 0.8rem; color: #84817a; margin-bottom: 2px;">${senderName}</span>
-                <div class="message-content" style="padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px; font-size: 0.95rem; max-width: 80%; background: ${isMe ? 'var(--accent-color)' : '#f1f2f6'}; color: ${isMe ? '#ffffff' : '#2f3542'}; box-shadow: 0 2px 5px rgba(0,0,0,0.04);">${contentHtml}</div>
-                <span class="message-info" style="font-size: 0.7rem; color: #a4b0be; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span class="message-sender" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
+                <div class="message-content" style="${messageContentStyle}">${contentHtml}</div>
+                <span class="message-info" style="font-size: 0.7rem; color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         </div>
     `;
@@ -1249,6 +1259,8 @@ export function updateEmotionThermometer(friendNickname, emotionStr) {
 
     if (!friendNickname || !emotionStr) {
         banner.style.display = 'none';
+        const spiritWhispersEl = document.getElementById('ghibli-spirit-whispers');
+        if (spiritWhispersEl) spiritWhispersEl.style.display = 'none';
         if (headerEl) {
             headerEl.className = 'chat-main-header glow-muted';
         }
@@ -1269,8 +1281,21 @@ export function updateEmotionThermometer(friendNickname, emotionStr) {
     
     // 3. 온도계 게이지 바 채우기 및 색상 변경 (부드러운 애니메이션)
     if (fillEl) {
-        fillEl.style.width = metrics.fillPercent;
-        fillEl.style.background = `linear-gradient(90deg, ${metrics.color}, var(--secondary-color))`;
+        if (fillEl.classList.contains('gauge-needle')) {
+            fillEl.style.left = metrics.fillPercent;
+            fillEl.style.background = ''; // reset gradient bg on the needle
+        } else {
+            fillEl.style.width = metrics.fillPercent;
+            fillEl.style.background = `linear-gradient(90deg, ${metrics.color}, var(--secondary-color))`;
+        }
+    }
+
+    // 3.1 Ghibli Spirit Whispers (AI Insight Box) 텍스트 동적 업데이트
+    const spiritWhispersEl = document.getElementById('ghibli-spirit-whispers');
+    const whispersTextEl = document.getElementById('spirit-whispers-text');
+    if (spiritWhispersEl && whispersTextEl) {
+        whispersTextEl.innerText = metrics.advice.replace('💡 비서 조언: ', '');
+        spiritWhispersEl.style.display = 'flex';
     }
 
     // 4. 감성 톤에 따른 대화방 헤더의 네온 글로우 색상 실시간 반영
