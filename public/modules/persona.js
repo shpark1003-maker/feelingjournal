@@ -204,42 +204,11 @@ export function setupPersonaUI() {
 
         const voices = window.speechSynthesis.getVoices();
         const koVoices = voices.filter(v => v.lang.startsWith('ko'));
-        const personaGender = document.querySelector('input[name="gender"]:checked')?.value || '여성';
-        const selectedOption = document.getElementById('ai-voice-select')?.value || 'v1';
-
-        let selectedVoice = null;
-        if (personaGender === '여성') {
-            const femaleVoices = koVoices.filter(v => v.name.includes('Heami') || v.name.includes('Google') || v.name.includes('Female') || v.name.includes('Sun-Hi') || v.name.includes('Yumi') || v.name.includes('Shin-Chi'));
-            if (selectedOption === 'v1') {
-                selectedVoice = femaleVoices.find(v => v.name.includes('Sun-Hi') || v.name.includes('Heami') || v.name.includes('Female')) || femaleVoices[0] || koVoices[0];
-            } else if (selectedOption === 'v2') {
-                selectedVoice = femaleVoices.find(v => v.name.includes('Google') || v.name.includes('Yumi') || v.name.includes('Shin-Chi')) || femaleVoices[1] || femaleVoices[0] || koVoices[0];
-            } else {
-                selectedVoice = femaleVoices[2] || femaleVoices[0] || koVoices[0];
-            }
-        } else {
-            const maleVoices = koVoices.filter(v => v.name.includes('Daehun') || v.name.includes('Male') || v.name.includes('InJoon') || v.name.includes('Min-Su') || v.name.includes('Google'));
-            if (selectedOption === 'v1') {
-                selectedVoice = maleVoices.find(v => v.name.includes('InJoon') || v.name.includes('Daehun') || v.name.includes('Male')) || maleVoices[0] || koVoices[0];
-            } else if (selectedOption === 'v2') {
-                selectedVoice = maleVoices.find(v => v.name.includes('Google') || v.name.includes('Min-Su')) || maleVoices[1] || maleVoices[0] || koVoices[0];
-            } else {
-                selectedVoice = maleVoices[2] || maleVoices[0] || koVoices[0];
-            }
-        }
+        const selectedVoice = koVoices.find(v => v.name.includes('Sun-Hi') || v.name.includes('Heami') || v.name.includes('Google') || v.name.includes('Female')) || koVoices[0];
 
         if (selectedVoice) msg.voice = selectedVoice;
-
-        if (selectedOption === 'v1') {
-            msg.pitch = 1.05;
-            msg.rate = 0.90;
-        } else if (selectedOption === 'v2') {
-            msg.pitch = 0.85;
-            msg.rate = 1.00;
-        } else if (selectedOption === 'v3') {
-            msg.pitch = 1.25;
-            msg.rate = 1.15;
-        }
+        msg.pitch = 1.0;
+        msg.rate = 1.0;
 
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(msg);
@@ -248,9 +217,7 @@ export function setupPersonaUI() {
     const voiceSelect = document.getElementById('ai-voice-select');
     if (voiceSelect && voiceSelect.options.length === 0) {
         const voices = [
-            { id: 'v1', name: '다정한 목소리' },
-            { id: 'v2', name: '시크한 목소리' },
-            { id: 'v3', name: '활기찬 목소리' }
+            { id: 'v1', name: '기본 한국어 목소리' }
         ];
         voiceSelect.innerHTML = voices.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
     }

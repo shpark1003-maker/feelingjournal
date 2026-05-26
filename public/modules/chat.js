@@ -543,7 +543,26 @@ export async function loadContacts() {
                     const phone = btn.dataset.phone;
 
                     if (!email) {
-                        const userEmailInput = prompt(`🤫 ${name}님은 구글 주소록에 이메일이 등록되어 있지 않습니다 (전화번호: ${phone || '없음'}). 초대를 전송할 이메일 주소를 입력해주세요:`);
+                        if (phone) {
+                            const inviteViaSms = confirm(`🤫 ${name}님은 구글 주소록에 이메일이 등록되어 있지 않고, 전화번호(${phone})만 존재합니다.\n\n휴대폰 문자 메시지(SMS)로 초대장(가입 링크 & QR 코드)을 발송하시겠습니까?\n\n(취소를 누르시면 이메일 주소를 직접 입력하여 메일로 초대할 수 있습니다.)`);
+                            if (inviteViaSms) {
+                                let currentUser = store.currentUser;
+                                if (!currentUser) {
+                                    const { data: { user } } = await store.supabaseClient.auth.getUser();
+                                    currentUser = user;
+                                }
+                                const inviterName = currentUser?.email ? currentUser.email.split('@')[0] : '친구';
+                                const shareLink = `${window.location.origin}/?invite_code=${currentUser?.id || ''}`;
+                                const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareLink)}`;
+                                const smsBody = `[Feeling Journal] 감정 일기장 초대장 ✨\n\n${inviterName}님이 당신을 마음 온도를 공유하는 Feeling Journal로 초대했습니다!\n\n🔗 초대 링크 접속:\n${shareLink}\n\n🖼️ QR코드로 접속:\n${qrLink}`;
+                                
+                                window.location.href = `sms:${phone.replace(/[^0-9+]/g, '')}?body=${encodeURIComponent(smsBody)}`;
+                                btn.innerText = '초대됨';
+                                return;
+                            }
+                        }
+
+                        const userEmailInput = prompt(`🤫 ${name}님의 초대를 전송할 이메일 주소를 입력해주세요:`);
                         if (!userEmailInput) return;
                         email = userEmailInput.trim();
                         if (!email.includes('@')) {
@@ -1186,42 +1205,11 @@ export function speakCallResponse(text) {
 
     const voices = window.speechSynthesis.getVoices();
     const koVoices = voices.filter(v => v.lang.startsWith('ko'));
-    const personaGender = document.querySelector('input[name="gender"]:checked')?.value || '여성';
-    const selectedOption = document.getElementById('ai-voice-select')?.value || 'v1';
-
-    let selectedVoice = null;
-    if (personaGender === '여성') {
-        const femaleVoices = koVoices.filter(v => v.name.includes('Heami') || v.name.includes('Google') || v.name.includes('Female') || v.name.includes('Sun-Hi') || v.name.includes('Yumi') || v.name.includes('Shin-Chi'));
-        if (selectedOption === 'v1') {
-            selectedVoice = femaleVoices.find(v => v.name.includes('Sun-Hi') || v.name.includes('Heami') || v.name.includes('Female')) || femaleVoices[0] || koVoices[0];
-        } else if (selectedOption === 'v2') {
-            selectedVoice = femaleVoices.find(v => v.name.includes('Google') || v.name.includes('Yumi') || v.name.includes('Shin-Chi')) || femaleVoices[1] || femaleVoices[0] || koVoices[0];
-        } else {
-            selectedVoice = femaleVoices[2] || femaleVoices[0] || koVoices[0];
-        }
-    } else {
-        const maleVoices = koVoices.filter(v => v.name.includes('Daehun') || v.name.includes('Male') || v.name.includes('InJoon') || v.name.includes('Min-Su') || v.name.includes('Google'));
-        if (selectedOption === 'v1') {
-            selectedVoice = maleVoices.find(v => v.name.includes('InJoon') || v.name.includes('Daehun') || v.name.includes('Male')) || maleVoices[0] || koVoices[0];
-        } else if (selectedOption === 'v2') {
-            selectedVoice = maleVoices.find(v => v.name.includes('Google') || v.name.includes('Min-Su')) || maleVoices[1] || maleVoices[0] || koVoices[0];
-        } else {
-            selectedVoice = maleVoices[2] || maleVoices[0] || koVoices[0];
-        }
-    }
+    const selectedVoice = koVoices.find(v => v.name.includes('Sun-Hi') || v.name.includes('Heami') || v.name.includes('Google') || v.name.includes('Female')) || koVoices[0];
 
     if (selectedVoice) msg.voice = selectedVoice;
-
-    if (selectedOption === 'v1') {
-        msg.pitch = 1.05;
-        msg.rate = 0.90;
-    } else if (selectedOption === 'v2') {
-        msg.pitch = 0.85;
-        msg.rate = 1.00;
-    } else if (selectedOption === 'v3') {
-        msg.pitch = 1.25;
-        msg.rate = 1.15;
-    }
+    msg.pitch = 1.0;
+    msg.rate = 1.0;
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(msg);

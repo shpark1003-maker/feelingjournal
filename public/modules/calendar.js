@@ -279,7 +279,7 @@ export async function loadCalendar() {
 
                 const eventEnd = info.event.end || info.event.start;
                 if (eventEnd && new Date(eventEnd) < new Date()) {
-                    info.el.style.opacity = '0.45'; // 지난 일정은 글자색과 투명도 반감
+                    info.el.style.opacity = '0.70'; // 지난 일정은 가시성을 위해 0.70으로 조정
                     info.el.style.filter = 'grayscale(15%)'; // 세련된 은은한 그레이스케일
                 }
 
