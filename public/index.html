@@ -37,33 +37,82 @@
  
 <body class="ghibli-theme">
     <!-- 인증 화면 -->
-    <div id="auth-container" class="auth-container">
-        <div class="auth-card">
-            <h1>AI 일기 <span style="font-size: 0.9rem; background: var(--accent-color); color: white; padding: 3px 8px; border-radius: 12px; font-weight: 600; vertical-align: middle; margin-left: 5px;">Beta</span></h1>
-            <p class="subtitle">마음을 기록하는 공간에 오신 것을 환영합니다.</p>
-            <form id="auth-form">
-                <div class="input-group">
-                    <label for="email">이메일</label>
-                    <input type="email" id="email" placeholder="example@email.com" required>
+    <!-- 인증 화면 -->
+    <div id="auth-container" class="auth-container flex items-center justify-center p-margin-mobile md:p-lg" style="min-height: 100vh; display: flex; box-sizing: border-box; justify-content: center; align-items: center; width: 100%;">
+        <div class="paper-texture"></div>
+        <main class="w-full max-w-[440px] watercolor-card p-md md:p-lg z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000" style="text-align: center; box-sizing: border-box; width: 100%;">
+            <!-- Brand Section & Creature -->
+            <div class="flex flex-col items-center text-center mb-lg" style="margin-bottom: 32px;">
+                <div class="w-32 h-32 mb-6 creature-float relative" style="width: 128px; height: 128px; margin: 0 auto 24px auto; position: relative;">
+                    <img alt="Aetheric Sanctuary Guardian" class="w-full h-full object-contain rounded-full shadow-inner" src="https://lh3.googleusercontent.com/aida/ADBb0ugUhkpZY5zaJITu0Llj-MnUQCAzq7QFC4q5JCObsBkUXZUNhhrkK2UJFhJ9ICetYh62Wu6eANed1miknYK0hWtVmc4hJhJfv3vNJi0Ge3qepY9gB5bH50_tXCdlik5YDWylYtWDLUrHUb6MGU1YN0oiYSJsXY_C_k2OzgaTx8Txp0vJaGDF2cwmjWaqhorxg4NfWJ2hFiV3_A2A0-eNramxdqRSGhHKcUNR0nQlgOxYoZJOkBRN7Dxz-I9j" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;"/>
+                    <div class="absolute -top-2 -right-2 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#e8dfd1] text-[#d4a373] text-[10px] font-bold tracking-wider uppercase" style="position: absolute; top: -8px; right: -8px; background: rgba(255,255,255,0.8); border: 1px solid #e8dfd1; color: #d4a373; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 9999px;">
+                        Beta
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
+                <div class="space-y-1">
+                    <h1 class="text-3xl font-bold text-[#433d3a] tracking-tight" style="margin: 0; font-size: 1.875rem;">Feeling Journal</h1>
+                    <p class="text-sm text-[#7c6a5a] font-medium opacity-80" style="margin: 4px 0 0 0; font-size: 0.875rem; font-weight: 500; color: #7c6a5a; opacity: 0.8;">A gentle place for your thoughts</p>
                 </div>
-                <div class="auth-button-group">
-                    <button type="submit" id="login-btn" class="btn primary">로그인</button>
-                    <button type="button" id="signup-btn" class="btn secondary">회원가입</button>
+            </div>
+            <form id="auth-form" class="space-y-md" style="display: flex; flex-direction: column; gap: 20px;" onsubmit="event.preventDefault();">
+                <!-- Form Inputs -->
+                <div class="space-y-base" style="text-align: left;">
+                    <label class="text-sm font-semibold text-[#7c6a5a] block ml-1" for="email" style="font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; display: block; margin-left: 4px; color: #7c6a5a;">Email Address</label>
+                    <div class="relative" style="position: relative;">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#a98467] text-[20px]" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #a98467; transition: all 0.3s ease;">mail</span>
+                        <input class="w-full soft-input rounded-2xl py-3.5 pl-12 pr-4 text-[#433d3a] placeholder:text-[#a98467]/50 text-base" id="email" placeholder="hello@gentle.com" type="email" required style="box-sizing: border-box; width: 100%; border-radius: 16px; padding: 14px 16px 14px 48px; font-size: 1rem;"/>
+                    </div>
+                </div>
+                <div class="space-y-base" style="text-align: left;">
+                    <div class="flex justify-between items-center ml-1" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-left: 4px;">
+                        <label class="text-sm font-semibold text-[#7c6a5a] block" for="password" style="font-size: 0.875rem; font-weight: 600; color: #7c6a5a;">Password</label>
+                        <a class="text-xs font-bold text-[#d4a373] hover:text-[#a98467] transition-colors" href="#" style="font-size: 0.75rem; font-weight: 700; color: #d4a373; text-decoration: none; transition: color 0.2s;">Forgot?</a>
+                    </div>
+                    <div class="relative" style="position: relative;">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#a98467] text-[20px]" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #a98467; transition: all 0.3s ease;">lock</span>
+                        <input class="w-full soft-input rounded-2xl py-3.5 pl-12 pr-4 text-[#433d3a] placeholder:text-[#a98467]/50 text-base" id="password" placeholder="••••••••" type="password" required style="box-sizing: border-box; width: 100%; border-radius: 16px; padding: 14px 16px 14px 48px; font-size: 1rem;"/>
+                    </div>
+                </div>
+                <!-- Main Buttons -->
+                <div class="space-y-sm pt-4" style="display: flex; flex-direction: column; gap: 12px; padding-top: 16px;">
+                    <button id="login-btn" type="submit" class="w-full ghibli-button py-4 text-base font-bold shadow-lg active:scale-95" style="border: none; cursor: pointer; font-size: 1rem; padding: 16px 0; font-weight: 700; width: 100%;">
+                        Step Into Your Sanctuary
+                    </button>
+                    <button id="signup-btn" type="button" class="w-full secondary-ghibli py-4 rounded-2xl text-base font-bold transition-all active:scale-95" style="cursor: pointer; font-size: 1rem; padding: 16px 0; font-weight: 700; width: 100%; border-radius: 16px;">
+                        Create a New Journal
+                    </button>
+                </div>
+                <!-- Divider -->
+                <div class="relative py-4" style="position: relative; padding: 16px 0; display: flex; align-items: center; justify-content: center;">
+                    <div class="absolute inset-0 flex items-center" style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 2px; background: rgba(232, 223, 209, 0.5);"></div>
+                    <div class="relative flex justify-center" style="position: relative; z-index: 1;">
+                        <span class="bg-[#fcf8f1] px-4 text-xs font-bold text-[#a98467] uppercase tracking-widest" style="background: #fcf8f1; padding: 0 16px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #a98467;">or bloom with</span>
+                    </div>
+                </div>
+                <!-- Social Logins -->
+                <div class="grid grid-cols-2 gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <button id="google-login-btn" type="button" class="flex items-center justify-center gap-3 bg-white hover:bg-[#fcf8f1] py-3.5 rounded-2xl border-2 border-[#e8dfd1] transition-all active:scale-95 shadow-sm" style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 0; border-radius: 16px; border: 2px solid #e8dfd1; background: #ffffff; cursor: pointer; transition: all 0.2s;">
+                        <img alt="Google" class="w-5 h-5 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYD3Gihl7VW3uztorWzfP5YrIIuQZquy6SQg0qGvpktQisWW0s1pIKOySdeGxKRBbp5NRP2DvbAkM5Gmwu-PK__VGvSp8gvtOCAHvLXHHhxPKeYHp1g2sX4zuIfgdkvOQ7kS6h6Z2Y-Heap5a-xM7xzWP-hYnQOG6uj-75MqtuM9PHMdeVa8f_aFSSjYCGUyrezeJ-lU5ewXhu9jfz3rJimTGRFKrOiP5Qul2PJbEc9X7DgQIGT6K7JSyKbBdgCgUhe6IavRKyPkVV" style="width: 20px; height: 20px;"/>
+                        <span class="text-[#433d3a] font-bold text-sm" style="font-size: 0.875rem; font-weight: 700; color: #433d3a;">Google</span>
+                    </button>
+                    <button id="kakao-login-btn" type="button" class="flex items-center justify-center gap-3 bg-[#FAE100] hover:bg-[#EBD200] py-3.5 rounded-2xl transition-all active:scale-95 shadow-sm" style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 0; border-radius: 16px; border: none; background: #FAE100; cursor: pointer; transition: all 0.2s;">
+                        <span class="material-symbols-outlined text-[#3C1E1E] text-[20px] scale-90" style="font-variation-settings: 'FILL' 1; font-size: 20px; color: #3C1E1E;">chat_bubble</span>
+                        <span class="text-[#3C1E1E] font-bold text-sm" style="font-size: 0.875rem; font-weight: 700; color: #3C1E1E;">Kakao</span>
+                    </button>
                 </div>
             </form>
-            <div class="divider"><span>또는</span></div>
-            <button id="google-login-btn" class="btn google-btn">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-                Google로 로그인
-            </button>
-            <button id="kakao-login-btn" class="btn kakao-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/KakaoTalk_logo.svg" alt="Kakao">
-                카카오로 로그인
-            </button>
+            <!-- Footer -->
+            <p class="mt-lg text-center text-xs font-medium text-[#7c6a5a]/70 leading-relaxed" style="margin-top: 32px; font-size: 0.75rem; font-weight: 500; color: rgba(124, 106, 90, 0.7); line-height: 1.6;">
+                By continuing, you embrace our <br/>
+                <a class="text-[#d4a373] font-bold hover:underline" href="#" style="color: #d4a373; font-weight: 700; text-decoration: none;">Terms of Service</a> and <a class="text-[#d4a373] font-bold hover:underline" href="#" style="color: #d4a373; font-weight: 700; text-decoration: none;">Privacy Policy</a>.
+            </p>
+        </main>
+        <!-- Background Decoration -->
+        <div class="fixed bottom-8 right-8 pointer-events-none opacity-30 hidden md:block" style="position: fixed; bottom: 32px; right: 32px; pointer-events: none; opacity: 0.3;">
+            <span class="material-symbols-outlined text-[#d4a373] text-[120px] creature-float" style="font-size: 120px; color: #d4a373;">spa</span>
+        </div>
+        <div class="fixed top-8 left-8 pointer-events-none opacity-20 hidden md:block" style="position: fixed; top: 32px; left: 32px; pointer-events: none; opacity: 0.2;">
+            <span class="material-symbols-outlined text-[#a98467] text-[80px] animate-pulse" style="font-size: 80px; color: #a98467;">cloud</span>
         </div>
     </div>
 

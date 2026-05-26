@@ -183,6 +183,26 @@ function setupAuth() {
         window.location.reload();
     });
 
+    // Soft input icon focus effect
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    [emailInput, passwordInput].forEach(input => {
+        input?.addEventListener('focus', () => {
+            const icon = input.parentElement.querySelector('.material-symbols-outlined');
+            if (icon) {
+                icon.style.color = '#d4a373';
+                icon.style.transform = 'translateY(-50%) scale(1.1)';
+            }
+        });
+        input?.addEventListener('blur', () => {
+            const icon = input.parentElement.querySelector('.material-symbols-outlined');
+            if (icon) {
+                icon.style.color = '#a98467';
+                icon.style.transform = 'translateY(-50%) scale(1)';
+            }
+        });
+    });
+
     store.supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
             onUserAuthenticated(session);
@@ -194,6 +214,7 @@ function setupAuth() {
 
 async function onUserAuthenticated(session) {
     store.currentUser = session.user;
+    document.body.classList.remove('auth-mode');
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('journal-app').style.display = 'block';
     
@@ -276,6 +297,7 @@ async function sendPresenceHeartbeat() {
 }
 
 function showAuthUI() {
+    document.body.classList.add('auth-mode');
     document.getElementById('auth-container').style.display = 'flex';
     document.getElementById('journal-app').style.display = 'none';
 }
