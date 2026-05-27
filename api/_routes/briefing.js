@@ -94,6 +94,11 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
         try {
             const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(yesterday.toISOString())}&timeMax=${encodeURIComponent(tomorrow.toISOString())}&singleEvents=true&orderBy=startTime`;
             const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
+            if (calRes.status === 401 || calRes.status === 403) {
+                await redis.del(`user:${userId}:google_provider_token`);
+                await redis.del(`user:${userId}:google_provider_refresh_token`);
+                console.warn(`--- [BRIEFING] Invalid token detected (Status ${calRes.status}). Evicted Google tokens from Redis for user ${userId} ---`);
+            }
             const calData = await calRes.json();
             if (calData.items) {
                 contextEvents = calData.items

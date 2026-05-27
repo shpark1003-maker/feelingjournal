@@ -127,6 +127,11 @@ module.exports = async (req, res) => {
                         };
                     });
                 } else {
+                    if (calRes.status === 401 || calRes.status === 403) {
+                        await redis.del(`user:${user.id}:google_provider_token`);
+                        await redis.del(`user:${user.id}:google_provider_refresh_token`);
+                        console.warn(`--- [CALENDAR] Invalid token detected (Status ${calRes.status}). Evicted Google tokens from Redis for user ${user.id} ---`);
+                    }
                     console.warn('--- [CALENDAR] Google API returned non-OK status. Falling back to empty Google events. Error:', calData.error?.message);
                 }
             } catch (err) {

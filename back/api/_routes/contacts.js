@@ -49,6 +49,9 @@ module.exports = async (req, res) => {
         if (!response.ok) {
             const msg = data.error?.message || '';
             if (response.status === 401 || response.status === 403 || msg.includes('invalid authentication')) {
+                await redis.del(`user:${user.id}:google_provider_token`);
+                await redis.del(`user:${user.id}:google_provider_refresh_token`);
+                console.warn(`--- [CONTACTS] Invalid token detected (Status ${response.status}). Evicted Google tokens from Redis for user ${user.id} ---`);
                 throw new Error('구글 인증이 만료되었습니다. 로그아웃 후 다시 로그인해 주세요.');
             }
             throw new Error(msg || 'Google Contacts API 호출 실패');
