@@ -160,19 +160,10 @@ function setupAuth() {
         else alert('인증 이메일을 확인해 주세요!');
     });
 
-    googleBtn?.addEventListener('click', async () => {
-        await store.supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin,
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent'
-                },
-                scopes: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/contacts.readonly'
-            }
-        });
+    googleBtn?.addEventListener('click', () => {
+        window.location.href = `${API_URL}/auth/google`;
     });
+
 
     kakaoBtn?.addEventListener('click', () => {
         window.location.href = `${API_URL}/auth/kakao`;
