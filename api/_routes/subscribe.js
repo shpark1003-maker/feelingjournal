@@ -34,8 +34,14 @@ module.exports = async (req, res) => {
 
             const providerToken = req.headers['x-provider-token'] || '';
             if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
-                await redis.set(`user:${user.id}:google_provider_token`, providerToken);
+                await redis.set(`user:${user.id}:google_provider_token`, providerToken, 'EX', 3600);
             }
+
+            const providerRefreshToken = req.headers['x-provider-refresh-token'] || '';
+            if (providerRefreshToken && providerRefreshToken !== 'mock' && providerRefreshToken !== 'null' && providerRefreshToken !== 'undefined') {
+                await redis.set(`user:${user.id}:google_provider_refresh_token`, providerRefreshToken);
+            }
+
 
             if (settings.providerTokenOnly) {
                 const dataRaw = await redis.get(subKey);

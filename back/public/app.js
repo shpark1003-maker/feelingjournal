@@ -223,19 +223,31 @@ async function onUserAuthenticated(session) {
 
     if (session.provider_token) {
         localStorage.setItem('google_provider_token', session.provider_token);
+        if (session.provider_refresh_token) {
+            localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
+        }
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'x-provider-token': session.provider_token
+        };
+        
+        const storedRefreshToken = session.provider_refresh_token || localStorage.getItem('google_provider_refresh_token');
+        if (storedRefreshToken) {
+            headers['x-provider-refresh-token'] = storedRefreshToken;
+        }
+
         // Sync provider token to Redis
         fetch(`${API_URL}/subscribe`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-                'x-provider-token': session.provider_token
-            },
+            headers: headers,
             body: JSON.stringify({
                 settings: { providerTokenOnly: true }
             })
         }).catch(err => console.error('Failed to sync provider token to Redis:', err));
     }
+
 
     // Check/Prompt Nickname
     await checkNickname();

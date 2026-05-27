@@ -7,7 +7,8 @@ const {
     getLiveWeather,
     getEconomicHeadlines,
     supabaseAdmin,
-    decrypt
+    decrypt,
+    getGoogleAccessToken
 } = require('./shared');
 
 // [MODULAR] ⏰ 데일리 브리핑 코어 스케줄러 & 과거 회상(Reminiscence) 공용 엔진
@@ -272,10 +273,10 @@ module.exports = async (req, res) => {
         const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1]);
         if (!user) return res.status(401).json({ error: 'Invalid user' });
 
-        // Google Provider Token을 Redis에서 먼저 조회하고 헤더에서 폴백
+        // Google Provider Token을 helper를 통해 조회하고 헤더에서 폴백
         let providerToken = null;
         try {
-            providerToken = await redis.get(`user:${user.id}:google_provider_token`);
+            providerToken = await getGoogleAccessToken(user.id);
         } catch (redisErr) {
             console.warn('--- [BRIEFING] Redis connection offline/error, falling back to header:', redisErr.message);
         }

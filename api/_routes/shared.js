@@ -576,6 +576,69 @@ function decrypt(encryptedText, masterKey) {
     }
 }
 
+async function refreshGoogleAccessToken(userId) {
+    try {
+        const refreshToken = await redis.get(`user:${userId}:google_provider_refresh_token`);
+        if (!refreshToken) {
+            console.warn(`--- [Google OAuth Refresh] No refresh token found in Redis for user ${userId} ---`);
+            return null;
+        }
+
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+            console.warn('--- [Google OAuth Refresh] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not configured in .env ---');
+            return null;
+        }
+
+        console.log(`--- [Google OAuth Refresh] Attempting to refresh Google Access Token for user ${userId} ---`);
+        
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: refreshToken,
+                grant_type: 'refresh_token'
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('--- [Google OAuth Refresh] Google Token Refresh API returned error:', data);
+            return null;
+        }
+
+        const newAccessToken = data.access_token;
+        if (newAccessToken) {
+            await redis.set(`user:${userId}:google_provider_token`, newAccessToken, 'EX', 3600);
+            console.log(`--- [Google OAuth Refresh] Successfully refreshed Google Access Token for user ${userId} ---`);
+            return newAccessToken;
+        }
+        return null;
+    } catch (err) {
+        console.error('--- [Google OAuth Refresh] Error refreshing token:', err.message);
+        return null;
+    }
+}
+
+async function getGoogleAccessToken(userId) {
+    try {
+        let token = await redis.get(`user:${userId}:google_provider_token`);
+        if (!token) {
+            token = await refreshGoogleAccessToken(userId);
+        }
+        return token;
+    } catch (err) {
+        console.error('--- [Google Access Token Helper] Error fetching token:', err.message);
+        return null;
+    }
+}
+
 module.exports = {
     PORT,
     DEFAULT_MODEL,
@@ -600,5 +663,8 @@ module.exports = {
     getLiveWeather,
     getEconomicHeadlines,
     encrypt,
-    decrypt
+    decrypt,
+    refreshGoogleAccessToken,
+    getGoogleAccessToken
 };
+

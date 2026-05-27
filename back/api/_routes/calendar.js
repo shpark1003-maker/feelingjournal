@@ -4,7 +4,8 @@ const {
     fetchWithTimeout, 
     callGemini, 
     safeParseJsonArray, 
-    scanRedisKeys 
+    scanRedisKeys,
+    getGoogleAccessToken
 } = require('./shared');
 
 module.exports = async (req, res) => {
@@ -16,10 +17,10 @@ module.exports = async (req, res) => {
         const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1]);
         if (!user) return res.status(401).json({ error: 'Invalid user' });
 
-        // Google Provider Token을 Redis에서 먼저 조회하고 헤더에서 폴백
+        // Google Provider Token을 helper를 통해 조회하고 헤더에서 폴백
         let providerToken = null;
         try {
-            providerToken = await redis.get(`user:${user.id}:google_provider_token`);
+            providerToken = await getGoogleAccessToken(user.id);
         } catch (redisErr) {
             console.warn('--- [CALENDAR] Redis connection offline/error, falling back to header:', redisErr.message);
         }
@@ -27,6 +28,7 @@ module.exports = async (req, res) => {
         if (!providerToken) {
             providerToken = req.headers['x-provider-token'];
         }
+
 
         // Handle POST (Create Event)
         if (req.method === 'POST') {

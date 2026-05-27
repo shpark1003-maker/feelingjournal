@@ -1,4 +1,4 @@
-const { supabase, redis, fetchWithTimeout } = require('./shared');
+const { supabase, redis, fetchWithTimeout, getGoogleAccessToken } = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
         // Try to get providerToken from Redis, then fall back to the header
         let providerToken = null;
         try {
-            providerToken = await redis.get(`user:${user.id}:google_provider_token`);
+            providerToken = await getGoogleAccessToken(user.id);
         } catch (redisErr) {
             console.warn('--- [CONTACTS] Redis connection offline/error, falling back to header:', redisErr.message);
         }
@@ -22,6 +22,7 @@ module.exports = async (req, res) => {
         if (!providerToken) {
             providerToken = req.headers['x-provider-token'];
         }
+
 
         if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
             console.log('--- [CONTACTS] Google OAuth token missing or mock. Returning curated mock contacts. ---');
