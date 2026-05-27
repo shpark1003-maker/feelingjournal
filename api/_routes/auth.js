@@ -110,6 +110,15 @@ module.exports = async (req, res) => {
                         await redis.set(`user:${userId}:google_provider_refresh_token`, providerRefreshToken);
                         console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for user ${userId} ---`);
                     }
+
+                    // 브라우저 측 Supabase SDK가 로그인을 온전히 인식할 수 있도록 hash fragment로 세션 정보 전달
+                    const accessToken = data.session.access_token;
+                    const refreshToken = data.session.refresh_token;
+                    const expiresIn = data.session.expires_in || 3600;
+                    const tokenType = data.session.token_type || 'bearer';
+                    
+                    res.redirect(`/#access_token=${accessToken}&refresh_token=${refreshToken}&expires_in=${expiresIn}&token_type=${tokenType}`);
+                    return;
                 }
             }
             res.redirect('/');
