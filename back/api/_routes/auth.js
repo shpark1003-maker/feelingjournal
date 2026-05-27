@@ -46,6 +46,35 @@ module.exports = async (req, res) => {
             return res.json({ success: true });
         }
 
+        // 4.5 구글 연동 해제 엔드포인트
+        if (req.method === 'POST' && path.includes('/unlink-google')) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+            
+            const token = authHeader.split(' ')[1];
+            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            if (authError || !user) return res.status(401).json({ error: 'Invalid user' });
+
+            try {
+                const { Client } = require('pg');
+                const client = new Client({
+                    connectionString: process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL,
+                    ssl: { rejectUnauthorized: false }
+                });
+                await client.connect();
+                await client.query(
+                    `DELETE FROM auth.identities WHERE user_id = $1 AND provider = 'google'`,
+                    [user.id]
+                );
+                await client.end();
+                console.log(`--- [OAuth Google Link] Successfully deleted Google identity for user ${user.id} ---`);
+                return res.json({ success: true });
+            } catch (dbErr) {
+                console.error('--- [OAuth Google Link] Database error deleting identity:', dbErr.message);
+                return res.status(500).json({ error: dbErr.message });
+            }
+        }
+
         // 5. [OAuth] 구글 로그인 리디렉션
         if (req.method === 'GET' && path.includes('/google')) {
             const { userId } = req.query;

@@ -167,7 +167,7 @@ export async function loadCalendar(forceRefresh = false) {
                             <span style="color: #636e72; font-size: 0.85rem;">현재 일반/카카오 로그인 상태입니다. 구글 계정을 추가 연동하시면 실시간 캘린더 동기화가 활성화됩니다.</span>
                         </div>
                     </div>
-                    <a href="/api/auth/google?userId=${store.currentUser ? store.currentUser.id : ''}" style="
+                    <button id="google-link-action-btn" style="
                         background: white; 
                         color: #2d3436; 
                         border: 1px solid rgba(0,0,0,0.1); 
@@ -180,7 +180,6 @@ export async function loadCalendar(forceRefresh = false) {
                         align-items: center; 
                         gap: 6px; 
                         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-                        text-decoration: none;
                         transition: all 0.2s;
                         white-space: nowrap;
                     " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.05)';">
@@ -191,8 +190,44 @@ export async function loadCalendar(forceRefresh = false) {
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
                         구글 계정 연동
-                    </a>
+                    </button>
                 `;
+                
+                const linkBtn = banner.querySelector('#google-link-action-btn');
+                linkBtn?.addEventListener('click', async () => {
+                    linkBtn.disabled = true;
+                    linkBtn.innerText = '연동 진행 중...';
+                    try {
+                        const { data: { session } } = await store.supabaseClient.auth.getSession();
+                        const response = await fetch(`${API_URL}/auth/unlink-google`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${session?.access_token}`
+                            }
+                        });
+                        const resData = await response.json();
+                        if (!resData.success) throw new Error(resData.error || '연동 해제 실패');
+
+                        // Trigger client-side OAuth
+                        const { error } = await store.supabaseClient.auth.signInWithOAuth({
+                            provider: 'google',
+                            options: {
+                                redirectTo: window.location.origin,
+                                scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
+                                queryParams: {
+                                    access_type: 'offline',
+                                    prompt: 'consent',
+                                }
+                            }
+                        });
+                        if (error) throw error;
+                    } catch (err) {
+                        alert('연동 실패: ' + err.message);
+                        linkBtn.disabled = false;
+                        linkBtn.innerHTML = '구글 계정 연동';
+                    }
+                });
+
                 container.parentNode.insertBefore(banner, container);
             }
         } else {
