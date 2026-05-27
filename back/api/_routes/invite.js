@@ -30,7 +30,18 @@ module.exports = async (req, res) => {
         
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.headers.host || 'localhost:3000';
-        const baseUrl = `${protocol}://${host}`;
+        let baseUrl = `${protocol}://${host}`;
+        
+        if (host.includes('localhost') || host.includes('127.0.0.1')) {
+            if (process.env.VERCEL_URL) {
+                baseUrl = `https://${process.env.VERCEL_URL}`;
+            } else if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) {
+                baseUrl = process.env.APP_URL;
+            } else {
+                baseUrl = 'https://feelingjournal.vercel.app';
+            }
+        }
+        
         const shareLink = `${baseUrl}/?invite_code=${req.user.id}`;
 
 

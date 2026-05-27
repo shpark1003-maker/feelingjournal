@@ -3922,7 +3922,7 @@ body {
 /* Background & Global layout */
 body.ghibli-theme {
     font-family: var(--font-sans) !important;
-    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCrf4AeXUU0Fh9e-m3XjfrKmuL4FFRO1ISO3UvzEyZKE3YRoMdEu9J76dqCo8VhZRPM944gR272HxanqwAQLMXVkamVpeNtuBfFD3bAkGS_0YBd6u1vFCb0YEDQBPvTrxNiCN66FoeJ8ngva4SnG_KZQnq7FQWKi-VCcOK3DP787hHTsqB9n9DXjwjHwzppilpDbf1jD_bgUUxOLX-7J2AC9ZHc-j0pD-d7Bgz3FW6l1GymJcYncL_7fNTu1sb_JK243LKqCaV1rLgo') !important;
+    background-image: url('ghibli_bg.png') !important;
     background-size: cover !important;
     background-attachment: fixed !important;
     background-position: center !important;
@@ -4102,7 +4102,7 @@ body.ghibli-theme .container {
 
 /* Paper texture & watercolor details */
 .ghibli-theme .paper-texture {
-    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfQ7-XYlnDaTbB8_Yz3Sg81dzDRWRyWweAaYxBU7kkReXHAn3yrZYCbiHtbM3rR_kN4CoT6tnX276zkhx7ajrJD-EY2hy71TIk6OlDM9dCxoxKenSGyjAOwFK4W18eEPqYxEKEJQh-QK79MhimZEkotOL0K6x2XRW6uN4KmqmTvgNYhz-m3H6X9LDWcTPWNjVGdO4_6dTWyoZwog_zdwa3DW8wpt-h_0GTDhDoVybcQoJ_80_dzN1VCQzr3z9cn2dJEuiKReVlqHdO') !important;
+    background-image: url('paper_texture.png') !important;
 }
 .ghibli-theme .watercolor-border {
     border-style: solid !important;

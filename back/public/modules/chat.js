@@ -188,7 +188,11 @@ export function setupChatUI() {
                 alert('로그인이 필요합니다.');
                 return;
             }
-            const shareLink = `${window.location.origin}/?invite_code=${user.id}`;
+            let origin = window.location.origin;
+            if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+                origin = 'https://feelingjournal.vercel.app';
+            }
+            const shareLink = `${origin}/?invite_code=${user.id}`;
             await navigator.clipboard.writeText(shareLink);
             alert(`📋 1촌 초대 링크가 클립보드에 성공적으로 복사되었습니다!\n\n${shareLink}\n\n이 링크를 카카오톡이나 문자로 친구에게 공유해 보세요.`);
         } catch (err) {
@@ -1528,7 +1532,11 @@ window.openSmsQrInviteModal = async function(name, phone) {
         currentUser = user;
     }
     const inviterName = currentUser?.email ? currentUser.email.split('@')[0] : '친구';
-    const shareLink = `${window.location.origin}/?invite_code=${currentUser?.id || ''}`;
+    let origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        origin = 'https://feelingjournal.vercel.app';
+    }
+    const shareLink = `${origin}/?invite_code=${currentUser?.id || ''}`;
     const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareLink)}`;
     const smsBody = `[Feeling Journal] 감정 일기장 초대장 ✨\n\n${inviterName}님이 당신을 마음 온도를 공유하는 Feeling Journal로 초대했습니다!\n\n🔗 초대 링크 접속:\n${shareLink}`;
 

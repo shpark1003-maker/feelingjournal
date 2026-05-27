@@ -167,7 +167,7 @@ export async function loadCalendar(forceRefresh = false) {
                             <span style="color: #636e72; font-size: 0.85rem;">현재 일반/카카오 로그인 상태입니다. 구글 계정을 추가 연동하시면 실시간 캘린더 동기화가 활성화됩니다.</span>
                         </div>
                     </div>
-                    <a href="/api/auth/google" style="
+                    <a href="/api/auth/google?userId=${store.currentUser ? store.currentUser.id : ''}" style="
                         background: white; 
                         color: #2d3436; 
                         border: 1px solid rgba(0,0,0,0.1); 

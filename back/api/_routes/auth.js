@@ -48,6 +48,26 @@ module.exports = async (req, res) => {
 
         // 5. [OAuth] 구글 로그인 리디렉션
         if (req.method === 'GET' && path.includes('/google')) {
+            const { userId } = req.query;
+            if (userId) {
+                try {
+                    const { Client } = require('pg');
+                    const client = new Client({
+                        connectionString: process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL,
+                        ssl: { rejectUnauthorized: false }
+                    });
+                    await client.connect();
+                    const deleteRes = await client.query(
+                        `DELETE FROM auth.identities WHERE user_id = $1 AND provider = 'google'`,
+                        [userId]
+                    );
+                    await client.end();
+                    console.log(`--- [OAuth Google Link] Successfully deleted old Google identity for user ${userId}. Rows affected: ${deleteRes.rowCount} ---`);
+                } catch (dbErr) {
+                    console.error('--- [OAuth Google Link] Database error deleting identity:', dbErr.message);
+                }
+            }
+
             const protocol = req.headers['x-forwarded-proto'] || 'http';
             const host = req.headers.host || 'localhost:3000';
             const redirectUrl = `${protocol}://${host}/api/auth/callback`;
