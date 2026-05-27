@@ -27,7 +27,12 @@ module.exports = async (req, res) => {
         let mailError = null;
 
         const inviterName = req.user.user_metadata?.full_name || req.user.email.split('@')[0];
-        const shareLink = `${process.env.APP_URL || 'http://localhost:3000'}/?invite_code=${req.user.id}`;
+        
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers.host || 'localhost:3000';
+        const baseUrl = `${protocol}://${host}`;
+        const shareLink = `${baseUrl}/?invite_code=${req.user.id}`;
+
 
         if (email) {
             if (emailConfigured && transporter) {
