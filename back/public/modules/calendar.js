@@ -101,10 +101,26 @@ function initCalendarModal() {
     }
 }
 
-export async function loadCalendar() {
+export async function loadCalendar(forceRefresh = false) {
     initCalendarModal();
     const container = document.getElementById('calendar-container');
     if (!container) return;
+
+    // Bind refresh button event
+    const refreshBtn = document.getElementById('calendar-refresh-btn');
+    if (refreshBtn) {
+        const newRefreshBtn = refreshBtn.cloneNode(true);
+        refreshBtn.parentNode.replaceChild(newRefreshBtn, refreshBtn);
+        newRefreshBtn.addEventListener('click', () => {
+            newRefreshBtn.style.transform = 'rotate(360deg)';
+            newRefreshBtn.style.transition = 'transform 0.6s ease';
+            setTimeout(() => {
+                newRefreshBtn.style.transform = 'none';
+                newRefreshBtn.style.transition = 'none';
+            }, 600);
+            loadCalendar(true);
+        });
+    }
 
     container.innerHTML = '<div class="loading-full">일정을 불러오는 중...</div>';
 
@@ -113,7 +129,7 @@ export async function loadCalendar() {
         const providerToken = await store.getProviderToken();
 
         // res API 호출을 먼저 단행하여 백엔드 unlinked 정보를 받아옴
-        const res = await fetch(`${API_URL}/calendar`, {
+        const res = await fetch(`${API_URL}/calendar${forceRefresh ? '?refresh=true' : ''}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'x-provider-token': providerToken || ''
@@ -123,7 +139,7 @@ export async function loadCalendar() {
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
-        const isUnlinked = data.unlinked || !providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined';
+        const isUnlinked = data.unlinked;
 
         let banner = document.getElementById('google-calendar-link-banner');
         if (isUnlinked) {

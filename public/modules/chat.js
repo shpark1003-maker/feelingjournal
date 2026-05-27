@@ -498,7 +498,7 @@ export async function loadContacts() {
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken() || 'mock';
+        const providerToken = await store.getProviderToken() || '';
 
         const res = await fetch(`${API_URL}/contacts`, {
             headers: { 'Authorization': `Bearer ${token}`, 'x-provider-token': providerToken }
@@ -544,22 +544,9 @@ export async function loadContacts() {
 
                     if (!email) {
                         if (phone) {
-                            const inviteViaSms = confirm(`🤫 ${name}님은 구글 주소록에 이메일이 등록되어 있지 않고, 전화번호(${phone})만 존재합니다.\n\n휴대폰 문자 메시지(SMS)로 초대장(가입 링크 & QR 코드)을 발송하시겠습니까?\n\n(취소를 누르시면 이메일 주소를 직접 입력하여 메일로 초대할 수 있습니다.)`);
-                            if (inviteViaSms) {
-                                let currentUser = store.currentUser;
-                                if (!currentUser) {
-                                    const { data: { user } } = await store.supabaseClient.auth.getUser();
-                                    currentUser = user;
-                                }
-                                const inviterName = currentUser?.email ? currentUser.email.split('@')[0] : '친구';
-                                const shareLink = `${window.location.origin}/?invite_code=${currentUser?.id || ''}`;
-                                const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareLink)}`;
-                                const smsBody = `[Feeling Journal] 감정 일기장 초대장 ✨\n\n${inviterName}님이 당신을 마음 온도를 공유하는 Feeling Journal로 초대했습니다!\n\n🔗 초대 링크 접속:\n${shareLink}\n\n🖼️ QR코드로 접속:\n${qrLink}`;
-                                
-                                window.location.href = `sms:${phone.replace(/[^0-9+]/g, '')}?body=${encodeURIComponent(smsBody)}`;
-                                btn.innerText = '초대됨';
-                                return;
-                            }
+                            window.openSmsQrInviteModal(name, phone);
+                            btn.innerText = '초대됨';
+                            return;
                         }
 
                         const userEmailInput = prompt(`🤫 ${name}님의 초대를 전송할 이메일 주소를 입력해주세요:`);
@@ -801,23 +788,6 @@ export async function checkFriendSos() {
             </div>
             `;
         }).join('');
-
-        // Append Invite button (via CSS .mobile-only-item)
-        htmlContent += `
-        <div class="page-item friend-item mobile-only-item" onclick="window.openInviteModal()" style="display:flex; align-items:center; gap:12px;">
-            <div class="friend-avatar" style="background: #f1f2f6; border: 1.5px dashed #ccc; color: #555; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; flex-shrink:0;">
-                ➕
-            </div>
-            <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
-                <div class="page-item-title" style="margin:0; color:var(--accent-color); font-weight:700; font-size:0.95rem;">
-                    <span>초대하기</span>
-                </div>
-                <div class="page-item-meta" style="font-size:0.75rem; color:var(--accent-color);">
-                    <span>친구와 온도 공유하기</span>
-                </div>
-            </div>
-        </div>
-        `;
 
         list.innerHTML = htmlContent;
     }
@@ -1547,3 +1517,72 @@ export async function setupUserProfileInChat() {
         }
     });
 }
+
+window.openSmsQrInviteModal = async function(name, phone) {
+    const oldModal = document.getElementById('sms-qr-invite-modal');
+    if (oldModal) oldModal.remove();
+
+    let currentUser = store.currentUser;
+    if (!currentUser) {
+        const { data: { user } } = await store.supabaseClient.auth.getUser();
+        currentUser = user;
+    }
+    const inviterName = currentUser?.email ? currentUser.email.split('@')[0] : '친구';
+    const shareLink = `${window.location.origin}/?invite_code=${currentUser?.id || ''}`;
+    const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareLink)}`;
+    const smsBody = `[Feeling Journal] 감정 일기장 초대장 ✨\n\n${inviterName}님이 당신을 마음 온도를 공유하는 Feeling Journal로 초대했습니다!\n\n🔗 초대 링크 접속:\n${shareLink}`;
+
+    const modal = document.createElement('div');
+    modal.id = 'sms-qr-invite-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 24px; padding: 30px; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); text-align: center; font-family: 'Outfit', 'Nanum', sans-serif;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: #2d3436; font-family: sans-serif;">📱 SMS 및 QR코드 초대</h3>
+                <button onclick="document.getElementById('sms-qr-invite-modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #b2bec3;">&times;</button>
+            </div>
+            
+            <p style="font-size: 0.95rem; color: #636e72; line-height: 1.5; margin-bottom: 20px; font-family: sans-serif;">
+                <strong>${name}</strong>님(${phone})에게 보낼 초대 메시지와 QR코드입니다.<br>
+                아래 방법 중 하나를 선택해 친구를 초대해 보세요!
+            </p>
+
+            <div style="background: #f1f2f6; border-radius: 16px; padding: 15px; margin-bottom: 20px; display: inline-block;">
+                <img src="${qrLink}" alt="QR Code" style="width: 160px; height: 160px; display: block; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <span style="font-size: 0.75rem; color: #7f8c8d; display: block; margin-top: 8px; font-family: sans-serif;">📷 폰 카메라로 스캔하여 즉시 입장</span>
+            </div>
+
+            <div style="text-align: left; background: #fafafa; border: 1px dashed #dfe6e9; border-radius: 12px; padding: 12px; font-size: 0.85rem; color: #2d3436; max-height: 100px; overflow-y: auto; margin-bottom: 20px; word-break: break-all; font-family: sans-serif;">
+                ${smsBody.replace(/\n/g, '<br>')}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="copy-sms-btn" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(108,92,231,0.2); font-family: sans-serif;">
+                    📋 초대 메시지 & 링크 복사
+                </button>
+                <a href="sms:${phone.replace(/[^0-9+]/g, '')}?body=${encodeURIComponent(smsBody + '\n🖼️ QR코드로 접속:\n' + qrLink)}" style="text-decoration: none; background: #00b894; color: white; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; display: block; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,184,148,0.2); text-align: center; font-family: sans-serif;">
+                    💬 휴대폰 문자(SMS)로 보내기
+                </a>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('copy-sms-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(`${smsBody}\n🖼️ QR코드로 접속:\n${qrLink}`).then(() => {
+            alert('📋 초대 메시지와 QR코드 링크가 클립보드에 성공적으로 복사되었습니다!\n카카오톡이나 문자 메시지에 붙여넣어 공유하세요.');
+        }).catch(() => {
+            alert('복사에 실패했습니다. 메시지 창에서 텍스트를 직접 복사해 주세요.');
+        });
+    });
+};
+

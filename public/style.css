@@ -1247,70 +1247,87 @@ footer {
     font-size: 1.1rem;
 }
 
-/* Mobile Adaptive */
+/* Mobile Adaptive - Allow resizer sizing on tablet by removing rigid layout constraints */
 @media (max-width: 1024px) {
-    .journal-3-column-layout {
-        grid-template-columns: 70px 240px 1fr;
-    }
     .notebook-sidebar h4, .notebook-item span {
-        display: none;
+        display: inline-block;
     }
 }
 
-/* [HOTFIX] 모바일 드로워 격리 레이아웃 및 겹침 방지 */
+/* [개선] 모바일 위에서 아래로 펼쳐지는 아코디언 드롭다운 목차 레이아웃 */
 @media (max-width: 768px) {
     .journal-3-column-layout {
         position: relative !important;
         display: flex !important;
+        flex-direction: column !important;
         height: calc(100vh - 120px) !important;
         overflow: hidden !important;
     }
     
     .resizer {
-        display: none !important; /* resizer는 모바일에서 물리적 0% 소멸 */
+        display: none !important; /* resizer는 모바일에서 0% 소멸 */
     }
 
-    /* 1단 & 2단 사이드바를 absolute 오버레이로 전환 */
+    /* 1단 & 2단 사이드바를 상단 절대좌표 드롭다운 오버레이로 전환 */
     .notebook-sidebar {
         position: absolute !important;
-        top: 0;
-        left: 0;
-        width: 80px !important;
-        height: 100% !important;
+        top: 54px !important; /* 에디터 헤더/툴바 아래 배치 */
+        left: 0 !important;
+        width: 35% !important;
+        height: 350px !important;
         z-index: 1010 !important;
-        background: #1e1e1e !important; /* Premium Dark Background for folder strip */
+        background: #1e1e1e !important; /* Premium Dark Background */
         color: #ffffff !important;
-        transform: translateX(-100%) !important;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transform: translateY(-120%) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
+        border-radius: 0 0 0 16px !important;
+        border-bottom: 2px solid rgba(0,0,0,0.15) !important;
     }
     
     .pages-sidebar {
         position: absolute !important;
-        top: 0;
-        left: 80px !important;
-        width: 220px !important;
-        height: 100% !important;
+        top: 54px !important;
+        left: 35% !important;
+        width: 65% !important;
+        height: 350px !important;
         z-index: 1009 !important;
         background: #ffffff !important;
         border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
-        transform: translateX(-300px) !important;
-        transition: left 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border-bottom: 2px solid rgba(0,0,0,0.08) !important;
+        transform: translateY(-120%) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
+        border-radius: 0 0 16px 0 !important;
     }
 
-    /* If notebook sidebar is closed, pages sidebar slides to left: 0 */
+    /* If notebook sidebar is closed, pages sidebar is hidden same as notebook */
     .notebook-sidebar:not(.active-drawer) ~ .pages-sidebar {
-        left: 0 !important;
+        transform: translateY(-120%) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 
-    /* 드로워 열림(Active) 클래스 */
+    /* 드로워 열림(Active) 클래스 - 위에서 아래로 슬라이딩 */
     .notebook-sidebar.active-drawer {
-        transform: translateX(0) !important;
-        box-shadow: 5px 0 25px rgba(0,0,0,0.2) !important;
+        transform: translateY(0) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
     }
     
     .pages-sidebar.active-drawer {
-        transform: translateX(0) !important;
-        box-shadow: 5px 0 25px rgba(0,0,0,0.1) !important;
+        transform: translateY(0) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    }
+
+    /* 글자 숨김 강제 해제 */
+    .notebook-sidebar h4, .notebook-item span {
+        display: inline-block !important;
     }
 
     .note-content-area {
@@ -3973,6 +3990,65 @@ body.ghibli-theme .container {
     .ghibli-theme .tab-content {
         grid-column: 2 !important;
         grid-row: 2 !important;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1023px) {
+    body.ghibli-theme #journal-app {
+        display: none;
+    }
+    body.ghibli-theme #journal-app:not([style*="display: none"]):not([style*="display:none"]) {
+        display: grid !important;
+        grid-template-columns: 80px 1fr !important;
+        grid-template-rows: auto 1fr !important;
+        gap: 16px !important;
+        padding: 12px !important;
+    }
+    .ghibli-theme .user-nav {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 !important;
+    }
+    .ghibli-theme .tab-nav {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        height: fit-content !important;
+        background: rgba(255, 252, 242, 0.9) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        border-radius: 24px !important;
+        padding: 16px 8px !important;
+        gap: 12px !important;
+        box-shadow: var(--shadow-premium) !important;
+        width: 80px !important;
+        overflow: hidden !important;
+    }
+    .ghibli-theme .tab-content {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+    }
+    .ghibli-theme .sidebar-user-card {
+        padding: 0 !important;
+        margin-bottom: 12px !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    .ghibli-theme .sidebar-user-card > div:last-child {
+        display: none !important;
+    }
+    .ghibli-theme .tab-btn {
+        width: 48px !important;
+        height: 48px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        border-radius: 16px !important;
+        gap: 0 !important;
+    }
+    .ghibli-theme .tab-btn span:not(.material-symbols-outlined) {
+        display: none !important;
     }
 }
 

@@ -29,7 +29,9 @@ module.exports = async (req, res) => {
                 { name: '다정한 영희', email: 'younghee@example.com', phone: '010-1234-5678' },
                 { name: '든든한 철수', email: 'chulsoo@example.com', phone: '010-2345-6789' },
                 { name: '행복한 민수', email: 'minsu@example.com', phone: '010-3456-7890' },
-                { name: '빛나는 수지', email: 'suji@example.com', phone: '010-4567-8901' }
+                { name: '빛나는 수지', email: 'suji@example.com', phone: '010-4567-8901' },
+                { name: '전화 전용 길동', email: '', phone: '010-9999-8888' },
+                { name: '전화 전용 지민', email: '', phone: '010-7777-6666' }
             ];
             return res.json({ success: true, contacts: mockContacts, isMock: true });
         }
@@ -66,7 +68,9 @@ module.exports = async (req, res) => {
                 { name: '다정한 영희 (데모)', email: 'younghee@example.com', phone: '010-1234-5678' },
                 { name: '든든한 철수 (데모)', email: 'chulsoo@example.com', phone: '010-2345-6789' },
                 { name: '행복한 민수 (데모)', email: 'minsu@example.com', phone: '010-3456-7890' },
-                { name: '빛나는 수지 (데모)', email: 'suji@example.com', phone: '010-4567-8901' }
+                { name: '빛나는 수지 (데모)', email: 'suji@example.com', phone: '010-4567-8901' },
+                { name: '전화 전용 길동 (데모)', email: '', phone: '010-9999-8888' },
+                { name: '전화 전용 지민 (데모)', email: '', phone: '010-7777-6666' }
             ];
         }
 
@@ -77,7 +81,9 @@ module.exports = async (req, res) => {
             { name: '다정한 영희 (데모)', email: 'younghee@example.com', phone: '010-1234-5678' },
             { name: '든든한 철수 (데모)', email: 'chulsoo@example.com', phone: '010-2345-6789' },
             { name: '행복한 민수 (데모)', email: 'minsu@example.com', phone: '010-3456-7890' },
-            { name: '빛나는 수지 (데모)', email: 'suji@example.com', phone: '010-4567-8901' }
+            { name: '빛나는 수지 (데모)', email: 'suji@example.com', phone: '010-4567-8901' },
+            { name: '전화 전용 길동 (데모)', email: '', phone: '010-9999-8888' },
+            { name: '전화 전용 지민 (데모)', email: '', phone: '010-7777-6666' }
         ];
         return res.json({ success: true, contacts: mockContacts, isMock: true, warning: error.message });
     }

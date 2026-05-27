@@ -1,4 +1,4 @@
-const { supabase, sendError } = require('./shared');
+const { supabase, sendError, redis } = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
@@ -93,8 +93,24 @@ module.exports = async (req, res) => {
         if (req.method === 'GET' && path.includes('/callback')) {
             const { code } = req.query;
             if (code) {
-                const { error } = await supabase.auth.exchangeCodeForSession(code);
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) throw error;
+
+                if (data && data.session && data.user) {
+                    const userId = data.user.id;
+                    const providerToken = data.session.provider_token;
+                    const providerRefreshToken = data.session.provider_refresh_token;
+
+                    if (providerToken) {
+                        await redis.set(`user:${userId}:google_provider_token`, providerToken, 'EX', 3600);
+                        await redis.del(`user:${userId}:calendar-advice-cache`);
+                        console.log(`--- [OAuth Callback] Cached google_provider_token for user ${userId} and cleared calendar cache ---`);
+                    }
+                    if (providerRefreshToken) {
+                        await redis.set(`user:${userId}:google_provider_refresh_token`, providerRefreshToken);
+                        console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for user ${userId} ---`);
+                    }
+                }
             }
             res.redirect('/');
             return;

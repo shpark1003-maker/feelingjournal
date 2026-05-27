@@ -138,10 +138,13 @@ module.exports = async (req, res) => {
 
         const currentFingerprint = events.map(e => `${e.id}-${e.title}-${e.start}-${e.end}`).join('|');
         const cacheKey = `user:${user.id}:calendar-advice-cache`;
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-            const { fingerprint, analyzedEvents } = JSON.parse(cached);
-            if (fingerprint === currentFingerprint) return res.json({ success: true, events: analyzedEvents, cached: true });
+        const { refresh } = req.query;
+        if (refresh !== 'true') {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                const { fingerprint, analyzedEvents } = JSON.parse(cached);
+                if (fingerprint === currentFingerprint) return res.json({ success: true, events: analyzedEvents, cached: true });
+            }
         }
 
         const keys = await scanRedisKeys(`user:${user.id}:diary-*`);
@@ -165,7 +168,7 @@ module.exports = async (req, res) => {
 데이터:
 ${diaryContent}`;
                 try {
-                    const data = await callGemini(prompt, { response_mime_type: 'application/json' }, 0, null, true, 3500);
+                    const data = await callGemini(prompt, { response_mime_type: 'application/json' }, 0, null, true, 15000);
                     const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
                     const diaryTasks = safeParseJsonArray(rawJson);
                     events = [...events, ...diaryTasks.map(t => ({ 
@@ -191,7 +194,7 @@ ${diaryContent}`;
 
             let adviceList = [];
             try {
-                const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' }, 0, null, true, 3500);
+                const batchData = await callGemini(batchPrompt, { response_mime_type: 'application/json' }, 0, null, true, 15000);
                 const rawAdvice = batchData.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
                 adviceList = safeParseJsonArray(rawAdvice);
             } catch (geminiErr) {

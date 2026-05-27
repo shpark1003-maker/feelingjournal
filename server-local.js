@@ -157,10 +157,23 @@ app.delete('/api/calendar/events/:id', verifyUser, async (req, res) => {
 
 app.post('/api/calendar/add', verifyUser, async (req, res) => {
     try {
-        const providerToken = req.headers['x-provider-token'];
+        const user = req.user;
+        let providerToken = null;
+        try {
+            providerToken = await redis.get(`user:${user.id}:google_provider_token`);
+        } catch (redisErr) {
+            console.warn('--- [CALENDAR ADD] Redis connection offline/error, falling back to header:', redisErr.message);
+        }
+
+        if (!providerToken) {
+            providerToken = req.headers['x-provider-token'];
+        }
+
         const { summary, start, end } = req.body;
 
-        if (!providerToken) return sendError(res, 400, 'Google Provider Token이 필요합니다.');
+        if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+            return sendError(res, 400, 'Google Provider Token이 필요하며, 연동이 활성화되어 있지 않습니다.');
+        }
         if (!summary || !start || !end) return sendError(res, 400, 'summary, start, end 값이 필요합니다.');
 
         const startDate = new Date(start);

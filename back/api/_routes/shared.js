@@ -15,11 +15,17 @@ const nodemailer = require('nodemailer');
 // 2. 핵심 설정 정보 추출
 const PORT = process.env.PORT || 3000;
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const MODEL_FALLBACKS = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+const MODEL_FALLBACKS = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '')
+    .replace(/["']/g, '')
+    .trim();
+const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || '')
+    .replace(/["']/g, '')
+    .trim();
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '')
+    .replace(/["']/g, '')
+    .trim();
 
 const cleanApiKey = (process.env.GEMINI_API_KEY || '')
     .replace(/["']/g, '')
