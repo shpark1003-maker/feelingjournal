@@ -5370,3 +5370,8 @@ body.ghibli-theme.auth-mode .creature-float {
     }
 }
 
+/* Fix high-specificity flex layouts overriding display: none hidden state */
+.ghibli-theme .hidden, .hidden {
+    display: none !important;
+}
+
