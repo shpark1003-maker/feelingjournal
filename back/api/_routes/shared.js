@@ -366,10 +366,8 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
         return await callLocalLLM(prompt);
     } catch (localErr) {
         console.error('--- [CRITICAL] Both Cloud Gemini and Local LLM fallbacks failed.');
+        throw lastError || localErr;
     }
-
-    console.error('--- [CRITICAL] All Gemini models failed.');
-    throw lastError;
 };
 
 // 12. 공통 가공 및 파싱 헬퍼

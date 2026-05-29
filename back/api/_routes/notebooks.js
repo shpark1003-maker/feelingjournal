@@ -1,4 +1,4 @@
-const { supabase, redis } = require('./shared');
+const { supabase, redis, scanRedisKeys } = require('./shared');
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
