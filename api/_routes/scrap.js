@@ -93,39 +93,41 @@ module.exports = async (req, res) => {
             
             let browser;
             let page;
+            let isDedicatedBrowser = false;
             try {
-                browser = await getBrowserInstance();
-                page = await browser.newPage();
-            } catch (e) {
-                console.log('Shared browser launch failed. Creating dedicated browser fallback. Error:', e.message);
-                if (process.env.VERCEL) {
-                    const chromium = require('@sparticuz/chromium');
-                    const puppeteerCore = require('puppeteer-core');
-                    browser = await puppeteerCore.launch({
-                        args: chromium.args,
-                        defaultViewport: chromium.defaultViewport,
-                        executablePath: await chromium.executablePath(),
-                        headless: chromium.headless,
-                        ignoreHTTPSErrors: true,
-                    });
-                } else {
-                    const puppeteer = require('puppeteer');
-                    browser = await puppeteer.launch({
-                        headless: 'new',
-                        args: ['--no-sandbox', '--disable-setuid-sandbox']
-                    });
+                try {
+                    browser = await getBrowserInstance();
+                    page = await browser.newPage();
+                } catch (e) {
+                    console.log('Shared browser launch failed. Creating dedicated browser fallback. Error:', e.message);
+                    isDedicatedBrowser = true;
+                    if (process.env.VERCEL) {
+                        const chromium = require('@sparticuz/chromium');
+                        const puppeteerCore = require('puppeteer-core');
+                        browser = await puppeteerCore.launch({
+                            args: chromium.args,
+                            defaultViewport: chromium.defaultViewport,
+                            executablePath: await chromium.executablePath(),
+                            headless: chromium.headless,
+                            ignoreHTTPSErrors: true,
+                        });
+                    } else {
+                        const puppeteer = require('puppeteer');
+                        browser = await puppeteer.launch({
+                            headless: 'new',
+                            args: ['--no-sandbox', '--disable-setuid-sandbox']
+                        });
+                    }
+                    page = await browser.newPage();
                 }
-                page = await browser.newPage();
-            }
 
-            await page.setViewport({ width: 1280, height: 800 });
-            await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-            
-            const pageTitle = await page.title();
-            const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 80 });
-            await page.close();
-
-            const prompt = `
+                await page.setViewport({ width: 1280, height: 800 });
+                await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+                
+                const pageTitle = await page.title();
+                const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 80 });
+                
+                const prompt = `
                 사용자가 웹 페이지를 스크랩하기 위해 URL 스냅샷을 찍었습니다. 
                 이미지 속의 텍스트와 주요 정보를 추출하여 정리해 주세요:
                 1. 페이지의 핵심 제목
@@ -153,6 +155,22 @@ module.exports = async (req, res) => {
                 title: data.title || pageTitle,
                 content: data.content
             });
+            } finally {
+                if (page) {
+                    try {
+                        await page.close();
+                    } catch (err) {
+                        console.error('Failed to close page:', err);
+                    }
+                }
+                if (isDedicatedBrowser && browser) {
+                    try {
+                        await browser.close();
+                    } catch (err) {
+                        console.error('Failed to close dedicated browser:', err);
+                    }
+                }
+            }
         }
 
         // 3. 사용자가 직접 캡처하여 올린 스크린샷 이미지 분석 (POST /api/scrap/scrap-screenshot)

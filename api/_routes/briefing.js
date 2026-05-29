@@ -257,10 +257,10 @@ ${reminiscenceMemory}
 `;
 
     const data = await callGemini(briefingPrompt, {}, 3, null, true);
-    const briefing = data.candidates?.[0]?.content?.parts?.[0]?.text || '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
+    const briefing = data?.candidates?.[0]?.content?.parts?.[0]?.text || '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
 
     // 성공적인 브리핑 생성 시 Redis 캐시 저장 (E2E가 아닐 때만)
-    if (!e2eKey && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    if (!e2eKey && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
         const isFallback = briefing.includes('API 할당량 초과');
         const cacheTTL = isFallback ? 15 : 300;
         await redis.set(cacheKey, briefing, 'EX', cacheTTL);
