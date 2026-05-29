@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js';
+import { store, API_URL } from './state.js?v=5.0.7';
 
 let initialized = false;
 let currentYear = new Date().getFullYear();
