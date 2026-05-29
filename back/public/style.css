@@ -4334,6 +4334,10 @@ body.ghibli-theme .container {
 .ghibli-theme .notebook-list .notebook-item .folder-icon {
     color: var(--primary) !important;
 }
+.ghibli-theme .notebook-list .notebook-item .name {
+    color: #43423E !important;
+    display: block !important;
+}
 .ghibli-theme .pages-sidebar {
     background: rgba(255, 252, 242, 0.5) !important;
     border-right: 1px solid var(--primary-container) !important;
