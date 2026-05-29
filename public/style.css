@@ -5249,3 +5249,99 @@ body.ghibli-theme.auth-mode .creature-float {
         font-size: 0.95rem !important;
     }
 }
+
+/* Ghibli Theme Styles (Chat Specific) */
+.chat-bg {
+    background-color: #fdf6e3 !important;
+    background-image: radial-gradient(#f9f1d7 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+}
+
+.paper-note {
+    background: #fffef0 !important;
+    border: 1px solid #e8e4d3 !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
+    position: relative !important;
+}
+
+.bubble-right {
+    border-radius: 12px 2px 12px 12px !important;
+}
+
+.bubble-left {
+    border-radius: 2px 12px 12px 12px !important;
+}
+
+.hand-painted-gauge {
+    background: linear-gradient(90deg, #a7d8de 0%, #f9d976 50%, #f7a8a8 100%) !important;
+    border: 2px solid #5d574d !important;
+    border-radius: 999px !important;
+    height: 12px !important;
+    position: relative !important;
+}
+
+.gauge-needle {
+    width: 4px !important;
+    height: 20px !important;
+    background: #5d574d !important;
+    position: absolute !important;
+    top: -4px !important;
+    border-radius: 2px !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+}
+
+.ghibli-border {
+    border: 2px solid #5d574d !important;
+}
+
+.floating-assistant {
+    animation: float 4s ease-in-out infinite !important;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(5deg); }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none !important; }
+.no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
+.active-bubble {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+    transition: all 0.5s ease-in-out !important;
+}
+
+.dim-context {
+    opacity: 0.4 !important;
+    filter: grayscale(20%) !important;
+    transition: opacity 0.5s ease !important;
+}
+
+.thinking-indicator {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 8px 16px !important;
+    background: white !important;
+    border-radius: 20px !important;
+    border: 1px solid #d4a373 !important;
+    width: fit-content !important;
+}
+
+.dot {
+    width: 6px !important;
+    height: 6px !important;
+    background: #d4a373 !important;
+    border-radius: 50% !important;
+    animation: pulse 1.5s infinite ease-in-out !important;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s !important; }
+.dot:nth-child(3) { animation-delay: 0.4s !important; }
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.5); opacity: 1; }
+}
+
