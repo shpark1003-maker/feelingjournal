@@ -1,7 +1,9 @@
 import { store, API_URL } from './state.js';
 
-let fullCalendar = null;
 let initialized = false;
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth(); // 0-indexed
+let calendarEvents = [];
 
 function formatLocalISO(date) {
     if (!date) return '';
@@ -9,10 +11,47 @@ function formatLocalISO(date) {
     return (new Date(date - tzOffset)).toISOString().slice(0, 16);
 }
 
-function initCalendarModal() {
+function getDayName(dayIndex) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayIndex];
+}
+
+function getMonthName(monthIndex) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[monthIndex];
+}
+
+function initCalendarUI() {
     if (initialized) return;
     initialized = true;
 
+    // 모달 및 슬라이더 카드 관련 요소 초기화 및 이벤트 리스너 바인딩
+    const prevBtn = document.getElementById('calendar-prev-btn');
+    const nextBtn = document.getElementById('calendar-next-btn');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCustomGrid();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCustomGrid();
+        });
+    }
+
+    // 일정 추가/상세 모달 이벤트 바인딩
     const modal = document.getElementById('calendar-event-modal');
     const form = document.getElementById('calendar-event-form');
     const closeBtn = document.getElementById('close-calendar-modal');
@@ -27,6 +66,7 @@ function initCalendarModal() {
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const id = document.getElementById('calendar-event-id').value;
             const summary = document.getElementById('calendar-event-summary').value;
             const startTime = document.getElementById('calendar-event-start').value;
             const endTime = document.getElementById('calendar-event-end').value;
@@ -36,26 +76,36 @@ function initCalendarModal() {
                 const token = await store.getSessionToken();
                 const providerToken = await store.getProviderToken();
 
-                const res = await fetch(`${API_URL}/calendar`, {
-                    method: 'POST',
+                const isEdit = !!id;
+                let url = `${API_URL}/calendar`;
+                let method = 'POST';
+
+                if (isEdit) {
+                    // 구글 캘린더 패치 API 
+                    url = `${API_URL}/calendar/events/${id}`;
+                    method = 'PATCH';
+                }
+
+                const payload = isEdit 
+                    ? { start: startTime, end: endTime } 
+                    : { summary, startTime, endTime, description };
+
+                const res = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                         'x-provider-token': providerToken || ''
                     },
-                    body: JSON.stringify({
-                        summary,
-                        startTime,
-                        endTime,
-                        description
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await res.json();
                 if (data.success) {
-                    alert('일정이 구글 캘린더에 성공적으로 저장되었습니다.');
+                    alert(isEdit ? '일정이 성공적으로 수정되었습니다.' : '일정이 구글 캘린더에 성공적으로 저장되었습니다.');
                     modal.style.display = 'none';
-                    loadCalendar();
+                    closeDayView();
+                    loadCalendar(true);
                 } else {
                     alert('일정 저장 실패: ' + data.error);
                 }
@@ -77,7 +127,8 @@ function initCalendarModal() {
                 const token = await store.getSessionToken();
                 const providerToken = await store.getProviderToken();
 
-                const res = await fetch(`${API_URL}/calendar?id=${encodeURIComponent(id)}`, {
+                // 구글 캘린더 삭제 API 호출
+                const res = await fetch(`${API_URL}/calendar/events/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -89,7 +140,8 @@ function initCalendarModal() {
                 if (data.success) {
                     alert('일정이 성공적으로 삭제되었습니다.');
                     modal.style.display = 'none';
-                    loadCalendar();
+                    closeDayView();
+                    loadCalendar(true);
                 } else {
                     alert('일정 삭제 실패: ' + data.error);
                 }
@@ -99,11 +151,36 @@ function initCalendarModal() {
             }
         });
     }
+
+    // 날짜 상세 슬라이더(dayView) 관련 이벤트 바인딩
+    const dayViewCloseBg = document.getElementById('dayViewCloseBg');
+    const dayViewCloseBtn = document.getElementById('dayViewCloseBtn');
+    const dayViewAddBtn = document.getElementById('day-view-add-btn');
+
+    if (dayViewCloseBg) dayViewCloseBg.addEventListener('click', closeDayView);
+    if (dayViewCloseBtn) dayViewCloseBtn.addEventListener('click', closeDayView);
+
+    if (dayViewAddBtn) {
+        dayViewAddBtn.addEventListener('click', () => {
+            // 현재 상세 뷰가 띄워진 날짜 기준 일정 추가 열기
+            const dateStr = dayViewAddBtn.dataset.date; 
+            if (!dateStr) return;
+
+            const baseDate = new Date(dateStr);
+            const startISO = formatLocalISO(baseDate);
+            const endISO = formatLocalISO(new Date(baseDate.getTime() + 60 * 60 * 1000)); // 1시간 뒤
+
+            openEventModal('add', {
+                start: startISO,
+                end: endISO
+            });
+        });
+    }
 }
 
 export async function loadCalendar(forceRefresh = false) {
-    initCalendarModal();
-    const container = document.getElementById('calendar-container');
+    initCalendarUI();
+    const container = document.getElementById('calendar-days-grid');
     if (!container) return;
 
     // Bind refresh button event
@@ -122,13 +199,12 @@ export async function loadCalendar(forceRefresh = false) {
         });
     }
 
-    container.innerHTML = '<div class="loading-full">일정을 불러오는 중...</div>';
+    container.innerHTML = '<div style="grid-column: span 7; text-align: center; padding: 40px; color: #8c7e6d; font-weight: 600;">일정을 불러오는 중...</div>';
 
     try {
         const token = await store.getSessionToken();
         const providerToken = await store.getProviderToken();
 
-        // res API 호출을 먼저 단행하여 백엔드 unlinked 정보를 받아옴
         const res = await fetch(`${API_URL}/calendar${forceRefresh ? '?refresh=true' : ''}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -139,8 +215,10 @@ export async function loadCalendar(forceRefresh = false) {
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
+        calendarEvents = data.events || [];
         const isUnlinked = data.unlinked;
 
+        // 구글 연동 배너 처리
         let banner = document.getElementById('google-calendar-link-banner');
         if (isUnlinked) {
             if (!banner) {
@@ -208,7 +286,6 @@ export async function loadCalendar(forceRefresh = false) {
                         const resData = await response.json();
                         if (!resData.success) throw new Error(resData.error || '연동 해제 실패');
 
-                        // Trigger client-side OAuth
                         const { error } = await store.supabaseClient.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
@@ -227,142 +304,278 @@ export async function loadCalendar(forceRefresh = false) {
                         linkBtn.innerHTML = '구글 계정 연동';
                     }
                 });
-
-                container.parentNode.insertBefore(banner, container);
+                
+                const cardContainer = document.getElementById('calendar-container');
+                cardContainer.parentNode.insertBefore(banner, cardContainer);
             }
         } else {
             if (banner) banner.remove();
         }
 
-        if (fullCalendar) fullCalendar.destroy();
-        container.innerHTML = '';
-
-        fullCalendar = new FullCalendar.Calendar(container, {
-            initialView: 'dayGridMonth',
-            locale: 'ko',
-            height: 'auto',
-            selectable: true,
-            eventDisplay: 'block',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,listMonth'
-            },
-            events: data.events,
-            select: (info) => {
-                const modal = document.getElementById('calendar-event-modal');
-                document.getElementById('calendar-modal-title').innerText = '📌 일정 추가';
-                document.getElementById('calendar-event-id').value = '';
-                document.getElementById('calendar-event-summary').value = '';
-                document.getElementById('calendar-event-summary').disabled = false;
-                
-                // Set starts and ends
-                document.getElementById('calendar-event-start').value = formatLocalISO(info.start);
-                document.getElementById('calendar-event-start').disabled = false;
-                
-                let endDate = info.end;
-                if (info.allDay) {
-                    endDate = new Date(info.start.getTime() + 60 * 60 * 1000); // default +1 hour
-                }
-                document.getElementById('calendar-event-end').value = formatLocalISO(endDate);
-                document.getElementById('calendar-event-end').disabled = false;
-
-                document.getElementById('calendar-event-desc').value = '';
-                document.getElementById('calendar-event-desc').disabled = false;
-
-                document.getElementById('calendar-event-advice-group').style.display = 'none';
-                document.getElementById('delete-calendar-event-btn').style.display = 'none';
-                document.getElementById('save-calendar-event-btn').style.display = 'block';
-
-                modal.style.display = 'flex';
-                fullCalendar.unselect();
-            },
-            eventClick: (info) => {
-                const modal = document.getElementById('calendar-event-modal');
-                const type = info.event.extendedProps.type;
-                const isReadOnly = type === 'task' || type === 'shared';
-
-                let modalTitle = '📌 일정 상세';
-                if (type === 'task') modalTitle = '📝 일기 분석 약속';
-                else if (type === 'shared') modalTitle = '👥 공유된 약속 일정';
-
-                document.getElementById('calendar-modal-title').innerText = modalTitle;
-                document.getElementById('calendar-event-id').value = info.event.id || '';
-                document.getElementById('calendar-event-summary').value = info.event.title || '';
-                document.getElementById('calendar-event-summary').disabled = isReadOnly;
-
-                document.getElementById('calendar-event-start').value = formatLocalISO(info.event.start);
-                document.getElementById('calendar-event-start').disabled = isReadOnly;
-
-                document.getElementById('calendar-event-end').value = formatLocalISO(info.event.end || info.event.start);
-                document.getElementById('calendar-event-end').disabled = isReadOnly;
-
-                document.getElementById('calendar-event-desc').value = info.event.extendedProps.description || '';
-                document.getElementById('calendar-event-desc').disabled = isReadOnly;
-
-                const advice = info.event.extendedProps.advice;
-                if (advice) {
-                    document.getElementById('calendar-event-advice-group').style.display = 'block';
-                    document.getElementById('calendar-event-advice-text').innerText = advice;
-                } else {
-                    document.getElementById('calendar-event-advice-group').style.display = 'none';
-                }
-
-                if (isReadOnly) {
-                    document.getElementById('delete-calendar-event-btn').style.display = 'none';
-                    document.getElementById('save-calendar-event-btn').style.display = 'none';
-                } else {
-                    document.getElementById('delete-calendar-event-btn').style.display = 'block';
-                    document.getElementById('save-calendar-event-btn').style.display = 'block';
-                }
-
-                modal.style.display = 'flex';
-            },
-            eventDidMount: (info) => {
-                const type = info.event.extendedProps.type;
-                if (type === 'task') {
-                    info.el.classList.add('event-task');
-                } else if (type === 'shared') {
-                    info.el.classList.add('event-shared');
-                } else {
-                    info.el.classList.add('event-personal');
-                }
-
-                const eventEnd = info.event.end || info.event.start;
-                if (eventEnd && new Date(eventEnd) < new Date()) {
-                    info.el.style.opacity = '0.70'; // 지난 일정은 가시성을 위해 0.70으로 조정
-                    info.el.style.filter = 'grayscale(15%)'; // 세련된 은은한 그레이스케일
-                }
-
-                const title = info.event.title || '제목 없음';
-                const desc = info.event.extendedProps.description || '';
-                const advice = info.event.extendedProps.advice || '';
-                
-                let tooltipContent = `<div style="text-align:left; padding:6px; max-width:260px; font-family:'Outfit', 'Nanum', sans-serif;">`;
-                tooltipContent += `<strong style="font-size:0.95rem; color:#fff; display:block; margin-bottom:4px;">📌 ${title}</strong>`;
-                if (desc) {
-                    tooltipContent += `<hr style="border:none; border-top:1px solid rgba(255,255,255,0.15); margin:6px 0;">`;
-                    tooltipContent += `<div style="font-size:0.82rem; color:#dfe4ea; white-space:pre-wrap; line-height:1.4;">${desc}</div>`;
-                }
-                if (advice) {
-                    tooltipContent += `<hr style="border:none; border-top:1px solid rgba(255,255,255,0.15); margin:6px 0;">`;
-                    tooltipContent += `<div style="font-size:0.82rem; color:#ffeaa7; font-weight:600; line-height:1.4;">💡 비서: ${advice}</div>`;
-                }
-                tooltipContent += `</div>`;
-                
-                tippy(info.el, {
-                    content: tooltipContent,
-                    allowHTML: true,
-                    placement: 'top',
-                    interactive: true,
-                    theme: 'translucent'
-                });
-            }
-        });
-
-        fullCalendar.render();
+        renderCustomGrid();
     } catch (e) {
         console.error(e);
-        container.innerHTML = `<div class="error">캘린더 로드 실패: ${e.message}</div>`;
+        container.innerHTML = `<div style="grid-column: span 7; text-align: center; padding: 40px; color: #ff4d4d;">캘린더 로드 실패: ${e.message}</div>`;
     }
+}
+
+function renderCustomGrid() {
+    const grid = document.getElementById('calendar-days-grid');
+    const monthYearText = document.getElementById('calendar-month-year-text');
+    if (!grid || !monthYearText) return;
+
+    // 월 이름 업데이트
+    monthYearText.innerText = `${getMonthName(currentMonth)} ${currentYear}`;
+
+    grid.innerHTML = '';
+
+    // 이번 달 1일 정보 및 전체 일수 계산
+    const firstDayDate = new Date(currentYear, currentMonth, 1);
+    const startDayOfWeek = firstDayDate.getDay(); // 0: 일요일, 6: 토요일
+    const lastDayDate = new Date(currentYear, currentMonth + 1, 0);
+    const totalDays = lastDayDate.getDate();
+
+    // 지난 달의 마지막 날 정보
+    const prevMonthLastDate = new Date(currentYear, currentMonth, 0).getDate();
+
+    // 1. 지난 달 날짜 칸 렌더링 (그리드 시작을 일요일에 정렬)
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+        const prevDayNum = prevMonthLastDate - i;
+        const cell = document.createElement('div');
+        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
+        cell.innerHTML = `<span class="text-sm font-medium mb-2">${prevDayNum}</span>`;
+        
+        // 날짜 클릭 시 이전 달 뷰로 이동 또는 이전 달 날짜에 대한 조회
+        const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
+        cell.addEventListener('click', () => openDayView(dateStr));
+        grid.appendChild(cell);
+    }
+
+    // 2. 이번 달 날짜 칸 렌더링
+    for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const cellDate = new Date(currentYear, currentMonth, day);
+        
+        const cell = document.createElement('div');
+        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer';
+        
+        // 오늘 날짜 하이라이팅
+        const today = new Date();
+        const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
+        let dayClass = 'text-sm font-semibold mb-2';
+        if (isToday) {
+            dayClass += ' text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit';
+        }
+        
+        // 상단 날짜 숫자 및 클라우드 아이콘(일정에 비서 조언이 있는 경우) 표시
+        let dayHeaderHTML = `<div class="flex justify-between items-start"><span class="${dayClass}">${day}</span>`;
+        
+        // 해당 날짜의 일정들 매핑
+        const dayEvents = calendarEvents.filter(ev => {
+            const evStart = new Date(ev.start);
+            return evStart.getFullYear() === currentYear && evStart.getMonth() === currentMonth && evStart.getDate() === day;
+        });
+
+        // 조언이 담긴 AI 일정이 있는지 검사해 마스코트 아이콘 노출
+        const hasAdvice = dayEvents.some(ev => ev.extendedProps?.advice || ev.advice);
+        if (hasAdvice) {
+            dayHeaderHTML += `<img alt="Cloud Spirit" class="w-6 h-6 object-contain opacity-70 floating-cloud" src="mascot.png" style="width: 24px; height: 24px;"/>`;
+        }
+        dayHeaderHTML += `</div>`;
+        
+        let eventsHTML = '<div class="flex-1 overflow-y-auto space-y-1 mt-1 no-scrollbar">';
+        // 칩 카드 형태로 최대 3개까지 노출
+        dayEvents.slice(0, 3).forEach(ev => {
+            const type = ev.extendedProps?.type || ev.type || 'personal';
+            let chipStyle = '';
+            
+            if (type === 'task') {
+                chipStyle = 'bg-tertiary/10 text-tertiary border-tertiary/20';
+            } else if (type === 'shared') {
+                chipStyle = 'bg-secondary/10 text-secondary border-secondary/20';
+            } else {
+                chipStyle = 'bg-primary/10 text-primary border-primary/20';
+            }
+
+            const title = ev.title || '제목 없음';
+            eventsHTML += `<div class="px-2 py-1 rounded-lg text-[10px] border font-medium truncate ${chipStyle}">${title}</div>`;
+        });
+        eventsHTML += '</div>';
+
+        cell.innerHTML = dayHeaderHTML + eventsHTML;
+        cell.addEventListener('click', () => openDayView(dateStr));
+        grid.appendChild(cell);
+    }
+
+    // 3. 다음 달 날짜 칸 렌더링 (그리드 남은 칸 채우기, 총 42칸 기준)
+    const totalRendered = startDayOfWeek + totalDays;
+    const remaining = (totalRendered % 7 === 0) ? 0 : 7 - (totalRendered % 7);
+    for (let i = 1; i <= remaining; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
+        cell.innerHTML = `<span class="text-sm font-medium mb-2">${i}</span>`;
+        
+        const dateStr = `${currentMonth === 11 ? currentYear + 1 : currentYear}-${String(currentMonth === 11 ? 1 : currentMonth + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        cell.addEventListener('click', () => openDayView(dateStr));
+        grid.appendChild(cell);
+    }
+}
+
+export function openDayView(dateStr) {
+    const container = document.getElementById('dayViewContainer');
+    const card = document.getElementById('dayViewCard');
+    if (!container || !card) return;
+
+    const baseDate = new Date(dateStr);
+    const dayName = getDayName(baseDate.getDay());
+    const dateText = `${getMonthName(baseDate.getMonth())} ${baseDate.getDate()}, ${baseDate.getFullYear()}`;
+
+    // 상세 카드 헤더 데이터 반영
+    document.getElementById('day-view-day-name').innerText = dayName;
+    document.getElementById('day-view-date-text').innerText = dateText;
+
+    // '일정 등록' 버튼에 타겟 날짜 문자열 주입
+    const addBtn = document.getElementById('day-view-add-btn');
+    if (addBtn) addBtn.dataset.date = dateStr;
+
+    // 해당 날짜 일정 필터링
+    const dayEvents = calendarEvents.filter(ev => {
+        const evStart = new Date(ev.start);
+        return evStart.getFullYear() === baseDate.getFullYear() && 
+               evStart.getMonth() === baseDate.getMonth() && 
+               evStart.getDate() === baseDate.getDate();
+    });
+
+    const eventsList = document.getElementById('day-view-events-list');
+    eventsList.innerHTML = '';
+
+    if (dayEvents.length === 0) {
+        eventsList.innerHTML = `<div style="text-align: center; padding: 20px; color: #8c7e6d; font-style: italic;">이 날에는 일정이 없습니다.</div>`;
+    } else {
+        dayEvents.forEach(ev => {
+            const type = ev.extendedProps?.type || ev.type || 'personal';
+            let categoryClass = 'bg-primary';
+            let cardBg = 'bg-primary/10 border-primary/20';
+
+            if (type === 'task') {
+                categoryClass = 'bg-tertiary';
+                cardBg = 'bg-tertiary/10 border-tertiary/20';
+            } else if (type === 'shared') {
+                categoryClass = 'bg-secondary';
+                cardBg = 'bg-secondary/10 border-secondary/20';
+            }
+
+            const evId = ev.id || '';
+            const evTitle = ev.title || '제목 없음';
+            const timeStr = new Date(ev.start).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+            const item = document.createElement('div');
+            item.className = `flex items-center gap-4 p-5 rounded-[1.5rem] border-2 ${cardBg} cursor-pointer hover:opacity-90 transition-opacity`;
+            item.innerHTML = `
+                <div class="w-4 h-4 rounded-full ${categoryClass}" style="width:16px; height:16px; border-radius:50%;"></div>
+                <div style="flex:1; text-align:left;">
+                    <h4 class="text-xl font-bold text-on-surface" style="margin:0; font-size:1.25rem;">${evTitle}</h4>
+                    <p class="text-on-surface-variant" style="margin:2px 0 0 0; font-size:0.9rem;">${timeStr} • ${type.toUpperCase()}</p>
+                </div>
+                <button class="p-2 text-on-surface-variant hover:text-primary edit-event-btn" style="background:none; border:none; cursor:pointer;" data-id="${evId}">
+                    <span class="material-symbols-outlined text-2xl">edit</span>
+                </button>
+            `;
+            
+            // 일정 카드 클릭 시 상세보기/수정 모달 띄우기
+            item.querySelector('.edit-event-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEventModal('edit', ev);
+            });
+            item.addEventListener('click', () => {
+                openEventModal('edit', ev);
+            });
+            eventsList.appendChild(item);
+        });
+    }
+
+    // AI Insight 조언 카드 렌더링
+    const adviceCard = document.getElementById('day-view-advice-card');
+    const adviceText = document.getElementById('day-view-advice-text');
+    const evWithAdvice = dayEvents.find(ev => ev.extendedProps?.advice || ev.advice);
+
+    if (evWithAdvice) {
+        const advice = evWithAdvice.extendedProps?.advice || evWithAdvice.advice;
+        adviceText.innerText = `"${advice}"`;
+        adviceCard.style.display = 'block';
+    } else {
+        adviceCard.style.display = 'none';
+    }
+
+    // 슬라이더 상승 애니메이션 실행
+    container.classList.remove('hidden');
+    container.classList.add('flex');
+    setTimeout(() => {
+        card.classList.remove('translate-y-full');
+        card.classList.add('translate-y-0');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+}
+
+export function closeDayView() {
+    const container = document.getElementById('dayViewContainer');
+    const card = document.getElementById('dayViewCard');
+    if (!container || !card) return;
+
+    card.classList.remove('translate-y-0');
+    card.classList.add('translate-y-full');
+    setTimeout(() => {
+        container.classList.add('hidden');
+        container.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }, 500);
+}
+
+function openEventModal(mode, eventData) {
+    const modal = document.getElementById('calendar-event-modal');
+    if (!modal) return;
+
+    const isReadOnly = eventData.extendedProps?.type === 'task' || eventData.extendedProps?.type === 'shared' || eventData.type === 'task' || eventData.type === 'shared';
+
+    document.getElementById('calendar-modal-title').innerText = mode === 'add' ? '📌 일정 추가' : '📌 일정 상세';
+    document.getElementById('calendar-event-id').value = eventData.id || '';
+    document.getElementById('calendar-event-summary').value = eventData.title || '';
+    document.getElementById('calendar-event-summary').disabled = isReadOnly;
+
+    // ISO 문자열 날짜를 datetime-local 포맷에 맞춰 슬라이싱
+    const startISO = formatLocalISO(new Date(eventData.start));
+    const endISO = formatLocalISO(new Date(eventData.end || eventData.start));
+
+    document.getElementById('calendar-event-start').value = startISO;
+    document.getElementById('calendar-event-start').disabled = isReadOnly;
+
+    document.getElementById('calendar-event-end').value = endISO;
+    document.getElementById('calendar-event-end').disabled = isReadOnly;
+
+    document.getElementById('calendar-event-desc').value = eventData.extendedProps?.description || eventData.description || '';
+    document.getElementById('calendar-event-desc').disabled = isReadOnly;
+
+    const advice = eventData.extendedProps?.advice || eventData.advice;
+    const adviceGroup = document.getElementById('calendar-event-advice-group');
+    const adviceText = document.getElementById('calendar-event-advice-text');
+
+    if (advice) {
+        adviceText.innerText = advice;
+        adviceGroup.style.display = 'flex';
+    } else {
+        adviceGroup.style.display = 'none';
+    }
+
+    const deleteBtn = document.getElementById('delete-calendar-event-btn');
+    const saveBtn = document.getElementById('save-calendar-event-btn');
+
+    if (isReadOnly) {
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        if (saveBtn) saveBtn.style.display = 'none';
+    } else {
+        if (deleteBtn) deleteBtn.style.display = mode === 'edit' ? 'block' : 'none';
+        if (saveBtn) saveBtn.style.display = 'block';
+    }
+
+    modal.style.display = 'flex';
 }

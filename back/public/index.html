@@ -7,7 +7,7 @@
     <title>AI 일기 (Beta) - 당신의 하루를 기록하세요</title>
     <meta name="description" content="AI가 분석하는 일기장입니다. 당신의 하루를 기록하고 조언을 받아보세요.">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css?v=5.0.4">
+    <link rel="stylesheet" href="style.css?v=5.0.5">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -337,14 +337,18 @@
         </div>
 
         <!-- [2] 캘린더 뷰 -->
-        <div id="calendar-view" class="tab-content">
-            <div class="calendar-header-premium flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <h3 class="text-3xl font-bold tracking-tight text-on-surface font-headline flex items-center gap-2" style="margin: 0;">
-                    📅 AI 캘린더
-                    <button id="calendar-refresh-btn" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; padding: 4px; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.05)';" onmouseout="this.style.background='none';" title="구글 캘린더 일정 실시간 동기화 및 캐시 새로고침">🔄</button>
-                </h3>
-                <!-- 일정이 컬러코딩된 레전드 범례 -->
-                <div class="flex flex-wrap gap-3 text-[13px] font-semibold">
+        <div id="calendar-view" class="tab-content max-w-7xl mx-auto px-4 md:px-6 mt-4">
+            <!-- Calendar Header & Legend -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-3xl font-bold tracking-tight text-on-surface font-headline" id="calendar-month-year-text">March 2024</h2>
+                    <div class="flex gap-1 bg-white/50 p-1 rounded-full border border-on-surface/5">
+                        <button class="p-2 hover:bg-white rounded-full transition-colors text-on-surface-variant" id="calendar-prev-btn"><span class="material-symbols-outlined">chevron_left</span></button>
+                        <button class="p-2 hover:bg-white rounded-full transition-colors text-on-surface-variant" id="calendar-next-btn"><span class="material-symbols-outlined">chevron_right</span></button>
+                        <button id="calendar-refresh-btn" style="background: none; border: none; cursor: pointer; font-size: 1.25rem; padding: 6px; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="구글 캘린더 동기화 및 새로고침">🔄</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 text-[13px] font-semibold">
                     <div class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary/20 bg-primary/10 text-primary">
                         <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-sm"></span> 개인 일정
                     </div>
@@ -356,7 +360,21 @@
                     </div>
                 </div>
             </div>
-            <div id="calendar-container" class="calendar-card-premium bg-surface paper-texture rounded-[2.5rem] overflow-hidden border border-on-surface/10 ghibli-shadow p-6"></div>
+            
+            <div id="calendar-container" class="bg-surface paper-texture rounded-[2.5rem] overflow-hidden border border-on-surface/10 ghibli-shadow p-0">
+                <!-- Day Names -->
+                <div class="calendar-grid border-b border-on-surface/5 bg-surface-container-low/50">
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Sun</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Mon</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Tue</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Wed</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Thu</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Fri</div>
+                    <div class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">Sat</div>
+                </div>
+                <!-- Calendar Days Grid -->
+                <div class="calendar-grid min-h-[600px]" id="calendar-days-grid"></div>
+            </div>
         </div>
 
         <!-- [3] 채팅 뷰 -->
@@ -801,6 +819,43 @@
         </div>
     </div>
 
+    <!-- [MODAL] 날짜 상세 슬라이더 카드 (Cozy Ghibli) -->
+    <div class="fixed inset-0 z-[110] hidden flex-col justify-end transition-all duration-300" id="dayViewContainer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
+        <div class="absolute inset-0 bg-surface-dim/40 backdrop-blur-md" id="dayViewCloseBg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(253, 248, 225, 0.4); backdrop-filter: blur(6px);"></div>
+        <div class="relative w-full h-[70%] bg-surface paper-texture rounded-t-[3rem] border-t-4 border-white ghibli-shadow flex flex-col transform translate-y-full transition-transform duration-500 ease-out" id="dayViewCard" style="position: relative; border-top-left-radius: 3rem; border-top-right-radius: 3rem; background-color: #fffcf2;">
+            <div class="w-12 h-1.5 bg-on-surface/10 rounded-full mx-auto mt-4 mb-6" style="width: 48px; height: 6px; background-color: rgba(74, 63, 53, 0.1); border-radius: 9999px; margin: 16px auto 24px auto;"></div>
+            <div class="flex-1 overflow-y-auto px-8 pb-12" style="padding: 0 32px 48px 32px; overflow-y: auto; flex: 1;">
+                <div class="flex justify-between items-start mb-8" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+                    <div>
+                        <h3 class="text-4xl font-bold font-headline text-on-surface mb-1" id="day-view-day-name" style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #4a3f35;">Tuesday</h3>
+                        <p class="text-xl text-on-surface-variant font-medium" id="day-view-date-text" style="margin: 4px 0 0 0; font-size: 1.25rem; color: #8c7e6d; font-weight: 500;">March 12, 2024</p>
+                    </div>
+                    <button class="p-3 rounded-full hover:bg-surface-dim transition-colors text-on-surface-variant" id="day-view-close-btn" style="background: none; border: none; cursor: pointer; border-radius: 50%; color: #8c7e6d; padding: 12px;">
+                        <span class="material-symbols-outlined text-3xl" style="font-size: 1.875rem;">close</span>
+                    </button>
+                </div>
+                <!-- 날짜별 일정 목록 컨테이너 -->
+                <div class="space-y-6 mb-10" id="day-view-events-list" style="margin-bottom: 40px; display: flex; flex-direction: column; gap: 24px;">
+                    <!-- JS에 의해 동적 생성 -->
+                </div>
+                <div class="flex gap-4 mb-10" style="display: flex; gap: 16px; margin-bottom: 40px;">
+                    <button class="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-white border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all" id="day-view-add-btn" style="flex: 1; border: 2px solid rgba(125, 161, 204, 0.2); border-radius: 16px; background: white; color: #7da1cc; font-weight: 700; padding: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-symbols-outlined">edit_note</span> 일정 등록
+                    </button>
+                </div>
+                <div class="bg-primary/10 border-4 border-white rounded-[2.5rem] p-8 ghibli-shadow relative" id="day-view-advice-card" style="display: none; padding: 32px; border-radius: 2.5rem; border: 4px solid white; background-color: rgba(125, 161, 204, 0.1); position: relative;">
+                    <div class="absolute -top-4 -left-4 bg-white p-2 rounded-2xl ghibli-shadow" style="position: absolute; top: -16px; left: -16px; background: white; padding: 8px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <span class="material-symbols-outlined text-3xl text-primary" style="font-size: 1.875rem; color: #7da1cc;">auto_awesome</span>
+                    </div>
+                    <h4 class="text-primary font-bold text-lg mb-3 font-headline uppercase tracking-widest" style="color: #7da1cc; font-size: 1.125rem; font-weight: 700; margin: 0 0 12px 0;">Daily Spirit Insight</h4>
+                    <p class="text-2xl text-on-surface leading-snug font-handwritten" id="day-view-advice-text" style="margin: 0; font-family: 'Caveat', cursive; font-size: 1.5rem; color: #4a3f35; line-height: 1.3;">
+                        "The stars align for a magical evening."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- [MODAL] AI 화상 통화 오버레이 -->
     <div id="call-overlay" class="call-overlay hidden">
         <div class="call-content">
@@ -885,7 +940,7 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script type="module" src="app.js?v=5.0.1"></script>
+    <script type="module" src="app.js?v=5.0.5"></script>
 </body>
 
 </html>

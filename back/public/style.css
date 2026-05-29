@@ -5345,3 +5345,28 @@ body.ghibli-theme.auth-mode .creature-float {
     50% { transform: scale(1.5); opacity: 1; }
 }
 
+/* Cozy Ghibli Calendar Custom Grid Styles */
+.calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+}
+.watercolor-border {
+    border-style: solid !important;
+}
+.ghibli-shadow {
+    box-shadow: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
+}
+.paper-texture {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCfQ7-XYlnDaTbB8_Yz3Sg81dzDRWRyWweAaYxBU7kkReXHAn3yrZYCbiHtbM3rR_kN4CoT6tnX276zkhx7ajrJD-EY2hy71TIk6OlDM9dCxoxKenSGyjAOwFK4W18eEPqYxEKEJQh-QK79MhimZEkotOL0K6x2XRW6uN4KmqmTvgNYhz-m3H6X9LDWcTPWNjVGdO4_6dTWyoZwog_zdwa3DW8wpt-h_0GTDhDoVybcQoJ_80_dzN1VCQzr3z9cn2dJEuiKReVlqHdO) !important;
+}
+.floating-cloud {
+    animation: float-cloud 6s ease-in-out infinite !important;
+}
+@keyframes float-cloud {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg) !important;
+    } 50% {
+        transform: translateY(-10px) rotate(2deg) !important;
+    }
+}
+
