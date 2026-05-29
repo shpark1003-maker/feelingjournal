@@ -3899,31 +3899,32 @@ body {
    [Digital Sanctuary - Stitch Premium Theme Custom Rules]
    ========================================================================== */
 .ghibli-theme {
-    --primary: #7da1cc !important; /* Sky Blue */
+    --primary: #8ba88e !important; /* Cozy Sage Green */
     --on-primary: #FFFFFF !important;
-    --primary-container: #d7e3f5 !important;
-    --on-primary-container: #2c4a70 !important;
-    --secondary: #f2a7b3 !important; /* Rose */
+    --primary-container: #d7e8d9 !important; /* Soft Sage container */
+    --on-primary-container: #2d3b2e !important;
+    --secondary: #8D775F !important; /* Warm Oak Brown */
     --on-secondary: #FFFFFF !important;
-    --tertiary: #c3a6d1 !important; /* Lavender */
-    --surface: #fffcf2 !important; /* Creamy Paper */
-    --on-surface: #4a3f35 !important; /* Warm Charcoal */
-    --on-surface-variant: #8c7e6d !important;
-    --surface-container-low: #faf3e0 !important;
-    --surface-dim: #fdf8e1 !important;
-    --primary-fixed: #7da1cc !important;
-    --primary-fixed-dim: #d7e3f5 !important;
-    --font-sans: 'Public Sans', 'Noto Sans KR', sans-serif !important;
+    --tertiary: #D4A373 !important; /* Warm Sand / Mustard */
+    --surface: #fdf9f3 !important; /* Cozy Creamy Paper */
+    --on-surface: #43423E !important; /* Dark Warm Charcoal */
+    --on-surface-variant: #717069 !important;
+    --surface-container-low: #f7f3ed !important;
+    --surface-dim: #fdf9f3 !important;
+    --primary-fixed: #8ba88e !important;
+    --primary-fixed-dim: #d7e8d9 !important;
+    --font-sans: 'Plus Jakarta Sans', 'Outfit', 'Noto Sans KR', sans-serif !important;
     --border-radius-card: 24px !important;
     --border-radius-btn: 16px !important;
-    --shadow-premium: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
+    --shadow-premium: 0 10px 30px -10px rgba(141, 119, 95, 0.2) !important;
 }
 
 /* Background & Global layout */
 body.ghibli-theme {
     font-family: var(--font-sans) !important;
-    background-image: url('ghibli_bg.png') !important;
-    background-size: cover !important;
+    background-color: #fdf9f3 !important;
+    background-image: linear-gradient(rgba(139, 119, 95, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 119, 95, 0.02) 1px, transparent 1px), url('ghibli_bg.png') !important;
+    background-size: 24px 24px, 24px 24px, cover !important;
     background-attachment: fixed !important;
     background-position: center !important;
     color: var(--on-surface) !important;
@@ -4554,6 +4555,130 @@ body.ghibli-theme .container {
 .ghibli-theme .transition-all { transition-property: all !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; transition-duration: 150ms !important; }
 .ghibli-theme .shadow-\[0_32px_64px_-16px_rgba\(0\2c 0\2c 0\2c 0\.2\)\] { box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.2) !important; }
 .ghibli-theme .watercolor-border { border-style: solid !important; }
+
+/* ==========================================================================
+   [Premium Cozy Ghibli Theme Integration Styles]
+   ========================================================================== */
+
+/* 1. Journal Paper analog style */
+.ghibli-theme .journal-paper {
+    background-color: #fdf9f3 !important;
+    background-image: linear-gradient(rgba(139, 119, 95, 0.05) 1px, transparent 1px) !important;
+    background-size: 100% 32px !important;
+    box-shadow: 0 10px 30px -5px rgba(141, 119, 95, 0.05) !important;
+    border: 2px solid #E5E1D1 !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Ensure Quill Editor fits paper theme */
+.ghibli-theme .editor-section-premium.journal-paper .ql-container {
+    background: transparent !important;
+    border: none !important;
+}
+.ghibli-theme .editor-section-premium.journal-paper .ql-editor {
+    background: transparent !important;
+    line-height: 32px !important;
+    font-size: 1.15rem !important;
+    color: #43423E !important;
+    padding: 10px 20px 20px 20px !important;
+    font-family: var(--font-sans) !important;
+}
+
+/* 2. Chat analog styles & dynamic elements */
+.ghibli-theme .friend-banner.paper-note {
+    background: #fffef0 !important;
+    border: 2px solid #5d574d !important;
+    box-shadow: 2px 2px 0px rgba(93,87,77,0.1) !important;
+}
+.ghibli-theme .hand-painted-gauge {
+    background: linear-gradient(90deg, #a7d8de 0%, #f9d976 50%, #f7a8a8 100%) !important;
+    border: 2px solid #5d574d !important;
+    border-radius: 999px !important;
+    height: 12px !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+.ghibli-theme .gauge-needle {
+    width: 4px !important;
+    height: 20px !important;
+    background: #5d574d !important;
+    position: absolute !important;
+    top: -6px !important;
+    border-radius: 2px !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+    transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.ghibli-theme .bubble-left.paper-note {
+    background: #fffef0 !important;
+    border: 2.2px solid #e8e4d3 !important;
+    box-shadow: 3px 3px 0px rgba(139, 119, 95, 0.04) !important;
+    color: #43423E !important;
+}
+.ghibli-theme .bubble-right.paper-note {
+    background: #e8f0e0 !important; /* Pastel Green note */
+    border: 2.2px solid #c5d3ba !important;
+    box-shadow: 3px 3px 0px rgba(139, 119, 95, 0.04) !important;
+    color: #43423E !important;
+}
+
+/* 3. Message highlighting (Recent vs Context dimming) */
+.ghibli-theme .active-bubble {
+    font-size: 1.05rem !important;
+    line-height: 1.65 !important;
+    font-weight: 600 !important;
+    transition: all 0.4s ease-in-out !important;
+}
+.ghibli-theme .dim-context {
+    opacity: 0.5 !important;
+    filter: grayscale(10%) !important;
+    transition: opacity 0.5s ease !important;
+}
+
+/* 4. Deep Reflection Chat input wrapper */
+.ghibli-theme .chat-footer-kakaostyle .chat-input-wrapper {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid var(--primary-container) !important;
+    box-shadow: 0 8px 24px rgba(141, 119, 95, 0.06) !important;
+}
+
+/* 5. Cozy Calendar watercolour chip stylings */
+.ghibli-theme .fc-event {
+    border-radius: 12px !important;
+    padding: 5px 10px !important;
+    border-width: 2px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 10px rgba(141, 119, 95, 0.05) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.ghibli-theme .fc-event:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 8px 16px rgba(141, 119, 95, 0.1) !important;
+}
+.ghibli-theme .fc-event.event-personal {
+    background-color: rgba(139, 168, 142, 0.12) !important; /* Sage Green pastel */
+    color: #556f59 !important;
+    border-color: rgba(139, 168, 142, 0.3) !important;
+}
+.ghibli-theme .fc-event.event-shared {
+    background-color: rgba(242, 167, 179, 0.12) !important; /* Shared Rose pastel */
+    color: #a85867 !important;
+    border-color: rgba(242, 167, 179, 0.3) !important;
+}
+.ghibli-theme .fc-event.event-task {
+    background-color: rgba(212, 163, 115, 0.12) !important; /* Sand / Mustard pastel */
+    color: #8c5b30 !important;
+    border-color: rgba(212, 163, 115, 0.3) !important;
+}
+
+/* 6. Cloud advice card handwriting font */
+.ghibli-theme .font-handwritten {
+    font-family: 'Caveat', cursive, var(--font-sans) !important;
+    font-size: 1.45rem !important;
+    line-height: 1.3 !important;
+    color: #5d574d !important;
+}
+
 /* ==========================================================================
    [Digital Sanctuary - Cozy Auth Theme Custom Rules]
    ========================================================================== */

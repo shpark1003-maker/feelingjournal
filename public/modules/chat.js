@@ -50,6 +50,13 @@ export function appendMessage(msg) {
     const container = document.getElementById('chat-messages-tab');
     if (!container) return;
 
+    // [Cozy Ghibli Interaction] Conversational Dimming: 이전 메시지들은 흐리게 처리
+    const previousBubbles = container.querySelectorAll('.message-content');
+    previousBubbles.forEach(b => {
+        b.classList.remove('active-bubble');
+        b.classList.add('dim-context');
+    });
+
     const isAi = msg.user_email === 'ai@feeling.journal' || msg.sender_id === '00000000-0000-0000-0000-000000000000';
     const isFriend = msg.user_email && msg.user_email.startsWith('friend-');
     const isMe = !isAi && !isFriend && (msg.sender_id === store.currentUser?.id || msg.user_email === document.getElementById('user-email')?.innerText);
@@ -106,7 +113,7 @@ export function appendMessage(msg) {
             ${avatarHtml}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
                 <span class="message-sender" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
-                <div class="message-content" style="${messageContentStyle}">${contentHtml}</div>
+                <div class="message-content paper-note active-bubble" style="${messageContentStyle}">${contentHtml}</div>
                 <span class="message-info" style="font-size: 0.7rem; color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         </div>
