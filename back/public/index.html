@@ -7,7 +7,7 @@
     <title>AI 일기 (Beta) - 당신의 하루를 기록하세요</title>
     <meta name="description" content="AI가 분석하는 일기장입니다. 당신의 하루를 기록하고 조언을 받아보세요.">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css?v=5.0.5">
+    <link rel="stylesheet" href="style.css?v=5.0.6">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -924,9 +924,12 @@
                 Google 로그인 보안 정책으로 인해 카카오톡, 인스타그램 등 인앱 웹뷰에서의 로그인이 불가능합니다.<br><br>
                 정상적인 이용을 위해 <strong>Chrome, Safari</strong> 등 전용 웹 브라우저에서 열어주시길 바랍니다.
             </p>
-            <div class="inapp-button-group">
-                <button id="btn-inapp-open-external" class="inapp-btn primary">외부 브라우저로 열기</button>
-                <button id="btn-inapp-copy-link" class="inapp-btn secondary">링크 복사하기</button>
+            <div class="inapp-button-group" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                <button id="btn-inapp-open-external" class="inapp-btn primary" style="width: 100%;">외부 브라우저로 열기</button>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button id="btn-inapp-copy-link" class="inapp-btn secondary" style="flex: 1;">링크 복사</button>
+                    <button id="btn-inapp-close" class="inapp-btn secondary" style="flex: 1; background: #dfe4ea; color: #2d3436; border: none; cursor: pointer; border-radius: 12px; font-weight: 600; padding: 10px;">닫기</button>
+                </div>
             </div>
         </div>
     </div>
@@ -940,7 +943,7 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script type="module" src="app.js?v=5.0.5"></script>
+    <script type="module" src="app.js?v=5.0.6"></script>
 </body>
 
 </html>

@@ -17,7 +17,8 @@ function detectAndHandleInAppBrowser() {
     const isInstagram = /instagram/i.test(userAgent);
     const isFacebook = /fban|fbav/i.test(userAgent);
     const isLine = /line/i.test(userAgent);
-    const isInApp = isKakao || isInstagram || isFacebook || isLine || /inapp|webview/i.test(userAgent);
+    // Remove loose /inapp|webview/i check as it causes false positives on general mobile browsers
+    const isInApp = isKakao || isInstagram || isFacebook || isLine;
 
     if (isInApp) {
         console.log('--- [DETECT] In-App Browser Environment Detected! ---');
@@ -42,6 +43,7 @@ function detectAndHandleInAppBrowser() {
             
             const btnOpenExternal = document.getElementById('btn-inapp-open-external');
             const btnCopyLink = document.getElementById('btn-inapp-copy-link');
+            const btnClose = document.getElementById('btn-inapp-close');
 
             btnOpenExternal?.addEventListener('click', () => {
                 if (isKakao) {
@@ -63,6 +65,10 @@ function detectAndHandleInAppBrowser() {
             btnCopyLink?.addEventListener('click', () => {
                 copyToClipboard(window.location.href);
                 alert('링크가 성공적으로 복사되었습니다. 브라우저 주소창에 붙여넣어 주세요!');
+            });
+
+            btnClose?.addEventListener('click', () => {
+                overlay.classList.add('hidden');
             });
         }
     }
