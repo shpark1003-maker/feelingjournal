@@ -5416,20 +5416,24 @@ body.ghibli-theme.auth-mode .creature-float {
         grid-template-columns: repeat(4, 1fr) !important;
         gap: 4px !important;
         padding: 4px !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 6px !important;
     }
 
     .tab-btn {
-        padding: 8px 4px !important;
-        font-size: 0.75rem !important;
+        padding: 4px 2px !important;
+        font-size: 0.65rem !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        gap: 2px !important;
+        gap: 1px !important;
     }
 
-    .tab-btn span {
+    .tab-btn .material-symbols-outlined {
         font-size: 1.1rem !important;
+    }
+
+    .tab-btn span:not(.material-symbols-outlined) {
+        font-size: 0.65rem !important;
     }
 
     .sidebar-user-card {
@@ -5528,7 +5532,7 @@ body.ghibli-theme.auth-mode .creature-float {
     /* 6. Chat & Social Layout Repair (Kakao / Ghibli Blend) */
     .chat-view-layout {
         flex-direction: column !important;
-        height: calc(100dvh - 120px) !important;
+        height: calc(100dvh - 90px) !important;
     }
 
     /* Mobile 1-chon friends list slider */
@@ -5538,7 +5542,7 @@ body.ghibli-theme.auth-mode .creature-float {
         height: auto !important;
         border-right: none !important;
         border-bottom: 2px solid #5d574d !important;
-        padding: 6px 12px !important;
+        padding: 4px 8px !important;
         background: #fbf9f5 !important;
     }
 
@@ -5548,22 +5552,42 @@ body.ghibli-theme.auth-mode .creature-float {
     }
 
     .chat-sidebar-header {
-        padding: 4px 0 !important;
-    }
-
-    .chat-sidebar-header h3 {
-        font-size: 0.85rem !important;
-        margin: 0 !important;
+        display: none !important; /* 모바일 공간 절약을 위해 1촌 헤더 완전히 숨김 */
     }
 
     .friend-list-container {
         display: flex !important;
         flex-direction: row !important;
-        gap: 12px !important;
-        overflow-x: auto !important;
+        gap: 8px !important;
+        overflow-x: hidden !important; /* 기본 상태에서는 스크롤바 감춤 */
         white-space: nowrap !important;
-        padding: 6px 0 !important;
+        padding: 4px !important;
         width: 100% !important;
+        background: rgba(0, 0, 0, 0.02) !important;
+        border: 1px dashed rgba(93, 87, 77, 0.2) !important;
+        border-radius: 12px !important;
+        transition: all 0.3s ease !important;
+        cursor: pointer !important;
+        min-height: 52px !important;
+        align-items: center !important;
+    }
+
+    /* 기본 상태에서는 active 상태인 1촌 친구 하나만 노출 */
+    .friend-list-container:not(.expanded):not(:hover) .friend-item:not(.active) {
+        display: none !important;
+    }
+
+    /* 마우스 커서를 올리거나(hover) .expanded 클래스가 활성화되면 전체 1촌 목록이 확장 */
+    .friend-list-container.expanded,
+    .friend-list-container:hover {
+        overflow-x: auto !important;
+        background: rgba(0, 0, 0, 0.05) !important;
+        border-color: rgba(93, 87, 77, 0.4) !important;
+    }
+
+    .friend-list-container.expanded .friend-item:not(.active),
+    .friend-list-container:hover .friend-item:not(.active) {
+        display: inline-flex !important;
     }
 
     /* Hide the status tags, emotion tags, and settings gear icon in mobile friends slider */
@@ -5609,6 +5633,11 @@ body.ghibli-theme.auth-mode .creature-float {
         margin: 4px 6px !important;
         background: transparent !important;
         border: none !important;
+    }
+
+    .friend-item.active {
+        background: rgba(93, 87, 77, 0.1) !important;
+        border-radius: 8px !important;
     }
 
     .friend-item .friend-avatar {
@@ -5775,9 +5804,26 @@ body.ghibli-theme.auth-mode .creature-float {
 
     /* 1촌 감성 온도계 배너 */
     #friend-emotion-banner {
-        margin: 8px 10px 0 10px !important;
-        padding: 10px !important;
+        margin: 4px 10px 0 10px !important;
+        padding: 6px 10px !important;
         border-radius: 8px !important;
+        gap: 8px !important;
+    }
+
+    #friend-banner-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.2rem !important;
+    }
+
+    .hand-painted-gauge {
+        height: 8px !important;
+    }
+
+    .gauge-needle {
+        height: 12px !important;
+        width: 3px !important;
+        top: -2px !important;
     }
 
     #friend-emotion-banner h4 {
@@ -5789,11 +5835,9 @@ body.ghibli-theme.auth-mode .creature-float {
         margin-top: 2px !important;
     }
 
-    /* Spirit Whispers (AI 안내 배너) */
+    /* Spirit Whispers (AI 안내 배너) - 모바일 공간 확보를 위해 완전히 숨김 */
     #ghibli-spirit-whispers {
-        margin: 8px 10px 0 10px !important;
-        padding: 10px !important;
-        gap: 10px !important;
+        display: none !important;
     }
 
     /* 대망의 말풍선 폰트 및 너비 조율 */

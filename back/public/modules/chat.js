@@ -372,6 +372,18 @@ export function setupChatUI() {
             }
         });
     }
+
+    // 모바일에서 1촌 목록 영역을 탭하면 목록이 열리거나 닫히도록 지원 (hover 보완용)
+    const friendStatusList = document.getElementById('friend-status-list');
+    if (friendStatusList) {
+        friendStatusList.addEventListener('click', function(e) {
+            // ⚙️ 버튼이나 개별 친구 클릭 시 방 이동을 방해하지 않기 위해 target 체크
+            if (e.target.closest('.friend-settings-btn-icon') || e.target.closest('.friend-item:not(.active)')) {
+                return;
+            }
+            friendStatusList.classList.toggle('expanded');
+        });
+    }
 }
 
 export async function openChatWithAi() {
@@ -754,12 +766,13 @@ export async function checkFriendSos() {
 
     const list = document.getElementById('friend-status-list');
     if (list) {
+        const isAiActive = store.currentRoomId && !friends.some(f => f.id === store.currentRoomId);
         const aiAvatarHtml = store.currentAvatarUrl
             ? `<img class="friend-avatar" src="${store.currentAvatarUrl}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; flex-shrink:0;">`
             : `<div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0; width:34px; height:34px; border-radius:50%; font-size: 0.95rem;">✨</div>`;
 
         const aiFriendHtml = `
-        <div class="page-item friend-item ai-friend ${store.currentRoomId && store.currentRoomId.startsWith('Private-AI-') ? 'active' : ''}" onclick="window.openChatWithAi()" style="display:flex; align-items:center; gap:12px;">
+        <div class="page-item friend-item ai-friend ${isAiActive ? 'active' : ''}" onclick="window.openChatWithAi()" style="display:flex; align-items:center; gap:12px;">
             ${aiAvatarHtml}
             <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
                 <div class="page-item-title" style="margin:0; font-weight:700; font-size:0.95rem; color:#323130; display:flex; align-items:center; gap:8px;">
