@@ -480,37 +480,26 @@ const ZONE_MAP = {
 
 async function getLiveWeather(region) {
     const axios = require('axios');
-    const cheerio = require('cheerio');
-    const zone = ZONE_MAP[region] || ZONE_MAP['서울'];
-    const url = `http://www.kma.go.kr/wid/queryDFSRSS.jsp?zone=${zone}`;
+    const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
     
     try {
         const res = await axios.get(url, { timeout: 5000 });
-        const $ = cheerio.load(res.data, { xmlMode: true });
-        const dataBlock = $('data').first();
+        const current = res.data.current_condition?.[0];
+        if (!current) return null;
         
-        if (!dataBlock.length) return null;
-        
-        const temp = dataBlock.find('temp').text();
-        const wfKor = dataBlock.find('wfKor').text();
-        const pop = dataBlock.find('pop').text();
-        const pty = dataBlock.find('pty').text();
-        
-        let ptyStr = '강수 없음';
-        if (pty === '1') ptyStr = '비';
-        else if (pty === '2') ptyStr = '진눈깨비';
-        else if (pty === '3') ptyStr = '눈';
-        else if (pty === '4') ptyStr = '소나기';
+        const sky = current.weatherDesc?.[0]?.value || 'Clear';
+        const temp = parseFloat(current.temp_C || 0);
+        const pop = res.data.weather?.[0]?.hourly?.[0]?.chanceofrain || '0';
         
         return {
             region,
-            temp: parseFloat(temp),
-            sky: wfKor,
-            rainProb: parseInt(pop, 10),
-            rainType: ptyStr
+            temp: temp,
+            sky: sky,
+            rainProb: parseInt(pop, 10) || 0,
+            rainType: parseInt(pop, 10) > 30 ? '강수 가능성 있음' : '강수 없음'
         };
     } catch (e) {
-        console.error(`--- [WEATHER CRAWL ERROR] Region: ${region}, Error: ${e.message} ---`);
+        console.error(`--- [WEATHER FETCH ERROR] Region: ${region}, Error: ${e.message} ---`);
         return null;
     }
 }
@@ -518,7 +507,8 @@ async function getLiveWeather(region) {
 async function getEconomicHeadlines() {
     const axios = require('axios');
     const cheerio = require('cheerio');
-    const url = 'https://news.naver.com/rss/section/101';
+    // 증권/주식시황 뉴스 RSS
+    const url = 'https://news.naver.com/rss/section/101/258';
     
     try {
         const res = await axios.get(url, { timeout: 5000 });
