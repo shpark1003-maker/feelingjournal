@@ -688,9 +688,10 @@ footer {
 /* Chat Section Styles */
 
 .chat-scroll-area {
-    flex: 1;
-    height: auto;
-    min-height: 0;
+    height: 50vh;
+    min-height: 150px;
+    max-height: 80vh;
+    resize: vertical;
     overflow-y: auto;
     padding: 20px 15px;
     display: flex;
@@ -3227,11 +3228,8 @@ body {
 
 #journal-app.container {
     max-width: 1600px;
-    height: calc(100vh - 40px);
-    max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 #user-email {
@@ -3286,8 +3284,6 @@ body {
 
     #journal-app.container {
         padding: 16px;
-        height: calc(100vh - 20px);
-        max-height: calc(100vh - 20px);
     }
 
     .tab-nav {
@@ -5808,8 +5804,9 @@ body.ghibli-theme.auth-mode .creature-float {
 
     /* 대망의 말풍선 폰트 및 너비 조율 */
     .chat-scroll-area {
-        flex: 1 !important;
-        height: auto !important;
+        height: 60vh !important;
+        min-height: 200px !important;
+        resize: vertical !important;
         padding: 12px 10px !important;
         gap: 12px !important;
     }
