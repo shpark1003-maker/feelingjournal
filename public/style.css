@@ -42,10 +42,10 @@
 body {
     font-family: 'Noto Sans KR', 'Outfit', sans-serif;
     background: var(--bg-color);
-    background-image: 
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
     display: flex;
@@ -57,7 +57,8 @@ body {
 
 .container {
     width: 100%;
-    max-width: 1100px; /* 600px에서 1100px로 대폭 확장 */
+    max-width: 1100px;
+    /* 600px에서 1100px로 대폭 확장 */
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -69,15 +70,32 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-.animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+.animate-fade-up {
+    animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 
 header {
@@ -160,7 +178,8 @@ textarea:focus {
 }
 
 .btn.secondary {
-    background: #4a4a4a; /* 대비 향상 */
+    background: #4a4a4a;
+    /* 대비 향상 */
     color: white;
 }
 
@@ -175,9 +194,20 @@ textarea:focus {
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
-    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
 }
 
 .btn:active {
@@ -263,7 +293,7 @@ footer {
 .sort-btn.active {
     background: white;
     color: var(--accent-color);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .history-grid {
@@ -279,12 +309,12 @@ footer {
     border: 1px solid #edf2f7;
     transition: var(--transition);
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
 .history-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
     border-color: var(--secondary-color);
 }
 
@@ -420,7 +450,7 @@ footer {
     background: white !important;
     color: #444 !important;
     border: 1px solid #ddd !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     width: 100%;
 }
 
@@ -595,7 +625,7 @@ footer {
 .fc-event:hover {
     transform: scale(1.02);
     z-index: 100 !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* 툴팁 효과를 위한 타이틀 가독성 */
@@ -616,7 +646,8 @@ footer {
 .past-event {
     opacity: 0.5 !important;
     filter: grayscale(0.5);
-    text-decoration: line-through; /* 선택사항: 취소선 추가 */
+    text-decoration: line-through;
+    /* 선택사항: 취소선 추가 */
 }
 
 .past-event .fc-event-title {
@@ -629,41 +660,43 @@ footer {
     #calendar-container {
         min-height: 500px !important;
     }
-    
+
     .fc-header-toolbar {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .fc-toolbar-title {
         font-size: 1.1rem !important;
     }
-    
+
     .fc-button {
         padding: 5px 10px !important;
         font-size: 0.8rem !important;
     }
 }
+
 /* ---------------------------------- */
 
 /* Chat Section (KakaoTalk Style) */
 .chat-section {
     margin-top: 30px;
-    background: #bacee0 !important; /* KakaoTalk Blue */
+    background: #bacee0 !important;
+    /* KakaoTalk Blue */
     border: none;
     display: flex;
     flex-direction: column;
     max-height: 600px;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .chat-section .panel-header {
     background: #bacee0;
     padding: 15px;
     margin-bottom: 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .chat-scroll-area {
@@ -681,9 +714,11 @@ footer {
 .chat-scroll-area::-webkit-scrollbar {
     width: 6px;
 }
+
 .chat-scroll-area::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .chat-scroll-area::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.1);
     border-radius: 10px;
@@ -802,8 +837,15 @@ footer {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .logout-link {
@@ -823,14 +865,16 @@ footer {
 
 /* Mobile Responsiveness Updates */
 @media (max-width: 480px) {
-    .container, .auth-card {
+
+    .container,
+    .auth-card {
         padding: 25px;
     }
-    
+
     .button-group {
         flex-direction: column;
     }
-    
+
     h1 {
         font-size: 1.8rem;
     }
@@ -889,8 +933,15 @@ footer {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 480px) {
@@ -934,8 +985,15 @@ footer {
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Settings Section */
@@ -1010,7 +1068,8 @@ footer {
     border-radius: 2px;
 }
 
-.resizer:hover, .resizer.dragging {
+.resizer:hover,
+.resizer.dragging {
     background: var(--accent-color);
     width: 8px;
 }
@@ -1153,7 +1212,7 @@ footer {
 
 /* 3단: 메인 콘텐츠 영역 (남은 공간 모두 차지) */
 .note-content-area {
-    flex: 1; 
+    flex: 1;
     padding: 40px;
     overflow-y: auto;
     display: flex;
@@ -1249,7 +1308,9 @@ footer {
 
 /* Mobile Adaptive - Allow resizer sizing on tablet by removing rigid layout constraints */
 @media (max-width: 1024px) {
-    .notebook-sidebar h4, .notebook-item span {
+
+    .notebook-sidebar h4,
+    .notebook-item span {
         display: inline-block;
     }
 }
@@ -1263,29 +1324,32 @@ footer {
         height: calc(100vh - 120px) !important;
         overflow: hidden !important;
     }
-    
+
     .resizer {
-        display: none !important; /* resizer는 모바일에서 0% 소멸 */
+        display: none !important;
+        /* resizer는 모바일에서 0% 소멸 */
     }
 
     /* 1단 & 2단 사이드바를 상단 절대좌표 드롭다운 오버레이로 전환 */
     .notebook-sidebar {
         position: absolute !important;
-        top: 54px !important; /* 에디터 헤더/툴바 아래 배치 */
+        top: 54px !important;
+        /* 에디터 헤더/툴바 아래 배치 */
         left: 0 !important;
         width: 35% !important;
         height: 350px !important;
         z-index: 1010 !important;
-        background: #1e1e1e !important; /* Premium Dark Background */
+        background: #1e1e1e !important;
+        /* Premium Dark Background */
         color: #ffffff !important;
         transform: translateY(-120%) !important;
         opacity: 0 !important;
         visibility: hidden !important;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
         border-radius: 0 0 0 16px !important;
-        border-bottom: 2px solid rgba(0,0,0,0.15) !important;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.15) !important;
     }
-    
+
     .pages-sidebar {
         position: absolute !important;
         top: 54px !important;
@@ -1295,7 +1359,7 @@ footer {
         z-index: 1009 !important;
         background: #ffffff !important;
         border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
-        border-bottom: 2px solid rgba(0,0,0,0.08) !important;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.08) !important;
         transform: translateY(-120%) !important;
         opacity: 0 !important;
         visibility: hidden !important;
@@ -1304,7 +1368,7 @@ footer {
     }
 
     /* If notebook sidebar is closed, pages sidebar is hidden same as notebook */
-    .notebook-sidebar:not(.active-drawer) ~ .pages-sidebar {
+    .notebook-sidebar:not(.active-drawer)~.pages-sidebar {
         transform: translateY(-120%) !important;
         opacity: 0 !important;
         visibility: hidden !important;
@@ -1315,18 +1379,19 @@ footer {
         transform: translateY(0) !important;
         opacity: 1 !important;
         visibility: visible !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
     }
-    
+
     .pages-sidebar.active-drawer {
         transform: translateY(0) !important;
         opacity: 1 !important;
         visibility: visible !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
     }
 
     /* 글자 숨김 강제 해제 */
-    .notebook-sidebar h4, .notebook-item span {
+    .notebook-sidebar h4,
+    .notebook-item span {
         display: inline-block !important;
     }
 
@@ -1335,7 +1400,7 @@ footer {
         padding: 15px !important;
         min-width: 100% !important;
     }
-    
+
     .note-title-input-large {
         font-size: 1.5rem !important;
     }
@@ -1456,15 +1521,16 @@ footer {
     padding: 20px;
     margin-bottom: 25px;
     box-shadow: 0 4px 20px rgba(77, 150, 255, 0.08);
-    
+
     /* 리사이즈를 방해하는 flex 제거하고 블록 성질 강조 */
     display: block !important;
     resize: vertical !important;
-    overflow: auto !important; 
+    overflow: auto !important;
     min-height: 100px;
     max-height: 800px;
     position: relative;
-    flex-shrink: 0; /* 부모 flex에 의해 찌그러지지 않도록 */
+    flex-shrink: 0;
+    /* 부모 flex에 의해 찌그러지지 않도록 */
 }
 
 .briefing-header {
@@ -1475,7 +1541,8 @@ footer {
     font-size: 1rem;
     color: #4D96FF;
     margin-bottom: 12px;
-    position: sticky; /* 스크롤해도 헤더는 보이게 */
+    position: sticky;
+    /* 스크롤해도 헤더는 보이게 */
     top: 0;
     background: inherit;
     z-index: 1;
@@ -1493,13 +1560,16 @@ footer {
 .briefing-text::-webkit-scrollbar {
     width: 6px;
 }
+
 .briefing-text::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .briefing-text::-webkit-scrollbar-thumb {
     background: rgba(77, 150, 255, 0.2);
     border-radius: 10px;
 }
+
 .briefing-text::-webkit-scrollbar-thumb:hover {
     background: rgba(77, 150, 255, 0.4);
 }
@@ -1537,15 +1607,24 @@ footer {
 }
 
 .record-outer.recording .record-inner {
-    border-radius: 8px; /* 녹화 중에는 정지 버튼 모양(네모)으로 변경 */
+    border-radius: 8px;
+    /* 녹화 중에는 정지 버튼 모양(네모)으로 변경 */
     transform: scale(0.6);
     transition: all 0.3s;
 }
 
 @keyframes pulse-recording {
-    0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(255, 71, 87, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
 }
 
 .icon-btn.close {
@@ -1699,7 +1778,7 @@ footer {
     max-width: 450px;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .contact-modal .modal-header {
@@ -1785,7 +1864,7 @@ footer {
 .chat-room-icon {
     width: 42px;
     height: 42px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -1803,7 +1882,7 @@ footer {
 }
 
 .chat-room-sub {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.78rem;
     margin: 2px 0 0 0;
 }
@@ -1822,13 +1901,13 @@ footer {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     white-space: nowrap;
 }
 
 .invite-btn-premium:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102,126,234,0.5);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
 }
 
 .invite-btn-premium:active {
@@ -1856,8 +1935,13 @@ footer {
 }
 
 @keyframes overlayIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .invite-modal-panel {
@@ -1868,14 +1952,21 @@ footer {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
     animation: panelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
 }
 
 @keyframes panelIn {
-    from { opacity: 0; transform: scale(0.92) translateY(20px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .invite-modal-header {
@@ -1895,7 +1986,7 @@ footer {
 .invite-header-icon {
     width: 44px;
     height: 44px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -1911,7 +2002,7 @@ footer {
 }
 
 .invite-subtitle {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 0.8rem;
     margin: 2px 0 0 0;
 }
@@ -1920,7 +2011,7 @@ footer {
     width: 34px;
     height: 34px;
     border: none;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     color: white;
     border-radius: 50%;
     cursor: pointer;
@@ -1932,7 +2023,7 @@ footer {
 }
 
 .invite-close-btn:hover {
-    background: rgba(255,255,255,0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .invite-search-bar {
@@ -1971,6 +2062,7 @@ footer {
 .invite-contact-list::-webkit-scrollbar {
     width: 5px;
 }
+
 .invite-contact-list::-webkit-scrollbar-thumb {
     background: #e0e0e0;
     border-radius: 10px;
@@ -1997,7 +2089,9 @@ footer {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* 연락처 아이템 */
@@ -2064,12 +2158,12 @@ footer {
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .invite-action-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .invite-action-btn.sent {
@@ -2105,10 +2199,12 @@ footer {
     align-items: center;
     justify-content: center;
 }
+
 .nickname-modal-overlay.open {
     display: flex;
     animation: overlayIn 0.25s ease;
 }
+
 .nickname-modal-panel {
     background: #fff;
     border-radius: 24px;
@@ -2116,23 +2212,43 @@ footer {
     width: 90%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
     animation: panelIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .nickname-modal-icon {
     font-size: 3rem;
     margin-bottom: 16px;
     display: block;
     animation: wave 1s ease-in-out;
 }
+
 @keyframes wave {
-    0%   { transform: rotate(0deg); }
-    20%  { transform: rotate(-15deg); }
-    40%  { transform: rotate(15deg); }
-    60%  { transform: rotate(-10deg); }
-    80%  { transform: rotate(10deg); }
-    100% { transform: rotate(0deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(-15deg);
+    }
+
+    40% {
+        transform: rotate(15deg);
+    }
+
+    60% {
+        transform: rotate(-10deg);
+    }
+
+    80% {
+        transform: rotate(10deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
 }
+
 .nickname-modal-title {
     font-size: 1.4rem;
     font-weight: 800;
@@ -2140,24 +2256,30 @@ footer {
     margin-bottom: 10px;
     letter-spacing: -0.5px;
 }
+
 .nickname-modal-desc {
     font-size: 0.9rem;
     color: #636e72;
     line-height: 1.7;
     margin-bottom: 24px;
 }
+
 .nickname-hint {
     display: inline-block;
     margin-top: 6px;
     padding: 4px 12px;
-    background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
-    border: 1px solid rgba(102,126,234,0.3);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border: 1px solid rgba(102, 126, 234, 0.3);
     color: #667eea;
     border-radius: 20px;
     font-size: 0.82rem;
     font-weight: 600;
 }
-.nickname-input-row { margin-bottom: 24px; }
+
+.nickname-input-row {
+    margin-bottom: 24px;
+}
+
 .nickname-input {
     width: 100%;
     padding: 14px 18px;
@@ -2171,13 +2293,23 @@ footer {
     transition: border-color 0.2s, box-shadow 0.2s;
     background: #fafafa;
 }
+
 .nickname-input:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102,126,234,0.12);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
     background: #fff;
 }
-.nickname-input::placeholder { color: #ccc; font-weight: 400; }
-.nickname-modal-btns { display: flex; gap: 10px; }
+
+.nickname-input::placeholder {
+    color: #ccc;
+    font-weight: 400;
+}
+
+.nickname-modal-btns {
+    display: flex;
+    gap: 10px;
+}
+
 .nickname-skip-btn {
     flex: 1;
     padding: 12px;
@@ -2190,7 +2322,12 @@ footer {
     cursor: pointer;
     transition: all 0.2s;
 }
-.nickname-skip-btn:hover { border-color: #bbb; color: #555; }
+
+.nickname-skip-btn:hover {
+    border-color: #bbb;
+    color: #555;
+}
+
 .nickname-save-btn {
     flex: 1.5;
     padding: 12px;
@@ -2202,19 +2339,37 @@ footer {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 14px rgba(102,126,234,0.4);
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
 }
-.nickname-save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.5); }
-.nickname-save-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+.nickname-save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+}
+
+.nickname-save-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+    transform: none;
+}
 
 /* =========================================
    Quill 리치 에디터 커스텀 스타일
    ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 
-.ql-font-serif { font-family: 'Georgia', 'Batang', serif; }
-.ql-font-monospace { font-family: 'Courier New', monospace; }
-.ql-font-nanum { font-family: 'Nanum Pen Script', cursive; font-size: 1.1em; }
+.ql-font-serif {
+    font-family: 'Georgia', 'Batang', serif;
+}
+
+.ql-font-monospace {
+    font-family: 'Courier New', monospace;
+}
+
+.ql-font-nanum {
+    font-family: 'Nanum Pen Script', cursive;
+    font-size: 1.1em;
+}
 
 .note-editor-container {
     display: flex;
@@ -2223,7 +2378,7 @@ footer {
     border: 1px solid #e8e4d9;
     border-radius: 12px;
     overflow: visible;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     margin-bottom: 16px;
     position: relative;
 }
@@ -2239,8 +2394,15 @@ footer {
     border-radius: 12px 12px 0 0;
 }
 
-#quill-toolbar.ql-toolbar { border: none !important; background: transparent !important; padding: 6px !important; }
-#quill-toolbar.ql-toolbar .ql-formats { margin-right: 4px; }
+#quill-toolbar.ql-toolbar {
+    border: none !important;
+    background: transparent !important;
+    padding: 6px !important;
+}
+
+#quill-toolbar.ql-toolbar .ql-formats {
+    margin-right: 4px;
+}
 
 .ql-toolbar-sep {
     display: inline-block;
@@ -2263,7 +2425,10 @@ footer {
     align-items: center;
     justify-content: center;
 }
-.emoji-picker-toolbar-btn:hover { background: #e0dbd0; }
+
+.emoji-picker-toolbar-btn:hover {
+    background: #e0dbd0;
+}
 
 #quill-editor {
     min-height: 280px;
@@ -2281,9 +2446,7 @@ footer {
     line-height: 1.8;
     min-height: 280px;
     color: #2d2a22;
-    background-image: repeating-linear-gradient(
-        transparent, transparent 31px, #e8e3d5 31px, #e8e3d5 32px
-    );
+    background-image: repeating-linear-gradient(transparent, transparent 31px, #e8e3d5 31px, #e8e3d5 32px);
     background-size: 100% 32px;
 }
 
@@ -2303,8 +2466,14 @@ footer {
     margin: 8px 0;
 }
 
-#quill-editor::-webkit-scrollbar { width: 5px; }
-#quill-editor::-webkit-scrollbar-thumb { background: #d0ccc2; border-radius: 10px; }
+#quill-editor::-webkit-scrollbar {
+    width: 5px;
+}
+
+#quill-editor::-webkit-scrollbar-thumb {
+    background: #d0ccc2;
+    border-radius: 10px;
+}
 
 /* 이모지 패널 */
 .emoji-panel {
@@ -2315,14 +2484,20 @@ footer {
     background: #fff;
     border: 1px solid #e0dbd0;
     border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     z-index: 1000;
     padding: 10px;
     animation: panelIn 0.2s ease;
 }
-.emoji-panel.hidden { display: none; }
 
-.emoji-search-bar { margin-bottom: 8px; }
+.emoji-panel.hidden {
+    display: none;
+}
+
+.emoji-search-bar {
+    margin-bottom: 8px;
+}
+
 .emoji-search-bar input {
     width: 100%;
     padding: 8px 12px;
@@ -2332,9 +2507,19 @@ footer {
     outline: none;
     background: #fafaf6;
 }
-.emoji-search-bar input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
 
-.emoji-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.emoji-search-bar input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.emoji-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
 .emoji-tab {
     padding: 4px 10px;
     border: 1px solid #e0dbd0;
@@ -2345,8 +2530,17 @@ footer {
     transition: all 0.15s;
     white-space: nowrap;
 }
-.emoji-tab:hover { background: #f0eeff; border-color: #667eea; }
-.emoji-tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+
+.emoji-tab:hover {
+    background: #f0eeff;
+    border-color: #667eea;
+}
+
+.emoji-tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+}
 
 .emoji-grid {
     display: grid;
@@ -2355,8 +2549,15 @@ footer {
     max-height: 180px;
     overflow-y: auto;
 }
-.emoji-grid::-webkit-scrollbar { width: 4px; }
-.emoji-grid::-webkit-scrollbar-thumb { background: #d0ccc2; border-radius: 10px; }
+
+.emoji-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb {
+    background: #d0ccc2;
+    border-radius: 10px;
+}
 
 .emoji-item {
     width: 36px;
@@ -2370,7 +2571,11 @@ footer {
     transition: background 0.1s, transform 0.1s;
     user-select: none;
 }
-.emoji-item:hover { background: #f0eeff; transform: scale(1.2); }
+
+.emoji-item:hover {
+    background: #f0eeff;
+    transform: scale(1.2);
+}
 
 /* =========================================
    AI 비서 채팅 스타일 & SOS 알림
@@ -2379,7 +2584,7 @@ footer {
     background: linear-gradient(135deg, #f0f4ff 0%, #f9f0ff 100%);
     border-left: 4px solid #667eea;
     border-radius: 4px 15px 15px 15px;
-    box-shadow: 0 4px 12px rgba(102,126,234,0.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
 }
 
 .message.received.ai-message .message-sender {
@@ -2401,7 +2606,7 @@ footer {
     background: #fff;
     border-left: 5px solid #ff4757;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     padding: 15px;
     display: flex;
     gap: 12px;
@@ -2461,7 +2666,7 @@ footer {
     border: 1px solid #f0ede4;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 .chat-sidebar {
@@ -2510,7 +2715,7 @@ footer {
     justify-content: center;
     font-weight: bold;
     position: relative;
-    box-shadow: 0 4px 10px rgba(102,126,234,0.3);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
 }
 
 .emotion-badge {
@@ -2525,7 +2730,7 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .friend-info {
@@ -2616,13 +2821,13 @@ footer {
     border-radius: 30px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     transition: all 0.3s;
 }
 
 .btn-premium-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .persona-layout {
@@ -2639,7 +2844,7 @@ footer {
     flex-direction: column;
     align-items: center;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .avatar-preview-box {
@@ -2708,7 +2913,9 @@ footer {
     font-size: 0.9rem;
 }
 
-.select-premium, .input-premium, .textarea-premium {
+.select-premium,
+.input-premium,
+.textarea-premium {
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -2717,7 +2924,9 @@ footer {
     transition: border-color 0.2s;
 }
 
-.select-premium:focus, .input-premium:focus, .textarea-premium:focus {
+.select-premium:focus,
+.input-premium:focus,
+.textarea-premium:focus {
     border-color: #667eea;
     outline: none;
 }
@@ -2748,7 +2957,7 @@ footer {
     transition: all 0.2s;
 }
 
-.radio-group input[type="radio"]:checked + label {
+.radio-group input[type="radio"]:checked+label {
     background: #667eea;
     color: white;
     border-color: #667eea;
@@ -2765,7 +2974,9 @@ footer {
     line-height: 1.5;
 }
 
-.mt-20 { margin-top: 20px; }
+.mt-20 {
+    margin-top: 20px;
+}
 
 /* =========================================
    글 도우미 (Writing Assistant) 스타일
@@ -2774,7 +2985,7 @@ footer {
     margin-top: 20px;
     background: #fff;
     border: 1px solid #667eea;
-    box-shadow: 0 10px 30px rgba(102,126,234,0.1);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
     display: flex;
     flex-direction: column;
 }
@@ -2876,8 +3087,15 @@ footer {
 }
 
 @keyframes bubbleUp {
-    from { opacity: 0; transform: translateY(20px) scale(0.9); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .helper-avatar-mini {
@@ -2891,7 +3109,7 @@ footer {
     color: white;
     font-size: 1.2rem;
     margin-bottom: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .helper-bubble-content {
@@ -2899,7 +3117,7 @@ footer {
     border: 1px solid #e0e0e0;
     border-radius: 20px 20px 2px 20px;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .helper-bubble-content p {
@@ -2951,7 +3169,9 @@ footer {
     padding: 5px;
 }
 
-.btn-text-link.gray { color: #999; }
+.btn-text-link.gray {
+    color: #999;
+}
 
 /* =========================================
    프리미엄 감성 캘린더 디자인
@@ -2972,7 +3192,7 @@ footer {
     margin: 0 30px 30px 30px;
     padding: 25px;
     border-radius: 20px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
     min-height: 650px;
 }
 
@@ -3004,6 +3224,7 @@ footer {
     font-size: 0.85rem !important;
     border: none !important;
 }
+
 :root {
     --primary-color: #6c5ce7;
 }
@@ -3044,6 +3265,7 @@ body {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -3119,14 +3341,21 @@ body {
     border-radius: 25px;
     width: 90%;
     max-width: 450px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     position: relative;
     animation: modalSlideUp 0.4s ease-out;
 }
 
 @keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .modal-header-premium {
@@ -3246,7 +3475,7 @@ body {
 
 .responsive-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .btn-text {
@@ -3266,11 +3495,11 @@ body {
     .premium-footer {
         padding: 10px 15px;
     }
-    
+
     .btn-text {
         display: none;
     }
-    
+
     .responsive-btn {
         width: 42px;
         height: 42px;
@@ -3278,12 +3507,13 @@ body {
         border-radius: 50% !important;
         gap: 0;
     }
-    
+
     .responsive-btn span {
         font-size: 1.2rem;
     }
-    
-    .button-group, .main-actions {
+
+    .button-group,
+    .main-actions {
         gap: 6px !important;
     }
 }
@@ -3350,19 +3580,22 @@ body {
 }
 
 .notebook-item .name {
-    color: #ffffff !important; /* 글자색 흰색 강제 */
+    color: #ffffff !important;
+    /* 글자색 흰색 강제 */
     font-size: 1rem;
     font-weight: 600;
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: block !important; /* 노출 강제 */
+    display: block !important;
+    /* 노출 강제 */
 }
 
 .notebook-item .folder-icon {
     font-size: 1.2rem;
-    color: #6366f1; /* 아이콘 색상 포인트 */
+    color: #6366f1;
+    /* 아이콘 색상 포인트 */
 }
 
 .call-overlay.hidden {
@@ -3399,9 +3632,20 @@ body {
 }
 
 @keyframes pulse-avatar {
-    0% { transform: scale(1); box-shadow: 0 0 50px rgba(99, 102, 241, 0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(99, 102, 241, 0.6); }
-    100% { transform: scale(1); box-shadow: 0 0 50px rgba(99, 102, 241, 0.4); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 50px rgba(99, 102, 241, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 80px rgba(99, 102, 241, 0.6);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 50px rgba(99, 102, 241, 0.4);
+    }
 }
 
 .ai-video-avatar {
@@ -3417,8 +3661,8 @@ body {
     border-radius: 15px;
     background: #333;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 #user-video-preview {
@@ -3432,7 +3676,7 @@ body {
     bottom: 5px;
     left: 10px;
     font-size: 0.7rem;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     padding: 2px 8px;
     border-radius: 10px;
 }
@@ -3448,7 +3692,7 @@ body {
 }
 
 .call-info p {
-    color: rgba(255,255,255,0.6);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 1rem;
 }
 
@@ -3463,7 +3707,7 @@ body {
     height: 65px;
     border-radius: 50%;
     border: none;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
@@ -3474,7 +3718,7 @@ body {
 }
 
 .control-btn:hover {
-    background: rgba(255,255,255,0.25);
+    background: rgba(255, 255, 255, 0.25);
     transform: translateY(-5px);
 }
 
@@ -3489,20 +3733,27 @@ body {
 }
 
 .ai-speech-bubble {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     color: #333;
     padding: 15px 25px;
     border-radius: 20px;
     margin-top: 30px;
     max-width: 300px;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .chat-header-actions {
@@ -3514,7 +3765,7 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     background: white;
     cursor: pointer;
     display: flex;
@@ -3540,7 +3791,8 @@ body {
     margin-bottom: 25px;
     transition: all 0.3s ease;
     animation: fadeUp 0.6s ease-out;
-    display: none; /* JS load시 block으로 변환 */
+    display: none;
+    /* JS load시 block으로 변환 */
 }
 
 .briefing-card:hover {
@@ -3565,8 +3817,15 @@ body {
 }
 
 @keyframes sparkle {
-    0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99,102,241,0.5)); }
-    100% { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(168,85,247,0.8)); }
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.5));
+    }
+
+    100% {
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8));
+    }
 }
 
 .briefing-text {
@@ -3605,6 +3864,7 @@ body {
         opacity: 0;
         transform: translateY(-12px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -3647,10 +3907,12 @@ body {
 .inapp-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.85); /* Sleek dark slate overlay */
+    background: rgba(15, 23, 42, 0.85);
+    /* Sleek dark slate overlay */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    z-index: 100000; /* Ensure it is above all modals */
+    z-index: 100000;
+    /* Ensure it is above all modals */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3675,13 +3937,25 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes scaleUp {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .inapp-icon {
@@ -3692,8 +3966,15 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .inapp-title {
@@ -3756,16 +4037,19 @@ body {
     border: none !important;
     font-family: 'Outfit', 'Noto Sans KR', sans-serif !important;
 }
+
 .fc-header-toolbar {
     margin-bottom: 25px !important;
     padding: 10px 5px !important;
 }
+
 .fc-toolbar-title {
     font-size: 1.45rem !important;
     font-weight: 800 !important;
     color: #1e293b !important;
     letter-spacing: -0.5px;
 }
+
 .fc-button {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
@@ -3778,6 +4062,7 @@ body {
     transition: all 0.2s ease !important;
     text-transform: capitalize !important;
 }
+
 .fc-button:hover {
     background: #f8fafc !important;
     border-color: #cbd5e1 !important;
@@ -3785,47 +4070,59 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
-.fc-button-active, .fc-button-primary:not(:disabled):active {
+
+.fc-button-active,
+.fc-button-primary:not(:disabled):active {
     background: #4f46e5 !important;
     border-color: #4f46e5 !important;
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
 }
+
 .fc-button-active:hover {
     background: #4338ca !important;
     border-color: #4338ca !important;
     color: #ffffff !important;
 }
+
 .fc-button-group {
     gap: 4px !important;
 }
-.fc-button-group > .fc-button {
+
+.fc-button-group>.fc-button {
     border-radius: 20px !important;
 }
+
 .fc-today-button {
     border-radius: 20px !important;
     margin-right: 8px !important;
 }
+
 .fc-theme-standard th {
     border: none !important;
     border-bottom: 2px solid #f1f5f9 !important;
     padding: 10px 0 !important;
     background: #f8fafc !important;
 }
+
 .fc-col-header-cell-cushion {
     font-size: 0.82rem !important;
     font-weight: 700 !important;
     color: #64748b !important;
 }
+
 .fc-theme-standard td {
     border: 1px solid #f1f5f9 !important;
 }
+
 .fc-daygrid-day {
     transition: background-color 0.15s ease;
 }
+
 .fc-daygrid-day:hover {
     background-color: #f8fafc !important;
 }
+
 .fc-daygrid-day-number {
     font-weight: 600 !important;
     font-size: 0.82rem !important;
@@ -3833,9 +4130,11 @@ body {
     padding: 8px 10px !important;
     text-decoration: none !important;
 }
+
 .fc-day-today {
     background-color: rgba(91, 62, 49, 0.04) !important;
 }
+
 .fc-day-today .fc-daygrid-day-number {
     color: #ffffff !important;
     background: #5b3e31 !important;
@@ -3848,45 +4147,62 @@ body {
     text-align: center !important;
     margin: 6px 8px 0 0 !important;
 }
-.fc-event, .fc-daygrid-dot-event {
+
+.fc-event,
+.fc-daygrid-dot-event {
     margin: 2px 4px !important;
     padding: 4px 8px !important;
     border-radius: 6px !important;
     border: none !important;
     font-weight: 600 !important;
     font-size: 0.78rem !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     text-decoration: none !important;
 }
-.fc-event:hover, .fc-daygrid-dot-event:hover {
+
+.fc-event:hover,
+.fc-daygrid-dot-event:hover {
     transform: translateY(-1px) scale(1.01);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
 }
-.fc-event.event-personal, .fc-daygrid-dot-event.event-personal {
+
+.fc-event.event-personal,
+.fc-daygrid-dot-event.event-personal {
     background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
     color: white !important;
 }
-.fc-event.event-shared, .fc-daygrid-dot-event.event-shared {
+
+.fc-event.event-shared,
+.fc-daygrid-dot-event.event-shared {
     background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%) !important;
     color: white !important;
 }
-.fc-event.event-task, .fc-daygrid-dot-event.event-task {
+
+.fc-event.event-task,
+.fc-daygrid-dot-event.event-task {
     background: linear-gradient(135deg, #ff8a65 0%, #f4511e 100%) !important;
     color: white !important;
 }
-.event-personal *, .event-shared *, .event-task * {
+
+.event-personal *,
+.event-shared *,
+.event-task * {
     color: inherit !important;
 }
-.fc-daygrid-event-dot, .fc-event-time {
+
+.fc-daygrid-event-dot,
+.fc-event-time {
     display: none !important;
 }
+
 .fc-list-event {
     cursor: pointer !important;
 }
+
 .fc-list-event:hover td {
     background-color: #f8fafc !important;
 }
@@ -3899,15 +4215,21 @@ body {
    [Digital Sanctuary - Stitch Premium Theme Custom Rules]
    ========================================================================== */
 .ghibli-theme {
-    --primary: #8ba88e !important; /* Cozy Sage Green */
+    --primary: #8ba88e !important;
+    /* Cozy Sage Green */
     --on-primary: #FFFFFF !important;
-    --primary-container: #d7e8d9 !important; /* Soft Sage container */
+    --primary-container: #d7e8d9 !important;
+    /* Soft Sage container */
     --on-primary-container: #2d3b2e !important;
-    --secondary: #8D775F !important; /* Warm Oak Brown */
+    --secondary: #8D775F !important;
+    /* Warm Oak Brown */
     --on-secondary: #FFFFFF !important;
-    --tertiary: #D4A373 !important; /* Warm Sand / Mustard */
-    --surface: #fdf9f3 !important; /* Cozy Creamy Paper */
-    --on-surface: #43423E !important; /* Dark Warm Charcoal */
+    --tertiary: #D4A373 !important;
+    /* Warm Sand / Mustard */
+    --surface: #fdf9f3 !important;
+    /* Cozy Creamy Paper */
+    --on-surface: #43423E !important;
+    /* Dark Warm Charcoal */
     --on-surface-variant: #717069 !important;
     --surface-container-low: #f7f3ed !important;
     --surface-dim: #fdf9f3 !important;
@@ -3963,16 +4285,19 @@ body.ghibli-theme .container {
     body.ghibli-theme #journal-app {
         display: none;
     }
+
     body.ghibli-theme #journal-app:not([style*="display: none"]):not([style*="display:none"]) {
         display: grid !important;
         grid-template-columns: 280px 1fr !important;
         grid-template-rows: auto 1fr !important;
         gap: 24px !important;
     }
+
     .ghibli-theme .user-nav {
         grid-column: 1 / -1 !important;
         grid-row: 1 !important;
     }
+
     .ghibli-theme .tab-nav {
         grid-column: 1 !important;
         grid-row: 2 !important;
@@ -3988,6 +4313,7 @@ body.ghibli-theme .container {
         gap: 8px !important;
         box-shadow: var(--shadow-premium) !important;
     }
+
     .ghibli-theme .tab-content {
         grid-column: 2 !important;
         grid-row: 2 !important;
@@ -3998,6 +4324,7 @@ body.ghibli-theme .container {
     body.ghibli-theme #journal-app {
         display: none;
     }
+
     body.ghibli-theme #journal-app:not([style*="display: none"]):not([style*="display:none"]) {
         display: grid !important;
         grid-template-columns: 80px 1fr !important;
@@ -4005,10 +4332,12 @@ body.ghibli-theme .container {
         gap: 16px !important;
         padding: 12px !important;
     }
+
     .ghibli-theme .user-nav {
         grid-column: 1 / -1 !important;
         grid-row: 1 !important;
     }
+
     .ghibli-theme .tab-nav {
         grid-column: 1 !important;
         grid-row: 2 !important;
@@ -4027,19 +4356,23 @@ body.ghibli-theme .container {
         width: 80px !important;
         overflow: hidden !important;
     }
+
     .ghibli-theme .tab-content {
         grid-column: 2 !important;
         grid-row: 2 !important;
     }
+
     .ghibli-theme .sidebar-user-card {
         padding: 0 !important;
         margin-bottom: 12px !important;
         justify-content: center !important;
         width: 100% !important;
     }
-    .ghibli-theme .sidebar-user-card > div:last-child {
+
+    .ghibli-theme .sidebar-user-card>div:last-child {
         display: none !important;
     }
+
     .ghibli-theme .tab-btn {
         width: 48px !important;
         height: 48px !important;
@@ -4048,6 +4381,7 @@ body.ghibli-theme .container {
         border-radius: 16px !important;
         gap: 0 !important;
     }
+
     .ghibli-theme .tab-btn span:not(.material-symbols-outlined) {
         display: none !important;
     }
@@ -4071,15 +4405,18 @@ body.ghibli-theme .container {
     text-align: left !important;
     width: 100% !important;
 }
+
 .ghibli-theme .tab-btn:hover {
     background: rgba(125, 161, 204, 0.08) !important;
     color: var(--primary) !important;
 }
+
 .ghibli-theme .tab-btn.active {
     background: rgba(125, 161, 204, 0.15) !important;
     color: var(--primary) !important;
     font-weight: 700 !important;
 }
+
 .ghibli-theme .tab-btn .material-symbols-outlined {
     font-size: 1.3rem !important;
     color: inherit !important;
@@ -4105,17 +4442,23 @@ body.ghibli-theme .container {
 .ghibli-theme .paper-texture {
     background-image: url('paper_texture.png') !important;
 }
+
 .ghibli-theme .watercolor-border {
     border-style: solid !important;
     border-color: rgba(74, 63, 53, 0.15) !important;
 }
+
 .ghibli-theme .floating-cloud {
     animation: float 6s ease-in-out infinite !important;
 }
+
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px) rotate(0deg);
     }
+
     50% {
         transform: translateY(-10px) rotate(2deg);
     }
@@ -4138,6 +4481,7 @@ body.ghibli-theme .container {
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme button.primary:hover,
 .ghibli-theme .btn.primary:hover,
 .ghibli-theme #save-persona-btn:hover,
@@ -4148,6 +4492,7 @@ body.ghibli-theme .container {
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 20px rgba(125, 161, 204, 0.3) !important;
 }
+
 .ghibli-theme button.secondary,
 .ghibli-theme .btn.secondary,
 .ghibli-theme #generate-avatar-btn,
@@ -4161,8 +4506,9 @@ body.ghibli-theme .container {
     font-weight: 600 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02) !important;
 }
+
 .ghibli-theme button.secondary:hover,
 .ghibli-theme .btn.secondary:hover,
 .ghibli-theme #generate-avatar-btn:hover,
@@ -4187,6 +4533,7 @@ body.ghibli-theme .container {
     font-size: 0.95rem !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme input[type="text"]:focus,
 .ghibli-theme input[type="time"]:focus,
 .ghibli-theme select:focus,
@@ -4205,9 +4552,11 @@ body.ghibli-theme .container {
     gap: 4px !important;
     width: fit-content !important;
 }
+
 .ghibli-theme .radio-group input[type="radio"] {
     display: none !important;
 }
+
 .ghibli-theme .radio-group label {
     flex: 1 !important;
     text-align: center !important;
@@ -4222,7 +4571,8 @@ body.ghibli-theme .container {
     transition: all 0.2s ease !important;
     display: inline-block !important;
 }
-.ghibli-theme .radio-group input[type="radio"]:checked + label {
+
+.ghibli-theme .radio-group input[type="radio"]:checked+label {
     background: var(--primary) !important;
     color: white !important;
 }
@@ -4237,12 +4587,14 @@ body.ghibli-theme .container {
     overflow: hidden !important;
     margin: 0 auto 16px auto !important;
 }
+
 .ghibli-theme .avatar-option {
     border-radius: 20px !important;
     border: 3px solid transparent !important;
     padding: 4px !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme .avatar-option.selected {
     border-color: var(--primary) !important;
     background: var(--primary-container) !important;
@@ -4262,6 +4614,7 @@ body.ghibli-theme .container {
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme .video-dropzone:hover {
     background: rgba(255, 255, 255, 0.6) !important;
     border-color: var(--primary) !important;
@@ -4276,6 +4629,7 @@ body.ghibli-theme .container {
     color: var(--primary) !important;
     cursor: pointer !important;
 }
+
 .ghibli-theme input[type="checkbox"]:focus {
     box-shadow: 0 0 0 4px rgba(125, 161, 204, 0.1) !important;
 }
@@ -4294,6 +4648,7 @@ body.ghibli-theme .container {
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme .guardian-item-btn.selected {
     background: rgba(125, 161, 204, 0.05) !important;
     border-color: var(--primary) !important;
@@ -4307,14 +4662,17 @@ body.ghibli-theme .container {
     box-shadow: var(--shadow-premium) !important;
     overflow: hidden !important;
 }
+
 .ghibli-theme .notebook-sidebar {
     background: rgba(255, 252, 242, 0.6) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .notebook-sidebar .sidebar-header {
     background: rgba(255, 252, 242, 0.4) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .notebook-list .notebook-item {
     border-radius: 16px !important;
     border: 2px solid transparent !important;
@@ -4323,28 +4681,35 @@ body.ghibli-theme .container {
     color: var(--on-surface) !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme .notebook-list .notebook-item:hover {
     background: rgba(125, 161, 204, 0.05) !important;
 }
+
 .ghibli-theme .notebook-list .notebook-item.active {
     background: white !important;
     border-color: var(--primary) !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .notebook-list .notebook-item .folder-icon {
     color: var(--primary) !important;
 }
+
 .ghibli-theme .notebook-list .notebook-item .name {
     color: #43423E !important;
     display: block !important;
 }
+
 .ghibli-theme .pages-sidebar {
     background: rgba(255, 252, 242, 0.5) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .pages-sidebar .sidebar-header {
     border-bottom: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .page-list .page-item {
     border-radius: 16px !important;
     border: 2px solid transparent !important;
@@ -4352,14 +4717,17 @@ body.ghibli-theme .container {
     padding: 12px 14px !important;
     transition: all 0.2s ease !important;
 }
+
 .ghibli-theme .page-list .page-item:hover {
     background: rgba(125, 161, 204, 0.05) !important;
 }
+
 .ghibli-theme .page-list .page-item.active {
     background: white !important;
     border-color: var(--primary) !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .resizer {
     background-color: var(--primary-container) !important;
     width: 2px !important;
@@ -4373,23 +4741,28 @@ body.ghibli-theme .container {
     padding: 24px !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .briefing-header {
     color: var(--primary) !important;
     font-weight: 800 !important;
 }
+
 .ghibli-theme .note-toolbar {
     background: rgba(255, 255, 255, 0.8) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme #quill-toolbar {
     background: rgba(255, 255, 255, 0.5) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme #quill-editor {
     background: white !important;
     padding: 24px !important;
     color: var(--on-surface) !important;
 }
+
 .ghibli-theme .editor-footer {
     background: rgba(255, 255, 255, 0.8) !important;
     border-top: 1px solid var(--primary-container) !important;
@@ -4405,21 +4778,25 @@ body.ghibli-theme .container {
     padding: 24px !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .fc .fc-button-primary {
     background: white !important;
     color: var(--primary) !important;
     border: 2px solid var(--primary-container) !important;
     border-radius: 12px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
 }
+
 .ghibli-theme .fc .fc-button-primary:hover {
     background: var(--primary-container) !important;
 }
+
 .ghibli-theme .fc .fc-button-primary:disabled {
     background: #fdf8e1 !important;
     color: #cbd5e1 !important;
 }
-.ghibli-theme .fc-theme-standard td, 
+
+.ghibli-theme .fc-theme-standard td,
 .ghibli-theme .fc-theme-standard th {
     border: 1px solid rgba(125, 161, 204, 0.15) !important;
 }
@@ -4433,6 +4810,7 @@ body.ghibli-theme .container {
     font-weight: 600 !important;
     padding: 2px 6px !important;
 }
+
 .ghibli-theme .fc-event.event-shared {
     background: #fde2e4 !important;
     color: #9f1239 !important;
@@ -4441,6 +4819,7 @@ body.ghibli-theme .container {
     font-weight: 600 !important;
     padding: 2px 6px !important;
 }
+
 .ghibli-theme .fc-event.event-task {
     background: #f0e6f6 !important;
     color: #5b21b6 !important;
@@ -4455,6 +4834,7 @@ body.ghibli-theme .container {
     background: rgba(255, 252, 242, 0.8) !important;
     border-right: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .friend-item {
     background: white !important;
     border: 2px solid var(--primary-container) !important;
@@ -4462,14 +4842,17 @@ body.ghibli-theme .container {
     margin: 6px 12px !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .friend-item.active {
     border-color: var(--primary) !important;
     background: var(--primary-container) !important;
 }
+
 .ghibli-theme .chat-main-header {
     background: rgba(255, 252, 242, 0.85) !important;
     border-bottom: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .bubble-left {
     background: linear-gradient(135deg, #fffcf2 0%, #faf3e0 100%) !important;
     border: 1px solid rgba(184, 166, 142, 0.25) !important;
@@ -4477,6 +4860,7 @@ body.ghibli-theme .container {
     color: var(--on-surface) !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .bubble-right {
     background: var(--primary) !important;
     border: none !important;
@@ -4484,81 +4868,285 @@ body.ghibli-theme .container {
     color: white !important;
     box-shadow: var(--shadow-premium) !important;
 }
+
 .ghibli-theme .chat-footer-kakaostyle {
     background: rgba(255, 255, 255, 0.8) !important;
     border-top: 1px solid var(--primary-container) !important;
 }
+
 .ghibli-theme .chat-input-wrapper {
     border: 2px solid var(--primary-container) !important;
     border-radius: 20px !important;
 }
 
 /* Cozy Calendar Layout Tailwind Utilities */
-.ghibli-theme .flex { display: flex !important; }
-.ghibli-theme .flex-col { display: flex !important; flex-direction: column !important; }
-.ghibli-theme .flex-row { display: flex !important; flex-direction: row !important; }
-.ghibli-theme .items-center { align-items: center !important; }
-.ghibli-theme .justify-between { justify-content: space-between !important; }
-.ghibli-theme .gap-2 { gap: 8px !important; }
-.ghibli-theme .gap-3 { gap: 12px !important; }
-.ghibli-theme .gap-4 { gap: 16px !important; }
-.ghibli-theme .mb-6 { margin-bottom: 24px !important; }
-.ghibli-theme .mb-8 { margin-bottom: 32px !important; }
-.ghibli-theme .w-10 { width: 40px !important; }
-.ghibli-theme .h-10 { height: 40px !important; }
-.ghibli-theme .w-full { width: 100% !important; }
-.ghibli-theme .text-2xl { font-size: 1.5rem !important; }
-.ghibli-theme .text-3xl { font-size: 1.875rem !important; }
-.ghibli-theme .font-bold { font-weight: 700 !important; }
-.ghibli-theme .font-headline { font-family: var(--font-sans) !important; }
-.ghibli-theme .text-on-surface { color: var(--on-surface) !important; }
-.ghibli-theme .text-on-surface-variant { color: var(--on-surface-variant) !important; }
-.ghibli-theme .rounded-full { border-radius: 9999px !important; }
-.ghibli-theme .rounded-2xl { border-radius: 16px !important; }
-.ghibli-theme .rounded-\[1\.5rem\] { border-radius: 24px !important; }
-.ghibli-theme .rounded-\[2\.5rem\] { border-radius: 40px !important; }
-.ghibli-theme .bg-surface { background-color: var(--surface) !important; }
-.ghibli-theme .bg-white { background-color: #ffffff !important; }
-.ghibli-theme .bg-primary\/10 { background-color: rgba(125, 161, 204, 0.1) !important; }
-.ghibli-theme .bg-secondary\/10 { background-color: rgba(242, 167, 179, 0.1) !important; }
-.ghibli-theme .bg-tertiary\/10 { background-color: rgba(195, 166, 209, 0.1) !important; }
-.ghibli-theme .bg-primary\/5 { background-color: rgba(125, 161, 204, 0.05) !important; }
-.ghibli-theme .text-primary { color: var(--primary) !important; }
-.ghibli-theme .text-secondary { color: var(--secondary) !important; }
-.ghibli-theme .text-tertiary { color: var(--tertiary) !important; }
-.ghibli-theme .border-2 { border-width: 2px !important; }
-.ghibli-theme .border-4 { border-width: 4px !important; }
-.ghibli-theme .border-white { border-color: #ffffff !important; }
-.ghibli-theme .border-primary\/20 { border-color: rgba(125, 161, 204, 0.2) !important; }
-.ghibli-theme .border-secondary\/20 { border-color: rgba(242, 167, 179, 0.2) !important; }
-.ghibli-theme .border-tertiary\/20 { border-color: rgba(195, 166, 209, 0.2) !important; }
-.ghibli-theme .border-on-surface\/5 { border-color: rgba(74, 63, 53, 0.05) !important; }
-.ghibli-theme .border-on-surface\/10 { border-color: rgba(74, 63, 53, 0.1) !important; }
-.ghibli-theme .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
-.ghibli-theme .shadow-lg { box-shadow: 0 10px 15px -3px rgba(125, 161, 204, 0.1), 0 4px 6px -2px rgba(125, 161, 204, 0.05) !important; }
-.ghibli-theme .px-4 { padding-left: 16px !important; padding-right: 16px !important; }
-.ghibli-theme .py-2 { padding-top: 8px !important; padding-bottom: 8px !important; }
-.ghibli-theme .px-5 { padding-left: 20px !important; padding-right: 20px !important; }
-.ghibli-theme .py-4 { padding-top: 16px !important; padding-bottom: 16px !important; }
-.ghibli-theme .p-5 { padding: 20px !important; }
-.ghibli-theme .p-6 { padding: 24px !important; }
-.ghibli-theme .p-8 { padding: 32px !important; }
-.ghibli-theme .pt-4 { padding-top: 16px !important; }
-.ghibli-theme .mt-4 { margin-top: 16px !important; }
-.ghibli-theme .text-sm { font-size: 0.875rem !important; }
-.ghibli-theme .text-lg { font-size: 1.125rem !important; }
-.ghibli-theme .text-xs { font-size: 0.75rem !important; }
-.ghibli-theme .uppercase { text-transform: uppercase !important; }
-.ghibli-theme .tracking-widest { letter-spacing: 0.1em !important; }
-.ghibli-theme .tracking-tight { letter-spacing: -0.025em !important; }
-.ghibli-theme .font-semibold { font-weight: 600 !important; }
-.ghibli-theme .font-medium { font-weight: 500 !important; }
-.ghibli-theme .space-y-5 > * + * { margin-top: 20px !important; }
-.ghibli-theme .flex-1 { flex: 1 1 0% !important; }
-.ghibli-theme .w-1\/3 { width: 33.333333% !important; }
-.ghibli-theme .transition-all { transition-property: all !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; transition-duration: 150ms !important; }
-.ghibli-theme .shadow-\[0_32px_64px_-16px_rgba\(0\2c 0\2c 0\2c 0\.2\)\] { box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.2) !important; }
-.ghibli-theme .watercolor-border { border-style: solid !important; }
+.ghibli-theme .flex {
+    display: flex !important;
+}
+
+.ghibli-theme .flex-col {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.ghibli-theme .flex-row {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.ghibli-theme .items-center {
+    align-items: center !important;
+}
+
+.ghibli-theme .justify-between {
+    justify-content: space-between !important;
+}
+
+.ghibli-theme .gap-2 {
+    gap: 8px !important;
+}
+
+.ghibli-theme .gap-3 {
+    gap: 12px !important;
+}
+
+.ghibli-theme .gap-4 {
+    gap: 16px !important;
+}
+
+.ghibli-theme .mb-6 {
+    margin-bottom: 24px !important;
+}
+
+.ghibli-theme .mb-8 {
+    margin-bottom: 32px !important;
+}
+
+.ghibli-theme .w-10 {
+    width: 40px !important;
+}
+
+.ghibli-theme .h-10 {
+    height: 40px !important;
+}
+
+.ghibli-theme .w-full {
+    width: 100% !important;
+}
+
+.ghibli-theme .text-2xl {
+    font-size: 1.5rem !important;
+}
+
+.ghibli-theme .text-3xl {
+    font-size: 1.875rem !important;
+}
+
+.ghibli-theme .font-bold {
+    font-weight: 700 !important;
+}
+
+.ghibli-theme .font-headline {
+    font-family: var(--font-sans) !important;
+}
+
+.ghibli-theme .text-on-surface {
+    color: var(--on-surface) !important;
+}
+
+.ghibli-theme .text-on-surface-variant {
+    color: var(--on-surface-variant) !important;
+}
+
+.ghibli-theme .rounded-full {
+    border-radius: 9999px !important;
+}
+
+.ghibli-theme .rounded-2xl {
+    border-radius: 16px !important;
+}
+
+.ghibli-theme .rounded-\[1\.5rem\] {
+    border-radius: 24px !important;
+}
+
+.ghibli-theme .rounded-\[2\.5rem\] {
+    border-radius: 40px !important;
+}
+
+.ghibli-theme .bg-surface {
+    background-color: var(--surface) !important;
+}
+
+.ghibli-theme .bg-white {
+    background-color: #ffffff !important;
+}
+
+.ghibli-theme .bg-primary\/10 {
+    background-color: rgba(125, 161, 204, 0.1) !important;
+}
+
+.ghibli-theme .bg-secondary\/10 {
+    background-color: rgba(242, 167, 179, 0.1) !important;
+}
+
+.ghibli-theme .bg-tertiary\/10 {
+    background-color: rgba(195, 166, 209, 0.1) !important;
+}
+
+.ghibli-theme .bg-primary\/5 {
+    background-color: rgba(125, 161, 204, 0.05) !important;
+}
+
+.ghibli-theme .text-primary {
+    color: var(--primary) !important;
+}
+
+.ghibli-theme .text-secondary {
+    color: var(--secondary) !important;
+}
+
+.ghibli-theme .text-tertiary {
+    color: var(--tertiary) !important;
+}
+
+.ghibli-theme .border-2 {
+    border-width: 2px !important;
+}
+
+.ghibli-theme .border-4 {
+    border-width: 4px !important;
+}
+
+.ghibli-theme .border-white {
+    border-color: #ffffff !important;
+}
+
+.ghibli-theme .border-primary\/20 {
+    border-color: rgba(125, 161, 204, 0.2) !important;
+}
+
+.ghibli-theme .border-secondary\/20 {
+    border-color: rgba(242, 167, 179, 0.2) !important;
+}
+
+.ghibli-theme .border-tertiary\/20 {
+    border-color: rgba(195, 166, 209, 0.2) !important;
+}
+
+.ghibli-theme .border-on-surface\/5 {
+    border-color: rgba(74, 63, 53, 0.05) !important;
+}
+
+.ghibli-theme .border-on-surface\/10 {
+    border-color: rgba(74, 63, 53, 0.1) !important;
+}
+
+.ghibli-theme .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.ghibli-theme .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(125, 161, 204, 0.1), 0 4px 6px -2px rgba(125, 161, 204, 0.05) !important;
+}
+
+.ghibli-theme .px-4 {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+
+.ghibli-theme .py-2 {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.ghibli-theme .px-5 {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+.ghibli-theme .py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+
+.ghibli-theme .p-5 {
+    padding: 20px !important;
+}
+
+.ghibli-theme .p-6 {
+    padding: 24px !important;
+}
+
+.ghibli-theme .p-8 {
+    padding: 32px !important;
+}
+
+.ghibli-theme .pt-4 {
+    padding-top: 16px !important;
+}
+
+.ghibli-theme .mt-4 {
+    margin-top: 16px !important;
+}
+
+.ghibli-theme .text-sm {
+    font-size: 0.875rem !important;
+}
+
+.ghibli-theme .text-lg {
+    font-size: 1.125rem !important;
+}
+
+.ghibli-theme .text-xs {
+    font-size: 0.75rem !important;
+}
+
+.ghibli-theme .uppercase {
+    text-transform: uppercase !important;
+}
+
+.ghibli-theme .tracking-widest {
+    letter-spacing: 0.1em !important;
+}
+
+.ghibli-theme .tracking-tight {
+    letter-spacing: -0.025em !important;
+}
+
+.ghibli-theme .font-semibold {
+    font-weight: 600 !important;
+}
+
+.ghibli-theme .font-medium {
+    font-weight: 500 !important;
+}
+
+.ghibli-theme .space-y-5>*+* {
+    margin-top: 20px !important;
+}
+
+.ghibli-theme .flex-1 {
+    flex: 1 1 0% !important;
+}
+
+.ghibli-theme .w-1\/3 {
+    width: 33.333333% !important;
+}
+
+.ghibli-theme .transition-all {
+    transition-property: all !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-duration: 150ms !important;
+}
+
+.ghibli-theme .shadow-\[0_32px_64px_-16px_rgba\(0\2c 0\2c 0\2c 0\.2\)\] {
+    box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.ghibli-theme .watercolor-border {
+    border-style: solid !important;
+}
 
 /* ==========================================================================
    [Premium Cozy Ghibli Theme Integration Styles]
@@ -4579,6 +5167,7 @@ body.ghibli-theme .container {
     background: transparent !important;
     border: none !important;
 }
+
 .ghibli-theme .editor-section-premium.journal-paper .ql-editor {
     background: transparent !important;
     line-height: 32px !important;
@@ -4592,8 +5181,9 @@ body.ghibli-theme .container {
 .ghibli-theme .friend-banner.paper-note {
     background: #fffef0 !important;
     border: 2px solid #5d574d !important;
-    box-shadow: 2px 2px 0px rgba(93,87,77,0.1) !important;
+    box-shadow: 2px 2px 0px rgba(93, 87, 77, 0.1) !important;
 }
+
 .ghibli-theme .hand-painted-gauge {
     background: linear-gradient(90deg, #a7d8de 0%, #f9d976 50%, #f7a8a8 100%) !important;
     border: 2px solid #5d574d !important;
@@ -4603,6 +5193,7 @@ body.ghibli-theme .container {
     width: 100% !important;
     box-sizing: border-box !important;
 }
+
 .ghibli-theme .gauge-needle {
     width: 4px !important;
     height: 20px !important;
@@ -4610,17 +5201,20 @@ body.ghibli-theme .container {
     position: absolute !important;
     top: -6px !important;
     border-radius: 2px !important;
-    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2) !important;
     transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
+
 .ghibli-theme .bubble-left.paper-note {
     background: #fffef0 !important;
     border: 2.2px solid #e8e4d3 !important;
     box-shadow: 3px 3px 0px rgba(139, 119, 95, 0.04) !important;
     color: #43423E !important;
 }
+
 .ghibli-theme .bubble-right.paper-note {
-    background: #e8f0e0 !important; /* Pastel Green note */
+    background: #e8f0e0 !important;
+    /* Pastel Green note */
     border: 2.2px solid #c5d3ba !important;
     box-shadow: 3px 3px 0px rgba(139, 119, 95, 0.04) !important;
     color: #43423E !important;
@@ -4633,6 +5227,7 @@ body.ghibli-theme .container {
     font-weight: 600 !important;
     transition: all 0.4s ease-in-out !important;
 }
+
 .ghibli-theme .dim-context {
     opacity: 0.5 !important;
     filter: grayscale(10%) !important;
@@ -4655,22 +5250,29 @@ body.ghibli-theme .container {
     box-shadow: 0 4px 10px rgba(141, 119, 95, 0.05) !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
+
 .ghibli-theme .fc-event:hover {
     transform: translateY(-1.5px) !important;
     box-shadow: 0 8px 16px rgba(141, 119, 95, 0.1) !important;
 }
+
 .ghibli-theme .fc-event.event-personal {
-    background-color: rgba(139, 168, 142, 0.12) !important; /* Sage Green pastel */
+    background-color: rgba(139, 168, 142, 0.12) !important;
+    /* Sage Green pastel */
     color: #556f59 !important;
     border-color: rgba(139, 168, 142, 0.3) !important;
 }
+
 .ghibli-theme .fc-event.event-shared {
-    background-color: rgba(242, 167, 179, 0.12) !important; /* Shared Rose pastel */
+    background-color: rgba(242, 167, 179, 0.12) !important;
+    /* Shared Rose pastel */
     color: #a85867 !important;
     border-color: rgba(242, 167, 179, 0.3) !important;
 }
+
 .ghibli-theme .fc-event.event-task {
-    background-color: rgba(212, 163, 115, 0.12) !important; /* Sand / Mustard pastel */
+    background-color: rgba(212, 163, 115, 0.12) !important;
+    /* Sand / Mustard pastel */
     color: #8c5b30 !important;
     border-color: rgba(212, 163, 115, 0.3) !important;
 }
@@ -4741,13 +5343,17 @@ body.ghibli-theme.auth-mode .creature-float {
 }
 
 @keyframes float-creature-auth {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px) rotate(0deg);
     }
+
     50% {
         transform: translateY(-15px) rotate(2deg);
     }
 }
+
 /* CSS Fix: Ensure display: none override works despite the global flex utility */
 .ghibli-theme #auth-container[style*="display: none"],
 .ghibli-theme #auth-container[style*="display:none"] {
@@ -4758,13 +5364,17 @@ body.ghibli-theme.auth-mode .creature-float {
    [Feeling Journal - Mobile Responsiveness & Layout Fixes v1.0.1]
    ========================================================================== */
 @media (max-width: 768px) {
+
     /* 1. Global Reset & Overflows */
-    html, body {
+    html,
+    body {
         overflow-x: hidden !important;
         max-width: 100vw !important;
         padding: 6px !important;
+        display: block !important;
+        min-height: 100vh;
     }
-    
+
     .container {
         padding: 12px 10px !important;
         border-radius: 16px !important;
@@ -4773,7 +5383,7 @@ body.ghibli-theme.auth-mode .creature-float {
         box-shadow: none !important;
         margin: 0 !important;
     }
-    
+
     /* 2. Top Nav (User Actions & Logo) */
     .user-nav {
         flex-direction: column !important;
@@ -4781,25 +5391,25 @@ body.ghibli-theme.auth-mode .creature-float {
         gap: 8px !important;
         padding: 4px !important;
     }
-    
+
     .brand-logo-section {
         gap: 6px !important;
     }
-    
+
     .brand-logo-section h1 {
         font-size: 1.1rem !important;
     }
-    
+
     .user-actions-section {
         width: 100% !important;
         justify-content: space-between !important;
         font-size: 0.8rem !important;
     }
-    
+
     #user-email {
         font-size: 0.8rem !important;
     }
-    
+
     /* 3. Tab Navigation Grid */
     .tab-nav {
         display: grid !important;
@@ -4808,7 +5418,7 @@ body.ghibli-theme.auth-mode .creature-float {
         padding: 4px !important;
         margin-bottom: 15px !important;
     }
-    
+
     .tab-btn {
         padding: 8px 4px !important;
         font-size: 0.75rem !important;
@@ -4817,30 +5427,31 @@ body.ghibli-theme.auth-mode .creature-float {
         align-items: center !important;
         gap: 2px !important;
     }
-    
+
     .tab-btn span {
         font-size: 1.1rem !important;
     }
-    
+
     .sidebar-user-card {
-        display: none !important; /* 모바일 탑바에 정보가 있으므로 탭 내부 유저 카드는 숨겨 넓은 면적 확보 */
+        display: none !important;
+        /* 모바일 탑바에 정보가 있으므로 탭 내부 유저 카드는 숨겨 넓은 면적 확보 */
     }
 
     /* 4. Notebook / Page Accordion Drawer Slide Control */
     .journal-3-column-layout {
         height: calc(100vh - 160px) !important;
     }
-    
+
     .note-content-area {
         padding: 15px 10px !important;
         gap: 15px !important;
     }
-    
+
     .note-title-input-large {
         font-size: 1.3rem !important;
         padding: 5px 0 !important;
     }
-    
+
     /* 5. Calendar Layout Repair */
     .calendar-header-premium {
         flex-direction: column !important;
@@ -4848,57 +5459,57 @@ body.ghibli-theme.auth-mode .creature-float {
         gap: 8px !important;
         margin-bottom: 12px !important;
     }
-    
+
     .calendar-header-premium h3 {
         font-size: 1.3rem !important;
     }
-    
+
     .calendar-header-premium .flex-wrap {
         gap: 6px !important;
         font-size: 0.75rem !important;
     }
-    
-    .calendar-header-premium .flex-wrap > div {
+
+    .calendar-header-premium .flex-wrap>div {
         padding: 4px 10px !important;
         font-size: 0.75rem !important;
     }
-    
+
     #calendar-container {
         padding: 10px !important;
         border-radius: 1.5rem !important;
         min-height: 420px !important;
     }
-    
+
     /* FullCalendar Mobile Typography & Padding */
     .fc .fc-toolbar {
         flex-direction: row !important;
         justify-content: space-between !important;
         gap: 5px !important;
     }
-    
+
     .fc .fc-toolbar-title {
         font-size: 1.1rem !important;
     }
-    
+
     .fc .fc-button {
         padding: 4px 8px !important;
         font-size: 0.75rem !important;
     }
-    
+
     .fc .fc-col-header-cell-cushion {
         font-size: 0.75rem !important;
         padding: 4px 0 !important;
     }
-    
+
     .fc-daygrid-day-number {
         font-size: 0.75rem !important;
         padding: 2px !important;
     }
-    
+
     .fc-daygrid-day-frame {
         min-height: 55px !important;
     }
-    
+
     .fc-event {
         font-size: 0.65rem !important;
         padding: 1px 2px !important;
@@ -4909,17 +5520,17 @@ body.ghibli-theme.auth-mode .creature-float {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
-    
+
     .fc-event-title {
         font-size: 0.65rem !important;
     }
-    
+
     /* 6. Chat & Social Layout Repair (Kakao / Ghibli Blend) */
     .chat-view-layout {
         flex-direction: column !important;
-        height: calc(100vh - 180px) !important;
+        height: calc(100dvh - 120px) !important;
     }
-    
+
     /* Mobile 1-chon friends list slider */
     .chat-sidebar {
         width: 100% !important;
@@ -4930,20 +5541,21 @@ body.ghibli-theme.auth-mode .creature-float {
         padding: 6px 12px !important;
         background: #fbf9f5 !important;
     }
-    
+
     .user-profile-section {
-        display: none !important; /* 공간 절약을 위해 모바일 채팅창 내 프로필 사진 변경은 숨김 (설정 탭에서 지원) */
+        display: none !important;
+        /* 공간 절약을 위해 모바일 채팅창 내 프로필 사진 변경은 숨김 (설정 탭에서 지원) */
     }
-    
+
     .chat-sidebar-header {
         padding: 4px 0 !important;
     }
-    
+
     .chat-sidebar-header h3 {
         font-size: 0.85rem !important;
         margin: 0 !important;
     }
-    
+
     .friend-list-container {
         display: flex !important;
         flex-direction: row !important;
@@ -4953,7 +5565,7 @@ body.ghibli-theme.auth-mode .creature-float {
         padding: 6px 0 !important;
         width: 100% !important;
     }
-    
+
     /* Hide the status tags, emotion tags, and settings gear icon in mobile friends slider */
     .friend-item .page-item-meta,
     .friend-item .emotion-tag,
@@ -4961,7 +5573,7 @@ body.ghibli-theme.auth-mode .creature-float {
     .friend-item .friend-settings-btn-icon {
         display: none !important;
     }
-    
+
     /* Make the friend item name text small, centered, and truncated */
     .friend-item .page-item-title {
         font-size: 0.7rem !important;
@@ -4975,15 +5587,15 @@ body.ghibli-theme.auth-mode .creature-float {
         text-align: center !important;
         margin: 0 auto !important;
     }
-    
+
     /* Center the title wrapper */
-    .friend-item > div:last-child {
+    .friend-item>div:last-child {
         width: 100% !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
     }
-    
+
     /* Make sure individual friend cards have a vertical layout */
     .friend-item {
         display: inline-flex !important;
@@ -4998,38 +5610,39 @@ body.ghibli-theme.auth-mode .creature-float {
         background: transparent !important;
         border: none !important;
     }
-    
+
     .friend-item .friend-avatar {
         width: 40px !important;
         height: 40px !important;
         font-size: 1.3rem !important;
         margin: 0 auto !important;
     }
-    
+
     .friend-item .friend-info {
         text-align: center !important;
     }
-    
+
     /* 1초대 초대 버튼 가로 배치 */
     .sidebar-footer {
-        display: none !important; /* 1촌 목록 우측 끝에 수동으로 친구초대 버튼이 가도록 처리하거나 헤더에 결합 */
+        display: none !important;
+        /* 1촌 목록 우측 끝에 수동으로 친구초대 버튼이 가도록 처리하거나 헤더에 결합 */
     }
-    
+
     /* 채팅창 영역 */
     .chat-main {
         flex: 1 !important;
         width: 100% !important;
         height: auto !important;
     }
-    
+
     .chat-main-header {
         padding: 10px 14px !important;
     }
-    
+
     .chat-main-header h3 {
         font-size: 1rem !important;
     }
-    
+
     /* Exclude the journal drawer toggle from being hidden and style it neatly */
     #mobile-drawer-toggle.mobile-drawer-toggle-btn {
         display: inline-flex !important;
@@ -5048,27 +5661,29 @@ body.ghibli-theme.auth-mode .creature-float {
     }
 
     .mobile-drawer-toggle-btn:not(#mobile-drawer-toggle) {
-        display: none !important; /* 가로 슬라이더로 상시 표시되므로 모바일 1촌 목록 토글 버튼은 불필요 */
+        display: none !important;
+        /* 가로 슬라이더로 상시 표시되므로 모바일 1촌 목록 토글 버튼은 불필요 */
     }
-    
+
     /* Give sidebars a solid background on mobile so they don't let text show through */
     .notebook-sidebar {
         width: 40% !important;
         padding: 10px 5px !important;
-        background: #fffcf2 !important; /* solid Ghibli cream background */
-        box-shadow: 5px 10px 30px rgba(0,0,0,0.15) !important;
+        background: #fffcf2 !important;
+        /* solid Ghibli cream background */
+        box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.15) !important;
         border-right: 1px solid var(--primary-container) !important;
     }
-    
+
     .pages-sidebar {
         left: 40% !important;
         width: 60% !important;
         padding: 10px 5px !important;
         background: #fffcf2 !important;
-        box-shadow: 5px 10px 30px rgba(0,0,0,0.15) !important;
+        box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.15) !important;
         border-left: 1px solid var(--primary-container) !important;
     }
-    
+
     /* Ensure sidebars display on top of everything when open */
     .notebook-sidebar.active-drawer,
     .pages-sidebar.active-drawer {
@@ -5082,32 +5697,41 @@ body.ghibli-theme.auth-mode .creature-float {
         width: 55% !important;
         font-size: 0.75rem !important;
     }
+
     .notebook-sidebar .sidebar-header {
         padding: 0 5px 10px !important;
     }
+
     .sidebar-actions {
         gap: 2px !important;
     }
+
     .icon-btn {
         font-size: 0.95rem !important;
     }
+
     .notebook-item {
         padding: 6px 4px !important;
         gap: 6px !important;
     }
+
     .notebook-item span {
         font-size: 0.75rem !important;
     }
+
     #new-page-btn {
         padding: 6px 10px !important;
         font-size: 0.75rem !important;
     }
+
     .page-item {
         padding: 8px 6px !important;
     }
+
     .page-item-title {
         font-size: 0.8rem !important;
     }
+
     .page-item-meta {
         font-size: 0.65rem !important;
     }
@@ -5119,113 +5743,167 @@ body.ghibli-theme.auth-mode .creature-float {
         gap: 20px !important;
         width: 100% !important;
     }
-    
+
     .persona-avatar-section {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
     }
-    
+
     .persona-config-section {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
     }
-    
+
     .settings-container {
         width: 100% !important;
         box-sizing: border-box !important;
     }
-    
+
     /* Prevent awkward heading word-wrapping */
     .persona-learning-center h4 {
         white-space: nowrap !important;
         font-size: 0.95rem !important;
     }
-    
+
     .chat-header-actions .btn-icon-circle {
         width: 32px !important;
         height: 32px !important;
         font-size: 0.9rem !important;
     }
-    
+
     /* 1촌 감성 온도계 배너 */
     #friend-emotion-banner {
         margin: 8px 10px 0 10px !important;
         padding: 10px !important;
         border-radius: 8px !important;
     }
-    
+
     #friend-emotion-banner h4 {
         font-size: 0.8rem !important;
     }
-    
+
     #friend-emotion-banner p {
         font-size: 0.72rem !important;
         margin-top: 2px !important;
     }
-    
+
     /* Spirit Whispers (AI 안내 배너) */
     #ghibli-spirit-whispers {
         margin: 8px 10px 0 10px !important;
         padding: 10px !important;
         gap: 10px !important;
     }
-    
+
     /* 대망의 말풍선 폰트 및 너비 조율 */
     .chat-scroll-area {
-        height: calc(100% - 150px) !important;
+        flex: 1 !important;
+        height: auto !important;
         padding: 12px 10px !important;
         gap: 12px !important;
     }
-    
+
     /* 말풍선 공통 */
-    .message-bubble, .message-content, .msg-bubble, .message-text, .message p, .message {
+    .message-bubble,
+    .message-content,
+    .msg-bubble,
+    .message-text,
+    .message p,
+    .message {
         max-width: 80% !important;
         font-size: 0.88rem !important;
         line-height: 1.4 !important;
     }
-    
-    .message-content, .message-bubble {
+
+    .message-content,
+    .message-bubble {
         padding: 8px 12px !important;
         border-radius: 12px !important;
     }
-    
-    /* 닝닝비서 조언 버튼 및 플로팅 컨트롤 */
+
+    /* 닝닝비서 조언 버튼 및 플로팅 컨트롤 (모바일 플로팅 최적화) */
     .chat-ai-floating-controls {
-        bottom: 70px !important;
+        position: absolute !important;
+        bottom: 110px !important;
         right: 15px !important;
+        left: auto !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
         gap: 8px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        z-index: 100 !important;
+        width: auto !important;
+        max-width: 200px !important;
     }
-    
+
     .chat-ai-floating-controls button {
-        padding: 8px 12px !important;
-        font-size: 0.75rem !important;
-        border-radius: 20px !important;
+        padding: 6px 12px !important;
+        font-size: 0.7rem !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: max-content !important;
     }
-    
+
     .chat-ai-floating-controls button span {
-        font-size: 0.95rem !important;
+        font-size: 0.8rem !important;
     }
-    
-    /* 채팅 입력 하단 풋터 */
-    .chat-footer-kakaostyle {
+
+    /* 채팅 입력 하단 딥 리플렉션 모드 풋터 (모바일 크기 축소) */
+    #chat-view footer {
+        padding: 8px 10px !important;
+        background: rgba(253, 246, 227, 0.95) !important;
+    }
+
+    #chat-view footer > div {
         padding: 8px 12px !important;
+        gap: 8px !important;
+        border-radius: 16px !important;
+        border-width: 1px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
     }
-    
-    .chat-input-wrapper {
-        gap: 6px !important;
+
+    #chat-view footer > div > div:first-child {
+        display: none !important; /* 모바일 공간 절약을 위해 Deep Reflection Mode 라벨 숨김 */
     }
-    
-    .chat-textarea {
+
+    #chat-input-tab {
+        min-height: 44px !important;
+        height: 44px !important;
         font-size: 0.88rem !important;
-        height: 32px !important;
+        padding: 6px 10px !important;
+        line-height: 1.3 !important;
+        background: #fffdf9 !important;
+        border: 1px solid #e1dcc9 !important;
+        border-radius: 10px !important;
     }
-    
-    .chat-footer-attach-btn, .chat-footer-send-btn {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.9rem !important;
+
+    #send-chat-btn-tab {
+        padding: 6px 14px !important;
+        font-size: 0.8rem !important;
+        border-radius: 10px !important;
+    }
+
+    #chat-attach-btn {
+        padding: 6px 10px !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* 설정 폼 두 컬럼 모바일 세로 배치 */
+    .settings-section > div > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    .settings-section .checkbox-group {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 10px 15px !important;
     }
 }
 
@@ -5234,17 +5912,19 @@ body.ghibli-theme.auth-mode .creature-float {
     .tab-nav {
         gap: 2px !important;
     }
+
     .tab-btn {
         font-size: 0.7rem !important;
     }
+
     .tab-btn span {
         font-size: 1rem !important;
     }
-    
+
     .calendar-header-premium h3 {
         font-size: 1.15rem !important;
     }
-    
+
     .fc .fc-toolbar-title {
         font-size: 0.95rem !important;
     }
@@ -5260,7 +5940,7 @@ body.ghibli-theme.auth-mode .creature-float {
 .paper-note {
     background: #fffef0 !important;
     border: 1px solid #e8e4d3 !important;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05) !important;
     position: relative !important;
 }
 
@@ -5287,7 +5967,7 @@ body.ghibli-theme.auth-mode .creature-float {
     position: absolute !important;
     top: -4px !important;
     border-radius: 2px !important;
-    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2) !important;
 }
 
 .ghibli-border {
@@ -5299,12 +5979,25 @@ body.ghibli-theme.auth-mode .creature-float {
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-10px) rotate(5deg); }
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(5deg);
+    }
 }
 
-.no-scrollbar::-webkit-scrollbar { display: none !important; }
-.no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+.no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
 
 .active-bubble {
     font-size: 1.125rem !important;
@@ -5337,12 +6030,26 @@ body.ghibli-theme.auth-mode .creature-float {
     animation: pulse 1.5s infinite ease-in-out !important;
 }
 
-.dot:nth-child(2) { animation-delay: 0.2s !important; }
-.dot:nth-child(3) { animation-delay: 0.4s !important; }
+.dot:nth-child(2) {
+    animation-delay: 0.2s !important;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s !important;
+}
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.5); opacity: 1; }
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 1;
+    }
 }
 
 /* Cozy Ghibli Calendar Custom Grid Styles */
@@ -5350,28 +6057,37 @@ body.ghibli-theme.auth-mode .creature-float {
     display: grid !important;
     grid-template-columns: repeat(7, 1fr) !important;
 }
+
 .watercolor-border {
     border-style: solid !important;
 }
+
 .ghibli-shadow {
     box-shadow: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
 }
+
 .paper-texture {
     background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCfQ7-XYlnDaTbB8_Yz3Sg81dzDRWRyWweAaYxBU7kkReXHAn3yrZYCbiHtbM3rR_kN4CoT6tnX276zkhx7ajrJD-EY2hy71TIk6OlDM9dCxoxKenSGyjAOwFK4W18eEPqYxEKEJQh-QK79MhimZEkotOL0K6x2XRW6uN4KmqmTvgNYhz-m3H6X9LDWcTPWNjVGdO4_6dTWyoZwog_zdwa3DW8wpt-h_0GTDhDoVybcQoJ_80_dzN1VCQzr3z9cn2dJEuiKReVlqHdO) !important;
 }
+
 .floating-cloud {
     animation: float-cloud 6s ease-in-out infinite !important;
 }
+
 @keyframes float-cloud {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px) rotate(0deg) !important;
-    } 50% {
+    }
+
+    50% {
         transform: translateY(-10px) rotate(2deg) !important;
     }
 }
 
 /* Fix high-specificity flex layouts overriding display: none hidden state */
-.ghibli-theme .hidden, .hidden {
+.ghibli-theme .hidden,
+.hidden {
     display: none !important;
 }
-

@@ -22,13 +22,13 @@ function detectAndHandleInAppBrowser() {
 
     if (isInApp) {
         console.log('--- [DETECT] In-App Browser Environment Detected! ---');
-        
+
         // Auto-redirect KakaoTalk
         if (isKakao) {
             const externalUrl = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
             window.location.href = externalUrl;
         }
-        
+
         // Auto-redirect LINE
         if (isLine && !window.location.search.includes('openExternalBrowser=1')) {
             const url = new URL(window.location.href);
@@ -40,7 +40,7 @@ function detectAndHandleInAppBrowser() {
         const overlay = document.getElementById('inapp-browser-overlay');
         if (overlay) {
             overlay.classList.remove('hidden');
-            
+
             const btnOpenExternal = document.getElementById('btn-inapp-open-external');
             const btnCopyLink = document.getElementById('btn-inapp-copy-link');
             const btnClose = document.getElementById('btn-inapp-close');
@@ -225,7 +225,7 @@ async function onUserAuthenticated(session) {
     document.body.classList.remove('auth-mode');
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('journal-app').style.display = 'block';
-    
+
     const emailEl = document.getElementById('user-email');
     if (emailEl) emailEl.innerText = session.user.email;
 
@@ -234,13 +234,13 @@ async function onUserAuthenticated(session) {
         if (session.provider_refresh_token) {
             localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
         }
-        
+
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
             'x-provider-token': session.provider_token
         };
-        
+
         const storedRefreshToken = session.provider_refresh_token || localStorage.getItem('google_provider_refresh_token');
         if (storedRefreshToken) {
             headers['x-provider-refresh-token'] = storedRefreshToken;
@@ -272,18 +272,18 @@ async function onUserAuthenticated(session) {
             },
             body: JSON.stringify({ inviterId: pendingInvite })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert(`🎉 1촌 초대를 성공적으로 수락하여 실시간 연결되었습니다!`);
-                checkFriendSos();
-            }
-            localStorage.removeItem('pending_invite_code');
-        })
-        .catch(err => {
-            console.error('Failed to accept invite:', err);
-            localStorage.removeItem('pending_invite_code');
-        });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`🎉 1촌 초대를 성공적으로 수락하여 실시간 연결되었습니다!`);
+                    checkFriendSos();
+                }
+                localStorage.removeItem('pending_invite_code');
+            })
+            .catch(err => {
+                console.error('Failed to accept invite:', err);
+                localStorage.removeItem('pending_invite_code');
+            });
     }
 
     // Load Data
@@ -509,7 +509,7 @@ async function loadSettings() {
         const data = await res.json();
         if (data.success && data.config && data.config.settings) {
             const s = data.config.settings;
-            
+
             const a60 = document.getElementById('alarm-60');
             const a30 = document.getElementById('alarm-30');
             const a10 = document.getElementById('alarm-10');
