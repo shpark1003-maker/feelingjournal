@@ -5804,9 +5804,9 @@ body.ghibli-theme.auth-mode .creature-float {
 
     /* 대망의 말풍선 폰트 및 너비 조율 */
     .chat-scroll-area {
-        height: 60vh !important;
-        min-height: 200px !important;
-        resize: vertical !important;
+        height: 60vh;
+        min-height: 200px;
+        resize: vertical;
         padding: 12px 10px !important;
         gap: 12px !important;
     }
