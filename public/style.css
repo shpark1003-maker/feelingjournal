@@ -1,14 +1,16 @@
 :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --bg-color: #f8f9fa;
-    --card-bg: #ffffff;
-    --text-main: #2d3436;
-    --text-muted: #636e72;
-    --accent-color: #6c5ce7;
-    --secondary-color: #a29bfe;
-    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
-    --shadow-strong: 0 15px 35px rgba(108, 92, 231, 0.2);
-    --border-radius: 20px;
+    --primary-gradient: linear-gradient(135deg, #7a9e7e 0%, #a9c2ad 100%);
+    --primary-color: #7a9e7e;
+    --secondary-color: #d4a373;
+    --tertiary-color: #9a8c98;
+    --bg-color: #fffef0;
+    --card-bg: #fdf6e3;
+    --text-main: #433e37;
+    --text-muted: #7c7267;
+    --accent-color: #7a9e7e;
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --shadow-strong: 0 10px 30px rgba(122, 158, 126, 0.2);
+    --border-radius: 16px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -678,26 +680,7 @@ footer {
 
 /* ---------------------------------- */
 
-/* Chat Section (KakaoTalk Style) */
-.chat-section {
-    margin-top: 30px;
-    background: #bacee0 !important;
-    /* KakaoTalk Blue */
-    border: none;
-    display: flex;
-    flex-direction: column;
-    max-height: 600px;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.chat-section .panel-header {
-    background: #bacee0;
-    padding: 15px;
-    margin-bottom: 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
+/* Chat Section Styles */
 
 .chat-scroll-area {
     height: 350px;
@@ -771,13 +754,7 @@ footer {
     margin-right: 2px;
 }
 
-.chat-footer-kakaostyle {
-    background: #ffffff;
-    padding: 10px 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+
 
 .chat-extra-btns {
     display: flex;
@@ -5529,110 +5506,81 @@ body.ghibli-theme.auth-mode .creature-float {
         font-size: 0.65rem !important;
     }
 
-    /* 6. Chat & Social Layout Repair (Kakao / Ghibli Blend) */
+    /* 6. Chat & Social Layout Repair (Ghibli Accordion Drawer) */
     .chat-view-layout {
+        position: relative !important;
         flex-direction: column !important;
         height: calc(100dvh - 90px) !important;
     }
 
-    /* Mobile 1-chon friends list slider */
+    /* Mobile 1-chon friends list Accordion Drawer */
     .chat-sidebar {
+        position: absolute !important;
+        top: 60px !important; /* Below chat header */
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 100 !important;
+        background: rgba(253, 246, 227, 0.98) !important; /* Ghibli surface */
+        backdrop-filter: blur(15px) !important;
+        transform: translateY(-120%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+        border-bottom-left-radius: 20px !important;
+        border-bottom-right-radius: 20px !important;
+        border: 2px solid #5d574d !important;
         width: 100% !important;
         max-width: 100% !important;
         height: auto !important;
-        border-right: none !important;
-        border-bottom: 2px solid #5d574d !important;
-        padding: 4px 8px !important;
-        background: #fbf9f5 !important;
+        max-height: 50vh !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+    }
+
+    .chat-sidebar.active-drawer {
+        transform: translateY(0) !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
 
     .user-profile-section {
         display: none !important;
-        /* 공간 절약을 위해 모바일 채팅창 내 프로필 사진 변경은 숨김 (설정 탭에서 지원) */
     }
 
     .chat-sidebar-header {
-        display: none !important; /* 모바일 공간 절약을 위해 1촌 헤더 완전히 숨김 */
+        display: block !important;
+        margin-bottom: 15px !important;
     }
 
     .friend-list-container {
         display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        overflow-x: hidden !important; /* 기본 상태에서는 스크롤바 감춤 */
-        white-space: nowrap !important;
-        padding: 4px !important;
-        width: 100% !important;
-        background: rgba(0, 0, 0, 0.02) !important;
-        border: 1px dashed rgba(93, 87, 77, 0.2) !important;
-        border-radius: 12px !important;
-        transition: all 0.3s ease !important;
-        cursor: pointer !important;
-        min-height: 52px !important;
-        align-items: center !important;
-    }
-
-    /* 기본 상태에서는 active 상태인 1촌 친구 하나만 노출 */
-    .friend-list-container:not(.expanded):not(:hover) .friend-item:not(.active) {
-        display: none !important;
-    }
-
-    /* 마우스 커서를 올리거나(hover) .expanded 클래스가 활성화되면 전체 1촌 목록이 확장 */
-    .friend-list-container.expanded,
-    .friend-list-container:hover {
-        overflow-x: auto !important;
-        background: rgba(0, 0, 0, 0.05) !important;
-        border-color: rgba(93, 87, 77, 0.4) !important;
-    }
-
-    .friend-list-container.expanded .friend-item:not(.active),
-    .friend-list-container:hover .friend-item:not(.active) {
-        display: inline-flex !important;
-    }
-
-    /* Hide the status tags, emotion tags, and settings gear icon in mobile friends slider */
-    .friend-item .page-item-meta,
-    .friend-item .emotion-tag,
-    .friend-item .sos-badge,
-    .friend-item .friend-settings-btn-icon {
-        display: none !important;
-    }
-
-    /* Make the friend item name text small, centered, and truncated */
-    .friend-item .page-item-title {
-        font-size: 0.7rem !important;
-        font-weight: 700 !important;
-        max-width: 55px !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        display: block !important;
-        line-height: 1.1 !important;
-        text-align: center !important;
-        margin: 0 auto !important;
-    }
-
-    /* Center the title wrapper */
-    .friend-item>div:last-child {
-        width: 100% !important;
-        display: flex !important;
         flex-direction: column !important;
-        align-items: center !important;
-    }
-
-    /* Make sure individual friend cards have a vertical layout */
-    .friend-item {
-        display: inline-flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
-        min-width: 70px !important;
-        width: 70px !important;
-        padding: 4px !important;
-        margin: 4px 6px !important;
+        gap: 10px !important;
+        overflow-x: hidden !important;
+        white-space: normal !important;
+        width: 100% !important;
         background: transparent !important;
         border: none !important;
+        min-height: auto !important;
+    }
+
+    /* Hide the horizontal expansion logic as we now use vertical accordion */
+    .friend-list-container:not(.expanded):not(:hover) .friend-item:not(.active) {
+        display: flex !important;
+    }
+
+    .friend-item {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        width: 100% !important;
+        padding: 10px !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 12px !important;
     }
 
     .friend-item.active {

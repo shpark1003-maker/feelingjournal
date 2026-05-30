@@ -68,7 +68,6 @@
 
 <body class="ghibli-theme">
     <!-- 인증 화면 -->
-    <!-- 인증 화면 -->
     <div id="auth-container" class="auth-container flex items-center justify-center p-margin-mobile md:p-lg"
         style="min-height: 100vh; display: flex; box-sizing: border-box; justify-content: center; align-items: center; width: 100%;">
         <div class="paper-texture"></div>
@@ -306,22 +305,22 @@
                     </div>
 
                     <!-- [2] 에디터 및 작업 영역 (중간) -->
-                    <div class="editor-section-premium journal-paper"
-                        style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                    <div class="editor-section-premium journal-paper note-editor-container"
+                        style="background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-soft); display: flex; flex-direction: column; border: 2px solid #5d574d;">
                         <!-- 페이지 제목 영역 -->
                         <div class="note-toolbar"
-                            style="padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+                            style="padding: 20px 25px; border-bottom: 2px solid rgba(93, 87, 77, 0.1); display: flex; align-items: center; gap: 15px;">
                             <button id="mobile-drawer-toggle" class="mobile-drawer-toggle-btn">📖 목차</button>
                             <input type="text" id="note-title" placeholder="페이지 제목을 입력하세요"
                                 class="note-title-input-large"
-                                style="width: 100%; border: none; font-size: 1.8rem; font-weight: 800; outline: none; color: #1a1a1a; background: transparent;">
-                            <div class="note-meta" style="margin-top: 5px; color: #888; font-size: 0.9rem;"><span
+                                style="flex: 1; border: none; font-size: 1.8rem; font-weight: 800; outline: none; color: var(--text-main); background: transparent;">
+                            <div class="note-meta" style="color: var(--text-muted); font-size: 0.9rem;"><span
                                     id="note-date-display"></span></div>
                         </div>
 
                         <!-- 툴바 영역 -->
                         <div id="quill-toolbar" class="quill-toolbar-custom"
-                            style="border: none; border-bottom: 1px solid #f0f0f0; padding: 10px 20px;">
+                            style="border: none; border-bottom: 2px solid rgba(93, 87, 77, 0.1); padding: 10px 20px; background: rgba(255,255,255,0.4); border-radius: 0;">
                             <span class="ql-formats">
                                 <select class="ql-font">
                                     <option selected>기본체</option>
@@ -700,7 +699,7 @@
 
                 <!-- [NEW] 알람 및 푸시 주기 설정 -->
                 <div class="settings-section card mt-20"
-                    style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+                    style="background: var(--card-bg); border: 2px solid #5d574d; border-radius: var(--border-radius); padding: 25px; box-shadow: var(--shadow-soft);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                         <span style="font-size: 1.3rem;">🔔</span>
                         <h4 style="margin: 0; color: #2d3436; font-size: 1.1rem; font-weight: 700;">알람 및 알림 주기 설정</h4>
@@ -766,7 +765,7 @@
 
                 <!-- [NEW] 안심 케어 모드 연동 설정 -->
                 <div class="settings-section card mt-20"
-                    style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+                    style="background: var(--card-bg); border: 2px solid #5d574d; border-radius: var(--border-radius); padding: 25px; box-shadow: var(--shadow-soft);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                         <span style="font-size: 1.3rem;">🏡</span>
                         <h4 style="margin: 0; color: #2d3436; font-size: 1.1rem; font-weight: 700;">안심 케어 모드 연동 설정</h4>
@@ -796,7 +795,7 @@
                         </div>
 
                         <button id="save-care-settings-btn" class="btn primary"
-                            style="align-self: flex-start; padding: 10px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); border: none;">케어
+                            style="align-self: flex-start; padding: 10px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; background: var(--primary-color); border: 2px solid #5d574d;">케어
                             설정 저장</button>
                     </div>
                 </div>

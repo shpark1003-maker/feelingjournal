@@ -1,10 +1,10 @@
-import { store, API_URL } from './modules/state.js?v=5.0.7';
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.0.7';
-import { setupEditor } from './modules/editor.js?v=5.0.7';
-import { loadCalendar } from './modules/calendar.js?v=5.0.7';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.0.7';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.0.7';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.0.7';
+import { store, API_URL } from './modules/state.js?v=5.0.8';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.0.8';
+import { setupEditor } from './modules/editor.js?v=5.0.8';
+import { loadCalendar } from './modules/calendar.js?v=5.0.8';
+import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.0.8';
+import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.0.8';
+import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.0.8';
 
 console.log('App.js is loading as a modern ES Module...');
 

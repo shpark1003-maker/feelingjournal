@@ -533,6 +533,11 @@ export async function loadContacts() {
         }
 
         const data = await res.json();
+        
+        if (data.isMock) {
+            throw new Error(data.warning || '구글 인증이 만료되었거나 연동되지 않았습니다.');
+        }
+
         const contacts = data.contacts || [];
 
         const container = document.getElementById('contact-items-container');
@@ -1545,6 +1550,13 @@ export async function setupUserProfileInChat() {
 window.openSmsQrInviteModal = async function(name, phone) {
     const oldModal = document.getElementById('sms-qr-invite-modal');
     if (oldModal) oldModal.remove();
+
+    // Close the mobile drawer when the modal opens
+    const sidebar = document.querySelector('.chat-sidebar');
+    if (sidebar && sidebar.classList.contains('active-drawer')) {
+        sidebar.classList.remove('active-drawer');
+    }
+
 
     let currentUser = store.currentUser;
     if (!currentUser) {
