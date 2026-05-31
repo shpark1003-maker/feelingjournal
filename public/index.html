@@ -7,7 +7,7 @@
     <title>AI 일기 (Beta) - 당신의 하루를 기록하세요</title>
     <meta name="description" content="AI가 분석하는 일기장입니다. 당신의 하루를 기록하고 조언을 받아보세요.">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css?v=5.1.1">
+    <link rel="stylesheet" href="style.css?v=5.1.2">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -467,10 +467,10 @@
         </div>
 
         <!-- [3] 채팅 뷰 -->
-        <div id="chat-view" class="tab-content w-full h-full">
+        <div id="chat-view" class="tab-content w-full h-full !overflow-hidden">
             <div class="chat-view-layout ghibli-theme h-full relative overflow-hidden flex watercolor-bg">
                 <!-- Mobile Drawer for 1-Chon (Friend List) -->
-                <aside id="chat-sidebar-drawer" class="fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out w-80 bg-surface/95 backdrop-blur-xl border-r border-surface-variant shadow-xl flex flex-col py-6 px-4">
+                <aside id="chat-sidebar-drawer" class="fixed md:static md:translate-x-0 inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out w-80 bg-surface/95 backdrop-blur-xl border-r border-surface-variant shadow-xl flex flex-col py-6 px-4">
                     <div class="flex items-center justify-between mb-6 border-b border-surface-variant pb-4">
                         <div class="flex items-center gap-3">
                             <div class="relative">
@@ -499,12 +499,12 @@
                 </aside>
 
                 <!-- Overlay for drawer -->
-                <div id="chat-sidebar-overlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" onclick="document.getElementById('chat-sidebar-drawer').classList.add('-translate-x-full'); this.classList.add('hidden');"></div>
+                <div id="chat-sidebar-overlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden md:hidden" onclick="document.getElementById('chat-sidebar-drawer').classList.add('-translate-x-full'); this.classList.add('hidden');"></div>
 
                 <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-background/50">
                     <header class="bg-surface/80 backdrop-blur-xl border-b border-surface-variant/50 shadow-sm z-30 flex justify-between items-center px-4 w-full h-16 shrink-0">
                         <div class="flex items-center gap-3">
-                            <button id="mobile-chat-drawer-toggle" onclick="document.getElementById('chat-sidebar-drawer').classList.remove('-translate-x-full'); document.getElementById('chat-sidebar-overlay').classList.remove('hidden');" class="text-primary hover:bg-primary-container/20 p-2 rounded-full transition-colors flex items-center justify-center">
+                            <button id="mobile-chat-drawer-toggle" onclick="document.getElementById('chat-sidebar-drawer').classList.remove('-translate-x-full'); document.getElementById('chat-sidebar-overlay').classList.remove('hidden');" class="md:hidden text-primary hover:bg-primary-container/20 p-2 rounded-full transition-colors flex items-center justify-center">
                                 <span class="material-symbols-outlined">menu</span>
                             </button>
                             <h3 id="chat-room-title-text" class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">채팅방</h3>
@@ -1210,7 +1210,7 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script type="module" src="app.js?v=5.1.1"></script>
+    <script type="module" src="app.js?v=5.1.2"></script>
 </body>
 
 </html>

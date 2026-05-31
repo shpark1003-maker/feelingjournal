@@ -1,10 +1,10 @@
-import { store, API_URL } from './modules/state.js?v=5.1.1';
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.1';
-import { setupEditor } from './modules/editor.js?v=5.1.1';
-import { loadCalendar } from './modules/calendar.js?v=5.1.1';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.1';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.1';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.1';
+import { store, API_URL } from './modules/state.js?v=5.1.2';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.2';
+import { setupEditor } from './modules/editor.js?v=5.1.2';
+import { loadCalendar } from './modules/calendar.js?v=5.1.2';
+import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.2';
+import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.2';
+import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.2';
 
 console.log('App.js is loading as a modern ES Module...');
 
@@ -373,7 +373,7 @@ function setupTabs() {
                 if (tabId === 'calendar') loadCalendar();
                 else if (tabId === 'chat') {
                     // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.1.1').then(chatMod => {
+                    import('./modules/chat.js?v=5.1.2').then(chatMod => {
                         chatMod.initializeChat();
                     });
                 }

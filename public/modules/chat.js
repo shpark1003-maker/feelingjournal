@@ -109,7 +109,7 @@ export function appendMessage(msg) {
     }
 
     div.innerHTML = `
-        <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%;">
+        <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%; ${isMe ? 'flex-direction: row-reverse;' : ''}">
             ${avatarHtml}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
                 <span class="message-sender" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
