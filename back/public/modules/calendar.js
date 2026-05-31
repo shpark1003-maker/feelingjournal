@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.0.7';
+import { store, API_URL } from './state.js?v=5.0.8';
 
 let initialized = false;
 let currentYear = new Date().getFullYear();
@@ -199,7 +199,13 @@ export async function loadCalendar(forceRefresh = false) {
         });
     }
 
-    container.innerHTML = '<div style="grid-column: span 7; text-align: center; padding: 40px; color: #8c7e6d; font-weight: 600;">일정을 불러오는 중...</div>';
+    container.innerHTML = `
+        <div style="grid-column: span 7; text-align: center; padding: 60px 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;">
+            <div style="width: 40px; height: 40px; border: 4px solid var(--primary-container); border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span style="font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px;">일정표를 펼치는 중...</span>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        </div>
+    `;
 
     try {
         const token = await store.getSessionToken();
@@ -390,15 +396,15 @@ function renderCustomGrid() {
             let chipStyle = '';
             
             if (type === 'task') {
-                chipStyle = 'bg-tertiary/10 text-tertiary border-tertiary/20';
+                chipStyle = 'bg-[#f4eff3] text-[#4a3b47] border-[#d1c1cf] shadow-sm font-bold';
             } else if (type === 'shared') {
-                chipStyle = 'bg-secondary/10 text-secondary border-secondary/20';
+                chipStyle = 'bg-[#fdf6ec] text-[#6b4c2a] border-[#e6cda8] shadow-sm font-bold';
             } else {
-                chipStyle = 'bg-primary/10 text-primary border-primary/20';
+                chipStyle = 'bg-[#eff6ef] text-[#2d4a31] border-[#b8d4bb] shadow-sm font-bold';
             }
 
             const title = ev.title || '제목 없음';
-            eventsHTML += `<div class="px-2 py-1 rounded-lg text-[10px] border font-medium truncate ${chipStyle}">${title}</div>`;
+            eventsHTML += `<div class="px-2 py-1 mb-1 rounded-lg text-[10px] border truncate transition hover:brightness-95 ${chipStyle}">${title}</div>`;
         });
         eventsHTML += '</div>';
 

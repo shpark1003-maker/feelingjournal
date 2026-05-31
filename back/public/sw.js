@@ -1,5 +1,5 @@
 // Feeling Journal Service Worker - Self-Unregister Kill Switch (sw.js)
-// 강력한 로컬 브라우저 캐시 감옥을 분쇄하고 강제 최신 릴리즈 v5.0.1 새로고침을 단행합니다.
+// 강력한 로컬 브라우저 캐시 감옥을 분쇄하고 강제 최신 릴리즈 v5.0.8 새로고침을 단행합니다.
 
 self.addEventListener('install', (event) => {
     console.log('[SW] Kill Switch Activated. Installing...');
@@ -24,7 +24,7 @@ self.addEventListener('activate', (event) => {
             .then((clients) => {
                 clients.forEach((client) => {
                     if (client.url && 'navigate' in client) {
-                        console.log('[SW] Force reloading client to grab V1.0 v5.0.1 assets...');
+                        console.log('[SW] Force reloading client to grab V1.0 v5.0.8 assets...');
                         client.navigate(client.url);
                     }
                 });

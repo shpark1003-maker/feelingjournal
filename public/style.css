@@ -6098,3 +6098,37 @@ body.ghibli-theme.auth-mode .creature-float {
 .hidden {
     display: none !important;
 }
+
+/* Stitch Focus UI Styles */
+.watercolor-bg {
+    background: linear-gradient(180deg, #fdf9f3 0%, #f1ede7 100%);
+    position: relative;
+}
+.watercolor-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
+    opacity: 0.3;
+    pointer-events: none;
+}
+.cloud-float {
+    animation: cloudFloat 20s infinite linear;
+    filter: blur(40px);
+    opacity: 0.4;
+}
+@keyframes cloudFloat {
+    0% { transform: translateX(-20%) translateY(0); }
+    50% { transform: translateX(20%) translateY(-20px); }
+    100% { transform: translateX(-20%) translateY(0); }
+}
+.mascot-float {
+    animation: float 6s infinite ease-in-out;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-12px) rotate(2deg); }
+}
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 24px);
+}

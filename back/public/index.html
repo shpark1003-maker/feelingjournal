@@ -42,23 +42,84 @@
             darkMode: "class",
             theme: {
                 extend: {
-                    colors: {
-                        primary: "#7a9e7e", /* Sage Green */
-                        "primary-container": "#e8f0e0",
-                        "on-primary-container": "#2d3b2e",
-                        secondary: "#d4a373", /* Warm Sand */
-                        tertiary: "#9a8c98",
-                        surface: "#fffef0",
-                        "surface-dim": "#fdf6e3",
-                        "surface-container-low": "#f9f1d7",
-                        "on-surface": "#433e37",
-                        "on-surface-variant": "#7c7267",
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#dddad4",
+                        "primary": "#4a654e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e6e2dc",
+                        "inverse-on-surface": "#f4f0ea",
+                        "surface-container-high": "#ebe8e2",
+                        "tertiary": "#41627b",
+                        "surface-tint": "#4a654e",
+                        "on-tertiary-fixed": "#001e30",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#1c1c18",
+                        "primary-fixed-dim": "#b0ceb2",
+                        "tertiary-container": "#83a5c1",
+                        "inverse-surface": "#31302d",
+                        "secondary-fixed-dim": "#f7bb7e",
+                        "primary-container": "#8ba88e",
+                        "surface-variant": "#e6e2dc",
+                        "on-primary-fixed": "#07200f",
+                        "surface-bright": "#fdf9f3",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#2c1600",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#424842",
+                        "inverse-primary": "#b0ceb2",
+                        "background": "#fdf9f3",
+                        "surface": "#fdf9f3",
+                        "primary-fixed": "#cceace",
+                        "on-secondary-fixed-variant": "#663d0b",
+                        "tertiary-fixed-dim": "#a8cbe8",
+                        "tertiary-fixed": "#cae6ff",
+                        "outline-variant": "#c2c8c0",
+                        "on-primary-container": "#233d29",
+                        "on-secondary-container": "#784c1a",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f7f3ed",
+                        "secondary": "#825422",
+                        "on-tertiary-container": "#173b52",
+                        "outline": "#737972",
+                        "secondary-fixed": "#ffdcbd",
+                        "surface-container": "#f1ede7",
+                        "on-primary-fixed-variant": "#334d38",
+                        "secondary-container": "#fdc083",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#284a62",
+                        "on-background": "#1c1c18"
                     },
-                    borderRadius: {
-                        "DEFAULT": "0.5rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.5rem",
                         "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "sidebar-width": "280px",
+                        "margin-desktop": "40px",
+                        "max-content-width": "1200px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "handwritten": ["Caveat"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
                     }
                 },
             },
@@ -68,144 +129,71 @@
 
 <body class="ghibli-theme">
     <!-- 인증 화면 -->
-    <!-- 인증 화면 -->
-    <div id="auth-container" class="auth-container flex items-center justify-center p-margin-mobile md:p-lg"
-        style="min-height: 100vh; display: flex; box-sizing: border-box; justify-content: center; align-items: center; width: 100%;">
+    <div id="auth-container" class="auth-container active z-10 px-margin-mobile pt-12 pb-24 overflow-y-auto" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
         <div class="paper-texture"></div>
-        <main
-            class="w-full max-w-[440px] watercolor-card p-md md:p-lg z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000"
-            style="text-align: center; box-sizing: border-box; width: 100%;">
-            <!-- Brand Section & Creature -->
-            <div class="flex flex-col items-center text-center mb-lg" style="margin-bottom: 32px;">
-                <div class="w-32 h-32 mb-6 creature-float relative"
-                    style="width: 128px; height: 128px; margin: 0 auto 24px auto; position: relative;">
-                    <img alt="Aetheric Sanctuary Guardian"
-                        class="w-full h-full object-contain rounded-full shadow-inner" src="mascot.png"
-                        style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" />
-                    <div class="absolute -top-2 -right-2 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#e8dfd1] text-[#d4a373] text-[10px] font-bold tracking-wider uppercase"
-                        style="position: absolute; top: -8px; right: -8px; background: rgba(255,255,255,0.8); border: 1px solid #e8dfd1; color: #d4a373; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 9999px;">
-                        Beta
-                    </div>
+        <main class="w-full max-w-[440px] relative z-10">
+            <!-- Branding/Mascot -->
+            <div class="flex flex-col items-center mb-10">
+                <div class="relative mb-6 mascot-float">
+                    <div class="absolute inset-0 bg-primary-container/20 blur-2xl rounded-full scale-150"></div>
+                    <img alt="Cloud Spirit" class="w-32 h-32 object-contain relative z-20 rounded-full shadow-inner" src="mascot.png"/>
                 </div>
-                <div class="space-y-1">
-                    <h1 class="text-3xl font-bold text-[#433d3a] tracking-tight"
-                        style="margin: 0; font-size: 1.875rem;">Feeling Journal</h1>
-                    <p class="text-sm text-[#7c6a5a] font-medium opacity-80"
-                        style="margin: 4px 0 0 0; font-size: 0.875rem; font-weight: 500; color: #7c6a5a; opacity: 0.8;">
-                        A gentle place for your thoughts</p>
-                </div>
+                <h1 class="font-handwritten text-4xl text-primary drop-shadow-sm">Feeling Journal</h1>
+                <p class="font-label-sm text-on-surface-variant tracking-widest uppercase mt-1">Your heart's quiet garden</p>
             </div>
-            <form id="auth-form" class="space-y-md" style="display: flex; flex-direction: column; gap: 20px;"
-                onsubmit="event.preventDefault();">
-                <!-- Form Inputs -->
-                <div class="space-y-base" style="text-align: left;">
-                    <label class="text-sm font-semibold text-[#7c6a5a] block ml-1" for="email"
-                        style="font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; display: block; margin-left: 4px; color: #7c6a5a;">Email
-                        Address</label>
-                    <div class="relative" style="position: relative;">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#a98467] text-[20px]"
-                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #a98467; transition: all 0.3s ease;">mail</span>
-                        <input
-                            class="w-full soft-input rounded-2xl py-3.5 pl-12 pr-4 text-[#433d3a] placeholder:text-[#a98467]/50 text-base"
-                            id="email" placeholder="hello@gentle.com" type="email" required
-                            style="box-sizing: border-box; width: 100%; border-radius: 16px; padding: 14px 16px 14px 48px; font-size: 1rem;" />
+            <!-- Login Form -->
+            <div class="bg-white/60 backdrop-blur-md rounded-2xl p-6 shadow-[0_8px_32px_rgba(93,64,55,0.06)] border border-white/40">
+                <form id="auth-form" class="space-y-5" onsubmit="event.preventDefault();">
+                    <div class="space-y-1.5 text-left">
+                        <label class="font-label-sm text-on-surface-variant ml-2 block" for="email">Email Address</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">mail</span>
+                            <input class="w-full pl-12 pr-4 py-3.5 bg-surface/50 border-2 border-transparent focus:border-primary focus:ring-0 rounded-xl transition-all outline-none" id="email" placeholder="hello@forest.com" type="email" required/>
+                        </div>
                     </div>
-                </div>
-                <div class="space-y-base" style="text-align: left;">
-                    <div class="flex justify-between items-center ml-1"
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-left: 4px;">
-                        <label class="text-sm font-semibold text-[#7c6a5a] block" for="password"
-                            style="font-size: 0.875rem; font-weight: 600; color: #7c6a5a;">Password</label>
-                        <a class="text-xs font-bold text-[#d4a373] hover:text-[#a98467] transition-colors" href="#"
-                            style="font-size: 0.75rem; font-weight: 700; color: #d4a373; text-decoration: none; transition: color 0.2s;">Forgot?</a>
+                    <div class="space-y-1.5 text-left">
+                        <div class="flex justify-between items-center px-2">
+                            <label class="font-label-sm text-on-surface-variant block" for="password">Password</label>
+                            <a class="text-[12px] font-semibold text-primary" href="#">Forgot?</a>
+                        </div>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">lock</span>
+                            <input class="w-full pl-12 pr-4 py-3.5 bg-surface/50 border-2 border-transparent focus:border-primary focus:ring-0 rounded-xl transition-all outline-none" id="password" placeholder="••••••••" type="password" required/>
+                        </div>
                     </div>
-                    <div class="relative" style="position: relative;">
-                        <span
-                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#a98467] text-[20px]"
-                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #a98467; transition: all 0.3s ease;">lock</span>
-                        <input
-                            class="w-full soft-input rounded-2xl py-3.5 pl-12 pr-4 text-[#433d3a] placeholder:text-[#a98467]/50 text-base"
-                            id="password" placeholder="••••••••" type="password" required
-                            style="box-sizing: border-box; width: 100%; border-radius: 16px; padding: 14px 16px 14px 48px; font-size: 1rem;" />
-                    </div>
-                </div>
-                <!-- Main Buttons -->
-                <div class="space-y-sm pt-4"
-                    style="display: flex; flex-direction: column; gap: 12px; padding-top: 16px;">
-                    <button id="login-btn" type="submit"
-                        class="w-full ghibli-button py-4 text-base font-bold shadow-lg active:scale-95"
-                        style="border: none; cursor: pointer; font-size: 1rem; padding: 16px 0; font-weight: 700; width: 100%;">
-                        Step Into Your Sanctuary
+                    <button class="w-full py-4 bg-primary text-white font-headline-lg-mobile rounded-xl shadow-lg active:scale-95 transition-transform" id="login-btn" type="submit">
+                        Enter the Garden
                     </button>
-                    <button id="signup-btn" type="button"
-                        class="w-full secondary-ghibli py-4 rounded-2xl text-base font-bold transition-all active:scale-95"
-                        style="cursor: pointer; font-size: 1rem; padding: 16px 0; font-weight: 700; width: 100%; border-radius: 16px;">
-                        Create a New Journal
-                    </button>
-                </div>
-                <!-- Divider -->
-                <div class="relative py-4"
-                    style="position: relative; padding: 16px 0; display: flex; align-items: center; justify-content: center;">
-                    <div class="absolute inset-0 flex items-center"
-                        style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 2px; background: rgba(232, 223, 209, 0.5);">
-                    </div>
-                    <div class="relative flex justify-center" style="position: relative; z-index: 1;">
-                        <span class="bg-[#fcf8f1] px-4 text-xs font-bold text-[#a98467] uppercase tracking-widest"
-                            style="background: #fcf8f1; padding: 0 16px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #a98467;">or
-                            bloom with</span>
-                    </div>
+                </form>
+                <div class="flex items-center my-6">
+                    <div class="flex-grow h-px bg-outline-variant/50"></div>
+                    <span class="px-3 font-label-sm text-outline italic">or</span>
+                    <div class="flex-grow h-px bg-outline-variant/50"></div>
                 </div>
                 <!-- Social Logins -->
-                <div class="grid grid-cols-2 gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <button id="google-login-btn" type="button"
-                        class="flex items-center justify-center gap-3 bg-white hover:bg-[#fcf8f1] py-3.5 rounded-2xl border-2 border-[#e8dfd1] transition-all active:scale-95 shadow-sm"
-                        style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 0; border-radius: 16px; border: 2px solid #e8dfd1; background: #ffffff; cursor: pointer; transition: all 0.2s;">
-                        <svg viewBox="0 0 24 24" width="20" height="20"
-                            style="display: inline-block; vertical-align: middle; opacity: 0.8;">
-                            <path fill="#EA4335"
-                                d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3.01A11.91 11.91 0 0 0 12 0C7.29 0 3.203 2.697 1.156 6.658l4.11 3.107z" />
-                            <path fill="#34A853"
-                                d="M16.04 15.34c-1.077.73-2.436 1.17-4.04 1.17-2.836 0-5.245-1.91-6.1-4.47l-4.14 3.2A11.94 11.94 0 0 0 12 23c3.19 0 6.07-1.05 8.28-2.85l-4.24-2.81z" />
-                            <path fill="#4285F4"
-                                d="M23.49 12.275c0-.755-.06-1.56-.2-2.275H12v4.51h6.47c-.29 1.48-1.14 2.73-2.43 3.565l4.24 2.81c2.48-2.29 3.91-5.67 3.91-9.565z" />
-                            <path fill="#FBBC05"
-                                d="M5.84 12c0-.68.12-1.33.32-1.94l-4.11-3.11A11.97 11.97 0 0 0 1 12c0 2.25.62 4.35 1.7 6.16l4.14-3.2A7.03 7.03 0 0 1 5.84 12z" />
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="w-full flex items-center justify-center gap-3 py-3 bg-white/80 rounded-xl border border-outline-variant/30 active:bg-surface-container-low transition-colors shadow-sm" id="google-login-btn">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3.01A11.91 11.91 0 0 0 12 0C7.29 0 3.203 2.697 1.156 6.658l4.11 3.107z"/>
+                            <path fill="#34A853" d="M16.04 15.34c-1.077.73-2.436 1.17-4.04 1.17-2.836 0-5.245-1.91-6.1-4.47l-4.14 3.2A11.94 11.94 0 0 0 12 23c3.19 0 6.07-1.05 8.28-2.85l-4.24-2.81z"/>
+                            <path fill="#4285F4" d="M23.49 12.275c0-.755-.06-1.56-.2-2.275H12v4.51h6.47c-.29 1.48-1.14 2.73-2.43 3.565l4.24 2.81c2.48-2.29 3.91-5.67 3.91-9.565z"/>
+                            <path fill="#FBBC05" d="M5.84 12c0-.68.12-1.33.32-1.94l-4.11-3.11A11.97 11.97 0 0 0 1 12c0 2.25.62 4.35 1.7 6.16l4.14-3.2A7.03 7.03 0 0 1 5.84 12z"/>
                         </svg>
-                        <span class="text-[#433d3a] font-bold text-sm"
-                            style="font-size: 0.875rem; font-weight: 700; color: #433d3a;">Google</span>
+                        <span class="font-label-sm text-on-surface-variant font-bold">Google</span>
                     </button>
-                    <button id="kakao-login-btn" type="button"
-                        class="flex items-center justify-center gap-3 bg-[#FAE100] hover:bg-[#EBD200] py-3.5 rounded-2xl transition-all active:scale-95 shadow-sm"
-                        style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 0; border-radius: 16px; border: none; background: #FAE100; cursor: pointer; transition: all 0.2s;">
-                        <span class="material-symbols-outlined text-[#3C1E1E] text-[20px] scale-90"
-                            style="font-variation-settings: 'FILL' 1; font-size: 20px; color: #3C1E1E;">chat_bubble</span>
-                        <span class="text-[#3C1E1E] font-bold text-sm"
-                            style="font-size: 0.875rem; font-weight: 700; color: #3C1E1E;">Kakao</span>
+                    <button class="w-full flex items-center justify-center gap-3 py-3 bg-[#FAE100] rounded-xl border border-[#FAE100] active:bg-[#EBD200] transition-colors shadow-sm" id="kakao-login-btn">
+                        <span class="material-symbols-outlined text-[#3C1E1E] text-[20px] scale-90" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+                        <span class="font-label-sm text-[#3C1E1E] font-bold">Kakao</span>
                     </button>
                 </div>
-            </form>
-            <!-- Footer -->
-            <p class="mt-lg text-center text-xs font-medium text-[#7c6a5a]/70 leading-relaxed"
-                style="margin-top: 32px; font-size: 0.75rem; font-weight: 500; color: rgba(124, 106, 90, 0.7); line-height: 1.6;">
-                By continuing, you embrace our <br />
-                <a class="text-[#d4a373] font-bold hover:underline" href="#"
-                    style="color: #d4a373; font-weight: 700; text-decoration: none;">Terms of Service</a> and <a
-                    class="text-[#d4a373] font-bold hover:underline" href="#"
-                    style="color: #d4a373; font-weight: 700; text-decoration: none;">Privacy Policy</a>.
-            </p>
+            </div>
+            <div class="mt-8 text-center pb-8">
+                <p class="font-body-md text-on-surface-variant">
+                    New to the journey? 
+                    <a class="font-bold text-secondary underline decoration-secondary/30 underline-offset-4 ml-1" href="#" id="signup-btn">Begin Your Journey</a>
+                </p>
+            </div>
         </main>
-        <!-- Background Decoration -->
-        <div class="fixed bottom-8 right-8 pointer-events-none opacity-30 hidden md:block"
-            style="position: fixed; bottom: 32px; right: 32px; pointer-events: none; opacity: 0.3;">
-            <span class="material-symbols-outlined text-[#d4a373] text-[120px] creature-float"
-                style="font-size: 120px; color: #d4a373;">spa</span>
-        </div>
-        <div class="fixed top-8 left-8 pointer-events-none opacity-20 hidden md:block"
-            style="position: fixed; top: 32px; left: 32px; pointer-events: none; opacity: 0.2;">
-            <span class="material-symbols-outlined text-[#a98467] text-[80px] animate-pulse"
-                style="font-size: 80px; color: #a98467;">cloud</span>
-        </div>
     </div>
 
     <!-- 메인 앱 화면 -->
@@ -262,349 +250,334 @@
         </div>
 
         <!-- [1] 노트 뷰 -->
-        <div id="journal-view" class="tab-content active">
-            <div class="journal-3-column-layout">
-                <aside class="notebook-sidebar">
-                    <div class="sidebar-header"
-                        style="background: #1a1a1a; padding: 20px 15px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between;">
-                        <input type="text" id="sidebar-notebook-title" placeholder="필기장 제목"
-                            style="background: transparent; border: none; color: white; font-size: 1.1rem; font-weight: 700; width: 60%; outline: none;">
-                        <div class="sidebar-actions" style="display: flex; gap: 8px;">
-                            <button id="add-notebook-btn" class="icon-btn"
-                                style="color: #888; font-size: 1.2rem;">＋</button>
-                            <button id="remove-notebook-btn" class="icon-btn"
-                                style="color: #888; font-size: 1.2rem;">－</button>
-                        </div>
+        <div id="journal-view" class="tab-content active w-full max-w-[700px] mx-auto relative">
+            <!-- Journal View (Home List) -->
+            <div class="px-margin-mobile pt-6 pb-28 block" id="journal-home-view">
+                <!-- Notebook List / Horizontal Filter -->
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <input type="text" id="sidebar-notebook-title" placeholder="필기장 제목" class="bg-transparent border-none font-bold outline-none text-primary text-lg" style="width: 200px;">
+                    <div class="flex gap-3">
+                        <button id="add-notebook-btn" class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]">add</span></button>
+                        <button id="remove-notebook-btn" class="text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[20px]">remove</span></button>
                     </div>
-                    <ul id="notebook-list" class="notebook-list"></ul>
-                </aside>
-                <div class="resizer" id="resizer-1"></div>
-
-                <aside class="pages-sidebar">
-                    <div class="sidebar-header"
-                        style="padding: 20px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 12px;">
-                        <div id="current-notebook-display-title"
-                            style="font-size: 1.2rem; font-weight: 800; color: var(--accent-color); padding-left: 5px; letter-spacing: -0.5px;">
-                            나의 일기</div>
-                        <button id="new-page-btn" class="btn primary full-width">📝 페이지 추가</button>
+                </div>
+                <section class="mb-8 overflow-x-auto whitespace-nowrap pb-2 scrollbar-hide">
+                    <ul id="notebook-list" class="flex gap-3 notebook-list">
+                        <!-- Dynamically filled -->
+                    </ul>
+                </section>
+                
+                <!-- Greeting Section -->
+                <section class="mb-10 flex flex-col items-center text-center">
+                    <div class="relative w-40 h-40 mb-4 floating-anim">
+                        <img alt="Cloud Spirit" class="w-full h-full object-contain rounded-full mask-watercolor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4K-QnQLymxCWmYapi2S_UrcBd9T-PsUd0MfhOhTC2KNXVMnc6iLUKAhFabgaC3F3QLtnnsEnAcJeBdvMzT-uOTis-fr-29sp7NS7i3CqWj-cmg4bnFHog8y1NVTwUjzyj0XGA3C9x2KJTrWJSVNkSmfLTqfab7pQ1tWtX3gYwmCbHGoRh7uwxuqAKyXfH30g9tnQli-HySEU50LIA3I5CvUSRox4PPnTjAVNaixiSsQGc_4VMO_5cEKs8UqjpdmEkY1p4RVZYuVIk"/>
                     </div>
-                    <div id="page-list" class="page-list"></div>
-                </aside>
-                <div class="resizer" id="resizer-2"></div>
+                    <div class="space-y-1">
+                        <h2 class="font-headline-lg-mobile text-headline-lg-mobile text-secondary" id="current-notebook-display-title">나의 일기</h2>
+                        <p class="text-on-surface-variant font-medium">오늘 하루는 어땠나요?</p>
+                    </div>
+                </section>
 
-                <main class="note-content-area"
-                    style="display: flex; flex-direction: column; gap: 25px; padding: 30px; overflow-y: auto; background: #f8f9fa;">
-                    <!-- [0] 필기장 제목 표시줄 (제거됨 - 사이드바로 이동) -->
+                <!-- Journal Entry List -->
+                <section class="space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-label-sm text-label-sm uppercase tracking-widest text-primary">최근 기록</h3>
+                    </div>
+                    <div class="space-y-4 page-list" id="page-list">
+                        <!-- Dynamically filled by JS -->
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Editor View (Single Column Focus) -->
+            <div class="hidden px-margin-mobile pt-6 pb-32" id="editor-view">
+                <div class="mb-6 flex items-center justify-between">
+                    <button class="p-2 -ml-2 text-on-surface-variant hover:text-primary transition-colors" id="close-editor">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">새 일기 쓰기</span>
+                    <div class="w-10"></div>
+                </div>
 
-                    <!-- [1] 브리핑 카드 (상단) -->
-                    <div id="briefing-card" class="briefing-card hidden">
-                        <div class="briefing-header">
-                            <span class="icon">✨</span>
-                            <span id="briefing-title-text">나의 비서 브리핑</span>
-                        </div>
-                        <div id="briefing-content" class="briefing-text"></div>
+                <div id="briefing-card" class="hidden bg-surface-container-low p-4 rounded-xl mb-4 shadow-soft">
+                    <div class="flex items-center gap-2 text-tertiary font-bold mb-2">
+                        <span>✨</span> <span id="briefing-title-text">나의 비서 브리핑</span>
+                    </div>
+                    <div id="briefing-content" class="text-sm text-on-surface-variant"></div>
+                </div>
+
+                <section class="space-y-4" id="editor-section">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input class="flex-1 bg-transparent border-none text-headline-lg font-headline-lg text-secondary focus:ring-0 placeholder:text-outline-variant p-0 outline-none" id="note-title" placeholder="제목을 입력하세요..." type="text"/>
+                        <span id="note-date-display" class="text-label-sm text-outline"></span>
                     </div>
 
-                    <!-- [2] 에디터 및 작업 영역 (중간) -->
-                    <div class="editor-section-premium journal-paper"
-                        style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
-                        <!-- 페이지 제목 영역 -->
-                        <div class="note-toolbar"
-                            style="padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
-                            <button id="mobile-drawer-toggle" class="mobile-drawer-toggle-btn">📖 목차</button>
-                            <input type="text" id="note-title" placeholder="페이지 제목을 입력하세요"
-                                class="note-title-input-large"
-                                style="width: 100%; border: none; font-size: 1.8rem; font-weight: 800; outline: none; color: #1a1a1a; background: transparent;">
-                            <div class="note-meta" style="margin-top: 5px; color: #888; font-size: 0.9rem;"><span
-                                    id="note-date-display"></span></div>
-                        </div>
+                    <!-- Quill Toolbar -->
+                    <div id="quill-toolbar" class="bg-surface-container-high rounded-t-2xl px-4 py-2 flex flex-wrap gap-2 items-center border border-surface-variant">
+                        <span class="ql-formats">
+                            <select class="ql-font rounded border-none bg-surface/50 text-sm"><option selected>기본체</option><option value="serif">명조체</option><option value="monospace">코드체</option></select>
+                            <select class="ql-size rounded border-none bg-surface/50 text-sm"><option value="small">작게</option><option selected>보통</option><option value="large">크게</option></select>
+                        </span>
+                        <span class="ql-formats flex gap-1">
+                            <button class="ql-bold hover:bg-surface/50 p-1 rounded"></button>
+                            <button class="ql-italic hover:bg-surface/50 p-1 rounded"></button>
+                            <button class="ql-underline hover:bg-surface/50 p-1 rounded"></button>
+                            <select class="ql-color"></select>
+                        </span>
+                        <span class="ql-formats ml-auto">
+                            <button id="emoji-picker-btn" style="border:none; background:none; cursor:pointer; font-size: 1.2rem;">😊</button>
+                        </span>
+                    </div>
 
-                        <!-- 툴바 영역 -->
-                        <div id="quill-toolbar" class="quill-toolbar-custom"
-                            style="border: none; border-bottom: 1px solid #f0f0f0; padding: 10px 20px;">
-                            <span class="ql-formats">
-                                <select class="ql-font">
-                                    <option selected>기본체</option>
-                                    <option value="serif">명조체</option>
-                                    <option value="monospace">코드체</option>
-                                </select>
-                                <select class="ql-size">
-                                    <option value="small">작게</option>
-                                    <option selected>보통</option>
-                                    <option value="large">크게</option>
-                                </select>
-                            </span>
-                            <span class="ql-formats">
-                                <button class="ql-bold"></button>
-                                <button class="ql-italic"></button>
-                                <button class="ql-underline"></button>
-                                <select class="ql-color"></select>
-                            </span>
-                            <span class="ql-formats">
-                                <button id="emoji-picker-btn"
-                                    style="border:none; background:none; cursor:pointer; font-size: 1.2rem;">😊</button>
-                            </span>
+                    <div id="emoji-panel" class="emoji-panel hidden bg-white rounded-xl shadow-lg p-2 border border-surface-variant mt-1 absolute z-50">
+                        <div class="emoji-tabs flex gap-2 border-b pb-2 mb-2">
+                            <button class="emoji-tab active p-1" data-cat="recent">⏰</button>
+                            <button class="emoji-tab p-1" data-cat="emotion">😊</button>
+                            <button class="emoji-tab p-1" data-cat="nature">🌿</button>
+                            <button class="emoji-tab p-1" data-cat="food">🍕</button>
                         </div>
+                        <div id="emoji-grid" class="emoji-grid grid grid-cols-5 gap-2 max-h-40 overflow-y-auto text-xl"></div>
+                    </div>
 
-                        <!-- 이모지 피커 -->
-                        <div id="emoji-panel" class="emoji-panel hidden">
-                            <div class="emoji-tabs">
-                                <button class="emoji-tab active" data-cat="recent">⏰</button>
-                                <button class="emoji-tab" data-cat="emotion">😊</button>
-                                <button class="emoji-tab" data-cat="nature">🌿</button>
-                                <button class="emoji-tab" data-cat="food">🍕</button>
-                            </div>
-                            <div id="emoji-grid" class="emoji-grid"></div>
-                        </div>
-
-                        <!-- 에디터 본문 -->
-                        <div id="quill-editor"
-                            style="height: 450px; border: none; font-size: 1.1rem; line-height: 1.8; padding: 20px;">
-                        </div>
+                    <div class="parchment-texture rounded-b-2xl border border-surface-container-highest p-6 min-h-[400px] shadow-soft relative" id="quill-editor-container">
+                        <div class="min-h-[350px] text-on-surface font-body-md leading-relaxed outline-none" id="quill-editor" placeholder="마음속 이야기를 적어보세요..."></div>
                         <textarea id="diary-input" style="display:none;"></textarea>
 
-                        <!-- 이미지/영상 미리보기 -->
-                        <div id="image-preview-container" class="image-preview-container"
-                            style="display: none; padding: 10px 20px; position: relative;">
-                            <img id="image-preview" src="" style="display: none; max-width: 100%; border-radius: 8px;">
-                            <video id="video-preview" controls
-                                style="display: none; width: 100%; border-radius: 8px;"></video>
-                            <button id="remove-image-btn" class="remove-btn">✕</button>
+                        <div id="image-preview-container" class="mt-4 relative hidden image-preview-container" style="display: none;">
+                            <img id="image-preview" src="" class="max-w-full rounded-xl shadow-sm" style="display: none;">
+                            <video id="video-preview" controls class="w-full rounded-xl shadow-sm" style="display: none;"></video>
+                            <button id="remove-image-btn" class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md">✕</button>
                         </div>
+                    </div>
+                    <input type="file" id="camera-input" accept="image/*,video/*" capture="environment" style="display: none;">
 
-                        <!-- 하단 액션바 -->
-                        <div class="editor-footer premium-footer">
-                            <div class="button-group" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <button id="camera-btn" class="btn sm secondary responsive-btn"><span>📷</span> <span
-                                        class="btn-text">사진/영상</span></button>
-                                <button id="scrap-btn" class="btn sm secondary responsive-btn"><span>🌐</span> <span
-                                        class="btn-text">스크랩</span></button>
-                                <button id="voice-btn" class="btn sm secondary responsive-btn"><span>🎙️</span> <span
-                                        class="btn-text">음성</span></button>
-                            </div>
-                            <div class="main-actions" style="display: flex; gap: 8px;">
-                                <button id="writing-helper-btn"
-                                    class="btn sm secondary outline responsive-btn"><span>✍️</span> <span
-                                        class="btn-text">글 도우미</span></button>
-                                <button id="analyze-btn" class="btn primary responsive-btn"
-                                    style="padding: 8px 20px; border-radius: 20px; font-weight: 600;"><span>✨</span>
-                                    <span class="btn-text">AI 분석 및 저장</span></button>
-                            </div>
+                    <!-- 하단 액션바 요소 보존 -->
+                    <div class="flex flex-col gap-4 mt-6">
+                        <div class="button-group flex gap-2 justify-center flex-wrap">
+                            <button id="camera-btn" class="bg-surface-container-high px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container/20 transition-colors flex items-center gap-1"><span>📷</span> 사진/영상</button>
+                            <button id="scrap-btn" class="bg-surface-container-high px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container/20 transition-colors flex items-center gap-1"><span>🌐</span> 스크랩</button>
+                            <button id="voice-btn" class="bg-surface-container-high px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container/20 transition-colors flex items-center gap-1"><span>🎙️</span> 음성</button>
+                            <button id="writing-helper-btn" class="border border-primary text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/10 transition-colors flex items-center gap-1"><span>✍️</span> 글 도우미</button>
                         </div>
-                        <input type="file" id="camera-input" accept="image/*,video/*" capture="environment"
-                            style="display: none;">
+                        <button class="bg-primary text-on-primary w-full py-4 rounded-2xl font-semibold shadow-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" id="analyze-btn">
+                            <span class="material-symbols-outlined text-[20px]">magic_button</span>
+                            AI 분석 및 저장
+                        </button>
                     </div>
 
-                    <!-- [3] AI 분석 및 조언 영역 (하단) -->
-                    <div id="analysis-result-area" class="analysis-card hidden"
-                        style="background: #fff; border-left: 5px solid var(--accent-color); border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                        <div class="analysis-header" style="margin-bottom: 15px;">
-                            <h4
-                                style="margin:0; color: var(--accent-color); display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 1.4rem;">💡</span> AI 분석 및 조언
-                            </h4>
-                        </div>
-                        <div id="analysis-content" class="analysis-body"
-                            style="line-height: 1.7; color: #444; font-size: 1.05rem;"></div>
+                    <div class="mt-8 p-5 bg-tertiary-container/10 rounded-2xl border border-tertiary-container/20 hidden" id="analysis-result-area">
+                        <h5 class="text-tertiary font-semibold mb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">psychology</span>
+                            AI 분석 및 조언
+                        </h5>
+                        <div class="text-on-surface-variant text-sm italic" id="analysis-content"></div>
                     </div>
-                </main>
+                </section>
             </div>
+            
+            <!-- FAB: New Entry -->
+            <div class="fixed bottom-24 right-6 z-40" id="fab-container">
+                <button class="bg-primary text-on-primary w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center hover:scale-105 active:scale-90 transition-all duration-200 group" id="new-page-btn">
+                    <span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                </button>
+            </div>
+            
+            <script>
+                // Editor view transition logic
+                const journalHomeView = document.getElementById('journal-home-view');
+                const editorView = document.getElementById('editor-view');
+                const fabContainer = document.getElementById('fab-container');
+
+                document.getElementById('new-page-btn').addEventListener('click', () => {
+                    journalHomeView.classList.add('hidden');
+                    editorView.classList.remove('hidden');
+                    fabContainer.classList.add('hidden');
+                });
+
+                document.getElementById('page-list').addEventListener('click', (e) => {
+                    const li = e.target.closest('li'); // Legacy uses <li> for items
+                    if(li) {
+                        journalHomeView.classList.add('hidden');
+                        editorView.classList.remove('hidden');
+                        fabContainer.classList.add('hidden');
+                    }
+                });
+                
+                document.getElementById('close-editor').addEventListener('click', () => {
+                    editorView.classList.add('hidden');
+                    journalHomeView.classList.remove('hidden');
+                    fabContainer.classList.remove('hidden');
+                });
+            </script>
         </div>
 
         <!-- [2] 캘린더 뷰 -->
-        <div id="calendar-view" class="tab-content max-w-7xl mx-auto px-4 md:px-6 mt-4">
-            <!-- Calendar Header & Legend -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-3xl font-bold tracking-tight text-on-surface font-headline"
-                        id="calendar-month-year-text">March 2024</h2>
-                    <div class="flex gap-1 bg-white/50 p-1 rounded-full border border-on-surface/5">
-                        <button class="p-2 hover:bg-white rounded-full transition-colors text-on-surface-variant"
-                            id="calendar-prev-btn"><span class="material-symbols-outlined">chevron_left</span></button>
-                        <button class="p-2 hover:bg-white rounded-full transition-colors text-on-surface-variant"
-                            id="calendar-next-btn"><span class="material-symbols-outlined">chevron_right</span></button>
-                        <button id="calendar-refresh-btn"
-                            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; padding: 6px; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                            title="구글 캘린더 동기화 및 새로고침">🔄</button>
+        <div id="calendar-view" class="tab-content w-full max-w-[600px] mx-auto pt-6 px-margin-mobile relative hidden">
+            <!-- Calendar Header & Filters -->
+            <header class="flex flex-col gap-4 mb-6">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface" id="calendar-month-year-text">May 2026</h2>
+                    </div>
+                    <div class="flex gap-2 bg-surface-container/60 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
+                        <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary-container/20 transition-all" id="calendar-prev-btn">
+                            <span class="material-symbols-outlined text-primary">chevron_left</span>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary-container/20 transition-all" id="calendar-next-btn">
+                            <span class="material-symbols-outlined text-primary">chevron_right</span>
+                        </button>
+                        <button class="w-10 h-10 flex items-center justify-center bg-primary-container text-on-primary-container rounded-full shadow-sm transition-transform active:scale-90" id="calendar-refresh-btn">
+                            <span class="material-symbols-outlined">sync</span>
+                        </button>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-4 text-[13px] font-semibold">
-                    <div
-                        class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary/20 bg-primary/10 text-primary">
-                        <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-sm"></span> 개인 일정
-                    </div>
-                    <div
-                        class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-secondary/20 bg-secondary/10 text-secondary">
-                        <span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-sm"></span> 공유 일정 (👥)
-                    </div>
-                    <div
-                        class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-tertiary/20 bg-tertiary/10 text-tertiary">
-                        <span class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-sm"></span> 비서 분석 할 일 (📝)
-                    </div>
+                <!-- Legend Chips -->
+                <div class="flex flex-wrap gap-2">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-primary-container/30 border border-primary/20 rounded-full text-label-md font-label-md text-on-primary-container">
+                        <span class="w-2 h-2 rounded-full bg-primary"></span> 개인 일정
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-secondary-container/30 border border-secondary/20 rounded-full text-label-md font-label-md text-on-secondary-container">
+                        <span class="w-2 h-2 rounded-full bg-secondary"></span> 공유 일정 (👥)
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-tertiary-container/30 border border-tertiary/20 rounded-full text-label-md font-label-md text-on-tertiary-container">
+                        <span class="w-2 h-2 rounded-full bg-tertiary"></span> 비서 조언 (📝)
+                    </button>
                 </div>
-            </div>
-
-            <div id="calendar-container"
-                class="bg-surface paper-texture rounded-[2.5rem] overflow-hidden border border-on-surface/10 ghibli-shadow p-0">
-                <!-- Day Names -->
-                <div class="calendar-grid border-b border-on-surface/5 bg-surface-container-low/50">
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Sun</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Mon</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Tue</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Wed</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Thu</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Fri</div>
-                    <div
-                        class="py-5 text-center text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/70">
-                        Sat</div>
+            </header>
+            
+            <!-- Monthly Grid View -->
+            <section class="paper-texture rounded-xl shadow-lg overflow-hidden border border-surface-variant mb-32" id="calendar-container">
+                <div class="bg-surface-container-high/50 px-4 py-3 grid grid-cols-7 border-b border-outline-variant/30 text-center">
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Sun</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Mon</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Tue</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Wed</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Thu</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Fri</span>
+                    <span class="text-label-sm font-label-sm text-outline tracking-widest uppercase">Sat</span>
                 </div>
-                <!-- Calendar Days Grid -->
-                <div class="calendar-grid min-h-[600px]" id="calendar-days-grid"></div>
-            </div>
+                <div class="grid grid-cols-7 p-1 gap-[2px] min-h-[400px] bg-surface-variant/30" id="calendar-days-grid">
+                    <!-- Javascript populates cells here -->
+                </div>
+            </section>
         </div>
 
         <!-- [3] 채팅 뷰 -->
-        <div id="chat-view" class="tab-content">
-            <div class="chat-view-layout ghibli-theme">
-                <aside class="chat-sidebar">
-                    <!-- [NEW] 내 프로필 사진 변경 섹션 -->
-                    <div class="user-profile-section"
-                        style="padding: 22px 15px; border-bottom: 2.5px solid #5d574d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.015);">
-                        <div style="position: relative;">
-                            <img id="chat-my-avatar" src=""
-                                style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 2.5px solid #5d574d; cursor: pointer; box-shadow: 2px 2px 0px rgba(0,0,0,0.05); display: none;">
-                            <div id="chat-my-avatar-fallback"
-                                style="width: 75px; height: 75px; border-radius: 50%; background: #dfe4ea; display: flex; align-items: center; justify-content: center; font-size: 2.3rem; cursor: pointer; border: 2.5px solid #5d574d; box-shadow: 2px 2px 0px rgba(0,0,0,0.05);">
-                                👤</div>
-                            <input type="file" id="chat-avatar-upload-input" accept="image/*" style="display: none;">
+        <div id="chat-view" class="tab-content w-full h-full">
+            <div class="chat-view-layout ghibli-theme h-full relative overflow-hidden flex watercolor-bg">
+                <!-- Mobile Drawer for 1-Chon (Friend List) -->
+                <aside id="chat-sidebar-drawer" class="fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out w-80 bg-surface/95 backdrop-blur-xl border-r border-surface-variant shadow-xl flex flex-col py-6 px-4">
+                    <div class="flex items-center justify-between mb-6 border-b border-surface-variant pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <img id="chat-my-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-primary-fixed hidden shadow-sm">
+                                <div id="chat-my-avatar-fallback" class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center text-2xl border-2 border-primary-fixed shadow-sm cursor-pointer">👤</div>
+                                <input type="file" id="chat-avatar-upload-input" accept="image/*" class="hidden">
+                            </div>
+                            <button id="chat-change-photo-btn" class="text-xs font-label-sm text-outline hover:text-primary transition-colors">사진 변경</button>
                         </div>
-                        <button id="chat-change-photo-btn" class="btn-text"
-                            style="font-size: 0.8rem; color: #5d574d; font-weight: 700; background: none; border: none; cursor: pointer; padding: 2px 8px; transition: opacity 0.2s; font-family: inherit;">사진
-                            변경</button>
+                        <button onclick="document.getElementById('chat-sidebar-drawer').classList.add('-translate-x-full'); document.getElementById('chat-sidebar-overlay').classList.add('hidden');" class="text-outline hover:text-primary">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
                     </div>
 
-                    <div class="chat-sidebar-header">
-                        <h3 id="friend-list-title-text">👥 1촌</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 id="friend-list-title-text" class="font-headline-md text-headline-md text-primary">👥 1촌</h3>
                     </div>
-                    <div id="friend-status-list" class="friend-list-container no-scrollbar"></div>
-                    <div class="sidebar-footer">
-                        <button id="invite-friend-btn" class="btn-text-icon w-100">➕ 친구 초대하기</button>
+                    
+                    <div id="friend-status-list" class="flex-1 overflow-y-auto no-scrollbar space-y-2"></div>
+                    
+                    <div class="mt-4 pt-4 border-t border-surface-variant">
+                        <button id="invite-friend-btn" class="w-full bg-primary-container/30 text-on-primary-container py-3 rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-container/50 transition-colors">
+                            <span class="material-symbols-outlined text-sm">person_add</span> 친구 초대하기
+                        </button>
                     </div>
                 </aside>
-                <main class="chat-main chat-bg flex flex-col h-full relative overflow-hidden">
-                    <header class="chat-main-header">
-                        <button id="mobile-chat-drawer-toggle" class="mobile-drawer-toggle-btn">👥 1촌 목록</button>
-                        <h3 id="chat-room-title-text" class="italic font-bold">채팅방</h3>
-                        <div class="chat-header-actions">
-                            <button id="voice-call-btn" class="btn-icon-circle" title="음성 통화">📞</button>
-                            <button id="video-call-btn" class="btn-icon-circle" title="영상 통화">📹</button>
-                            <button id="chat-friend-settings-btn" class="btn-icon-circle" title="1촌 설정"
-                                style="display: none;">⚙️</button>
+
+                <!-- Overlay for drawer -->
+                <div id="chat-sidebar-overlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" onclick="document.getElementById('chat-sidebar-drawer').classList.add('-translate-x-full'); this.classList.add('hidden');"></div>
+
+                <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-background/50">
+                    <header class="bg-surface/80 backdrop-blur-xl border-b border-surface-variant/50 shadow-sm z-30 flex justify-between items-center px-4 w-full h-16 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <button id="mobile-chat-drawer-toggle" onclick="document.getElementById('chat-sidebar-drawer').classList.remove('-translate-x-full'); document.getElementById('chat-sidebar-overlay').classList.remove('hidden');" class="text-primary hover:bg-primary-container/20 p-2 rounded-full transition-colors flex items-center justify-center">
+                                <span class="material-symbols-outlined">menu</span>
+                            </button>
+                            <h3 id="chat-room-title-text" class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">채팅방</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="voice-call-btn" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors" title="음성 통화">
+                                <span class="material-symbols-outlined">call</span>
+                            </button>
+                            <button id="video-call-btn" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors" title="영상 통화">
+                                <span class="material-symbols-outlined">videocam</span>
+                            </button>
+                            <button id="chat-friend-settings-btn" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors" style="display: none;" title="1촌 설정">
+                                <span class="material-symbols-outlined">settings</span>
+                            </button>
                         </div>
                     </header>
 
                     <!-- [Ghibli Redesign] 1촌 감성 온도계 & 예보 배너 -->
-                    <section id="friend-emotion-banner"
-                        class="bg-surface/80 backdrop-blur-md p-4 flex items-center space-x-4 border-b border-[#e8e4d3] z-10 sticky top-0"
-                        style="display: none;">
-                        <div class="relative">
-                            <div class="banner-avatar text-2xl" id="friend-banner-avatar"
-                                style="font-size: 1.8rem; background: #fffef0; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #5d574d; box-shadow: 2px 2px 0px rgba(0,0,0,0.05);">
-                                😭</div>
-                            <div
-                                class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full">
-                            </div>
+                    <section id="friend-emotion-banner" class="bg-surface-container-low/90 backdrop-blur-md p-4 flex items-center gap-4 border-b border-surface-variant shadow-sm z-20 sticky top-0" style="display: none;">
+                        <div class="relative shrink-0">
+                            <div class="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center text-2xl border-2 border-outline shadow-sm" id="friend-banner-avatar">😭</div>
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
                         </div>
                         <div class="flex-1">
                             <div class="flex justify-between items-end mb-1">
-                                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wide"><span
-                                        id="friend-banner-name">상대방</span>님의 감성 기온</span>
-                                <span class="text-xs font-bold text-[#5d574d]" id="friend-banner-temp">18°C</span>
+                                <span class="text-label-sm font-label-sm text-outline uppercase"><span id="friend-banner-name">상대방</span>님의 감성 기온</span>
+                                <span class="text-label-sm font-bold text-primary" id="friend-banner-temp">18°C</span>
                             </div>
-                            <div class="hand-painted-gauge">
-                                <div class="gauge-needle" id="friend-banner-fill" style="left: 50%;"></div>
+                            <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full w-[50%] rounded-full shadow-[0_0_8px_rgba(74,101,78,0.5)] transition-all duration-500" id="friend-banner-fill"></div>
                             </div>
                         </div>
                         <p id="friend-banner-advice" class="hidden"></p>
                     </section>
 
                     <!-- [Ghibli Redesign] Spirit Whispers (AI Insight Box) -->
-                    <div id="ghibli-spirit-whispers" style="display: none;"
-                        class="mx-2 my-4 bg-white/60 border-2 border-dashed border-[#d4a373]/40 rounded-3xl p-5 flex items-center space-x-4 shadow-sm relative overflow-hidden dim-context">
-                        <div class="absolute -right-4 -top-4 w-24 h-24 opacity-10">
-                            <img alt="Decorative" class="w-full h-full object-contain" src="mascot.png" />
+                    <div id="ghibli-spirit-whispers" style="display: none;" class="mx-4 my-4 bg-surface-container-lowest/80 backdrop-blur-xl border border-tertiary-container/50 rounded-2xl p-4 flex items-start gap-4 shadow-sm relative overflow-hidden z-10">
+                        <div class="bg-tertiary-container/20 p-2 rounded-xl shrink-0">
+                            <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">psychology</span>
                         </div>
-                        <div class="relative z-10 w-16 h-16 shrink-0">
-                            <img alt="Cloud Spirit"
-                                class="w-full h-full object-cover rounded-full border-2 border-white shadow-md"
-                                src="mascot.png" />
+                        <div class="flex-1">
+                            <p class="text-[10px] font-label-sm text-tertiary uppercase tracking-wider mb-1">Spirit Whispers</p>
+                            <p id="spirit-whispers-text" class="text-body-md text-on-surface leading-snug font-medium">"Luna responds best to validation. Try sharing a specific small win from your day."</p>
                         </div>
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-1">Spirit
-                                Whispers</p>
-                            <p id="spirit-whispers-text"
-                                class="text-xs text-on-surface leading-snug italic font-medium">"Luna responds best to
-                                validation. Try sharing a specific small win from your day."</p>
-                        </div>
-                        <button onclick="document.getElementById('ghibli-spirit-whispers').style.display='none'"
-                            style="background: none; border: none; cursor: pointer; color: #7c7267; font-size: 1rem; padding: 2px; position: absolute; top: 10px; right: 10px;">✕</button>
+                        <button onclick="document.getElementById('ghibli-spirit-whispers').style.display='none'" class="text-outline-variant hover:text-outline absolute top-2 right-2 p-1">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
                     </div>
 
-                    <div id="chat-messages-tab"
-                        class="chat-scroll-area no-scrollbar flex-1 overflow-y-auto p-4 space-y-6"></div>
+                    <div id="chat-messages-tab" class="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-[200px]"></div>
 
                     <!-- [Ghibli Redesign] AI Assistant Floating Controls -->
-                    <div class="chat-ai-floating-controls px-4 py-4 flex space-x-4 justify-center z-20">
-                        <button id="ai-summon-btn"
-                            class="bg-[#7a9e7e] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-lg hover:opacity-95 transition-all flex items-center space-x-2 active:scale-95 ghibli-border floating-assistant">
-                            <div class="w-6 h-6 rounded-full overflow-hidden bg-white/20">
-                                <img alt="icon" class="w-full h-full object-cover" src="mascot.png" />
-                            </div>
+                    <div class="absolute bottom-[140px] left-0 right-0 px-4 flex justify-center gap-2 z-20 pointer-events-none">
+                        <button id="ai-summon-btn" class="pointer-events-auto bg-primary text-on-primary px-5 py-2.5 rounded-full text-label-md font-label-md shadow-lg hover:opacity-95 transition-all flex items-center gap-2 active:scale-95">
+                            <span class="material-symbols-outlined text-sm">robot_2</span>
                             <span>Summon Spirit</span>
                         </button>
-                        <button id="ai-secret-btn"
-                            class="bg-white text-secondary px-5 py-2.5 rounded-full text-xs font-bold shadow-md hover:bg-surface-container-low transition-all flex items-center space-x-2 active:scale-95 border border-secondary/30">
+                        <button id="ai-secret-btn" class="pointer-events-auto bg-surface-container-lowest text-secondary px-5 py-2.5 rounded-full text-label-md font-label-md shadow-md border border-surface-variant hover:bg-surface-variant transition-all flex items-center gap-2 active:scale-95">
                             <span class="material-symbols-outlined text-sm">auto_awesome</span>
                             <span>Guidance</span>
                         </button>
                     </div>
 
-                    <!-- Footer Input Wrapper (Deep Reflection Mode) -->
-                    <footer
-                        class="p-4 bg-surface-container-low/90 backdrop-blur-xl border-t border-[#e8e4d3] transition-all duration-500">
-                        <div
-                            class="max-w-4xl mx-auto flex flex-col space-y-4 bg-white/90 rounded-2xl p-5 shadow-lg border-2 border-primary/20">
-                            <div class="flex items-center justify-between border-b border-[#e8e4d3] pb-2 mb-2">
-                                <span class="text-xs font-bold text-primary uppercase">Deep Reflection Mode</span>
-                                <div class="flex items-center space-x-3">
-                                    <button class="material-symbols-outlined text-on-surface-variant text-sm"
-                                        id="chat-attach-btn">image</button>
-                                    <input type="file" id="chat-image-attach-input" accept="image/*"
-                                        style="display: none;">
+                    <!-- Footer Input Wrapper -->
+                    <footer class="absolute bottom-0 left-0 right-0 p-4 bg-surface/90 backdrop-blur-xl border-t border-surface-variant/50 shadow-[0_-4px_24px_rgba(0,0,0,0.05)] z-30 pb-safe">
+                        <div class="max-w-4xl mx-auto flex flex-col gap-2 bg-surface-container-lowest rounded-2xl p-3 shadow-inner border border-surface-variant">
+                            <div class="flex items-center justify-between border-b border-surface-variant pb-2 px-1">
+                                <span class="text-[10px] font-label-sm text-primary uppercase tracking-wider">Deep Reflection Mode</span>
+                                <div class="flex items-center gap-2">
+                                    <button class="material-symbols-outlined text-outline hover:text-primary transition-colors text-sm" id="chat-attach-btn">image</button>
+                                    <input type="file" id="chat-image-attach-input" accept="image/*" style="display: none;">
                                 </div>
                             </div>
-                            <textarea id="chat-input-tab"
-                                class="w-full bg-transparent border-none focus:ring-0 text-lg py-1 placeholder:italic min-h-[100px] resize-none"
-                                placeholder="Share your thoughts deeply with your companion..."></textarea>
-                            <div class="flex items-center justify-between mt-2">
-                                <div class="flex items-center space-x-3">
-                                    <button
-                                        class="material-symbols-outlined text-on-surface-variant">sentiment_satisfied</button>
-                                </div>
-                                <button id="send-chat-btn-tab"
-                                    class="bg-primary text-white px-6 py-2 rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-transform ghibli-border font-bold">
+                            <textarea id="chat-input-tab" class="w-full bg-transparent border-none focus:ring-0 text-body-md py-2 placeholder:text-outline-variant min-h-[60px] resize-none" placeholder="Share your thoughts deeply with your companion..."></textarea>
+                            <div class="flex items-center justify-between px-1">
+                                <button class="material-symbols-outlined text-outline hover:text-primary transition-colors">sentiment_satisfied</button>
+                                <button id="send-chat-btn-tab" class="bg-primary text-on-primary px-5 py-2 rounded-full font-label-md text-label-md flex items-center justify-center shadow-md active:scale-95 transition-transform">
                                     <span class="mr-2">Send Note</span>
                                     <span class="material-symbols-outlined text-sm">send</span>
                                 </button>
@@ -616,191 +589,230 @@
         </div>
 
         <!-- [4] 설정 & 아틀리에 뷰 -->
-        <div id="persona-view" class="tab-content">
-            <div class="settings-container">
-                <div class="settings-header-premium">
-                    <h3>⚙️ 설정 & 아틀리에</h3>
-                    <button id="save-persona-btn" class="btn-premium-save">저장 및 적용</button>
-                </div>
-
-                <div class="persona-layout">
-                    <div class="persona-avatar-section card">
-                        <div class="avatar-preview-box" id="ai-avatar-preview"></div>
-                        <div id="avatar-options-grid" class="avatar-options-grid hidden"></div>
-                        <button id="generate-avatar-btn" class="btn-text-icon">🎨 AI 얼굴 생성</button>
-                        <button id="upload-avatar-btn" class="btn-text-icon">📁 사진 업로드</button>
-                        <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
-                        <div class="voice-selection mt-20">
-                            <label>📢 목소리</label>
-                            <select id="ai-voice-select" class="select-premium"></select>
-                            <button id="test-voice-btn" class="btn-text sm">미리듣기</button>
+        <div id="persona-view" class="tab-content hidden h-full overflow-y-auto pb-safe">
+            <main class="pt-24 pb-32 px-container-padding max-w-[600px] mx-auto space-y-stack-md" id="settings-container">
+                
+                <!-- Profile & Save Section -->
+                <section class="relative overflow-hidden p-6 bg-surface-container rounded-xl shadow-[0_4px_15px_rgba(74,69,62,0.05)] border border-white/50" id="profile-edit-section">
+                    <div class="paper-texture absolute inset-0 pointer-events-none"></div>
+                    <div class="relative z-10 flex justify-between items-start mb-6">
+                        <div class="space-y-1">
+                            <h2 class="flex items-center gap-2 text-headline-md font-headline-md text-on-surface">
+                                <span class="material-symbols-outlined text-secondary">account_circle</span>
+                                설정 & 아틀리에
+                            </h2>
+                            <p class="text-label-md font-label-md text-on-surface-variant" id="user-email-display">user@example.com</p>
                         </div>
+                        <button id="save-persona-btn" class="px-6 py-3 bg-primary hover:bg-primary/90 text-on-primary font-label-md rounded-xl shadow-md transform active:scale-95 transition-all">
+                            저장 및 적용
+                        </button>
                     </div>
+                    
+                    <div class="relative w-32 h-32 mx-auto mb-6 group">
+                        <div id="ai-avatar-preview" class="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg bg-surface-variant flex items-center justify-center">
+                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwp1dem9VD3TRxofpVb2TDh1z9-oGfzI-LbilqDTzMeule7zHhtmfHh4Ec0kbJrZHaZLzuyw8olNNFq59xjIU4nBfkA-BHrQ1AqVHzv1iL8dOC0wyjzlHs957iT5Va78MbrdxhJ_x8fAmvXUCjG722uyWmLO2r6X5QEGD4MXCF5VWAXqB-RPKhL-krPDkyv6COJ8oAxGcAPEgKJyXWDfcCgup8aUVJlCHhjqQrgItJH39WgjxcXnuBiupLH-DTrk3CYb57rAqNmLzx" alt="AI Avatar">
+                        </div>
+                        <div id="upload-avatar-btn" class="absolute bottom-0 right-0 w-10 h-10 bg-surface rounded-full shadow-md flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-primary text-body-md">photo_camera</span>
+                        </div>
+                        <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <button id="generate-avatar-btn" class="text-label-sm text-primary hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">palette</span> AI 얼굴 재생성
+                        </button>
+                    </div>
+                </section>
 
-                    <div class="persona-config-section card">
-                        <div class="config-grid">
-                            <div class="config-item"><label>이름</label><input type="text" id="ai-name"
-                                    class="input-premium" placeholder="비서의 이름을 정해주세요"></div>
-                            <div class="config-item">
-                                <label>성별</label>
-                                <div class="radio-group">
-                                    <input type="radio" name="gender" value="여성" id="g-female" checked><label
-                                        for="g-female">여성</label>
-                                    <input type="radio" name="gender" value="남성" id="g-male"><label
-                                        for="g-male">남성</label>
+                <!-- AI Persona Config Section -->
+                <section class="p-6 bg-surface-container-low rounded-xl shadow-sm border border-white/40 space-y-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="flex items-center gap-2 text-label-md font-label-md text-on-surface">
+                            <span class="material-symbols-outlined text-primary">face</span>
+                            AI 프로필 설정
+                        </h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-label-sm font-label-sm text-on-surface-variant">비서 이름</label>
+                            <input type="text" id="ai-name" class="w-full p-3 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-primary focus:border-primary" placeholder="비서의 이름을 정해주세요">
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <div class="flex-1 flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface-variant">성별</label>
+                                <div class="flex gap-2 h-full">
+                                    <label class="flex-1 flex items-center justify-center gap-2 p-2 bg-surface border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-variant/50 transition-colors">
+                                        <input type="radio" name="gender" value="여성" id="g-female" checked class="hidden peer">
+                                        <span class="peer-checked:text-primary peer-checked:font-bold text-label-sm text-on-surface-variant">여성</span>
+                                    </label>
+                                    <label class="flex-1 flex items-center justify-center gap-2 p-2 bg-surface border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-variant/50 transition-colors">
+                                        <input type="radio" name="gender" value="남성" id="g-male" class="hidden peer">
+                                        <span class="peer-checked:text-primary peer-checked:font-bold text-label-sm text-on-surface-variant">남성</span>
+                                    </label>
                                 </div>
                             </div>
-                            <div class="config-item"><label>연령대</label><select id="ai-age" class="select-premium">
+                            <div class="flex-1 flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface-variant">연령대</label>
+                                <select id="ai-age" class="w-full p-2 h-full bg-surface border border-outline-variant rounded-lg text-label-sm focus:ring-primary focus:border-primary">
                                     <option value="20대">20대</option>
                                     <option value="30대">30대</option>
-                                </select></div>
-                            <div class="config-item"><label>관계</label><select id="ai-relationship"
-                                    class="select-premium">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-1 flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface-variant">관계</label>
+                                <select id="ai-relationship" class="w-full p-2 h-full bg-surface border border-outline-variant rounded-lg text-label-sm focus:ring-primary focus:border-primary">
                                     <option value="수석비서">수석비서</option>
                                     <option value="친구">친구</option>
                                     <option value="남자친구">남자친구</option>
                                     <option value="여자친구">여자친구</option>
                                     <option value="연인">연인</option>
-                                </select></div>
-                            <div class="config-item full"><label>성격</label><textarea id="ai-personality"
-                                    class="textarea-premium"></textarea></div>
+                                </select>
+                            </div>
+                            <div class="flex-1 flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface-variant">목소리</label>
+                                <div class="flex gap-2 h-full">
+                                    <select id="ai-voice-select" class="w-full p-2 bg-surface border border-outline-variant rounded-lg text-label-sm focus:ring-primary focus:border-primary"></select>
+                                    <button id="test-voice-btn" class="p-2 flex items-center justify-center bg-primary-container text-on-primary-container rounded-lg shadow-sm hover:opacity-90">
+                                        <span class="material-symbols-outlined" style="font-size: 18px;">volume_up</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label class="text-label-sm font-label-sm text-on-surface-variant">성격</label>
+                            <textarea id="ai-personality" rows="3" class="w-full p-3 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-primary focus:border-primary" placeholder="예: 다정하고 따뜻한 어조로 말해줘."></textarea>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- [NEW] AI 인격 학습 센터 (Experimental) -->
-                <div class="persona-learning-center card mt-20"
-                    style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 1px dashed var(--accent-color);">
-                    <div class="learning-header"
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h4 style="margin: 0; color: var(--accent-color); font-size: 1.1rem;">🧬 AI 인격 학습 센터 <span
-                                class="badge"
-                                style="font-size: 0.7rem; background: var(--accent-color); color: white; padding: 2px 8px; border-radius: 10px; margin-left: 5px;">Beta</span>
-                        </h4>
-                        <p style="font-size: 0.8rem; color: #666; margin: 0;">영상 속 인물의 말투와 행동, 목소리를 학습합니다.</p>
+                <!-- AI 인격 학습 센터 -->
+                <section class="p-6 bg-surface-container-low rounded-xl shadow-sm border border-white/40 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="flex items-center gap-2 text-label-md font-label-md text-on-surface">
+                            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">genetics</span>
+                            AI 인격 학습 센터
+                        </h3>
+                        <span class="px-3 py-1 bg-primary-container/40 text-on-primary-container text-label-sm font-label-sm rounded-full">Beta</span>
                     </div>
-                    <div class="learning-body" style="display: flex; gap: 20px; align-items: center;">
-                        <div id="video-dropzone" class="video-dropzone"
-                            style="flex: 1; height: 120px; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s;">
-                            <span style="font-size: 2rem;">📹</span>
-                            <span id="dropzone-text" style="font-size: 0.9rem; color: #888;">여기에 학습할 영상을 드래그하거나
-                                클릭하세요</span>
+                    
+                    <p class="text-label-sm text-on-surface-variant">영상 속 인물의 말투와 행동, 목소리를 학습합니다.</p>
+
+                    <div class="flex flex-col gap-4">
+                        <div id="video-dropzone" class="w-full h-32 border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-surface-variant/30 transition-colors">
+                            <span class="material-symbols-outlined text-[32px] text-outline mb-2">videocam</span>
+                            <span id="dropzone-text" class="text-label-sm text-on-surface-variant text-center px-4">여기에 학습할 영상을 드래그하거나<br>클릭하세요</span>
                             <input type="file" id="learning-video-input" accept="video/*" style="display: none;">
                         </div>
-                        <div class="learning-actions"
-                            style="width: 200px; display: flex; flex-direction: column; gap: 10px;">
-                            <button id="start-learning-btn" class="btn primary w-100" disabled>🚀 학습 시작</button>
-                            <div id="learning-status" class="hidden"
-                                style="font-size: 0.8rem; color: var(--accent-color); text-align: center;">
-                                <div class="loading sm"></div> <span id="status-text">분석 중...</span>
+                        
+                        <div class="flex flex-col gap-2">
+                            <button id="start-learning-btn" class="w-full py-3 bg-primary text-on-primary font-label-md rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                🚀 학습 시작
+                            </button>
+                            <div id="learning-status" class="hidden text-center text-label-sm text-primary flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined animate-spin" style="font-size: 16px;">progress_activity</span>
+                                <span id="status-text">분석 중...</span>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- [NEW] 알람 및 푸시 주기 설정 -->
-                <div class="settings-section card mt-20"
-                    style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                        <span style="font-size: 1.3rem;">🔔</span>
-                        <h4 style="margin: 0; color: #2d3436; font-size: 1.1rem; font-weight: 700;">알람 및 알림 주기 설정</h4>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <p style="font-size: 0.85rem; color: #636e72; margin: 0;">감성 분석 브리핑 발송 알림 및 캘린더 일정 푸시 발송 주기를
-                            제어합니다.</p>
-                        <div class="checkbox-group" style="display: flex; gap: 20px; padding: 10px 0;">
-                            <label class="checkbox-item"
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #2d3436;">
-                                <input type="checkbox" id="alarm-60"
-                                    style="width: 18px; height: 18px; accent-color: var(--accent-color);"> 1시간 전
-                            </label>
-                            <label class="checkbox-item"
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #2d3436;">
-                                <input type="checkbox" id="alarm-30" checked
-                                    style="width: 18px; height: 18px; accent-color: var(--accent-color);"> 30분 전
-                            </label>
-                            <label class="checkbox-item"
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #2d3436;">
-                                <input type="checkbox" id="alarm-10" checked
-                                    style="width: 18px; height: 18px; accent-color: var(--accent-color);"> 10분 전
-                            </label>
+                <!-- Notification & Daily Briefing -->
+                <section class="p-6 bg-surface-container-high rounded-xl space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-error">alarm</span>
+                            <h3 class="text-label-md font-label-md text-on-surface">데일리 브리핑 및 캘린더 알림</h3>
                         </div>
+                        <p class="text-label-sm text-on-surface-variant">브리핑 예약 발송 및 기기 위치 기반 기상 예보 설정</p>
 
-                        <!-- [NEW] 데일리 브리핑 예약 발송 및 기기 위치 기반 기상 예보 설정 -->
-                        <div
-                            style="display: flex; gap: 20px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 20px; margin-top: 5px; margin-bottom: 5px;">
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                                <label
-                                    style="font-size: 0.9rem; font-weight: 700; color: #2d3436; display: flex; align-items: center; gap: 5px;">
-                                    ⏰ 데일리 브리핑 발송 시간
+                        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/30 pt-4">
+                            <div class="flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface flex items-center gap-1">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">schedule</span> 발송 시간
                                 </label>
-                                <input type="time" id="briefing-time-input"
-                                    style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.12); font-size: 0.95rem; background: white; cursor: pointer; transition: all 0.2s; box-sizing: border-box;">
+                                <input type="time" id="briefing-time-input" class="w-full p-3 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-primary focus:border-primary cursor-pointer">
                             </div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                                <label
-                                    style="font-size: 0.9rem; font-weight: 700; color: #2d3436; display: flex; align-items: center; gap: 5px;">
-                                    📍 실시간 기상 예보 안내
+                            <div class="flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface flex items-center gap-1">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">location_on</span> 기상 예보 안내
                                 </label>
-                                <div style="display: flex; gap: 20px; padding: 10px 0; box-sizing: border-box;">
-                                    <label
-                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #2d3436;">
-                                        <input type="radio" name="weather-option" id="weather-on" checked
-                                            style="width: 18px; height: 18px; accent-color: var(--accent-color);"> 안내받기
-                                        (GPS 기반)
+                                <div class="flex gap-2 h-full">
+                                    <label class="flex-1 flex items-center justify-center p-2 bg-surface border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-variant/50 transition-colors">
+                                        <input type="radio" name="weather-option" id="weather-on" checked class="hidden peer">
+                                        <span class="peer-checked:text-primary peer-checked:font-bold text-label-sm text-on-surface-variant">사용</span>
                                     </label>
-                                    <label
-                                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #2d3436;">
-                                        <input type="radio" name="weather-option" id="weather-off"
-                                            style="width: 18px; height: 18px; accent-color: var(--accent-color);"> 끄기
+                                    <label class="flex-1 flex items-center justify-center p-2 bg-surface border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-variant/50 transition-colors">
+                                        <input type="radio" name="weather-option" id="weather-off" class="hidden peer">
+                                        <span class="peer-checked:text-primary peer-checked:font-bold text-label-sm text-on-surface-variant">끄기</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        <button id="save-settings-btn" class="btn primary"
-                            style="align-self: flex-start; padding: 10px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">설정
-                            저장</button>
-                    </div>
-                </div>
-
-                <!-- [NEW] 안심 케어 모드 연동 설정 -->
-                <div class="settings-section card mt-20"
-                    style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                        <span style="font-size: 1.3rem;">🏡</span>
-                        <h4 style="margin: 0; color: #2d3436; font-size: 1.1rem; font-weight: 700;">안심 케어 모드 연동 설정</h4>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <p style="font-size: 0.85rem; color: #636e72; margin: 0;">음성 대화 기반 돌봄 및 복약 안내 기능이 제공되는
-                            <strong>케어 모드</strong> 연동을 설정합니다. 나를 돌봐줄 수 있는 보호자(1촌)를 선택하세요.</p>
-
-                        <div style="display: flex; gap: 20px; padding-top: 5px; margin-bottom: 5px;">
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                                <label
-                                    style="font-size: 0.9rem; font-weight: 700; color: #2d3436; display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0;">
-                                    <input type="checkbox" id="care-mode-active"
-                                        style="width: 18px; height: 18px; accent-color: var(--accent-color);">
-                                    케어 모드 사용하기 (음성 대화 및 돌봄 지원)
-                                </label>
+                        <div class="pt-4 space-y-3 border-t border-outline-variant/30">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="alarm-60" class="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant">
+                                <label class="text-body-md text-on-surface-variant" for="alarm-60">1시간 전 알림</label>
                             </div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                                <label style="font-size: 0.9rem; font-weight: 700; color: #2d3436;">
-                                    👤 나를 돌봐줄 보호자(1촌) 지정
-                                </label>
-                                <select id="care-guardian-select"
-                                    style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.12); font-size: 0.95rem; background: white; cursor: pointer; outline: none;">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="alarm-30" checked class="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant">
+                                <label class="text-body-md text-on-surface-variant" for="alarm-30">30분 전 알림</label>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="alarm-10" checked class="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant">
+                                <label class="text-body-md text-on-surface-variant" for="alarm-10">10분 전 알림</label>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex justify-end border-t border-outline-variant/30">
+                            <button id="save-settings-btn" class="px-6 py-2 bg-surface text-primary border border-primary rounded-xl font-label-md hover:bg-primary-container/20 transition-colors">
+                                알림 설정 저장
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 안심 케어 모드 연동 설정 -->
+                <section class="p-6 bg-surface-container-high rounded-xl space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary">home_health</span>
+                            <h3 class="text-label-md font-label-md text-on-surface">안심 케어 모드 연동 설정</h3>
+                        </div>
+                        <p class="text-label-sm text-on-surface-variant">음성 대화 기반 돌봄 및 복약 안내 기능이 제공되는 케어 모드 연동을 설정합니다.</p>
+
+                        <div class="flex flex-col gap-4 border-t border-outline-variant/30 pt-4">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="care-mode-active" class="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant">
+                                <span class="text-body-md text-on-surface-variant font-bold text-primary">케어 모드 사용 (음성 대화 및 돌봄 지원)</span>
+                            </label>
+
+                            <div class="flex flex-col gap-2">
+                                <label class="text-label-sm font-label-sm text-on-surface">👤 나를 돌봐줄 보호자(1촌) 지정</label>
+                                <select id="care-guardian-select" class="w-full p-3 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-primary focus:border-primary cursor-pointer">
                                     <option value="">보호자를 지정하지 않음 (1촌 목록 불러오는 중...)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <button id="save-care-settings-btn" class="btn primary"
-                            style="align-self: flex-start; padding: 10px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); border: none;">케어
-                            설정 저장</button>
+                        <div class="pt-4 flex justify-end border-t border-outline-variant/30">
+                            <button id="save-care-settings-btn" class="px-6 py-2 bg-primary text-on-primary rounded-xl font-label-md shadow-md hover:bg-primary/90 transition-colors">
+                                케어 설정 저장
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </section>
+
+                <button id="logout-btn" class="w-full py-4 mt-8 bg-surface-container-highest border border-error/20 text-error font-label-md rounded-xl hover:bg-error-container/20 transition-colors shadow-sm">
+                    로그아웃
+                </button>
+            </main>
         </div>
 
         <footer>
