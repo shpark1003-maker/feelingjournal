@@ -7,7 +7,7 @@
     <title>AI 일기 (Beta) - 당신의 하루를 기록하세요</title>
     <meta name="description" content="AI가 분석하는 일기장입니다. 당신의 하루를 기록하고 조언을 받아보세요.">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css?v=5.0.9">
+    <link rel="stylesheet" href="style.css?v=5.1.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -253,6 +253,17 @@
         <div id="journal-view" class="tab-content active w-full max-w-[700px] mx-auto relative">
             <!-- Journal View (Home List) -->
             <div class="px-margin-mobile pt-6 pb-28 block" id="journal-home-view">
+                
+                <!-- 🌟 데일리 브리핑 (Daily Briefing) 🌟 -->
+                <div id="briefing-card" class="hidden mb-8 p-5 bg-surface-container-high rounded-2xl border border-primary/20 shadow-sm relative overflow-hidden">
+                    <div class="absolute -top-4 -right-4 text-[80px] opacity-5 pointer-events-none">✨</div>
+                    <div class="flex items-center gap-2 text-primary font-bold mb-3">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">info</span>
+                        <span id="briefing-title-text" class="text-label-md font-label-md">나의 비서 브리핑</span>
+                    </div>
+                    <div id="briefing-content" class="text-body-sm text-on-surface-variant leading-relaxed"></div>
+                </div>
+
                 <!-- Notebook List / Horizontal Filter -->
                 <div class="flex justify-between items-center mb-4 px-2">
                     <input type="text" id="sidebar-notebook-title" placeholder="필기장 제목" class="bg-transparent border-none font-bold outline-none text-primary text-lg" style="width: 200px;">
@@ -297,13 +308,6 @@
                     </button>
                     <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">새 일기 쓰기</span>
                     <div class="w-10"></div>
-                </div>
-
-                <div id="briefing-card" class="hidden bg-surface-container-low p-4 rounded-xl mb-4 shadow-soft">
-                    <div class="flex items-center gap-2 text-tertiary font-bold mb-2">
-                        <span>✨</span> <span id="briefing-title-text">나의 비서 브리핑</span>
-                    </div>
-                    <div id="briefing-content" class="text-sm text-on-surface-variant"></div>
                 </div>
 
                 <section class="space-y-4" id="editor-section">
@@ -1206,7 +1210,7 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script type="module" src="app.js?v=5.0.9"></script>
+    <script type="module" src="app.js?v=5.1.0"></script>
 </body>
 
 </html>
