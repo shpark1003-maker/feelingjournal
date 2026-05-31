@@ -1,10 +1,10 @@
-import { store, API_URL } from './modules/state.js?v=5.1.2';
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.2';
-import { setupEditor } from './modules/editor.js?v=5.1.2';
-import { loadCalendar } from './modules/calendar.js?v=5.1.2';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.2';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.2';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.2';
+import { store, API_URL } from './modules/state.js?v=5.1.3';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.3';
+import { setupEditor } from './modules/editor.js?v=5.1.3';
+import { loadCalendar } from './modules/calendar.js?v=5.1.3';
+import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.3';
+import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.3';
+import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.3';
 
 console.log('App.js is loading as a modern ES Module...');
 
@@ -220,11 +220,16 @@ function setupAuth() {
     });
 }
 
+let isAppInitialized = false;
+
 async function onUserAuthenticated(session) {
     store.currentUser = session.user;
     document.body.classList.remove('auth-mode');
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('journal-app').style.display = 'block';
+
+    if (isAppInitialized) return;
+    isAppInitialized = true;
 
     const emailEl = document.getElementById('user-email');
     if (emailEl) emailEl.innerText = session.user.email;
@@ -317,6 +322,7 @@ async function sendPresenceHeartbeat() {
 }
 
 function showAuthUI() {
+    isAppInitialized = false;
     document.body.classList.add('auth-mode');
     document.getElementById('auth-container').style.display = 'flex';
     document.getElementById('journal-app').style.display = 'none';
@@ -373,7 +379,7 @@ function setupTabs() {
                 if (tabId === 'calendar') loadCalendar();
                 else if (tabId === 'chat') {
                     // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.1.2').then(chatMod => {
+                    import('./modules/chat.js?v=5.1.3').then(chatMod => {
                         chatMod.initializeChat();
                     });
                 }

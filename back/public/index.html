@@ -416,7 +416,7 @@
         </div>
 
         <!-- [2] 캘린더 뷰 -->
-        <div id="calendar-view" class="tab-content w-full max-w-[600px] mx-auto pt-6 px-margin-mobile relative hidden">
+        <div id="calendar-view" class="tab-content w-full max-w-[600px] mx-auto pt-6 px-margin-mobile relative">
             <!-- Calendar Header & Filters -->
             <header class="flex flex-col gap-4 mb-6">
                 <div class="flex justify-between items-end">
@@ -593,7 +593,7 @@
         </div>
 
         <!-- [4] 설정 & 아틀리에 뷰 -->
-        <div id="persona-view" class="tab-content hidden h-full overflow-y-auto pb-safe">
+        <div id="persona-view" class="tab-content h-full overflow-y-auto pb-safe">
             <main class="pt-24 pb-32 px-container-padding max-w-[600px] mx-auto space-y-stack-md" id="settings-container">
                 
                 <!-- Profile & Save Section -->
@@ -1210,7 +1210,8 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script type="module" src="app.js?v=5.1.2"></script>
+    <!-- Main App Module (Cache Busting v5.1.3) -->
+    <script type="module" src="app.js?v=5.1.3"></script>
 </body>
 
 </html>
