@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js';
+import { store, API_URL } from './state.js?v=5.1.2';
 
 let localStream = null;
 let isCallActive = false;
