@@ -109,9 +109,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check for invite code in query parameters and store it immediately
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for auth error in query parameters
+    const errorMsgQuery = urlParams.get('error_description') || urlParams.get('error');
+    if (errorMsgQuery) {
+        alert('로그인 실패: ' + decodeURIComponent(errorMsgQuery.replace(/\+/g, ' ')));
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
+    // Check for auth error in URL hash
+    if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const errorMsgHash = hashParams.get('error_description') || hashParams.get('error');
+        if (errorMsgHash) {
+            alert('로그인 실패: ' + decodeURIComponent(errorMsgHash.replace(/\+/g, ' ')));
+            const newUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    }
+
     const inviteCode = urlParams.get('invite_code');
     if (inviteCode) {
-        localStorage.setItem('pending_invite_code', inviteCode);
+        try {
+            localStorage.setItem('pending_invite_code', inviteCode);
+        } catch (storageErr) {
+            console.warn('Failed to save pending invite code:', storageErr);
+        }
         // Clear the query parameter from URL to keep it clean
         const newUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
@@ -242,9 +266,13 @@ async function onUserAuthenticated(session) {
     if (emailEl) emailEl.innerText = session.user.email;
 
     if (session.provider_token) {
-        localStorage.setItem('google_provider_token', session.provider_token);
-        if (session.provider_refresh_token) {
-            localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
+        try {
+            localStorage.setItem('google_provider_token', session.provider_token);
+            if (session.provider_refresh_token) {
+                localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
+            }
+        } catch (storageErr) {
+            console.warn('Failed to save google provider tokens to localStorage:', storageErr);
         }
 
         const headers = {
