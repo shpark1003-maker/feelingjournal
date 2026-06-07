@@ -5,7 +5,7 @@ const {
     callGemini, 
     scanRedisKeys,
     getLiveWeather,
-    getEconomicHeadlines,
+    getNewsHeadlines,
     supabaseAdmin,
     decrypt,
     getGoogleAccessToken
@@ -30,6 +30,7 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
 
     // 사용자 예보 지역 설정 조회
     let region = '서울';
+    let newsCategories = ['business'];
     if (regionOverride) {
         region = regionOverride;
     } else {
@@ -37,21 +38,24 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
             const client = supabaseAdmin || supabase;
             const { data: profile } = await client
                 .from('profiles')
-                .select('weather_region')
+                .select('weather_region, news_categories')
                 .eq('id', userId)
                 .maybeSingle();
             
             if (profile?.weather_region) {
                 region = profile.weather_region;
             }
+            if (profile?.news_categories && profile.news_categories.length > 0) {
+                newsCategories = profile.news_categories;
+            }
         } catch (e) {
-            console.error('Briefing profile fetch failed, fallback to Seoul:', e.message);
+            console.error('Briefing profile fetch failed, fallback to defaults:', e.message);
         }
     }
 
-    // 실시간 날씨 및 경제 헤드라인 크롤링 (병렬 비동기 수행으로 응답 최적화)
+    // 실시간 날씨 및 경제/선택분야 헤드라인 크롤링 (병렬 비동기 수행으로 응답 최적화)
     let weatherStr = '날씨 정보 조회 불가';
-    let newsStr = '경제 헤드라인 정보 없음';
+    let newsStr = '주요 뉴스 헤드라인 정보 없음';
 
     const weatherPromise = region === 'off'
         ? Promise.resolve(null)
@@ -59,7 +63,7 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
 
     const [weatherRes, newsRes] = await Promise.allSettled([
         weatherPromise,
-        getEconomicHeadlines()
+        getNewsHeadlines(newsCategories)
     ]);
 
     if (region === 'off') {
@@ -240,17 +244,17 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
 3. 최근 생각(Diary) (작성일 포함): 
 ${recentDiaries}
 4. 실시간 기상 예보: ${weatherStr}
-5. 전날 주요 경제 헤드라인 뉴스: 
+5. 당일 주요 관심분야 뉴스: 
 ${newsStr}
 6. 연계된 과거의 기억(Reminiscence): 
 ${reminiscenceMemory}
 
 [수행 지시]
-1. **내일 일정 최우선**: 구글 일정 중 '내일' 예정된 일정을 가장 먼저 언급하며 준비 사항을 비서의 어조로 따뜻하게 조언하라.
+1. **당일 및 내일 일정 완벽 브리핑**: 구글 일정 중 '오늘(당일)' 예정된 일정을 시작으로 '내일'의 주요 일정까지 순차적으로 꼼꼼하게 모두 챙겨서 언급하라. 오늘 일정이 끝났더라도 남은 내일 일정을 알려주며, 성공적인 하루를 위한 준비 사항을 비서의 어조로 따뜻하게 조언하라.
 2. **실시간 날씨 에스코트**: 실시간 기상 예보가 '날씨 안내 비활성화됨'인 경우에는 일절 날씨나 온도, 옷차림에 관련된 코멘트를 브리핑 전체에서 절대 언급하지 말고 완전히 생략하십시오. 그렇지 않고 기상 예보가 주어졌다면 오늘 외출 시 필요한 옷차림 조언이나 소지품 챙기기(예: 강수 확률에 따른 우산 소지, 환절기 겉옷 챙기기 등) 등의 섬세한 에스코트 조언을 어조에 녹여내십시오.
-3. **경제 헤드라인 1줄 요약**: 전날 경제 헤드라인 리스트를 한눈에 훑어보고, 가장 중요하거나 상징적인 시사적 흐름을 비서의 안목으로 간략히 1줄 요약하여 생활 밀착형 인사이트로 알려주십시오.
+3. **당일 뉴스 짧은 브리핑**: 오늘(당일) 수집된 사용자의 관심 분야 주요 헤드라인 리스트를 바탕으로 가장 중요하거나 상징적인 시사적 흐름을 짧고 간결하게 브리핑하여 생활 밀착형 인사이트를 제공하십시오.
 4. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 예를 들어, [일기 작성일: 2026-05-18]인 일기에 '내일 마트 가야지'라고 써있다면, 마트 가는 날은 2026-05-19(오늘)입니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일(2026-05-20)로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
-5. **오늘 일정 생략**: 오늘 이미 알고 있는 일정 리스트를 나열하지 마라. 대신 일기 내용 중 오늘 꼭 챙겨야 할 '태도'나 '감정' 한 가지만 언급하라.
+5. **(통합됨)**: 1번 지시사항에 통합됨.
 6. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 "그때의 기쁨/보람을 떠올리며 힘을 내보세요" 또는 "과거의 소중한 기억이 이번 활동에도 좋은 영감이 되길 바랍니다"라는 뉘앙스로 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
 7. 전체 브리핑은 5~6문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하라.
 8. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.

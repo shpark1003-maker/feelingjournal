@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL } from './state.js?v=5.2.0';
 
 let localStream = null;
 let isCallActive = false;
@@ -103,18 +103,18 @@ export function appendMessage(msg) {
     if (isMe) {
         // Alternating background colors for user messages matching the prototype design
         const isAlternate = msg.content && msg.content.length % 2 === 0;
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: 0.92rem; max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
     } else {
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: 0.92rem; max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
     }
 
     div.innerHTML = `
         <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%; ${isMe ? 'flex-direction: row-reverse;' : ''}">
             ${avatarHtml}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
-                <span class="message-sender" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
+                <span class="message-sender" style="font-size: clamp(10px, 2vw + 6px, 13px); color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
                 <div class="message-content paper-note active-bubble" style="${messageContentStyle}">${contentHtml}</div>
-                <span class="message-info" style="font-size: 0.7rem; color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span class="message-info" style="font-size: clamp(9px, 1.5vw + 5px, 11px); color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         </div>
     `;
@@ -722,10 +722,10 @@ export async function loadContacts() {
             `;
             
             document.getElementById('reauth-google-btn')?.addEventListener('click', async () => {
-                await store.supabaseClient.auth.signInWithOAuth({
+                await store.supabaseClient.auth.linkIdentity({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin,
+                        redirectTo: window.location.href.split('?')[0],
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'

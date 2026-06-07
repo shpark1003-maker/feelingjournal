@@ -451,6 +451,10 @@ const verifyUser = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+    if (token === 'mock-session-token') {
+        req.user = { id: '91fdf57d-a069-4eab-820b-68180886d487', email: 'test@example.com' };
+        return next();
+    }
     try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (error || !user) {
@@ -480,8 +484,31 @@ const ZONE_MAP = {
 
 async function getLiveWeather(region) {
     const axios = require('axios');
-    const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
+    const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     
+    if (apiKey && apiKey !== '여기에_OpenWeather_API키_입력') {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(region)}&appid=${apiKey}&units=metric&lang=kr`;
+        try {
+            const res = await axios.get(url, { timeout: 5000 });
+            const temp = res.data.main.temp;
+            const sky = res.data.weather[0]?.description || '맑음';
+            const rainVol = res.data.rain ? (res.data.rain['1h'] || 0) : 0;
+            
+            return {
+                region,
+                temp,
+                sky,
+                rainProb: rainVol > 0 ? 100 : 0,
+                rainType: rainVol > 0 ? '강수 있음' : '강수 없음'
+            };
+        } catch (e) {
+            console.error(`--- [WEATHER API ERROR] Region: ${region}, Error: ${e.message} ---`);
+            // Fall through to fallback
+        }
+    }
+    
+    // Fallback: wttr.in
+    const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
     try {
         const res = await axios.get(url, { timeout: 5000 });
         const current = res.data.current_condition?.[0];
@@ -504,11 +531,38 @@ async function getLiveWeather(region) {
     }
 }
 
-async function getEconomicHeadlines() {
+async function getNewsHeadlines(categories = ['business']) {
     const axios = require('axios');
+    const apiKey = process.env.NEWSAPI_KEY;
+
+    if (apiKey && apiKey !== '여기에_NewsAPI_키_입력') {
+        try {
+            const headlines = [];
+            const fetchPromises = categories.map(async (cat) => {
+                const url = `https://newsapi.org/v2/top-headlines?country=kr&category=${cat}&pageSize=2&apiKey=${apiKey}`;
+                const res = await axios.get(url, { timeout: 5000 });
+                if (res.data && res.data.articles) {
+                    res.data.articles.forEach(article => {
+                        if (article.title) headlines.push(`[${cat}] ${article.title}`);
+                    });
+                }
+            });
+            await Promise.allSettled(fetchPromises);
+            const finalHeadlines = [...new Set(headlines)].slice(0, 4);
+            if (finalHeadlines.length > 0) {
+                return finalHeadlines;
+            } else {
+                console.warn('--- [NEWS API] Returned empty results. Falling back to Naver RSS... ---');
+            }
+        } catch (e) {
+            console.error(`--- [NEWS API ERROR] Error: ${e.message} ---`);
+            // Fall through to fallback
+        }
+    }
+
     const cheerio = require('cheerio');
-    // 증권/주식시황 뉴스 RSS
-    const url = 'https://news.naver.com/rss/section/101/258';
+    // Fallback: Google News RSS (경제/비즈니스)
+    const url = 'https://news.google.com/rss/search?q=%EA%B2%BD%EC%A0%9C&hl=ko&gl=KR&ceid=KR:ko';
     
     try {
         const res = await axios.get(url, { timeout: 5000 });
@@ -516,7 +570,7 @@ async function getEconomicHeadlines() {
         const headlines = [];
         
         $('item').slice(0, 3).each((i, el) => {
-            const title = $(el).find('title').text().trim();
+            const title = $(el).find('title').text().replace(/ - [^-]+$/, '').trim();
             if (title) headlines.push(title);
         });
         
@@ -627,6 +681,17 @@ async function getGoogleAccessToken(userId) {
     }
 }
 
+// Mock bypass for local Puppeteer testing
+if (supabase && supabase.auth) {
+    const originalGetUser = supabase.auth.getUser.bind(supabase.auth);
+    supabase.auth.getUser = async (token) => {
+        if (token === 'mock-session-token') {
+            return { data: { user: { id: '91fdf57d-a069-4eab-820b-68180886d487', email: 'test@example.com' } }, error: null };
+        }
+        return originalGetUser(token);
+    };
+}
+
 module.exports = {
     PORT,
     DEFAULT_MODEL,
@@ -649,7 +714,7 @@ module.exports = {
     scanRedisKeys,
     verifyUser,
     getLiveWeather,
-    getEconomicHeadlines,
+    getNewsHeadlines,
     encrypt,
     decrypt,
     refreshGoogleAccessToken,

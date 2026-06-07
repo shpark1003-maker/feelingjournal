@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL, updateSettings, assertIds } from './state.js?v=5.2.0';
 
 let recognition = null;
 let isListening = false;
@@ -7,6 +7,23 @@ let selectedGuardianName = '';
 
 // 케어모드 시스템 초기화 및 이벤트 바인딩
 export function initCareMode() {
+    console.log('--- [CARE] initCareMode started ---');
+    
+    // [Required ID 체크] Module 6: Daily Alarms & Safe Care
+    assertIds('Care & Settings', [
+        'briefing-time-input',
+        'weather-on',
+        'weather-off',
+        'alarm-60',
+        'alarm-30',
+        'alarm-10',
+        'save-settings-btn',
+        'care-mode-active',
+        'care-guardian-select',
+        'save-care-settings-btn',
+        'care-mode-overlay'
+    ]);
+
     const startBtn = document.getElementById('care-mode-start-btn');
     const closeBtn = document.getElementById('close-care-btn');
     const overlay = document.getElementById('care-mode-overlay');
@@ -96,47 +113,31 @@ function setupCareSettingsUI() {
         const selectedOpt = guardianSelect ? guardianSelect.options[guardianSelect.selectedIndex] : null;
         const guardianName = selectedOpt && selectedOpt.value ? selectedOpt.textContent.split('(')[0].trim() : '';
 
-        const config = {
-            careModeEnabled: careActive,
-            careGuardianEmail: guardianEmail,
-            careGuardianName: guardianName
-        };
+        // 실패 대비 이전 UI 상태 백업
+        const prevActive = store.settings.care.enabled;
+        const prevEmail = store.settings.care.guardianEmail;
 
         try {
-            const token = await store.getSessionToken();
-            
-            // 기존 push-config 구조에 care 설정을 머지하여 저장
-            const res = await fetch(`${API_URL}/subscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    subscription: null,
-                    settings: {
-                        // 기존 알림 설정을 가져와 덮어씌우기
-                        alarm60: document.getElementById('alarm-60')?.checked || false,
-                        alarm30: document.getElementById('alarm-30')?.checked || false,
-                        alarm10: document.getElementById('alarm-10')?.checked || false,
-                        briefingTime: document.getElementById('briefing-time-input')?.value || '08:00',
-                        weatherRegion: document.getElementById('weather-off')?.checked ? 'off' : '서울',
-                        ...config
-                    }
-                })
+            // state.js의 공통 비동기 업데이트 헬퍼 호출 (Deep Merge 및 Rollback 처리)
+            await updateSettings({
+                care: {
+                    enabled: careActive,
+                    guardianEmail: guardianEmail,
+                    guardianName: guardianName
+                }
             });
 
-            const data = await res.json();
-            if (data.success) {
-                alert('🏡 안심 케어 모드 연동 설정이 완벽하게 저장되었습니다.');
-                // 헤더 버튼 노출 동기화
-                syncCareModeHeaderButton(careActive);
-            } else {
-                alert('케어 설정 저장 실패: ' + data.error);
-            }
+            alert('🏡 안심 케어 모드 연동 설정이 완벽하게 저장되었습니다.');
+            // 헤더 버튼 노출 동기화
+            syncCareModeHeaderButton(careActive);
         } catch (e) {
             console.error('Save Care Settings error:', e);
-            alert('케어 설정 저장 중 서버 통신 오류가 발생했습니다.');
+            alert('케어 설정 저장 실패: ' + e.message);
+            
+            // UI 상태 원복
+            document.getElementById('care-mode-active').checked = prevActive;
+            if (guardianSelect) guardianSelect.value = prevEmail;
+            syncCareModeHeaderButton(prevActive);
         } finally {
             saveCareBtn.disabled = false;
             saveCareBtn.innerText = '케어 설정 저장';
@@ -152,21 +153,29 @@ export function syncCareModeHeaderButton(enabled) {
     }
 }
 
-// 3. 케어 설정 데이터 로딩 바인딩
+// 3. 케어 설정 데이터 로딩 바인딩 (V1 평탄화 객체와 V2 중첩 구조 모두 대응하도록 안전 설계)
 export function applyCareSettingsToUI(settings) {
+    const s = (settings && (settings.careModeEnabled !== undefined || settings.careGuardianEmail !== undefined))
+        ? {
+            enabled: !!settings.careModeEnabled,
+            guardianEmail: settings.careGuardianEmail || '',
+            guardianName: settings.careGuardianName || ''
+          }
+        : store.settings.care;
+
     const careActive = document.getElementById('care-mode-active');
     const guardianSelect = document.getElementById('care-guardian-select');
 
-    if (careActive) careActive.checked = !!settings.careModeEnabled;
-    if (guardianSelect && settings.careGuardianEmail) {
-        guardianSelect.value = settings.careGuardianEmail;
+    if (careActive) careActive.checked = !!s.enabled;
+    if (guardianSelect) {
+        guardianSelect.value = s.guardianEmail;
         
         // 선택된 보호자 텍스트 획득
         const selectedOpt = guardianSelect.options[guardianSelect.selectedIndex];
-        selectedGuardianName = selectedOpt ? selectedOpt.text.split('(')[0].trim() : '보호자';
+        selectedGuardianName = selectedOpt && selectedOpt.value ? selectedOpt.textContent.split('(')[0].trim() : '보호자';
     }
 
-    syncCareModeHeaderButton(!!settings.careModeEnabled);
+    syncCareModeHeaderButton(!!s.enabled);
 }
 
 // 4. 아버님/사용자 맞춤형 복약 안내 및 안부 전송 음성 조합

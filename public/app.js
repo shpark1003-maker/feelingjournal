@@ -1,12 +1,14 @@
-import { store, API_URL } from './modules/state.js?v=5.1.3';
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.3';
-import { setupEditor } from './modules/editor.js?v=5.1.3';
-import { loadCalendar } from './modules/calendar.js?v=5.1.3';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.3';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.3';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.3';
+import { store, API_URL, initState, assertIds, updateSettings } from './modules/state.js?v=5.2.0';
+
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.2.0';
+import { setupEditor } from './modules/editor.js?v=5.2.0';
+import { loadCalendar } from './modules/calendar.js?v=5.2.0';
+import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.2.0';
+import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.2.0';
+import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.2.0';
 
 console.log('App.js is loading as a modern ES Module...');
+window.loadNotebooks = loadNotebooks;
 
 /* ==========================================================================
    [IN-APP BROWSER DETECTION & OUTLINK]
@@ -99,6 +101,9 @@ function copyToClipboard(text) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('--- [INIT] Feeling Journal Application Started ---');
 
+    // 1단계: 글로벌 상태 및 세션/설정 데이터를 최우선적으로 서버에서 fetch
+    await initState();
+
     // Run in-app browser environment handler
     detectAndHandleInAppBrowser();
 
@@ -143,6 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    [AUTHENTICATION & SESSION]
    ========================================================================== */
 function setupAuth() {
+    assertIds('Auth', ['email', 'password', 'google-login-btn', 'kakao-login-btn', 'logout-btn', 'user-email']);
+
     const loginBtn = document.getElementById('login-btn');
     const signupBtn = document.getElementById('signup-btn');
     const googleBtn = document.getElementById('google-login-btn');
@@ -170,7 +177,7 @@ function setupAuth() {
         const { data, error } = await store.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin,
+                redirectTo: window.location.href.split('?')[0],
                 scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                 queryParams: {
                     access_type: 'offline',
@@ -295,6 +302,7 @@ async function onUserAuthenticated(session) {
     await populateGuardianSelect(); // 1촌 보호자 목록 가져오기 선행
     await loadNotebooks();
     checkFriendSos();
+    await loadUserProfileInSettings();
 
     // Start background loops
     sendPresenceHeartbeat();
@@ -329,27 +337,31 @@ function showAuthUI() {
 }
 
 async function checkNickname() {
-    const token = await store.getSessionToken();
-    if (!token) return;
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
 
-    const res = await fetch(`${API_URL}/nickname`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
+        const res = await fetch(`${API_URL}/nickname`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
 
-    if (data.success && !data.nickname) {
-        const nickname = prompt('반갑습니다! 당신의 수석 비서가 당신을 어떻게 부르면 좋을까요? (호칭 입력)');
-        if (nickname) {
-            await fetch(`${API_URL}/nickname`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ nickname })
-            });
-            alert(`${nickname}님, 환영합니다. 당신의 하루를 책임지겠습니다.`);
+        if (data.success && !data.nickname) {
+            const nickname = prompt('반갑습니다! 당신의 수석 비서가 당신을 어떻게 부르면 좋을까요? (호칭 입력)');
+            if (nickname) {
+                await fetch(`${API_URL}/nickname`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nickname })
+                });
+                alert(`${nickname}님, 환영합니다. 당신의 하루를 책임지겠습니다.`);
+            }
         }
+    } catch (e) {
+        console.warn('Failed to check or set nickname:', e);
     }
 }
 
@@ -360,17 +372,36 @@ function setupTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    const activeClasses = ['bg-primary-container', 'text-on-primary-container', 'rounded-xl', 'py-1.5'];
+    const inactiveClasses = ['text-on-surface-variant', 'hover:text-primary', 'p-2'];
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.dataset.tab;
 
-            tabBtns.forEach(b => b.classList.remove('active'));
+            tabBtns.forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove(...activeClasses);
+                b.classList.add(...inactiveClasses);
+                
+                // Remove FILL 1 from icon
+                const icon = b.querySelector('.material-symbols-outlined');
+                if(icon) icon.style.fontVariationSettings = "'FILL' 0";
+            });
+
             tabContents.forEach(c => {
                 c.classList.remove('active');
                 c.style.display = 'none';
             });
 
             btn.classList.add('active');
+            btn.classList.remove(...inactiveClasses);
+            btn.classList.add(...activeClasses);
+            
+            // Add FILL 1 to icon
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if(icon) icon.style.fontVariationSettings = "'FILL' 1";
+
             const target = document.getElementById(`${tabId}-view`);
             if (target) {
                 target.classList.add('active');
@@ -379,7 +410,7 @@ function setupTabs() {
                 if (tabId === 'calendar') loadCalendar();
                 else if (tabId === 'chat') {
                     // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.1.3').then(chatMod => {
+                    import('./modules/chat.js?v=5.2.0').then(chatMod => {
                         chatMod.initializeChat();
                     });
                 }
@@ -424,6 +455,8 @@ function findClosestCity(lat, lon) {
 
 function setupSettingsUI() {
     console.log('--- [UI] Settings (Notification) UI Setup ---');
+    setupUserProfileUpload();
+    setupGoogleCalendarConnect();
     const saveBtn = document.getElementById('save-settings-btn');
     if (!saveBtn) return;
 
@@ -441,33 +474,32 @@ function setupSettingsUI() {
             briefingTime
         };
 
+        const newsCheckboxes = document.querySelectorAll('input[name="news-category"]:checked');
+        const newsCategories = Array.from(newsCheckboxes).map(cb => cb.value);
+        if (newsCategories.length === 0) newsCategories.push('business'); // Fallback if none selected
+        config.newsCategories = newsCategories;
+
         const executeSave = async (regionValue) => {
-            config.weatherRegion = regionValue;
             try {
-                const token = await store.getSessionToken();
-                const res = await fetch(`${API_URL}/subscribe`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                // state.js의 updateSettings 헬퍼를 사용하여 기존 care 설정을 해치지 않고 deep merge 저장
+                await updateSettings({
+                    alarm: {
+                        alarm60: config.alarm60,
+                        alarm30: config.alarm30,
+                        alarm10: config.alarm10,
+                        briefingTime: config.briefingTime
                     },
-                    body: JSON.stringify({
-                        subscription: null,
-                        settings: config
-                    })
+                    weatherRegion: regionValue,
+                    newsCategories: config.newsCategories
                 });
-                const data = await res.json();
-                if (data.success) {
-                    let msg = '설정 정보가 성공적으로 저장되었습니다.';
-                    if (regionValue !== 'off') {
-                        msg += `\n📍 위치 기반 기상 관측소: ${regionValue}`;
-                    } else {
-                        msg += '\n🔇 기상 예보 안내가 비활성화되었습니다.';
-                    }
-                    alert(msg);
+
+                let msg = '설정 정보가 성공적으로 저장되었습니다.';
+                if (regionValue !== 'off') {
+                    msg += `\n📍 위치 기반 기상 관측소: ${regionValue}`;
                 } else {
-                    alert('설정 저장 실패: ' + data.error);
+                    msg += '\n🔇 기상 예보 안내가 비활성화되었습니다.';
                 }
+                alert(msg);
             } catch (err) {
                 console.error(err);
                 alert('설정 저장 중 서버 통신 오류가 발생했습니다.');
@@ -534,10 +566,219 @@ async function loadSettings() {
                 if (weatherOn) weatherOn.checked = true;
             }
 
+            if (s.newsCategories && Array.isArray(s.newsCategories)) {
+                document.querySelectorAll('input[name="news-category"]').forEach(cb => {
+                    cb.checked = s.newsCategories.includes(cb.value);
+                });
+            }
+
             // 안심 케어 모드 설정 UI 반영
             applyCareSettingsToUI(s);
         }
     } catch (e) {
         console.error('Failed to load settings:', e);
     }
+}
+
+window.loadUserProfileInSettings = loadUserProfileInSettings;
+async function loadUserProfileInSettings() {
+    const avatarImg = document.getElementById('user-profile-avatar');
+    const nameEl = document.getElementById('user-profile-name');
+    const emailEl = document.getElementById('user-email');
+    
+    if (!store.currentUser) return;
+    
+    if (emailEl) emailEl.innerText = store.currentUser.email;
+    
+    // Set avatar
+    const myAvatarUrl = store.currentUser?.user_metadata?.avatar_url;
+    if (avatarImg && myAvatarUrl) {
+        avatarImg.src = `${myAvatarUrl}?t=${Date.now()}`;
+    }
+    
+    // Set nickname
+    try {
+        const token = await store.getSessionToken();
+        if (token) {
+            const res = await fetch(`${API_URL}/nickname`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success && data.nickname) {
+                if (nameEl) nameEl.innerText = data.nickname;
+            } else {
+                if (nameEl) nameEl.innerText = store.currentUser.email.split('@')[0];
+            }
+        }
+    } catch (e) {
+        if (nameEl) nameEl.innerText = store.currentUser.email.split('@')[0];
+    }
+    
+    // Check Google Calendar connection status
+    await checkGoogleCalendarStatus();
+}
+
+function setupUserProfileUpload() {
+    const avatarImg = document.getElementById('user-profile-avatar');
+    const editBtn = document.getElementById('user-profile-avatar-btn');
+    const fileInput = document.getElementById('user-avatar-upload-input');
+    
+    if (!avatarImg || !fileInput) return;
+    
+    const triggerUpload = () => fileInput.click();
+    avatarImg.addEventListener('click', triggerUpload);
+    if (editBtn) editBtn.addEventListener('click', triggerUpload);
+    
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (editBtn) {
+            editBtn.disabled = true;
+            editBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span>';
+        }
+        
+        try {
+            const filePath = `${store.currentUser.id}/avatar.png`;
+            
+            // Supabase Storage 'avatars' 버킷에 업로드
+            const { data, error } = await store.supabaseClient.storage
+                .from('avatars')
+                .upload(filePath, file, { cacheControl: '0', upsert: true });
+                
+            if (error) throw error;
+            
+            const { data: urlData } = store.supabaseClient.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+                
+            const publicUrl = urlData.publicUrl;
+            
+            // Supabase Auth 사용자 메타데이터에 저장
+            const { error: authError } = await store.supabaseClient.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
+            
+            if (authError) throw authError;
+            
+            // profiles 테이블 동기화
+            await store.supabaseClient
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', store.currentUser.id);
+                
+            alert('✨ 프로필 사진이 성공적으로 변경되었습니다!');
+            
+            // UI 업데이트
+            avatarImg.src = `${publicUrl}?t=${Date.now()}`;
+        } catch (err) {
+            console.error('Profile photo upload error:', err);
+            alert('프로필 사진 변경 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            if (editBtn) {
+                editBtn.disabled = false;
+                editBtn.innerHTML = '<span class="material-symbols-outlined text-sm">edit</span>';
+            }
+            fileInput.value = '';
+        }
+    });
+}
+
+window.checkGoogleCalendarStatus = checkGoogleCalendarStatus;
+async function checkGoogleCalendarStatus() {
+    const statusText = document.getElementById('google-cal-status-text');
+    const connectBtn = document.getElementById('settings-google-connect-btn');
+    if (!statusText || !connectBtn) return;
+    
+    try {
+        const token = await store.getSessionToken();
+        const providerToken = await store.getProviderToken();
+        if (!token) {
+            statusText.innerText = '로그인이 필요합니다.';
+            return;
+        }
+        
+        const res = await fetch(`${API_URL}/calendar`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'x-provider-token': providerToken || ''
+            }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.unlinked) {
+                statusText.innerText = '연결되어 있지 않습니다.';
+                statusText.className = 'font-label-sm text-xs text-outline';
+                connectBtn.innerText = '연결하기';
+                connectBtn.className = 'px-5 py-2 bg-primary text-on-primary rounded-full font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm';
+            } else {
+                statusText.innerText = '정상적으로 연동되었습니다.';
+                statusText.className = 'font-label-sm text-xs text-[#10ac84] font-semibold';
+                connectBtn.innerText = '연결 해제';
+                connectBtn.className = 'px-5 py-2 bg-surface-container-highest text-error border border-outline-variant/30 rounded-full font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm';
+            }
+        }
+    } catch (err) {
+        console.error('Failed to check Google Calendar status:', err);
+        statusText.innerText = '상태 확인 중 오류가 발생했습니다.';
+    }
+}
+
+function setupGoogleCalendarConnect() {
+    const connectBtn = document.getElementById('settings-google-connect-btn');
+    if (!connectBtn) return;
+    
+    connectBtn.addEventListener('click', async () => {
+        const isConnected = connectBtn.innerText === '연결 해제';
+        
+        if (isConnected) {
+            if (!confirm('정말로 Google 캘린더 연동을 해제하시겠습니까?')) return;
+            
+            connectBtn.disabled = true;
+            connectBtn.innerText = '해제 중...';
+            try {
+                const token = await store.getSessionToken();
+                const res = await fetch(`${API_URL}/auth/unlink-google`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Google 캘린더 연동이 성공적으로 해제되었습니다.');
+                    await checkGoogleCalendarStatus();
+                    if (window.loadCalendar) await window.loadCalendar();
+                } else {
+                    alert('연동 해제에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('연동 해제 중 오류가 발생했습니다.');
+            } finally {
+                connectBtn.disabled = false;
+            }
+        } else {
+            // Connect
+            connectBtn.disabled = true;
+            connectBtn.innerText = '연결 중...';
+            try {
+                const { error } = await store.supabaseClient.auth.linkIdentity({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href.split('?')[0],
+                        scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
+                    }
+                });
+                if (error) throw error;
+            } catch (err) {
+                alert('구글 로그인 실패: ' + err.message);
+                connectBtn.disabled = false;
+                connectBtn.innerText = '연결하기';
+            }
+        }
+    });
 }

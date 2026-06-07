@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL } from './state.js?v=5.2.0';
 
 export async function loadNotebooks() {
     const token = await store.getSessionToken();
@@ -21,9 +21,14 @@ export async function loadNotebooks() {
     }
 
     list.innerHTML = notebooks.map(nb => `
-        <li class="notebook-item ${store.currentNotebookId === nb.id ? 'active' : ''}" data-id="${nb.id}" data-name="${nb.name}">
-            <span class="folder-icon">📁</span>
-            <span class="name">${nb.name}</span>
+        <li class="notebook-item flex justify-between items-center ${store.currentNotebookId === nb.id ? 'active' : ''}" data-id="${nb.id}" data-name="${nb.name}">
+            <div class="flex items-center gap-3">
+                <span class="folder-icon">📁</span>
+                <span class="name">${nb.name}</span>
+            </div>
+            <button class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/20 text-white/70 hover:text-white transition-all" data-nb="${nb.id}" title="이 노트에 페이지 추가" onclick="event.preventDefault(); event.stopPropagation(); if (window.v2QuickAddPage) window.v2QuickAddPage('${nb.id}');">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+            </button>
         </li>
     `).join('');
 
@@ -344,4 +349,10 @@ function setupResizers() {
         const width = e.clientX - sidebar2.getBoundingClientRect().left;
         if (width > 150 && width < 500) sidebar2.style.width = width + 'px';
     }
+}
+
+window.v2QuickAddPage = v2QuickAddPage;
+export function v2QuickAddPage(nbId) {
+    store.currentNotebookId = nbId;
+    addNewPage();
 }

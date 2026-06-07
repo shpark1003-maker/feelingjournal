@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL } from './state.js?v=5.2.0';
 
 export async function loadPersona() {
     const token = await store.getSessionToken();

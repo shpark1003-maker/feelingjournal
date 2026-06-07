@@ -1,10 +1,10 @@
-import { store, API_URL } from './modules/state.js?v=5.1.3';
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.1.3';
-import { setupEditor } from './modules/editor.js?v=5.1.3';
-import { loadCalendar } from './modules/calendar.js?v=5.1.3';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.1.3';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.1.3';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.1.3';
+import { store, API_URL } from './modules/state.js?v=5.2.0';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.2.0';
+import { setupEditor } from './modules/editor.js?v=5.2.0';
+import { loadCalendar } from './modules/calendar.js?v=5.2.0';
+import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.2.0';
+import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.2.0';
+import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.2.0';
 
 console.log('App.js is loading as a modern ES Module...');
 
@@ -329,27 +329,31 @@ function showAuthUI() {
 }
 
 async function checkNickname() {
-    const token = await store.getSessionToken();
-    if (!token) return;
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
 
-    const res = await fetch(`${API_URL}/nickname`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
+        const res = await fetch(`${API_URL}/nickname`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
 
-    if (data.success && !data.nickname) {
-        const nickname = prompt('반갑습니다! 당신의 수석 비서가 당신을 어떻게 부르면 좋을까요? (호칭 입력)');
-        if (nickname) {
-            await fetch(`${API_URL}/nickname`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ nickname })
-            });
-            alert(`${nickname}님, 환영합니다. 당신의 하루를 책임지겠습니다.`);
+        if (data.success && !data.nickname) {
+            const nickname = prompt('반갑습니다! 당신의 수석 비서가 당신을 어떻게 부르면 좋을까요? (호칭 입력)');
+            if (nickname) {
+                await fetch(`${API_URL}/nickname`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nickname })
+                });
+                alert(`${nickname}님, 환영합니다. 당신의 하루를 책임지겠습니다.`);
+            }
         }
+    } catch (e) {
+        console.warn('Failed to check or set nickname:', e);
     }
 }
 
@@ -379,7 +383,7 @@ function setupTabs() {
                 if (tabId === 'calendar') loadCalendar();
                 else if (tabId === 'chat') {
                     // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.1.3').then(chatMod => {
+                    import('./modules/chat.js?v=5.2.0').then(chatMod => {
                         chatMod.initializeChat();
                     });
                 }
@@ -440,6 +444,11 @@ function setupSettingsUI() {
             alarm10: document.getElementById('alarm-10')?.checked || false,
             briefingTime
         };
+
+        const newsCheckboxes = document.querySelectorAll('input[name="news-category"]:checked');
+        const newsCategories = Array.from(newsCheckboxes).map(cb => cb.value);
+        if (newsCategories.length === 0) newsCategories.push('business'); // Fallback if none selected
+        config.newsCategories = newsCategories;
 
         const executeSave = async (regionValue) => {
             config.weatherRegion = regionValue;
@@ -532,6 +541,12 @@ async function loadSettings() {
                 if (weatherOff) weatherOff.checked = true;
             } else {
                 if (weatherOn) weatherOn.checked = true;
+            }
+
+            if (s.newsCategories && Array.isArray(s.newsCategories)) {
+                document.querySelectorAll('input[name="news-category"]').forEach(cb => {
+                    cb.checked = s.newsCategories.includes(cb.value);
+                });
             }
 
             // 안심 케어 모드 설정 UI 반영

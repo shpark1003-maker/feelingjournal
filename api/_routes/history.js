@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
                 return res.status(403).json({ error: '수정 권한이 없습니다.' });
             }
 
-            const { title, content, richContent } = req.body;
+            const { title, content, richContent, shared } = req.body;
             const existingData = await redis.get(key);
             if (!existingData) {
                 return res.status(404).json({ error: '메모를 찾을 수 없습니다.' });
@@ -59,9 +59,10 @@ module.exports = async (req, res) => {
             if (title !== undefined) item.title = title;
             if (content !== undefined) item.content = content;
             if (richContent !== undefined) item.richContent = richContent;
+            if (shared !== undefined) item.shared = !!shared;
 
             await redis.set(key, JSON.stringify(item), 'KEEPTTL');
-            return res.json({ success: true, title: item.title });
+            return res.json({ success: true, title: item.title, shared: item.shared });
         }
 
         // 3. Handle GET (List history entries)
@@ -104,7 +105,8 @@ module.exports = async (req, res) => {
                         createdAt: item.createdAt,
                         emotion: item.emotion,
                         mediaId: item.mediaId || null,
-                        notebookId: item.notebookId || 'nb-1'
+                        notebookId: item.notebookId || 'nb-1',
+                        shared: !!item.shared
                     });
                 } catch (e) {
                     console.error('History Parse Error:', e.message);

@@ -150,7 +150,10 @@ module.exports = async (req, res) => {
             const cached = await redis.get(cacheKey);
             if (cached) {
                 const { fingerprint, analyzedEvents } = JSON.parse(cached);
-                if (fingerprint === currentFingerprint) return res.json({ success: true, events: analyzedEvents, cached: true });
+                if (fingerprint === currentFingerprint) {
+                    const isUnlinked = !providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined';
+                    return res.json({ success: true, events: analyzedEvents, cached: true, unlinked: isUnlinked });
+                }
             }
         }
 

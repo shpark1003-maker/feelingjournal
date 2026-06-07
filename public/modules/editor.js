@@ -1,5 +1,5 @@
-import { store, API_URL } from './state.js?v=5.1.2';
-import { loadPages } from './notebook.js?v=5.1.2';
+import { store, API_URL, assertIds } from './state.js?v=5.2.0';
+import { loadPages } from './notebook.js?v=5.2.0';
 
 let cropperInstance = null;
 let cameraStream = null;
@@ -11,15 +11,28 @@ const EMOJI_DATA = {
 };
 
 export function setupEditor() {
+    assertIds('Editor', [
+        'v2-quick-add-nb-btn', 'note-title', 'quill-editor', 'analyze-btn', 
+        'analysis-result-area', 'analysis-content', 'camera-btn', 'scrap-btn', 'writing-helper-btn',
+        'camera-modal', 'scrap-choice-modal', 'scrap-url-modal', 'scrap-crop-modal', 'writing-helper-panel'
+    ]);
+
     if (typeof Quill === 'undefined') return;
 
     const Font = Quill.import('formats/font');
     Font.whitelist = ['serif', 'monospace', 'nanum'];
     Quill.register(Font, true);
 
+    if (typeof QuillBlotFormatter !== 'undefined') {
+        Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+    }
+
     store.quillEditor = new Quill('#quill-editor', {
         theme: 'snow',
-        modules: { toolbar: '#quill-toolbar' },
+        modules: { 
+            toolbar: '#quill-toolbar',
+            blotFormatter: {}
+        },
         placeholder: '오늘 당신의 마음은 어떤가요? 자유롭게 적어보세요...'
     });
 
@@ -30,6 +43,19 @@ export function setupEditor() {
     });
 
     document.getElementById('analyze-btn')?.addEventListener('click', analyzeDiary);
+
+    // V2 Toggle logic for share options
+    const shareToggle = document.getElementById('share-toggle-input');
+    const shareOptions = document.getElementById('share-options');
+    if (shareToggle && shareOptions) {
+        shareToggle.addEventListener('change', function() {
+            if (this.checked) {
+                shareOptions.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                shareOptions.classList.add('opacity-50', 'pointer-events-none');
+            }
+        });
+    }
 
     // Call sub UI loaders
     setupEmojiPicker();
@@ -45,15 +71,27 @@ export async function analyzeDiary() {
     const content = store.quillEditor.getText().trim();
     const richContent = store.quillEditor.root.innerHTML;
     const title = document.getElementById('note-title').value.trim();
+    const v2NotebookSelect = document.getElementById('v2-notebook-select');
+    const notebookId = v2NotebookSelect ? v2NotebookSelect.value : store.currentNotebookId;
 
-    if (!content) return alert('분석할 내용이 없습니다.');
+    // Extract the first image for Gemini OCR
+    let image = null;
+    const imgMatch = richContent.match(/<img[^>]+src="([^">]+)"/);
+    if (imgMatch && imgMatch[1].startsWith('data:image')) {
+        image = imgMatch[1];
+    }
+
+    if (!content && !image) return alert('분석할 내용이 없습니다.');
 
     store.isAnalysisRunning = true;
     const btn = document.getElementById('analyze-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> 분석 중...';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> 저장 중...';
+    }
 
     try {
+        console.log('Sending analyze request...');
         const token = await store.getSessionToken();
         const providerToken = await store.getProviderToken();
 
@@ -64,51 +102,75 @@ export async function analyzeDiary() {
                 'Authorization': `Bearer ${token}`,
                 'x-provider-token': providerToken || ''
             },
-            body: JSON.stringify({ content, richContent, title, notebookId: store.currentNotebookId })
+            body: JSON.stringify({ content, richContent, title, notebookId, image })
         });
 
         const data = await res.json();
+        console.log('Analyze response:', data);
+
         if (data.success) {
+            // Update currentPageId so we don't create duplicates on subsequent saves
+            if (data.id) {
+                store.currentPageId = data.id;
+            }
             const resultArea = document.getElementById('analysis-result-area');
             const resultContent = document.getElementById('analysis-content');
             if (resultArea && resultContent) {
                 resultArea.classList.remove('hidden');
+                // Trigger reflow to apply transition properly
+                void resultArea.offsetWidth;
+                resultArea.classList.remove('opacity-0', 'translate-y-4');
+                resultArea.classList.add('opacity-100', 'translate-y-0');
                 resultContent.innerHTML = data.answer.replace(/\n/g, '<br>');
             }
             alert('비서가 분석을 완료하고 기록을 저장했습니다.');
             loadPages();
+            // Scroll to the result area so the user sees the analysis
+            if (resultArea) {
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             if (data.event) {
                 if (confirm(`AI가 새로운 일정을 제안했습니다: [${data.event.summary}]\n캘린더에 등록할까요?`)) {
                     registerEventToGoogle(data.event);
                 }
             }
+        } else {
+            alert('저장 실패: ' + (data.error || data.answer || '알 수 없는 오류가 발생했습니다.'));
         }
     } catch (e) {
-        console.error(e);
-        alert('분석 중 오류가 발생했습니다.');
+        console.error('Analyze Diary Error:', e);
+        alert('저장 중 오류가 발생했습니다.');
     } finally {
         store.isAnalysisRunning = false;
-        btn.disabled = false;
-        btn.innerHTML = 'AI 분석 및 저장';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '저장';
+        }
     }
 }
 
 export async function registerEventToGoogle(event) {
-    const token = await store.getSessionToken();
-    const providerToken = await store.getProviderToken();
+    try {
+        const token = await store.getSessionToken();
+        const providerToken = await store.getProviderToken();
 
-    const res = await fetch(`${API_URL}/calendar/add`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'x-provider-token': providerToken || ''
-        },
-        body: JSON.stringify(event)
-    });
+        const res = await fetch(`${API_URL}/calendar/add`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'x-provider-token': providerToken || ''
+            },
+            body: JSON.stringify(event)
+        });
 
-    const data = await res.json();
-    if (data.success) alert('구글 캘린더에 일정이 성공적으로 등록되었습니다.');
+        const data = await res.json();
+        if (data.success) alert('구글 캘린더에 일정이 성공적으로 등록되었습니다.');
+        else alert('일정 등록 실패: ' + (data.error || '알 수 없는 오류'));
+    } catch (e) {
+        console.error('Event Registration Error:', e);
+        alert('일정을 캘린더에 등록하는 중 네트워크 오류가 발생했습니다.');
+    }
 }
 
 export function setupEmojiPicker() {

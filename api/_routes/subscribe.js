@@ -68,6 +68,20 @@ module.exports = async (req, res) => {
                     providerToken: (providerToken && providerToken !== 'mock') ? providerToken : undefined,
                     email: user.email
                 }));
+
+                // 동기화: Supabase profiles 테이블에도 기상/뉴스 설정 저장 (briefing.js 등에서 사용)
+                try {
+                    const updateData = {};
+                    if (settings.weatherRegion) updateData.weather_region = settings.weatherRegion;
+                    if (settings.newsCategories) updateData.news_categories = settings.newsCategories;
+                    
+                    if (Object.keys(updateData).length > 0) {
+                        const client = require('./shared').supabaseAdmin || supabase;
+                        await client.from('profiles').update(updateData).eq('id', user.id);
+                    }
+                } catch (e) {
+                    console.error('Failed to sync settings to profile:', e.message);
+                }
             }
 
             const pushEnabled = !!process.env.VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY;

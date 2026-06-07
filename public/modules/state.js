@@ -14,6 +14,22 @@ export const store = {
     isAnalysisRunning: false,
     currentUser: null,
     currentAvatarUrl: null,
+    activeChatWindows: {}, // Key: roomId, Value: { title, isMinimized, x, y, zIndex }
+    settings: {
+        alarm: {
+            briefingTime: '08:00',
+            alarm60: false,
+            alarm30: false,
+            alarm10: false
+        },
+        care: {
+            enabled: false,
+            guardianEmail: '',
+            guardianName: ''
+        },
+        weatherRegion: '서울',
+        newsCategories: ['business']
+    },
     
     // 3. 상태 취득/변경용 간결한 도우미 API
     async getSessionToken() {
@@ -26,3 +42,121 @@ export const store = {
         return session ? session.provider_token || localStorage.getItem('google_provider_token') : null;
     }
 };
+
+window.store = store;
+
+// 4. Deep Merge 헬퍼 함수
+export function deepMerge(target, source) {
+    const output = { ...target };
+    for (const key of Object.keys(source || {})) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+            output[key] = deepMerge(output[key] || {}, source[key]);
+        } else {
+            output[key] = source[key];
+        }
+    }
+    return output;
+}
+
+// 5. 초기화 함수 - 서버로부터 기존 설정을 로딩
+export async function initState() {
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
+
+        const res = await fetch(`${API_URL}/subscribe`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.config && data.config.settings) {
+            // 서버에 저장된 단층 settings 구조를 V2 중첩 settings 구조로 안전하게 매핑/머지
+            const s = data.config.settings;
+            const normalizedSettings = {
+                alarm: {
+                    briefingTime: s.briefingTime || '08:00',
+                    alarm60: !!s.alarm60,
+                    alarm30: !!s.alarm30,
+                    alarm10: !!s.alarm10
+                },
+                care: {
+                    enabled: !!s.careModeEnabled,
+                    guardianEmail: s.careGuardianEmail || '',
+                    guardianName: s.careGuardianName || ''
+                },
+                weatherRegion: s.weatherRegion || '서울',
+                newsCategories: s.newsCategories || ['business']
+            };
+            store.settings = deepMerge(store.settings, normalizedSettings);
+            console.log('--- [STATE] Successfully loaded and normalized settings ---', store.settings);
+        }
+    } catch (e) {
+        console.warn('--- [STATE] Failed to initialize settings from server, using default ---', e);
+    }
+}
+
+// 6. 설정 업데이트 및 Rollback 트랜잭션 함수
+export async function updateSettings(newSettings) {
+    const prevSettings = typeof structuredClone === 'function'
+        ? structuredClone(store.settings)
+        : JSON.parse(JSON.stringify(store.settings));
+
+    store.settings = deepMerge(store.settings, newSettings);
+
+    try {
+        const token = await store.getSessionToken();
+        if (!token) throw new Error('No user session token found');
+
+        // 서버 전송을 위해 중첩 settings 객체를 백엔드가 수용 가능한 단층 구조로 평탄화(Flatten)
+        const flatSettings = {
+            alarm60: store.settings.alarm.alarm60,
+            alarm30: store.settings.alarm.alarm30,
+            alarm10: store.settings.alarm.alarm10,
+            briefingTime: store.settings.alarm.briefingTime,
+            weatherRegion: store.settings.weatherRegion,
+            newsCategories: store.settings.newsCategories,
+            careModeEnabled: store.settings.care.enabled,
+            careGuardianEmail: store.settings.care.guardianEmail,
+            careGuardianName: store.settings.care.guardianName
+        };
+
+        const res = await fetch(`${API_URL}/subscribe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                subscription: null,
+                settings: flatSettings
+            })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Server rejected settings update');
+        }
+        console.log('--- [STATE] Settings successfully updated and saved ---');
+    } catch (e) {
+        console.error('--- [STATE] Failed to save settings. Rolling back status ---', e);
+        store.settings = prevSettings;
+        throw e;
+    }
+}
+
+export function assertIds(moduleName, ids) {
+    const missing = [];
+    ids.forEach(id => {
+        if (!document.getElementById(id)) {
+            missing.push(id);
+        }
+    });
+    if (missing.length > 0) {
+        const errorMsg = `[DOM ID ASSERTION FAILED] Module: ${moduleName} - The following required DOM IDs are missing: ${missing.join(', ')}`;
+        console.error(errorMsg);
+        // Throw an error so it displays in the browser console for testing and verification.
+        throw new TypeError(errorMsg);
+    } else {
+        console.log(`[DOM ID ASSERTION PASSED] Module: ${moduleName} - All required IDs are present: ${ids.join(', ')}`);
+    }
+}
+

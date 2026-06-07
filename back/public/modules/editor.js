@@ -1,5 +1,5 @@
-import { store, API_URL } from './state.js?v=5.1.2';
-import { loadPages } from './notebook.js?v=5.1.2';
+import { store, API_URL } from './state.js?v=5.2.0';
+import { loadPages } from './notebook.js?v=5.2.0';
 
 let cropperInstance = null;
 let cameraStream = null;
@@ -94,21 +94,27 @@ export async function analyzeDiary() {
 }
 
 export async function registerEventToGoogle(event) {
-    const token = await store.getSessionToken();
-    const providerToken = await store.getProviderToken();
+    try {
+        const token = await store.getSessionToken();
+        const providerToken = await store.getProviderToken();
 
-    const res = await fetch(`${API_URL}/calendar/add`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'x-provider-token': providerToken || ''
-        },
-        body: JSON.stringify(event)
-    });
+        const res = await fetch(`${API_URL}/calendar/add`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'x-provider-token': providerToken || ''
+            },
+            body: JSON.stringify(event)
+        });
 
-    const data = await res.json();
-    if (data.success) alert('구글 캘린더에 일정이 성공적으로 등록되었습니다.');
+        const data = await res.json();
+        if (data.success) alert('구글 캘린더에 일정이 성공적으로 등록되었습니다.');
+        else alert('일정 등록 실패: ' + (data.error || '알 수 없는 오류'));
+    } catch (e) {
+        console.error('Event Registration Error:', e);
+        alert('일정을 캘린더에 등록하는 중 네트워크 오류가 발생했습니다.');
+    }
 }
 
 export function setupEmojiPicker() {

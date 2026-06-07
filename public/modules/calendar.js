@@ -1,9 +1,57 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL, assertIds } from './state.js?v=5.2.0';
+
 
 let initialized = false;
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-indexed
 let calendarEvents = [];
+
+window.v2TaskEditTrigger = function(id) {
+    const task = calendarEvents.find(t => t.id === id);
+    if (task) {
+        openTaskEditor('edit', task);
+    }
+};
+
+window.v2TaskDeleteTrigger = async function(id) {
+    if (!confirm('정말로 이 과제를 삭제하시겠습니까?')) return;
+    try {
+        const token = await store.getSessionToken();
+        const providerToken = await store.getProviderToken();
+        const response = await fetch(`${API_URL}/calendar/events/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'x-provider-token': providerToken || ''
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('과제가 성공적으로 삭제되었습니다.');
+            loadCalendar(true); // 데이터 새로고침 및 목록 갱신
+        } else {
+            alert('과제 삭제에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
+        }
+    } catch (err) {
+        console.error('Task Delete Error:', err);
+        alert('과제 삭제 중 오류가 발생했습니다.');
+    }
+};
+
+window.v2ToggleTaskAccordion = function(el, event) {
+    if (event) {
+        if (event.target.closest('.edit-task-btn') || event.target.closest('.task-details')) {
+            return;
+        }
+    }
+    const isExpanded = el.getAttribute('aria-expanded') === 'true';
+    el.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+    if (!isExpanded) {
+        el.classList.add('ring-2', 'ring-primary/20', 'shadow-md');
+    } else {
+        el.classList.remove('ring-2', 'ring-primary/20', 'shadow-md');
+    }
+};
 
 function formatLocalISO(date) {
     if (!date) return '';
@@ -176,9 +224,192 @@ function initCalendarUI() {
             });
         });
     }
+
+    const v2CalendarAddBtn = document.getElementById('v2-calendar-add-btn');
+    if (v2CalendarAddBtn) {
+        v2CalendarAddBtn.addEventListener('click', () => {
+            if (typeof openEventModal === 'function') {
+                const today = new Date();
+                const startISO = formatLocalISO(today);
+                const endISO = formatLocalISO(new Date(today.getTime() + 60 * 60 * 1000));
+                openEventModal('add', {
+                    start: startISO,
+                    end: endISO
+                });
+            }
+        });
+    }
+    const v2TaskAddBtn = document.getElementById('v2-task-add-btn');
+    if (v2TaskAddBtn) {
+        v2TaskAddBtn.addEventListener('click', () => {
+            openTaskEditor('add', {}, 'task');
+        });
+    }
+
+    // Type Selector Tab Toggles
+    const typeEventBtn = document.getElementById('type-event');
+    const typeTaskBtn = document.getElementById('type-task');
+    if (typeEventBtn && !typeEventBtn.dataset.bound) {
+        typeEventBtn.dataset.bound = "true";
+        typeEventBtn.addEventListener('click', () => {
+            window.v2ToggleTaskType('event');
+        });
+    }
+    if (typeTaskBtn && !typeTaskBtn.dataset.bound) {
+        typeTaskBtn.dataset.bound = "true";
+        typeTaskBtn.addEventListener('click', () => {
+            window.v2ToggleTaskType('task');
+        });
+    }
+
+    // Delete Button Click Handler
+    const taskDeleteBtn = document.getElementById('v2-task-editor-delete');
+    if (taskDeleteBtn && !taskDeleteBtn.dataset.bound) {
+        taskDeleteBtn.dataset.bound = "true";
+        taskDeleteBtn.addEventListener('click', async () => {
+            const container = document.getElementById('v2-task-editor-container');
+            const id = container.dataset.id;
+            if (!id) return;
+
+            if (!confirm('이 일정/과제를 정말 삭제하시겠습니까?')) return;
+
+            try {
+                const token = await store.getSessionToken();
+                const providerToken = await store.getProviderToken();
+
+                const res = await fetch(`${API_URL}/calendar/events/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'x-provider-token': providerToken || ''
+                    }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('성공적으로 삭제되었습니다.');
+                    closeTaskEditor();
+                    loadCalendar(true);
+                } else {
+                    alert('삭제 실패: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Failed to delete event/task:', err);
+                alert('서버 통신 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 별점 버튼 이벤트 바인딩
+    const starBtns = document.querySelectorAll('#v2-task-rating-container .rating-star-btn');
+    starBtns.forEach(btn => {
+        if (!btn.dataset.bound) {
+            btn.dataset.bound = "true";
+            btn.addEventListener('click', () => {
+                const rating = parseInt(btn.dataset.rating, 10);
+                const ratingInput = document.getElementById('v2-task-rating-input');
+                if (ratingInput) ratingInput.value = rating;
+                updateEditorStarsUI(rating);
+            });
+        }
+    });
+
+    // 진행률 슬라이더 실시간 표시
+    const progressInput = document.getElementById('v2-task-progress-input');
+    const progressVal = document.getElementById('v2-task-progress-val');
+    if (progressInput && progressVal && !progressInput.dataset.bound) {
+        progressInput.dataset.bound = "true";
+        progressInput.addEventListener('input', (e) => {
+            progressVal.innerText = `${e.target.value}%`;
+        });
+    }
+
+    const taskSaveBtn = document.getElementById('v2-task-editor-save');
+    if (taskSaveBtn && !taskSaveBtn.dataset.bound) {
+        taskSaveBtn.dataset.bound = "true";
+        taskSaveBtn.addEventListener('click', async () => {
+            const container = document.getElementById('v2-task-editor-container');
+            const mode = container.dataset.mode;
+            const id = container.dataset.id;
+            const type = container.dataset.type || 'event';
+            
+            const title = document.getElementById('v2-task-title-input').value.trim();
+            const start = document.getElementById('v2-task-start-input').value;
+            const end = document.getElementById('v2-task-end-input').value;
+            const desc = document.getElementById('v2-task-desc-input').value.trim();
+
+            if (!title || !start || !end) {
+                alert('일정/과제 제목과 시작/종료 시간을 입력해 주세요.');
+                return;
+            }
+
+            try {
+                const token = await store.getSessionToken();
+                const providerToken = await store.getProviderToken();
+
+                const isEdit = mode === 'edit';
+                let url = `${API_URL}/calendar`;
+                let method = 'POST';
+
+                if (isEdit) {
+                    url = `${API_URL}/calendar/events/${id}`;
+                    method = 'PATCH';
+                }
+
+                let finalDesc = desc;
+                if (type === 'task') {
+                    const progress = document.getElementById('v2-task-progress-input').value;
+                    const rating = document.getElementById('v2-task-rating-input').value;
+                    const reviewDate = document.getElementById('v2-task-review-date-input').value;
+                    const reflection = document.getElementById('v2-task-reflection-input').value.trim();
+                    finalDesc = serializeTaskMetadata(desc, progress, rating, reviewDate, reflection);
+                }
+
+                const payload = isEdit
+                    ? { start, end, summary: title, description: finalDesc }
+                    : { summary: title, startTime: start, endTime: end, description: finalDesc };
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'x-provider-token': providerToken || ''
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(isEdit ? '일정/과제가 수정되었습니다.' : '일정/과제가 추가되었습니다.');
+                    closeTaskEditor();
+                    loadCalendar(true);
+                } else {
+                    alert('저장 실패: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Failed to save event/task:', err);
+                alert('서버 통신 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    const taskCloseBtn = document.getElementById('v2-task-editor-close');
+    if (taskCloseBtn && !taskCloseBtn.dataset.bound) {
+        taskCloseBtn.dataset.bound = "true";
+        taskCloseBtn.addEventListener('click', () => {
+            closeTaskEditor();
+        });
+    }
 }
 
 export async function loadCalendar(forceRefresh = false) {
+    assertIds('Calendar', [
+        'calendar-days-grid', 'calendar-month-year-text', 'calendar-prev-btn', 'calendar-next-btn', 
+        'calendar-refresh-btn', 'v2-calendar-add-btn', 'v2-task-list', 'v2-task-add-btn', 
+        'calendar-event-modal', 'dayViewContainer'
+    ]);
+
     initCalendarUI();
     const container = document.getElementById('calendar-days-grid');
     if (!container) return;
@@ -292,10 +523,10 @@ export async function loadCalendar(forceRefresh = false) {
                         const resData = await response.json();
                         if (!resData.success) throw new Error(resData.error || '연동 해제 실패');
 
-                        const { error } = await store.supabaseClient.auth.signInWithOAuth({
+                        const { error } = await store.supabaseClient.auth.linkIdentity({
                             provider: 'google',
                             options: {
-                                redirectTo: window.location.origin,
+                                redirectTo: window.location.href.split('?')[0],
                                 scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                                 queryParams: {
                                     access_type: 'offline',
@@ -311,14 +542,21 @@ export async function loadCalendar(forceRefresh = false) {
                     }
                 });
                 
-                const cardContainer = document.getElementById('calendar-container');
-                cardContainer.parentNode.insertBefore(banner, cardContainer);
+                const cardContainer = document.getElementById('calendar-container') || document.getElementById('ai-briefing-section');
+                if (cardContainer) {
+                    cardContainer.parentNode.insertBefore(banner, cardContainer);
+                }
             }
         } else {
             if (banner) banner.remove();
         }
 
         renderCustomGrid();
+        renderV2TaskList();
+        
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        openDayView(todayStr);
     } catch (e) {
         console.error(e);
         container.innerHTML = `<div style="grid-column: span 7; text-align: center; padding: 40px; color: #ff4d4d;">캘린더 로드 실패: ${e.message}</div>`;
@@ -330,96 +568,90 @@ function renderCustomGrid() {
     const monthYearText = document.getElementById('calendar-month-year-text');
     if (!grid || !monthYearText) return;
 
-    // 월 이름 업데이트
-    monthYearText.innerText = `${getMonthName(currentMonth)} ${currentYear}`;
+    monthYearText.innerText = `${currentYear}년 ${currentMonth + 1}월`;
 
     grid.innerHTML = '';
 
-    // 이번 달 1일 정보 및 전체 일수 계산
     const firstDayDate = new Date(currentYear, currentMonth, 1);
-    const startDayOfWeek = firstDayDate.getDay(); // 0: 일요일, 6: 토요일
+    const startDayOfWeek = firstDayDate.getDay();
     const lastDayDate = new Date(currentYear, currentMonth + 1, 0);
     const totalDays = lastDayDate.getDate();
 
-    // 지난 달의 마지막 날 정보
     const prevMonthLastDate = new Date(currentYear, currentMonth, 0).getDate();
 
-    // 1. 지난 달 날짜 칸 렌더링 (그리드 시작을 일요일에 정렬)
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
         const prevDayNum = prevMonthLastDate - i;
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
-        cell.innerHTML = `<span class="text-sm font-medium mb-2">${prevDayNum}</span>`;
-        
-        // 날짜 클릭 시 이전 달 뷰로 이동 또는 이전 달 날짜에 대한 조회
+        cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer';
+        cell.innerHTML = prevDayNum;
         const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
         cell.addEventListener('click', () => openDayView(dateStr));
         grid.appendChild(cell);
     }
 
-    // 2. 이번 달 날짜 칸 렌더링
     for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const cellDate = new Date(currentYear, currentMonth, day);
         
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer';
+        cell.className = 'h-10 flex flex-col items-center justify-center relative cursor-pointer text-label-md';
         
-        // 오늘 날짜 하이라이팅
         const today = new Date();
         const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
-        let dayClass = 'text-sm font-semibold mb-2';
-        if (isToday) {
-            dayClass += ' text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit';
-        }
         
-        // 상단 날짜 숫자 및 클라우드 아이콘(일정에 비서 조언이 있는 경우) 표시
-        let dayHeaderHTML = `<div class="flex justify-between items-start"><span class="${dayClass}">${day}</span>`;
-        
-        // 해당 날짜의 일정들 매핑
         const dayEvents = calendarEvents.filter(ev => {
             const evStart = new Date(ev.start);
             return evStart.getFullYear() === currentYear && evStart.getMonth() === currentMonth && evStart.getDate() === day;
         });
 
-        // 조언이 담긴 AI 일정이 있는지 검사해 마스코트 아이콘 노출
-        const hasAdvice = dayEvents.some(ev => ev.extendedProps?.advice || ev.advice);
-        if (hasAdvice) {
-            dayHeaderHTML += `<img alt="Cloud Spirit" class="w-6 h-6 object-contain opacity-70 floating-cloud" src="mascot.png" style="width: 24px; height: 24px;"/>`;
+        let dotsHTML = '';
+        if (dayEvents.length > 0) {
+            dotsHTML = `<div class="absolute bottom-1 flex gap-0.5">`;
+            dayEvents.slice(0, 3).forEach((ev, idx) => {
+                const desc = ev.extendedProps?.description || ev.description || '';
+                const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
+                let dotColor = 'bg-primary';
+                if (type === 'task') dotColor = 'bg-secondary';
+                if (type === 'shared') dotColor = 'bg-tertiary';
+                
+                if (isToday) {
+                    dotColor = idx === 0 ? 'bg-on-primary' : 'bg-tertiary-fixed';
+                }
+                dotsHTML += `<div class="w-1 h-1 rounded-full ${dotColor}"></div>`;
+            });
+            dotsHTML += `</div>`;
         }
-        dayHeaderHTML += `</div>`;
         
-        let eventsHTML = '<div class="flex-1 overflow-y-auto space-y-1 mt-1 no-scrollbar">';
-        // 칩 카드 형태로 최대 3개까지 노출
-        dayEvents.slice(0, 3).forEach(ev => {
-            const type = ev.extendedProps?.type || ev.type || 'personal';
-            let chipStyle = '';
-            
-            if (type === 'task') {
-                chipStyle = 'bg-[#f4eff3] text-[#4a3b47] border-[#d1c1cf] shadow-sm font-bold';
-            } else if (type === 'shared') {
-                chipStyle = 'bg-[#fdf6ec] text-[#6b4c2a] border-[#e6cda8] shadow-sm font-bold';
+        if (isToday) {
+            cell.className = 'h-10 flex flex-col items-center justify-center text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30';
+            cell.innerHTML = `
+                ${day}
+                <div class="absolute inset-0 flex items-center justify-center -z-10">
+                    <div class="w-8 h-8 rounded-full bg-primary"></div>
+                </div>
+                ${dotsHTML}
+            `;
+        } else {
+            if (cellDate.getDay() === 0) {
+                cell.className = 'h-10 flex flex-col items-center justify-center text-error text-label-md relative';
+            } else if (cellDate.getDay() === 6) {
+                cell.className = 'h-10 flex flex-col items-center justify-center text-primary text-label-md relative';
             } else {
-                chipStyle = 'bg-[#eff6ef] text-[#2d4a31] border-[#b8d4bb] shadow-sm font-bold';
+                cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface text-label-md relative';
             }
-
-            const title = ev.title || '제목 없음';
-            eventsHTML += `<div class="px-2 py-1 mb-1 rounded-lg text-[10px] border truncate transition hover:brightness-95 ${chipStyle}">${title}</div>`;
-        });
-        eventsHTML += '</div>';
-
-        cell.innerHTML = dayHeaderHTML + eventsHTML;
+            cell.innerHTML = `${day}${dotsHTML}`;
+        }
+        
         cell.addEventListener('click', () => openDayView(dateStr));
         grid.appendChild(cell);
     }
 
-    // 3. 다음 달 날짜 칸 렌더링 (그리드 남은 칸 채우기, 총 42칸 기준)
     const totalRendered = startDayOfWeek + totalDays;
     const remaining = (totalRendered % 7 === 0) ? 0 : 7 - (totalRendered % 7);
     for (let i = 1; i <= remaining; i++) {
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
-        cell.innerHTML = `<span class="text-sm font-medium mb-2">${i}</span>`;
+        cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer';
+        cell.innerHTML = i;
         
         const dateStr = `${currentMonth === 11 ? currentYear + 1 : currentYear}-${String(currentMonth === 11 ? 1 : currentMonth + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         cell.addEventListener('click', () => openDayView(dateStr));
@@ -428,21 +660,17 @@ function renderCustomGrid() {
 }
 
 export function openDayView(dateStr) {
-    const container = document.getElementById('dayViewContainer');
-    const card = document.getElementById('dayViewCard');
-    if (!container || !card) return;
+    const timelineList = document.getElementById('v2-timeline-list');
+    const timelineTitle = document.getElementById('v2-timeline-title');
+    if (!timelineList) return;
 
     const baseDate = new Date(dateStr);
     const dayName = getDayName(baseDate.getDay());
-    const dateText = `${getMonthName(baseDate.getMonth())} ${baseDate.getDate()}, ${baseDate.getFullYear()}`;
+    const dateText = `${baseDate.getFullYear()}년 ${baseDate.getMonth() + 1}월 ${baseDate.getDate()}일 (${dayName})`;
 
-    // 상세 카드 헤더 데이터 반영
-    document.getElementById('day-view-day-name').innerText = dayName;
-    document.getElementById('day-view-date-text').innerText = dateText;
-
-    // '일정 등록' 버튼에 타겟 날짜 문자열 주입
-    const addBtn = document.getElementById('day-view-add-btn');
-    if (addBtn) addBtn.dataset.date = dateStr;
+    if (timelineTitle) {
+        timelineTitle.innerText = `${dateText}의 상세 일정`;
+    }
 
     // 해당 날짜 일정 필터링
     const dayEvents = calendarEvents.filter(ev => {
@@ -452,136 +680,476 @@ export function openDayView(dateStr) {
                evStart.getDate() === baseDate.getDate();
     });
 
-    const eventsList = document.getElementById('day-view-events-list');
-    eventsList.innerHTML = '';
+    timelineList.innerHTML = '';
 
     if (dayEvents.length === 0) {
-        eventsList.innerHTML = `<div style="text-align: center; padding: 20px; color: #8c7e6d; font-style: italic;">이 날에는 일정이 없습니다.</div>`;
-    } else {
-        dayEvents.forEach(ev => {
-            const type = ev.extendedProps?.type || ev.type || 'personal';
-            let categoryClass = 'bg-primary';
-            let cardBg = 'bg-primary/10 border-primary/20';
+        timelineList.innerHTML = `<p class="text-on-surface-variant text-center py-4 text-sm ml-6">이 날에는 상세 일정이 없습니다.</p>`;
+        return;
+    }
 
-            if (type === 'task') {
-                categoryClass = 'bg-tertiary';
-                cardBg = 'bg-tertiary/10 border-tertiary/20';
-            } else if (type === 'shared') {
-                categoryClass = 'bg-secondary';
-                cardBg = 'bg-secondary/10 border-secondary/20';
-            }
+    dayEvents.forEach(ev => {
+        const desc = ev.extendedProps?.description || ev.description || '';
+        const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
+        
+        let icon = 'calendar_today';
+        let bgClass = 'bg-primary';
+        let textClass = 'text-on-primary';
+        let timeColorClass = 'text-primary';
+        let statusText = 'Done';
+        
+        if (type === 'task') {
+            icon = 'eco';
+            bgClass = 'bg-tertiary-container';
+            textClass = 'text-on-tertiary-container';
+            timeColorClass = 'text-tertiary';
+            statusText = 'Active';
+        } else if (type === 'shared') {
+            icon = 'palette';
+            bgClass = 'bg-secondary';
+            textClass = 'text-white';
+            timeColorClass = 'text-secondary';
+            statusText = 'Upcoming';
+        }
 
-            const evId = ev.id || '';
-            const evTitle = ev.title || '제목 없음';
-            const timeStr = new Date(ev.start).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        const evId = ev.id || '';
+        const evTitle = ev.title || '제목 없음';
+        
+        const startTime = new Date(ev.start);
+        let timeStr = startTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 
-            const item = document.createElement('div');
-            item.className = `flex items-center gap-4 p-5 rounded-[1.5rem] border-2 ${cardBg} cursor-pointer hover:opacity-90 transition-opacity`;
-            item.innerHTML = `
-                <div class="w-4 h-4 rounded-full ${categoryClass}" style="width:16px; height:16px; border-radius:50%;"></div>
-                <div style="flex:1; text-align:left;">
-                    <h4 class="text-xl font-bold text-on-surface" style="margin:0; font-size:1.25rem;">${evTitle}</h4>
-                    <p class="text-on-surface-variant" style="margin:2px 0 0 0; font-size:0.9rem;">${timeStr} • ${type.toUpperCase()}</p>
+        const cleanDesc = desc.replace(/\[Task\]/g, '')
+                              .replace(/\[Progress:\s*\d+\]/g, '')
+                              .replace(/\[Rating:\s*\d+\]/g, '')
+                              .replace(/\[ReviewDate:\s*[^\]]+\]/g, '')
+                              .replace(/\[Reflection:\s*[^\]]+\]/g, '')
+                              .trim();
+
+        const hasImage = ev.extendedProps?.imageUrl || ev.imageUrl;
+        let cardHTML = '';
+
+        if (hasImage) {
+            const imageUrl = ev.extendedProps?.imageUrl || ev.imageUrl;
+            cardHTML = `
+            <div class="flex-1 group overflow-hidden bg-surface-container-highest/60 backdrop-blur-sm rounded-xl p-0 shadow-sm border border-outline-variant/10">
+                <div class="relative h-32 overflow-hidden">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imageUrl}" alt="${evTitle}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div class="absolute bottom-3 left-4 text-white">
+                        <span class="text-label-sm font-bold opacity-80">${timeStr}</span>
+                        <h4 class="font-label-md">${evTitle}</h4>
+                    </div>
                 </div>
-                <button class="p-2 text-on-surface-variant hover:text-primary edit-event-btn" style="background:none; border:none; cursor:pointer;" data-id="${evId}">
-                    <span class="material-symbols-outlined text-2xl">edit</span>
-                </button>
-            `;
-            
-            // 일정 카드 클릭 시 상세보기/수정 모달 띄우기
-            item.querySelector('.edit-event-btn').addEventListener('click', (e) => {
+                <div class="p-4 journal-texture relative" style="transform: translateY(0px); transition: transform 0.3s;">
+                    <p class="text-label-sm text-on-surface-variant leading-relaxed">${cleanDesc || '설명이 없습니다.'}</p>
+                    <div class="absolute right-3 bottom-3 flex gap-1">
+                        <button class="p-1 text-on-surface-variant hover:text-primary edit-event-btn" data-id="${evId}"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+                    </div>
+                </div>
+            </div>`;
+        } else {
+            cardHTML = `
+            <div class="flex-1 bg-surface-container-highest/60 backdrop-blur-sm rounded-xl p-4 journal-texture shadow-sm border border-outline-variant/10 relative" style="transform: translateY(0px); transition: transform 0.3s;">
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-label-sm ${timeColorClass} font-bold">${timeStr}</span>
+                    <span class="text-[10px] text-on-surface-variant/60 uppercase font-bold tracking-widest">${statusText}</span>
+                </div>
+                <h4 class="font-label-md text-on-surface">${evTitle}</h4>
+                <p class="text-label-sm text-on-surface-variant mt-2 leading-relaxed italic">${cleanDesc || '설명이 없습니다.'}</p>
+                <div class="absolute right-3 bottom-3 flex gap-1">
+                    <button class="p-1 text-on-surface-variant hover:text-primary edit-event-btn" data-id="${evId}"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+                </div>
+            </div>`;
+        }
+
+        const item = document.createElement('div');
+        item.className = 'flex gap-gutter-md relative';
+        item.innerHTML = `
+            <div class="z-10 mt-1 w-6 h-6 rounded-full ${bgClass} flex items-center justify-center border-4 border-surface shadow-sm">
+                <span class="material-symbols-outlined ${textClass} text-[14px]">${icon}</span>
+            </div>
+            ${cardHTML}
+        `;
+
+        const cardBody = item.querySelector('.journal-texture');
+        if (cardBody) {
+            cardBody.addEventListener('mouseenter', () => {
+                cardBody.style.transform = 'translateY(-2px)';
+            });
+            cardBody.addEventListener('mouseleave', () => {
+                cardBody.style.transform = 'translateY(0)';
+            });
+        }
+
+        const editBtn = item.querySelector('.edit-event-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openEventModal('edit', ev);
             });
-            item.addEventListener('click', () => {
-                openEventModal('edit', ev);
-            });
-            eventsList.appendChild(item);
+        }
+
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.edit-event-btn')) return;
+            openEventModal('edit', ev);
         });
-    }
 
-    // AI Insight 조언 카드 렌더링
-    const adviceCard = document.getElementById('day-view-advice-card');
-    const adviceText = document.getElementById('day-view-advice-text');
-    const evWithAdvice = dayEvents.find(ev => ev.extendedProps?.advice || ev.advice);
-
-    if (evWithAdvice) {
-        const advice = evWithAdvice.extendedProps?.advice || evWithAdvice.advice;
-        adviceText.innerText = `"${advice}"`;
-        adviceCard.style.display = 'block';
-    } else {
-        adviceCard.style.display = 'none';
-    }
-
-    // 슬라이더 상승 애니메이션 실행
-    container.classList.remove('hidden');
-    container.classList.add('flex');
-    setTimeout(() => {
-        card.classList.remove('translate-y-full');
-        card.classList.add('translate-y-0');
-    }, 10);
-    document.body.style.overflow = 'hidden';
+        timelineList.appendChild(item);
+    });
 }
 
 export function closeDayView() {
-    const container = document.getElementById('dayViewContainer');
-    const card = document.getElementById('dayViewCard');
-    if (!container || !card) return;
-
-    card.classList.remove('translate-y-0');
-    card.classList.add('translate-y-full');
-    setTimeout(() => {
-        container.classList.add('hidden');
-        container.classList.remove('flex');
-        document.body.style.overflow = 'auto';
-    }, 500);
+    // No-op since we render in-page now
 }
 
 function openEventModal(mode, eventData) {
-    const modal = document.getElementById('calendar-event-modal');
-    if (!modal) return;
+    const desc = eventData?.extendedProps?.description || eventData?.description || '';
+    const type = eventData?.extendedProps?.type || eventData?.type || 'event';
+    const resolvedType = (type === 'task' || desc.includes('[Task]')) ? 'task' : 'event';
+    openTaskEditor(mode, eventData, resolvedType);
+}
 
-    const isReadOnly = eventData.extendedProps?.type === 'task' || eventData.extendedProps?.type === 'shared' || eventData.type === 'task' || eventData.type === 'shared';
+export function parseTaskMetadata(description) {
+    const meta = {
+        progress: 0,
+        rating: 0,
+        reviewDate: '',
+        reflection: '',
+        cleanDescription: description || ''
+    };
+    if (!description) return meta;
 
-    document.getElementById('calendar-modal-title').innerText = mode === 'add' ? '📌 일정 추가' : '📌 일정 상세';
-    document.getElementById('calendar-event-id').value = eventData.id || '';
-    document.getElementById('calendar-event-summary').value = eventData.title || '';
-    document.getElementById('calendar-event-summary').disabled = isReadOnly;
+    // Remove [Task] tag first
+    let clean = description.replace(/\[Task\]/g, '').trim();
 
-    // ISO 문자열 날짜를 datetime-local 포맷에 맞춰 슬라이싱
-    const startISO = formatLocalISO(new Date(eventData.start));
-    const endISO = formatLocalISO(new Date(eventData.end || eventData.start));
-
-    document.getElementById('calendar-event-start').value = startISO;
-    document.getElementById('calendar-event-start').disabled = isReadOnly;
-
-    document.getElementById('calendar-event-end').value = endISO;
-    document.getElementById('calendar-event-end').disabled = isReadOnly;
-
-    document.getElementById('calendar-event-desc').value = eventData.extendedProps?.description || eventData.description || '';
-    document.getElementById('calendar-event-desc').disabled = isReadOnly;
-
-    const advice = eventData.extendedProps?.advice || eventData.advice;
-    const adviceGroup = document.getElementById('calendar-event-advice-group');
-    const adviceText = document.getElementById('calendar-event-advice-text');
-
-    if (advice) {
-        adviceText.innerText = advice;
-        adviceGroup.style.display = 'flex';
-    } else {
-        adviceGroup.style.display = 'none';
+    // Parse [Progress: X]
+    const progMatch = clean.match(/\[Progress:\s*(\d+)\]/);
+    if (progMatch) {
+        meta.progress = parseInt(progMatch[1], 10);
+        clean = clean.replace(progMatch[0], '').trim();
     }
 
-    const deleteBtn = document.getElementById('delete-calendar-event-btn');
-    const saveBtn = document.getElementById('save-calendar-event-btn');
-
-    if (isReadOnly) {
-        if (deleteBtn) deleteBtn.style.display = 'none';
-        if (saveBtn) saveBtn.style.display = 'none';
-    } else {
-        if (deleteBtn) deleteBtn.style.display = mode === 'edit' ? 'block' : 'none';
-        if (saveBtn) saveBtn.style.display = 'block';
+    // Parse [Rating: X]
+    const ratingMatch = clean.match(/\[Rating:\s*(\d+)\]/);
+    if (ratingMatch) {
+        meta.rating = parseInt(ratingMatch[1], 10);
+        clean = clean.replace(ratingMatch[0], '').trim();
     }
 
-    modal.style.display = 'flex';
+    // Parse [ReviewDate: X]
+    const dateMatch = clean.match(/\[ReviewDate:\s*([^\]]+)\]/);
+    if (dateMatch) {
+        meta.reviewDate = dateMatch[1].trim();
+        clean = clean.replace(dateMatch[0], '').trim();
+    }
+
+    // Parse [Reflection: X]
+    const reflMatch = clean.match(/\[Reflection:\s*([^\]]+)\]/);
+    if (reflMatch) {
+        meta.reflection = reflMatch[1].trim();
+        clean = clean.replace(reflMatch[0], '').trim();
+    }
+
+    meta.cleanDescription = clean;
+    return meta;
+}
+
+export function serializeTaskMetadata(cleanDescription, progress, rating, reviewDate, reflection) {
+    let parts = [cleanDescription];
+    if (progress !== undefined && progress !== null && progress !== '') parts.push(`[Progress: ${progress}]`);
+    if (rating !== undefined && rating !== null && rating !== '') parts.push(`[Rating: ${rating}]`);
+    if (reviewDate) parts.push(`[ReviewDate: ${reviewDate}]`);
+    if (reflection) parts.push(`[Reflection: ${reflection}]`);
+    parts.push('[Task]');
+    return parts.join(' ').trim();
+}
+
+function getDDay(endDateStr) {
+    if (!endDateStr) return '';
+    const now = new Date();
+    const end = new Date(endDateStr);
+    
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    
+    const diffTime = endDate.getTime() - nowDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'D-Day';
+    if (diffDays > 0) return `D-${diffDays}`;
+    return `D+${Math.abs(diffDays)}`;
+}
+
+function getTaskIconInfo(title) {
+    const t = title || '';
+    if (t.includes('명상') || t.includes('스트레칭') || t.includes('요가') || t.includes('마음')) {
+        return { icon: 'self_improvement', colorClass: 'text-primary', bgClass: 'bg-primary/10' };
+    }
+    if (t.includes('독서') || t.includes('공부') || t.includes('공독') || t.includes('공책') || t.includes('학습') || t.includes('책')) {
+        return { icon: 'menu_book', colorClass: 'text-tertiary', bgClass: 'bg-tertiary/10' };
+    }
+    if (t.includes('드로잉') || t.includes('그림') || t.includes('수채화') || t.includes('미술') || t.includes('스케치')) {
+        return { icon: 'brush', colorClass: 'text-secondary', bgClass: 'bg-secondary/10' };
+    }
+    if (t.includes('식물') || t.includes('가드닝') || t.includes('물주기') || t.includes('꽃')) {
+        return { icon: 'eco', colorClass: 'text-primary', bgClass: 'bg-primary/10' };
+    }
+    if (t.includes('운동') || t.includes('러닝') || t.includes('산책') || t.includes('헬스')) {
+        return { icon: 'directions_run', colorClass: 'text-secondary', bgClass: 'bg-secondary/10' };
+    }
+    return { icon: 'check_circle', colorClass: 'text-primary', bgClass: 'bg-primary/10' };
+}
+
+export function renderV2TaskList() {
+    const listContainer = document.getElementById('v2-task-list');
+    if (!listContainer) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tasks = calendarEvents.filter(ev => {
+        const desc = ev.extendedProps?.description || ev.description || '';
+        const type = ev.extendedProps?.type || ev.type || 'personal';
+        if (type !== 'task' && !desc.includes('[Task]')) return false;
+
+        // 마감일/종료일이 오늘보다 과거인지 확인하여 필터링
+        const dateStr = ev.end || ev.start;
+        if (dateStr) {
+            const taskDate = new Date(dateStr);
+            taskDate.setHours(23, 59, 59, 999); // 오늘인 과제는 보이도록 오늘 자정 직전으로 설정
+            if (taskDate < today) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    if (tasks.length === 0) {
+        listContainer.innerHTML = `<p class="text-on-surface-variant text-center py-4 text-sm">과제가 없습니다.</p>`;
+        return;
+    }
+
+    listContainer.innerHTML = tasks.map(t => {
+        const desc = t.extendedProps?.description || t.description || '';
+        const meta = parseTaskMetadata(desc);
+        
+        const dday = getDDay(t.end || t.start);
+        const iconInfo = getTaskIconInfo(t.title);
+
+        let reviewSection = '';
+        if (meta.rating > 0 || meta.reflection || meta.reviewDate) {
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isFilled = i <= meta.rating;
+                starsHTML += `<span class="material-symbols-outlined ${isFilled ? 'text-primary' : 'text-outline-variant'} text-[18px]" style="font-variation-settings: 'FILL' ${isFilled ? 1 : 0};">star</span>`;
+            }
+
+            reviewSection = `
+            <div class="bg-primary/5 rounded-lg p-3 space-y-2 mt-4">
+                <div class="flex justify-between items-center">
+                    <h5 class="text-label-sm font-bold text-primary">중간 점검</h5>
+                    <span class="text-[10px] text-on-surface-variant/60">${meta.reviewDate || ''}</span>
+                </div>
+                <div class="flex gap-1">
+                    ${starsHTML}
+                </div>
+                <div class="space-y-1">
+                    <p class="text-[11px] text-on-surface-variant font-bold">자기 성찰</p>
+                    <p class="text-label-sm text-on-surface-variant italic leading-relaxed">${meta.reflection || '아직 등록된 성찰 코멘트가 없습니다.'}</p>
+                </div>
+            </div>`;
+        }
+
+        return `
+        <div class="task-expandable bg-surface-container-low rounded-xl p-4 border border-outline-variant/20 shadow-sm transition-all duration-300 cursor-pointer" data-id="${t.id}" aria-expanded="false" onclick="window.v2ToggleTaskAccordion(this, event)">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full ${iconInfo.bgClass} flex items-center justify-center">
+                        <span class="material-symbols-outlined ${iconInfo.colorClass} text-[20px]">${iconInfo.icon}</span>
+                    </div>
+                    <span class="font-label-md text-on-surface">${t.title || '제목 없음'}</span>
+                </div>
+                <span class="material-symbols-outlined text-on-surface-variant expand-icon transition-transform duration-300">expand_more</span>
+            </div>
+            <div class="task-details">
+                <div class="flex items-center gap-2 text-label-sm text-primary font-bold mb-1">
+                    <span class="material-symbols-outlined text-[14px]">calendar_today</span> 
+                    목표일 ${dday || 'D-Day'}
+                </div>
+                <p class="text-label-sm text-on-surface-variant leading-relaxed journal-texture p-3 rounded-lg bg-surface-container-high/50 border border-outline-variant/10">
+                    ${meta.cleanDescription || '상세 정보가 없습니다.'}
+                </p>
+                
+                <div class="mt-4 space-y-3 border-t border-outline-variant/20 pt-3">
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-label-sm">
+                            <span class="text-on-surface-variant">진행률</span>
+                            <span class="text-primary font-bold">${meta.progress}%</span>
+                        </div>
+                        <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full" style="width: ${meta.progress}%"></div>
+                        </div>
+                    </div>
+                    
+                    ${reviewSection}
+                    
+                    <div class="flex gap-2 justify-end pt-2">
+                        <button type="button" class="px-3 py-1 bg-error/10 text-error hover:bg-error hover:text-on-error rounded-lg text-[11px] font-bold transition-all delete-task-btn" onclick="event.stopPropagation(); window.v2TaskDeleteTrigger('${t.id}');">삭제</button>
+                        <button type="button" class="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-lg text-[11px] font-bold transition-all edit-task-btn" onclick="event.stopPropagation(); window.v2TaskEditTrigger('${t.id}');">수정</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function updateEditorStarsUI(rating) {
+    const stars = document.querySelectorAll('#v2-task-rating-container .rating-star-btn');
+    stars.forEach(btn => {
+        const btnRating = parseInt(btn.dataset.rating, 10);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+            if (btnRating <= rating) {
+                btn.classList.remove('text-outline-variant');
+                btn.classList.add('text-primary');
+                icon.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                btn.classList.remove('text-primary');
+                btn.classList.add('text-outline-variant');
+                icon.style.fontVariationSettings = "'FILL' 0";
+            }
+        }
+    });
+}
+
+export function openTaskEditor(mode, taskData = {}, defaultType = null) {
+    const container = document.getElementById('v2-task-editor-container');
+    const scrim = document.getElementById('v2-editor-scrim');
+    if (!container) return;
+
+    const titleInput = document.getElementById('v2-task-title-input');
+    const startInput = document.getElementById('v2-task-start-input');
+    const endInput = document.getElementById('v2-task-end-input');
+    const descInput = document.getElementById('v2-task-desc-input');
+
+    const progressInput = document.getElementById('v2-task-progress-input');
+    const progressVal = document.getElementById('v2-task-progress-val');
+    const ratingInput = document.getElementById('v2-task-rating-input');
+    const reviewDateInput = document.getElementById('v2-task-review-date-input');
+    const reflectionInput = document.getElementById('v2-task-reflection-input');
+    const deleteContainer = document.getElementById('v2-task-delete-container');
+
+    // Initialize/register toggle script on window if not yet set
+    if (!window.v2ToggleTaskType) {
+        window.v2ToggleTaskType = function(type) {
+            container.dataset.type = type;
+            const eventBtn = document.getElementById('type-event');
+            const taskBtn = document.getElementById('type-task');
+            const taskFields = document.getElementById('v2-task-only-fields');
+
+            if (type === 'event') {
+                if (eventBtn) {
+                    eventBtn.className = 'px-6 py-2 rounded-full font-label-md transition-all bg-secondary-container text-on-secondary-container shadow-sm';
+                }
+                if (taskBtn) {
+                    taskBtn.className = 'px-6 py-2 rounded-full font-label-md transition-all text-on-surface-variant';
+                }
+                if (taskFields) {
+                    taskFields.classList.add('hidden');
+                }
+            } else {
+                if (taskBtn) {
+                    taskBtn.className = 'px-6 py-2 rounded-full font-label-md transition-all bg-secondary-container text-on-secondary-container shadow-sm';
+                }
+                if (eventBtn) {
+                    eventBtn.className = 'px-6 py-2 rounded-full font-label-md transition-all text-on-surface-variant';
+                }
+                if (taskFields) {
+                    taskFields.classList.remove('hidden');
+                }
+            }
+        };
+        window.toggleType = window.v2ToggleTaskType; // HTML inline compatibility
+    }
+
+    let resolvedType = defaultType;
+
+    if (mode === 'add') {
+        container.dataset.mode = 'add';
+        container.dataset.id = '';
+        titleInput.value = '';
+        
+        // Use taskData.start/end if provided (e.g. from calendar grid click)
+        const now = new Date();
+        const startVal = taskData.start ? new Date(taskData.start) : now;
+        const endVal = taskData.end ? new Date(taskData.end) : new Date(startVal.getTime() + 60 * 60 * 1000);
+        
+        startInput.value = formatLocalISO(startVal);
+        endInput.value = formatLocalISO(endVal);
+        descInput.value = '';
+
+        if (progressInput) progressInput.value = 0;
+        if (progressVal) progressVal.innerText = '0%';
+        if (ratingInput) ratingInput.value = 0;
+        updateEditorStarsUI(0);
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (reviewDateInput) reviewDateInput.value = todayStr;
+        if (reflectionInput) reflectionInput.value = '';
+
+        if (deleteContainer) deleteContainer.classList.add('hidden');
+        
+        if (!resolvedType) {
+            resolvedType = 'event';
+        }
+    } else {
+        container.dataset.mode = 'edit';
+        container.dataset.id = taskData.id || '';
+        titleInput.value = taskData.title || '';
+        startInput.value = formatLocalISO(new Date(taskData.start));
+        endInput.value = formatLocalISO(new Date(taskData.end || taskData.start));
+        
+        const rawDesc = taskData.description || taskData.extendedProps?.description || '';
+        const meta = parseTaskMetadata(rawDesc);
+        descInput.value = meta.cleanDescription;
+
+        if (progressInput) progressInput.value = meta.progress;
+        if (progressVal) progressVal.innerText = `${meta.progress}%`;
+        if (ratingInput) ratingInput.value = meta.rating;
+        updateEditorStarsUI(meta.rating);
+        if (reviewDateInput) {
+            reviewDateInput.value = meta.reviewDate || new Date().toISOString().split('T')[0];
+        }
+        if (reflectionInput) reflectionInput.value = meta.reflection;
+
+        if (deleteContainer) deleteContainer.classList.remove('hidden');
+
+        if (!resolvedType) {
+            const isTask = taskData.type === 'task' || taskData.extendedProps?.type === 'task' || rawDesc.includes('[Task]');
+            resolvedType = isTask ? 'task' : 'event';
+        }
+    }
+
+    // Toggle to the resolved type (shows/hides task fields and updates toggle UI state)
+    window.v2ToggleTaskType(resolvedType);
+
+    scrim?.classList.remove('hidden');
+    container.classList.remove('hidden');
+    setTimeout(() => {
+        scrim?.classList.remove('opacity-0');
+        scrim?.classList.add('opacity-100');
+        container.style.transform = 'translateY(0)';
+    }, 10);
+}
+
+export function closeTaskEditor() {
+    const container = document.getElementById('v2-task-editor-container');
+    const scrim = document.getElementById('v2-editor-scrim');
+    if (!container) return;
+
+    container.style.transform = 'translateY(100%)';
+    scrim?.classList.remove('opacity-100');
+    scrim?.classList.add('opacity-0');
+    setTimeout(() => {
+        container.classList.add('hidden');
+        scrim?.classList.add('hidden');
+    }, 400);
 }

@@ -22,7 +22,8 @@ const {
     safeParseJsonArray,
     extractEventJson,
     scanRedisKeys,
-    verifyUser
+    verifyUser,
+    getGoogleAccessToken
 } = require('./api/_routes/shared');
 
 const app = express();
@@ -93,11 +94,24 @@ app.patch('/api/history/:id', verifyUser, historyRoute);
 // 4. 구글 캘린더 일정 수정/삭제 및 추가
 app.patch('/api/calendar/events/:id', verifyUser, async (req, res) => {
     try {
-        const providerToken = req.headers['x-provider-token'];
+        const user = req.user;
+        let providerToken = null;
+        try {
+            providerToken = await getGoogleAccessToken(user.id);
+        } catch (err) {
+            console.warn('--- [CALENDAR UPDATE] Token fetch error, falling back to header:', err.message);
+        }
+
+        if (!providerToken) {
+            providerToken = req.headers['x-provider-token'];
+        }
+
         const { id } = req.params;
         const { start, end } = req.body;
 
-        if (!providerToken) return sendError(res, 400, 'Provider Token이 필요합니다.');
+        if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+            return sendError(res, 400, 'Provider Token이 필요합니다.');
+        }
 
         const updateRes = await fetchWithTimeout(
             `https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}`,
@@ -129,10 +143,23 @@ app.patch('/api/calendar/events/:id', verifyUser, async (req, res) => {
 
 app.delete('/api/calendar/events/:id', verifyUser, async (req, res) => {
     try {
-        const providerToken = req.headers['x-provider-token'];
+        const user = req.user;
+        let providerToken = null;
+        try {
+            providerToken = await getGoogleAccessToken(user.id);
+        } catch (err) {
+            console.warn('--- [CALENDAR DELETE] Token fetch error, falling back to header:', err.message);
+        }
+
+        if (!providerToken) {
+            providerToken = req.headers['x-provider-token'];
+        }
+
         const { id } = req.params;
 
-        if (!providerToken) return sendError(res, 400, 'Provider Token이 필요합니다.');
+        if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+            return sendError(res, 400, 'Provider Token이 필요합니다.');
+        }
 
         const deleteRes = await fetchWithTimeout(
             `https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}`,
@@ -160,7 +187,7 @@ app.post('/api/calendar/add', verifyUser, async (req, res) => {
         const user = req.user;
         let providerToken = null;
         try {
-            providerToken = await redis.get(`user:${user.id}:google_provider_token`);
+            providerToken = await getGoogleAccessToken(user.id);
         } catch (redisErr) {
             console.warn('--- [CALENDAR ADD] Redis connection offline/error, falling back to header:', redisErr.message);
         }
@@ -215,8 +242,7 @@ app.post('/api/calendar/add', verifyUser, async (req, res) => {
 });
 
 // 5. 노트북(전자 필기장) 목록 보관 및 조회
-app.get('/api/notebooks', verifyUser, notebooksRoute);
-app.post('/api/notebooks', verifyUser, notebooksRoute);
+app.all('/api/notebooks', verifyUser, notebooksRoute);
 
 // 6. 사용자 호칭(닉네임) 관리
 app.get('/api/nickname', verifyUser, nicknameRoute);

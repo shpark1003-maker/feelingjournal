@@ -1,16 +1,16 @@
 :root {
-    --primary-gradient: linear-gradient(135deg, #7a9e7e 0%, #a9c2ad 100%);
-    --primary-color: #7a9e7e;
-    --secondary-color: #d4a373;
-    --tertiary-color: #9a8c98;
-    --bg-color: #fffef0;
-    --card-bg: #fdf6e3;
-    --text-main: #433e37;
-    --text-muted: #7c7267;
-    --accent-color: #7a9e7e;
-    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
-    --shadow-strong: 0 10px 30px rgba(122, 158, 126, 0.2);
-    --border-radius: 16px;
+    --primary-gradient: linear-gradient(135deg, #cfbcff 0%, #6750a4 100%);
+    --primary-color: #cfbcff;
+    --secondary-color: #c5c0ff;
+    --tertiary-color: #e7c365;
+    --bg-color: #141218;
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --text-main: #e6e0e9;
+    --text-muted: #cbc4d2;
+    --accent-color: #cfbcff;
+    --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --shadow-strong: 0 0 15px rgba(108, 92, 231, 0.5);
+    --border-radius: 20px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -41,6 +41,22 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 13px;
+    }
+}
+
 body {
     font-family: 'Noto Sans KR', 'Outfit', sans-serif;
     background: var(--bg-color);
@@ -60,11 +76,11 @@ body {
 .container {
     width: 100%;
     max-width: 1100px;
-    /* 600px에서 1100px로 대폭 확장 */
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius);
     padding: 30px;
     box-shadow: var(--shadow-soft);
@@ -106,7 +122,7 @@ header {
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 4vw + 1rem, 2rem);
     font-weight: 700;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
@@ -126,8 +142,8 @@ h1 {
 
 textarea:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
-    background: #fff;
+    box-shadow: 0 0 0 4px rgba(207, 188, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 
@@ -213,10 +229,11 @@ textarea:focus {
 }
 
 .auth-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius);
     padding: 40px;
     width: 100%;
@@ -278,10 +295,10 @@ textarea:focus {
     display: flex;
     gap: 5px;
     margin-bottom: 30px;
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.05);
     padding: 5px;
     border-radius: 15px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tab-btn {
@@ -289,7 +306,7 @@ textarea:focus {
     padding: 10px;
     border: none;
     background: none;
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--text-muted);
     cursor: pointer;
     border-radius: 10px;
     font-weight: 500;
@@ -298,9 +315,9 @@ textarea:focus {
 }
 
 .tab-btn.active {
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
     color: var(--accent-color);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -322,9 +339,8 @@ textarea:focus {
 #calendar-container {
     width: 100%;
     min-height: 650px;
-    background: #ffffff;
+    background: transparent;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* Calendar View */
@@ -353,21 +369,21 @@ textarea:focus {
 }
 
 .event-time {
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 1vw + 0.5rem, 0.8rem);
     color: var(--secondary-color);
     display: block;
     margin-bottom: 5px;
 }
 
 .event-title {
-    font-size: 1.1rem;
+    font-size: clamp(0.95rem, 2vw + 0.5rem, 1.1rem);
     font-weight: 600;
     margin-bottom: 8px;
     display: block;
 }
 
 .event-ai-advice {
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.9rem);
     color: rgba(255, 255, 255, 0.8);
     background: rgba(108, 92, 231, 0.1);
     padding: 10px;
@@ -479,7 +495,7 @@ textarea:focus {
     max-width: 100% !important;
     padding: 0 !important;
     border-radius: 0 !important;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.9rem);
     line-height: 1.4;
     position: relative;
     box-shadow: none !important;
@@ -608,7 +624,7 @@ textarea:focus {
     
 
     h1 {
-        font-size: 1.8rem;
+        /* font-size is now handled natively by clamp() fluid typography */
     }
 
     
@@ -722,7 +738,8 @@ textarea:focus {
 
 /* Settings Section */
 .settings-section {
-    background: white;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 30px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-soft);
@@ -762,10 +779,10 @@ textarea:focus {
 .journal-3-column-layout {
     display: flex !important;
     height: calc(100vh - 120px);
-    background: white;
+    background: transparent;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
     margin-top: 20px;
 }
 

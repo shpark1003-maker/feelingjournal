@@ -480,45 +480,85 @@ const ZONE_MAP = {
 
 async function getLiveWeather(region) {
     const axios = require('axios');
-    const cheerio = require('cheerio');
-    const zone = ZONE_MAP[region] || ZONE_MAP['서울'];
-    const url = `http://www.kma.go.kr/wid/queryDFSRSS.jsp?zone=${zone}`;
+    const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     
+    if (apiKey && apiKey !== '여기에_OpenWeather_API키_입력') {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(region)}&appid=${apiKey}&units=metric&lang=kr`;
+        try {
+            const res = await axios.get(url, { timeout: 5000 });
+            const temp = res.data.main.temp;
+            const sky = res.data.weather[0]?.description || '맑음';
+            const rainVol = res.data.rain ? (res.data.rain['1h'] || 0) : 0;
+            
+            return {
+                region,
+                temp,
+                sky,
+                rainProb: rainVol > 0 ? 100 : 0,
+                rainType: rainVol > 0 ? '강수 있음' : '강수 없음'
+            };
+        } catch (e) {
+            console.error(`--- [WEATHER API ERROR] Region: ${region}, Error: ${e.message} ---`);
+            // Fall through to fallback
+        }
+    }
+    
+    // Fallback: wttr.in
+    const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
     try {
         const res = await axios.get(url, { timeout: 5000 });
-        const $ = cheerio.load(res.data, { xmlMode: true });
-        const dataBlock = $('data').first();
+        const current = res.data.current_condition?.[0];
+        if (!current) return null;
         
-        if (!dataBlock.length) return null;
-        
-        const temp = dataBlock.find('temp').text();
-        const wfKor = dataBlock.find('wfKor').text();
-        const pop = dataBlock.find('pop').text();
-        const pty = dataBlock.find('pty').text();
-        
-        let ptyStr = '강수 없음';
-        if (pty === '1') ptyStr = '비';
-        else if (pty === '2') ptyStr = '진눈깨비';
-        else if (pty === '3') ptyStr = '눈';
-        else if (pty === '4') ptyStr = '소나기';
+        const sky = current.weatherDesc?.[0]?.value || 'Clear';
+        const temp = parseFloat(current.temp_C || 0);
+        const pop = res.data.weather?.[0]?.hourly?.[0]?.chanceofrain || '0';
         
         return {
             region,
-            temp: parseFloat(temp),
-            sky: wfKor,
-            rainProb: parseInt(pop, 10),
-            rainType: ptyStr
+            temp: temp,
+            sky: sky,
+            rainProb: parseInt(pop, 10) || 0,
+            rainType: parseInt(pop, 10) > 30 ? '강수 가능성 있음' : '강수 없음'
         };
     } catch (e) {
-        console.error(`--- [WEATHER CRAWL ERROR] Region: ${region}, Error: ${e.message} ---`);
+        console.error(`--- [WEATHER FETCH ERROR] Region: ${region}, Error: ${e.message} ---`);
         return null;
     }
 }
 
-async function getEconomicHeadlines() {
+async function getNewsHeadlines(categories = ['business']) {
     const axios = require('axios');
+    const apiKey = process.env.NEWSAPI_KEY;
+
+    if (apiKey && apiKey !== '여기에_NewsAPI_키_입력') {
+        try {
+            const headlines = [];
+            const fetchPromises = categories.map(async (cat) => {
+                const url = `https://newsapi.org/v2/top-headlines?country=kr&category=${cat}&pageSize=2&apiKey=${apiKey}`;
+                const res = await axios.get(url, { timeout: 5000 });
+                if (res.data && res.data.articles) {
+                    res.data.articles.forEach(article => {
+                        if (article.title) headlines.push(`[${cat}] ${article.title}`);
+                    });
+                }
+            });
+            await Promise.allSettled(fetchPromises);
+            const finalHeadlines = [...new Set(headlines)].slice(0, 4);
+            if (finalHeadlines.length > 0) {
+                return finalHeadlines;
+            } else {
+                console.warn('--- [NEWS API] Returned empty results. Falling back to Naver RSS... ---');
+            }
+        } catch (e) {
+            console.error(`--- [NEWS API ERROR] Error: ${e.message} ---`);
+            // Fall through to fallback
+        }
+    }
+
     const cheerio = require('cheerio');
-    const url = 'https://news.naver.com/rss/section/101';
+    // Fallback: Google News RSS (경제/비즈니스)
+    const url = 'https://news.google.com/rss/search?q=%EA%B2%BD%EC%A0%9C&hl=ko&gl=KR&ceid=KR:ko';
     
     try {
         const res = await axios.get(url, { timeout: 5000 });
@@ -526,7 +566,7 @@ async function getEconomicHeadlines() {
         const headlines = [];
         
         $('item').slice(0, 3).each((i, el) => {
-            const title = $(el).find('title').text().trim();
+            const title = $(el).find('title').text().replace(/ - [^-]+$/, '').trim();
             if (title) headlines.push(title);
         });
         
@@ -659,7 +699,7 @@ module.exports = {
     scanRedisKeys,
     verifyUser,
     getLiveWeather,
-    getEconomicHeadlines,
+    getNewsHeadlines,
     encrypt,
     decrypt,
     refreshGoogleAccessToken,

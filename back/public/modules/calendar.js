@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL } from './state.js?v=5.2.0';
 
 let initialized = false;
 let currentYear = new Date().getFullYear();
@@ -292,10 +292,10 @@ export async function loadCalendar(forceRefresh = false) {
                         const resData = await response.json();
                         if (!resData.success) throw new Error(resData.error || '연동 해제 실패');
 
-                        const { error } = await store.supabaseClient.auth.signInWithOAuth({
+                        const { error } = await store.supabaseClient.auth.linkIdentity({
                             provider: 'google',
                             options: {
-                                redirectTo: window.location.origin,
+                                redirectTo: window.location.href.split('?')[0],
                                 scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                                 queryParams: {
                                     access_type: 'offline',
@@ -348,8 +348,8 @@ function renderCustomGrid() {
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
         const prevDayNum = prevMonthLastDate - i;
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
-        cell.innerHTML = `<span class="text-sm font-medium mb-2">${prevDayNum}</span>`;
+        cell.className = 'border border-[#5D574D]/10 p-2 h-32 flex flex-col hover:bg-[#FDFCF0]/50 transition-colors cursor-pointer opacity-40 rounded-lg m-[2px]';
+        cell.innerHTML = `<span class="text-sm font-medium mb-1 text-[#8D775F]">${prevDayNum}</span>`;
         
         // 날짜 클릭 시 이전 달 뷰로 이동 또는 이전 달 날짜에 대한 조회
         const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
@@ -363,12 +363,12 @@ function renderCustomGrid() {
         const cellDate = new Date(currentYear, currentMonth, day);
         
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer';
+        cell.className = 'border border-[#5D574D]/30 p-2 h-32 flex flex-col hover:bg-[#FDFCF0] transition-colors cursor-pointer bg-white/60 shadow-[0_4px_12px_-5px_rgba(184,166,142,0.2)] rounded-lg m-[2px]';
         
         // 오늘 날짜 하이라이팅
         const today = new Date();
         const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
-        let dayClass = 'text-sm font-semibold mb-2';
+        let dayClass = 'text-sm font-bold mb-1 text-[#4A6741]';
         if (isToday) {
             dayClass += ' text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit';
         }
@@ -391,20 +391,25 @@ function renderCustomGrid() {
         
         let eventsHTML = '<div class="flex-1 overflow-y-auto space-y-1 mt-1 no-scrollbar">';
         // 칩 카드 형태로 최대 3개까지 노출
+        const isPastDay = cellDate < new Date(new Date().setHours(0,0,0,0));
         dayEvents.slice(0, 3).forEach(ev => {
             const type = ev.extendedProps?.type || ev.type || 'personal';
             let chipStyle = '';
             
             if (type === 'task') {
-                chipStyle = 'bg-[#f4eff3] text-[#4a3b47] border-[#d1c1cf] shadow-sm font-bold';
+                chipStyle = 'bg-[#A2C4E1] text-[#2d3436] border-[#8D775F] shadow-sm font-bold';
             } else if (type === 'shared') {
-                chipStyle = 'bg-[#fdf6ec] text-[#6b4c2a] border-[#e6cda8] shadow-sm font-bold';
+                chipStyle = 'bg-[#e8f0e0] text-[#6b4c2a] border-[#d4a373] shadow-sm font-bold';
             } else {
-                chipStyle = 'bg-[#eff6ef] text-[#2d4a31] border-[#b8d4bb] shadow-sm font-bold';
+                chipStyle = 'bg-[#7a9e7e] text-white border-[#4A6741] shadow-sm font-bold';
+            }
+
+            if (isPastDay) {
+                chipStyle += ' opacity-50 line-through';
             }
 
             const title = ev.title || '제목 없음';
-            eventsHTML += `<div class="px-2 py-1 mb-1 rounded-lg text-[10px] border truncate transition hover:brightness-95 ${chipStyle}">${title}</div>`;
+            eventsHTML += `<div class="px-1.5 py-0.5 mb-1 rounded-lg text-[clamp(9px,1.5vw+4px,11.5px)] border truncate transition hover:brightness-95 ${chipStyle}">${title}</div>`;
         });
         eventsHTML += '</div>';
 
@@ -418,8 +423,8 @@ function renderCustomGrid() {
     const remaining = (totalRendered % 7 === 0) ? 0 : 7 - (totalRendered % 7);
     for (let i = 1; i <= remaining; i++) {
         const cell = document.createElement('div');
-        cell.className = 'border-r border-b border-on-surface/5 p-3 h-40 flex flex-col hover:bg-surface-container-low transition-colors cursor-pointer opacity-50';
-        cell.innerHTML = `<span class="text-sm font-medium mb-2">${i}</span>`;
+        cell.className = 'border border-[#5D574D]/10 p-2 h-32 flex flex-col hover:bg-[#FDFCF0]/50 transition-colors cursor-pointer opacity-40 rounded-lg m-[2px]';
+        cell.innerHTML = `<span class="text-sm font-medium mb-1 text-[#8D775F]">${i}</span>`;
         
         const dateStr = `${currentMonth === 11 ? currentYear + 1 : currentYear}-${String(currentMonth === 11 ? 1 : currentMonth + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         cell.addEventListener('click', () => openDayView(dateStr));
@@ -480,8 +485,8 @@ export function openDayView(dateStr) {
             item.innerHTML = `
                 <div class="w-4 h-4 rounded-full ${categoryClass}" style="width:16px; height:16px; border-radius:50%;"></div>
                 <div style="flex:1; text-align:left;">
-                    <h4 class="text-xl font-bold text-on-surface" style="margin:0; font-size:1.25rem;">${evTitle}</h4>
-                    <p class="text-on-surface-variant" style="margin:2px 0 0 0; font-size:0.9rem;">${timeStr} • ${type.toUpperCase()}</p>
+                    <h4 class="text-xl font-bold text-on-surface" style="margin:0; font-size: clamp(14px, 3vw + 8px, 20px);">${evTitle}</h4>
+                    <p class="text-on-surface-variant" style="margin:2px 0 0 0; font-size: clamp(11px, 2vw + 6px, 14px);">${timeStr} • ${type.toUpperCase()}</p>
                 </div>
                 <button class="p-2 text-on-surface-variant hover:text-primary edit-event-btn" style="background:none; border:none; cursor:pointer;" data-id="${evId}">
                     <span class="material-symbols-outlined text-2xl">edit</span>

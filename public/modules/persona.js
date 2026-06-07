@@ -1,6 +1,13 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL, assertIds } from './state.js?v=5.2.0';
 
 export async function loadPersona() {
+    assertIds('Persona', [
+        'ai-name', 'ai-age', 'ai-relationship', 'ai-personality', 'ai-voice-select', 'test-voice-btn', 
+        'ai-avatar-preview', 'upload-avatar-btn', 'generate-avatar-btn', 'avatar-options-grid', 
+        'video-dropzone', 'learning-video-input', 'start-learning-btn', 'learning-status', 'status-text', 
+        'save-persona-btn'
+    ]);
+
     const token = await store.getSessionToken();
     if (!token) return;
 
@@ -333,7 +340,7 @@ export async function loadBriefing() {
 
         const aiName = document.getElementById('ai-name')?.value || '비서';
         const titleEl = document.getElementById('briefing-title-text');
-        if (titleEl) titleEl.innerText = `${aiName} 비서의 브리핑`;
+        if (titleEl) titleEl.innerText = `일과 브리핑`;
 
         card.style.display = 'block';
         card.classList.remove('hidden');

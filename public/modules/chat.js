@@ -1,10 +1,19 @@
-import { store, API_URL } from './state.js?v=5.1.2';
+import { store, API_URL, assertIds } from './state.js?v=5.2.0';
+
 
 let localStream = null;
 let isCallActive = false;
 let callRecognition = null;
+let currentFriendSortMode = 'name'; // 'name', 'degree', 'sos'
 
 export async function initializeChat() {
+    assertIds('Chat', [
+        'tab-people', 'tab-chats', 'friend-status-list', 'friend-sort-options-v2', 
+        'chat-room-list', 'copy-share-link-btn', 'chat-history', 'chat-room-title-text', 
+        'message-input-field', 'send-btn', 'chat-attach-btn', 'chat-image-attach-input', 
+        'invite-modal', 'friend-settings-modal', 'call-overlay'
+    ]);
+
     console.log('--- [CHAT] Initializing Chat - Defaulting to AI Secretary ---');
     
     try {
@@ -36,7 +45,7 @@ export async function loadMessages() {
         });
         const data = await res.json();
         
-        const container = document.getElementById('chat-messages-tab');
+        const container = document.getElementById('chat-history');
         if (container) {
             container.innerHTML = '';
             data?.messages?.forEach(appendMessage);
@@ -47,7 +56,7 @@ export async function loadMessages() {
 }
 
 export function appendMessage(msg) {
-    const container = document.getElementById('chat-messages-tab');
+    const container = document.getElementById('chat-history');
     if (!container) return;
 
     // [Cozy Ghibli Interaction] Conversational Dimming: 이전 메시지들은 흐리게 처리
@@ -103,18 +112,18 @@ export function appendMessage(msg) {
     if (isMe) {
         // Alternating background colors for user messages matching the prototype design
         const isAlternate = msg.content && msg.content.length % 2 === 0;
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: 0.92rem; max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
     } else {
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: 0.92rem; max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
     }
 
     div.innerHTML = `
         <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%; ${isMe ? 'flex-direction: row-reverse;' : ''}">
             ${avatarHtml}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
-                <span class="message-sender" style="font-size: 0.8rem; color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
+                <span class="message-sender" style="font-size: clamp(10px, 2vw + 6px, 13px); color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
                 <div class="message-content paper-note active-bubble" style="${messageContentStyle}">${contentHtml}</div>
-                <span class="message-info" style="font-size: 0.7rem; color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span class="message-info" style="font-size: clamp(9px, 1.5vw + 5px, 11px); color: #8b8273; margin-top: 4px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         </div>
     `;
@@ -176,16 +185,20 @@ export function setupChatUI() {
     setupUserProfileInChat();
 
     const inviteBtn = document.getElementById('invite-friend-btn');
-    const closeInviteBtn = document.getElementById('close-invite-modal');
-    const modal = document.getElementById('invite-modal');
+    const modal = document.getElementById('invite-modal') || document.getElementById('invite-overlay');
 
     inviteBtn?.addEventListener('click', () => {
-        if (modal) modal.style.display = 'flex';
+        toggleInviteOverlay(true);
         loadContacts();
     });
 
-    closeInviteBtn?.addEventListener('click', () => {
-        if (modal) modal.style.display = 'none';
+    // 1촌 초대 모달 내 닫기 액션 위임 (인라인 onclick 대체)
+    modal?.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-action="close-invite"], #overlay-backdrop');
+        if (target) {
+            e.preventDefault();
+            toggleInviteOverlay(false);
+        }
     });
 
     document.getElementById('copy-share-link-btn')?.addEventListener('click', async () => {
@@ -209,8 +222,10 @@ export function setupChatUI() {
     });
 
     // Chat input event list
-    document.getElementById('send-chat-btn-tab')?.addEventListener('click', async () => {
-        const input = document.getElementById('chat-input-tab');
+    const sendBtn = document.getElementById('send-btn');
+    sendBtn?.addEventListener('click', async () => {
+        const input = document.getElementById('message-input-field');
+        if (!input) return;
         const content = input.value.trim();
         if (!content) return;
 
@@ -265,10 +280,11 @@ export function setupChatUI() {
     });
 
     // Send chat on pressing Enter (without Shift)
-    document.getElementById('chat-input-tab')?.addEventListener('keydown', (e) => {
+    const chatInput = document.getElementById('message-input-field');
+    chatInput?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            document.getElementById('send-chat-btn-tab')?.click();
+            document.getElementById('send-btn')?.click();
         }
     });
 
@@ -374,7 +390,7 @@ export function setupChatUI() {
     }
 
     // 모바일에서 1촌 목록 영역을 탭하면 목록이 열리거나 닫히도록 지원 (hover 보완용)
-    const friendStatusList = document.getElementById('friend-status-list');
+    const friendStatusList = document.getElementById('friend-status-list') || document.getElementById('friend-list');
     if (friendStatusList) {
         friendStatusList.addEventListener('click', function(e) {
             // ⚙️ 버튼이나 개별 친구 클릭 시 방 이동을 방해하지 않기 위해 target 체크
@@ -384,29 +400,99 @@ export function setupChatUI() {
             friendStatusList.classList.toggle('expanded');
         });
     }
+
+    // [NEW] 친구 목록 정렬 칩 이벤트 바인딩
+    const bindSortChips = (containerId) => {
+        const sortContainer = document.getElementById(containerId);
+        if (sortContainer) {
+            const chips = sortContainer.querySelectorAll('button');
+            chips.forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    const sortMode = e.target.dataset.sort;
+                    if (!sortMode) return;
+
+                    currentFriendSortMode = sortMode;
+
+                    // 활성화된 칩 스타일 적용
+                    chips.forEach(c => {
+                        c.className = 'px-3 py-1.5 rounded-full text-[11px] md:text-label-sm font-bold transition-all bg-surface-container-high text-on-surface-variant whitespace-nowrap';
+                    });
+                    e.target.className = 'px-3 py-1.5 rounded-full text-[11px] md:text-label-sm font-bold transition-all bg-secondary-container text-on-secondary-container shadow-sm active-sort-chip whitespace-nowrap';
+
+                    // 다른 쪽 정렬 필터 UI도 동기화
+                    const otherContainerId = containerId === 'friend-sort-options' ? 'friend-sort-options-v2' : 'friend-sort-options';
+                    const otherContainer = document.getElementById(otherContainerId);
+                    if (otherContainer) {
+                        const otherChips = otherContainer.querySelectorAll('button');
+                        otherChips.forEach(oc => {
+                            if (oc.dataset.sort === sortMode) {
+                                oc.className = 'px-3 py-1.5 rounded-full text-[11px] md:text-label-sm font-bold transition-all bg-secondary-container text-on-secondary-container shadow-sm active-sort-chip whitespace-nowrap';
+                            } else {
+                                oc.className = 'px-3 py-1.5 rounded-full text-[11px] md:text-label-sm font-bold transition-all bg-surface-container-high text-on-surface-variant whitespace-nowrap';
+                            }
+                        });
+                    }
+
+                    // 친구 목록 데이터 새로고침
+                    checkFriendSos();
+                });
+            });
+        }
+    };
+
+    bindSortChips('friend-sort-options');
+    bindSortChips('friend-sort-options-v2');
+
+    // [NEW] HTML onclick 전면 제거에 따른 이벤트 위임(Event Delegation)
+    document.getElementById('chat-view')?.addEventListener('click', async (e) => {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+        if (action === 'switch-social-tab') {
+            e.preventDefault();
+            const tab = target.dataset.tab;
+            switchSocialTab(tab);
+        } else if (action === 'close-chat-detail') {
+            e.preventDefault();
+            document.getElementById('chat-detail-overlay')?.classList.add('hidden');
+        } else if (action === 'open-chat-ai') {
+            e.preventDefault();
+            e.stopPropagation();
+            openChatWithAi();
+        } else if (action === 'open-chat-friend') {
+            e.preventDefault();
+            e.stopPropagation();
+            const friendId = target.dataset.id;
+            const nickname = target.dataset.nickname;
+            window.openChatWithFriend(friendId, nickname);
+        } else if (action === 'toggle-friend-settings') {
+            e.preventDefault();
+            e.stopPropagation();
+            const friendId = target.dataset.id;
+            window.toggleFriendSettings(friendId);
+        } else if (action === 'open-chat-room') {
+            e.preventDefault();
+            e.stopPropagation();
+            const roomId = target.dataset.roomId;
+            const title = target.dataset.title;
+            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            await openChatWindow(roomId, title);
+        }
+    });
+
+    // 최외곽 detail overlay 내부의 닫기 버튼은 chat-view 바깥에 있어 글로벌 리스너 위임 바인딩
+    document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('#chat-detail-overlay [data-action="close-chat-detail"]');
+        if (closeBtn) {
+            e.preventDefault();
+            console.log('--- [CHAT] Closing chat detail overlay via global delegation ---');
+            document.getElementById('chat-detail-overlay')?.classList.add('hidden');
+        }
+    });
 }
 
 export async function openChatWithAi() {
-    const chatTabBtn = document.querySelector('[data-tab="chat"]');
-    if (chatTabBtn && !chatTabBtn.classList.contains('active')) {
-        // Safely switch to the Chat tab without triggering a click listener recursion loop
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabBtns.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => {
-            c.classList.remove('active');
-            c.style.display = 'none';
-        });
-
-        chatTabBtn.classList.add('active');
-        const target = document.getElementById('chat-view');
-        if (target) {
-            target.classList.add('active');
-            target.style.display = 'block';
-        }
-    }
-
     try {
         const { data: { user } } = await store.supabaseClient.auth.getUser();
         if (!user) return;
@@ -425,7 +511,8 @@ export async function openChatWithAi() {
 
         const data = await res.json();
         if (data.success && data.room) {
-            await switchChatRoom(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
+            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            await openChatWindow(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
         } else {
             console.error('Failed to get/create chat room:', data.error);
             alert('채팅방 연결에 실패했습니다.');
@@ -722,10 +809,10 @@ export async function loadContacts() {
             `;
             
             document.getElementById('reauth-google-btn')?.addEventListener('click', async () => {
-                await store.supabaseClient.auth.signInWithOAuth({
+                await store.supabaseClient.auth.linkIdentity({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin,
+                        redirectTo: window.location.href.split('?')[0],
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
@@ -748,7 +835,32 @@ export async function checkFriendSos() {
     const data = await res.json();
 
     // [NEW] Save friends list globally for instant lookups in room switches
-    const friends = data.allFriends || [];
+    let friends = data.allFriends || [];
+
+    // 친구 목록 정렬 적용
+    if (currentFriendSortMode === 'name') {
+        friends.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || '', 'ko'));
+    } else if (currentFriendSortMode === 'degree') {
+        // 1촌(진짜 친구): Supabase 가입자 -> 2촌(데모 친구): mock-
+        friends.sort((a, b) => {
+            const aIsMock = (a.id || '').startsWith('mock-');
+            const bIsMock = (b.id || '').startsWith('mock-');
+            if (aIsMock && !bIsMock) return 1;
+            if (!aIsMock && bIsMock) return -1;
+            return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
+        });
+    } else if (currentFriendSortMode === 'sos') {
+        friends.sort((a, b) => {
+            const aIsSos = data.sosList?.some(s => s.id === a.id);
+            const bIsSos = data.sosList?.some(s => s.id === b.id);
+            if (aIsSos && !bIsSos) return -1;
+            if (!aIsSos && bIsSos) return 1;
+            if (a.is_online && !b.is_online) return -1;
+            if (!a.is_online && b.is_online) return 1;
+            return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
+        });
+    }
+
     store.allFriends = friends;
 
     // [NEW] Update thermometer dynamically if currently chatting with this friend
@@ -769,7 +881,7 @@ export async function checkFriendSos() {
         console.error('Failed to auto-update thermometer in heartbeat:', err);
     }
 
-    const list = document.getElementById('friend-status-list');
+    const list = document.getElementById('friend-status-list') || document.getElementById('friend-list');
     if (list) {
         const isAiActive = store.currentRoomId && !friends.some(f => f.id === store.currentRoomId);
         const aiAvatarHtml = store.currentAvatarUrl
@@ -777,7 +889,7 @@ export async function checkFriendSos() {
             : `<div class="friend-avatar" style="background: var(--accent-color); color: white; display:flex; align-items:center; justify-content:center; flex-shrink:0; width:34px; height:34px; border-radius:50%; font-size: 0.95rem;">✨</div>`;
 
         const aiFriendHtml = `
-        <div class="page-item friend-item ai-friend ${isAiActive ? 'active' : ''}" onclick="window.openChatWithAi()" style="display:flex; align-items:center; gap:12px;">
+        <div class="page-item friend-item ai-friend ${isAiActive ? 'active' : ''}" data-action="open-chat-ai" style="display:flex; align-items:center; gap:12px;">
             ${aiAvatarHtml}
             <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
                 <div class="page-item-title" style="margin:0; font-weight:700; font-size:0.95rem; color:#323130; display:flex; align-items:center; gap:8px;">
@@ -797,7 +909,7 @@ export async function checkFriendSos() {
                 : `<span style="display:inline-block; width:8px; height:8px; background:#a4b0be; border-radius:50%; margin-right:4px;"></span>`;
 
             return `
-            <div class="page-item friend-item ${isSos ? 'sos' : ''} ${store.currentRoomId === f.id ? 'active' : ''}" onclick="window.openChatWithFriend('${f.id}', '${f.nickname}')" style="display:flex; align-items:center; gap:12px;">
+            <div class="page-item friend-item ${isSos ? 'sos' : ''} ${store.currentRoomId === f.id ? 'active' : ''}" data-action="open-chat-friend" data-id="${f.id}" data-nickname="${f.nickname}" style="display:flex; align-items:center; gap:12px;">
                 <div class="friend-avatar" style="position:relative; background:#888; color:white; font-weight:600; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; flex-shrink:0;">
                     ${f.nickname?.[0] || '👤'}
                 </div>
@@ -807,7 +919,7 @@ export async function checkFriendSos() {
                             <span>${f.nickname || '익명'}</span>
                             ${onlineDot}
                         </span>
-                        <button onclick="event.stopPropagation(); window.toggleFriendSettings('${f.id}')" class="friend-settings-btn-icon" style="background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0; display:flex; align-items:center; justify-content:center; color:#888; transition:color 0.2s;" title="1촌 설정">⚙️</button>
+                        <button data-action="toggle-friend-settings" data-id="${f.id}" class="friend-settings-btn-icon" style="background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0; display:flex; align-items:center; justify-content:center; color:#888; transition:color 0.2s;" title="1촌 설정">⚙️</button>
                     </div>
                     <div class="page-item-meta" style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#605e5c;">
                         <span class="emotion-tag" style="padding:2px 6px; border-radius:4px; font-size:0.72rem; background:rgba(0,0,0,0.05); color:#444;">${f.current_emotion || '평온'}</span>
@@ -1009,26 +1121,6 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         const { data: { user } } = await store.supabaseClient.auth.getUser();
         if (!user) return;
 
-        // Switch to chat tab if not active
-        const chatTabBtn = document.querySelector('[data-tab="chat"]');
-        if (chatTabBtn && !chatTabBtn.classList.contains('active')) {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => {
-                c.classList.remove('active');
-                c.style.display = 'none';
-            });
-
-            chatTabBtn.classList.add('active');
-            const target = document.getElementById('chat-view');
-            if (target) {
-                target.classList.add('active');
-                target.style.display = 'block';
-            }
-        }
-
         const ids = [user.id, friendId].sort();
         const roomName = `Friend-${ids[0].slice(0, 8)}-${ids[1].slice(0, 8)}`;
         const token = await store.getSessionToken();
@@ -1043,7 +1135,8 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            await switchChatRoom(data.room.id, `💬 ${friendNickname}님과의 대화`);
+            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            await openChatWindow(data.room.id, `💬 ${friendNickname}님과의 대화`);
         } else {
             console.error('Room registration failed:', data.error);
             alert('채팅방 연결에 실패했습니다.');
@@ -1625,4 +1718,68 @@ window.openSmsQrInviteModal = async function(name, phone) {
         });
     });
 };
+
+export function toggleInviteOverlay(force) {
+    const modal = document.getElementById('invite-modal');
+    const backdrop = document.getElementById('overlay-backdrop');
+    const panel = document.getElementById('overlay-panel');
+    if (!modal) return;
+
+    const shouldOpen = (typeof force === 'boolean')
+        ? force
+        : modal.classList.contains('pointer-events-none');
+
+    if (shouldOpen) {
+        modal.classList.remove('pointer-events-none');
+        if (backdrop) {
+            backdrop.classList.remove('opacity-0', 'pointer-events-none');
+            backdrop.classList.add('opacity-100', 'pointer-events-auto');
+        }
+        if (panel) panel.classList.remove('translate-y-full');
+    } else {
+        if (backdrop) {
+            backdrop.classList.add('opacity-0', 'pointer-events-none');
+            backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+        }
+        if (panel) panel.classList.add('translate-y-full');
+        setTimeout(() => {
+            modal.classList.add('pointer-events-none');
+        }, 300);
+    }
+}
+
+export function switchSocialTab(tab) {
+    const tabPeople = document.getElementById('tab-people');
+    const tabChats = document.getElementById('tab-chats');
+    const peopleView = document.getElementById('people-view');
+    const chatsView = document.getElementById('chats-view');
+
+    if(tab === 'people') {
+        tabPeople?.classList.add('border-primary', 'text-primary', 'font-bold');
+        tabPeople?.classList.remove('border-transparent', 'text-on-surface-variant');
+        const icon1 = tabPeople?.querySelector('.material-symbols-outlined');
+        if(icon1) icon1.style.fontVariationSettings = "'FILL' 1";
+        
+        tabChats?.classList.remove('border-primary', 'text-primary', 'font-bold');
+        tabChats?.classList.add('border-transparent', 'text-on-surface-variant');
+        const icon2 = tabChats?.querySelector('.material-symbols-outlined');
+        if(icon2) icon2.style.fontVariationSettings = "'FILL' 0";
+
+        peopleView?.classList.remove('hidden');
+        chatsView?.classList.add('hidden');
+    } else {
+        tabChats?.classList.add('border-primary', 'text-primary', 'font-bold');
+        tabChats?.classList.remove('border-transparent', 'text-on-surface-variant');
+        const icon1 = tabChats?.querySelector('.material-symbols-outlined');
+        if(icon1) icon1.style.fontVariationSettings = "'FILL' 1";
+        
+        tabPeople?.classList.remove('border-primary', 'text-primary', 'font-bold');
+        tabPeople?.classList.add('border-transparent', 'text-on-surface-variant');
+        const icon2 = tabPeople?.querySelector('.material-symbols-outlined');
+        if(icon2) icon2.style.fontVariationSettings = "'FILL' 0";
+
+        chatsView?.classList.remove('hidden');
+        peopleView?.classList.add('hidden');
+    }
+}
 
