@@ -490,6 +490,16 @@ export function setupChatUI() {
             document.getElementById('chat-detail-overlay')?.classList.add('hidden');
         }
     });
+
+    // 직접 이벤트 리스너 추가 바인딩 (이벤트 버블링 차단 방지용)
+    const directCloseBtn = document.querySelector('#chat-detail-overlay [data-action="close-chat-detail"]');
+    if (directCloseBtn) {
+        directCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('--- [CHAT] Closing chat detail overlay directly ---');
+            document.getElementById('chat-detail-overlay')?.classList.add('hidden');
+        });
+    }
 }
 
 export async function openChatWithAi() {

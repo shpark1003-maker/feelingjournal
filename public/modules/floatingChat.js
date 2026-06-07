@@ -63,9 +63,16 @@ export async function openChatWindow(roomId, title) {
         
         // 전역 window 헬퍼가 있을 경우 이를 통해 단일 뷰 스위치
         if (window.openChatWithFriend) {
-            // recursion 방지를 위해 window helper 직접 호출 대신 switchChatRoom
             const titleEl = document.getElementById('chat-room-title-text');
             if (titleEl) titleEl.innerText = title;
+
+            // Switch room to load messages and bind realtime events
+            import('./chat.js?v=5.2.0').then(async (chatMod) => {
+                await chatMod.switchChatRoom(roomId, title);
+            }).catch(err => {
+                console.error('Failed to import chat.js for mobile switchChatRoom:', err);
+            });
+
             // index.html의 overlay 노출
             const chatOverlay = document.getElementById('chat-detail-overlay');
             if (chatOverlay) chatOverlay.classList.remove('hidden');
