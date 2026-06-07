@@ -8,7 +8,8 @@ const WINDOW_HEIGHT = 480;
 const renderedMessageIds = {};
 
 export function isMobileChatMode() {
-    return window.matchMedia('(max-width: 768px)').matches;
+    const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+    return isMobileDevice && window.matchMedia('(max-width: 768px)').matches;
 }
 
 // 최대 z-index 가져오기

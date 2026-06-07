@@ -26,13 +26,21 @@ export async function initializeChat() {
             if (data.success && data.persona) {
                 store.currentAvatarUrl = data.persona.avatarUrl || '';
                 store.currentAvatarName = data.persona.name || '원이';
+
+                // Update dynamic name/avatar in chat list
+                const listName = document.getElementById('v2-chat-list-ai-name');
+                if (listName) {
+                    listName.innerText = `✨ ${store.currentAvatarName}와 대화`;
+                }
+                const listAvatar = document.getElementById('v2-chat-list-ai-avatar');
+                if (listAvatar && store.currentAvatarUrl) {
+                    listAvatar.src = store.currentAvatarUrl;
+                }
             }
         }
     } catch (e) {
         console.warn('Failed to prefetch AI persona for chat:', e);
     }
-
-    await openChatWithAi();
 }
 
 export async function loadMessages() {
@@ -504,7 +512,7 @@ export function setupChatUI() {
 
 export async function openChatWithAi() {
     try {
-        const { data: { user } } = await store.supabaseClient.auth.getUser();
+        const user = store.currentUser || (await store.supabaseClient.auth.getUser()).data?.user;
         if (!user) return;
 
         const roomName = `Private-AI-${user.id.slice(0, 8)}`;
