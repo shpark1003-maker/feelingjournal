@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html class="light" lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>감성 대화</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4a654e",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#8ba88e",
+                        "on-primary-container": "#233d29",
+                        "secondary": "#645e49",
+                        "on-secondary": "#ffffff",
+                        "surface": "#fff8f3",
+                        "on-surface": "#1f1b15",
+                        "surface-variant": "#eae1d7",
+                        "on-surface-variant": "#424842",
+                        "outline": "#737972",
+                        "outline-variant": "#c2c8c0",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#fbf2e8",
+                        "surface-container": "#f6ece3",
+                        "surface-container-high": "#f0e7dd",
+                        "surface-container-highest": "#eae1d7",
+                        "surface-tint": "#4a654e",
+                        "background": "#fff8f3",
+                        "tertiary": "#7d525c",
+                        "on-tertiary": "#ffffff"
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- Google Fonts & Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Manrope:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=5.2.0">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* custom scrollbar */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            background-color: #fff8f3;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Manrope', 'Plus Jakarta Sans', sans-serif;
+        }
+        .dim-context {
+            opacity: 0.65;
+            transition: opacity 0.3s;
+        }
+        .active-bubble {
+            opacity: 1;
+        }
+        .message {
+            display: flex;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .message.sent {
+            justify-content: flex-end;
+        }
+        .message.received {
+            justify-content: flex-start;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-background relative overflow-hidden">
+    <!-- Background Texture/Deco -->
+    <div class="absolute inset-0 z-0 watercolor-bg opacity-40 blur-3xl scale-110 pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col h-full w-full">
+        <!-- Top App Bar -->
+        <header class="flex justify-between items-center h-16 px-4 z-50 glass-panel shadow-[0_4px_20px_rgba(93,64,55,0.08)] flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <img id="chat-room-avatar" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS7-FAJ0ER6ZpwlaqQGfnq_BPKwN9LVVv2TOADLSc6aF2fjuk3VwIaycmeRHRsDVWNPcbckpdNwrjGOrU6hUcu96vnnzLguwTCLMy3R8YIS54RVi2OqrB7o84jj5PZF_SWrgj5m4wQmPp8mb50P8MdVB_SnM_sFkelKyBO9u6EwtlPlYwW4pTMT6TyeGQyKtXrHRbyUjJqqmkaI0J7tFNwH4wuINzB2kedoM6PiqV40UOQqnA20ekdYzqgzftADds_0hNQwvDnMyEy"/>
+                    <div>
+                        <h1 id="chat-room-title-text" class="font-bold text-[16px] leading-tight text-primary truncate max-w-[180px]">대화방</h1>
+                        <p id="chat-room-status" class="text-[10px] text-primary/70 uppercase tracking-widest font-bold">실시간 연결됨</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button id="pop-call-btn" class="w-8 h-8 flex items-center justify-center rounded-full text-primary hover:bg-surface-variant/50 transition-colors">
+                    <span class="material-symbols-outlined text-xl">call</span>
+                </button>
+                <button id="pop-videocam-btn" class="w-8 h-8 flex items-center justify-center rounded-full text-primary hover:bg-surface-variant/50 transition-colors">
+                    <span class="material-symbols-outlined text-xl">videocam</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sentiment Thermometer -->
+        <div class="w-full h-1.5 bg-surface-container-highest relative flex-shrink-0">
+            <div class="absolute inset-0 sentiment-gradient opacity-60"></div>
+            <div class="absolute h-4 w-4 bg-on-primary border-2 border-tertiary rounded-full -top-1 shadow-md transition-all duration-500 ease-in-out" id="sentiment-indicator" style="left: 50%;"></div>
+        </div>
+
+        <!-- Chat History -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar" id="chat-history">
+            <div class="flex justify-center my-6">
+                <span class="px-4 py-1 rounded-full bg-surface-container/50 text-on-surface-variant font-label-sm text-[11px] backdrop-blur-sm" id="today-date-text">오늘</span>
+            </div>
+            <!-- Messages will be appended here -->
+        </main>
+
+        <!-- Input Area -->
+        <footer class="p-3 bg-surface-container-low/90 backdrop-blur-xl rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)] flex-shrink-0">
+            <div class="flex items-end gap-2 bg-surface p-2 rounded-xl border border-outline-variant/30 shadow-inner">
+                <button id="chat-attach-btn" class="w-9 h-9 flex items-center justify-center rounded-full text-outline hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-xl">add_circle</span>
+                </button>
+                <input type="file" id="chat-image-attach-input" accept="image/*" class="hidden">
+                <textarea class="flex-1 py-1 px-1 bg-transparent border-none focus:ring-0 resize-none max-h-24 text-xs font-medium text-on-surface placeholder:text-outline/50 outline-none" id="message-input-field" placeholder="마음의 소리를 적어보세요..." rows="1"></textarea>
+                <div class="flex gap-1">
+                    <button id="send-btn" class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary shadow-md active:scale-90 transition-all">
+                        <span class="material-symbols-outlined text-md">send</span>
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        const SUPABASE_BASE_URL = 'https://gfvfilwigbwycnobvnuv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdmZpbHdpZ2J3eWNub2J2bnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIwNzUsImV4cCI6MjA5MzkxODA3NX0.dxvyeqt9tFizpraFDAcp1B3MfV-IGVdsqwAG6A_Ffa8';
+        const API_URL = '/api';
+
+        // 1. URL Parameter Parsing
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const title = urlParams.get('title') || '대화방';
+
+        if (!roomId) {
+            alert('유효하지 않은 대화방입니다.');
+            window.close();
+        }
+
+        // Apply title to head title and header text
+        document.title = title;
+        const titleEl = document.getElementById('chat-room-title-text');
+        if (titleEl) titleEl.innerText = title;
+
+        // Set date string
+        const dateEl = document.getElementById('today-date-text');
+        if (dateEl) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.innerText = new Date().toLocaleDateString('ko-KR', options);
+        }
+
+        // 2. Auth State Restoration
+        const sessionKey = 'sb-gfvfilwigbwycnobvnuv-auth-token';
+        const sessionData = JSON.parse(localStorage.getItem(sessionKey) || '{}');
+        const currentUser = sessionData?.user || null;
+        const sessionToken = sessionData?.access_token || null;
+
+        if (!sessionToken || !currentUser) {
+            alert('로그인이 필요합니다.');
+            window.close();
+        }
+
+        // Initialize Supabase Client
+        const supabaseClient = supabase.createClient(SUPABASE_BASE_URL, SUPABASE_ANON_KEY);
+        let chatChannel = null;
+
+        // Cache for dynamic avatar info
+        let currentAvatarUrl = '';
+        let currentAvatarName = '원이';
+
+        // Load Persona if AI Assistant chat
+        async function prefetchAiPersona() {
+            try {
+                const res = await fetch(`${API_URL}/persona`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json();
+                if (data.success && data.persona) {
+                    currentAvatarUrl = data.persona.avatarUrl || '';
+                    currentAvatarName = data.persona.name || '원이';
+                    
+                    // Update header avatar if AI chat
+                    if (title.includes('와 대화') || title.includes('비서')) {
+                        const avatarImg = document.getElementById('chat-room-avatar');
+                        if (avatarImg && currentAvatarUrl) {
+                            avatarImg.src = currentAvatarUrl;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to prefetch AI persona:', e);
+            }
+        }
+
+        // 3. Messages Fetching & Rendering
+        async function loadMessages() {
+            try {
+                const res = await fetch(`${API_URL}/chat/messages?roomId=${encodeURIComponent(roomId)}`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json();
+                
+                const container = document.getElementById('chat-history');
+                // Keep the today-date-text
+                const dateHeader = container.firstElementChild;
+                container.innerHTML = '';
+                if (dateHeader) container.appendChild(dateHeader);
+
+                data?.messages?.forEach(appendMessage);
+            } catch (e) {
+                console.error('Failed to load messages:', e);
+            }
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('chat-history');
+            if (!container) return;
+
+            // Cozy Ghibli Interaction: Conversational Dimming
+            const previousBubbles = container.querySelectorAll('.message-content');
+            previousBubbles.forEach(b => {
+                b.classList.remove('active-bubble');
+                b.classList.add('dim-context');
+            });
+
+            const isAi = msg.user_email === 'ai@feeling.journal' || msg.sender_id === '00000000-0000-0000-0000-000000000000';
+            const isFriend = msg.user_email && msg.user_email.startsWith('friend-');
+            const isMe = !isAi && !isFriend && (msg.sender_id === currentUser.id || msg.user_email === currentUser.email);
+
+            const div = document.createElement('div');
+            div.className = `message ${isMe ? 'sent' : 'received'} ${(isAi || isFriend) ? 'ai-message' : ''}`;
+
+            let senderName = msg.user_email ? msg.user_email.split('@')[0] : '알수없음';
+            if (isAi) {
+                senderName = currentAvatarName;
+            } else if (isFriend) {
+                const decodedPart = msg.user_email.replace('friend-', '').split('@')[0];
+                try {
+                    senderName = decodeURIComponent(decodedPart);
+                } catch (e) {
+                    senderName = decodedPart;
+                }
+            }
+
+            const myAvatarUrl = currentUser?.user_metadata?.avatar_url || '';
+            const avatarHtml = isMe 
+                ? (myAvatarUrl 
+                    ? `<img class="chat-msg-avatar" src="${myAvatarUrl}?t=${Date.now()}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #5d574d; margin-right: 8px; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">`
+                    : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #e8f0e0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">👤</div>`)
+                : (isAi 
+                    ? (currentAvatarUrl
+                        ? `<img class="chat-msg-avatar" src="${currentAvatarUrl}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #5d574d; margin-right: 8px; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">`
+                        : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #f9d976; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">🤖</div>`)
+                    : `<div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #fdf2b5; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #5d574d; margin-right: 8px; color: #5d574d; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">👥</div>`);
+
+            const imgMatch = msg.content && msg.content.trim().match(/^!\[image\]\((.*?)\)$/);
+            const isImage = !!imgMatch;
+            const imageUrl = isImage ? imgMatch[1] : '';
+
+            const contentHtml = isImage 
+                ? `<img class="chat-inline-photo" src="${imageUrl}" style="max-width: 250px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); cursor: pointer; display: block; margin-top: 4px; border: 2px solid #5d574d;" onclick="window.open('${imageUrl}', '_blank')" onerror="this.onerror=null; this.outerHTML='<div class=&quot;image-load-failed&quot; style=&quot;padding: 10px 14px; background: #ffebee; color: #d63031; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border: 1.5px solid #5d574d; font-weight: 500;&quot;>⚠️ 이미지를 불러올 수 없습니다.</div>';">`
+                : msg.content;
+
+            let messageContentStyle = '';
+            if (isMe) {
+                const isAlternate = msg.content && msg.content.length % 2 === 0;
+                messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+            } else {
+                messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+            }
+
+            div.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%; ${isMe ? 'flex-direction: row-reverse;' : ''}">
+                    ${avatarHtml}
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'};">
+                        <span class="message-sender" style="font-size: clamp(10px, 2vw + 6px, 13px); color: #5d574d; font-weight: 700; margin-bottom: 2px;">${senderName}</span>
+                        <div class="message-content paper-note active-bubble" style="${messageContentStyle}">${contentHtml}</div>
+                        <span class="message-info" style="font-size: clamp(9px, 1.5vw + 5px, 11px); color: #8b8273; margin-top: 4px;">${new Date(msg.created_at || msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 4. Send Message Handler
+        async function sendMessage() {
+            const input = document.getElementById('message-input-field');
+            if (!input) return;
+            const content = input.value.trim();
+            if (!content) return;
+
+            try {
+                const res = await fetch(`${API_URL}/chat/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({
+                        roomId,
+                        content
+                    })
+                });
+
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                input.value = '';
+
+                // Handle AI Auto-Response trigger for demo/private AI rooms
+                if (title.includes('와 대화') || title.includes('님과의 대화')) {
+                    const isMock = title.includes('영희') || title.includes('철수') || title.includes('민수') || title.includes('데모') || title.includes('비서') || title.includes('대화');
+                    if (isMock) {
+                        callChatAI(content);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to send message:', e);
+                alert('메시지 전송에 실패했습니다.');
+            }
+        }
+
+        async function callChatAI(msg) {
+            const res = await fetch(`${API_URL}/chat/ai-response`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sessionToken}`
+                },
+                body: JSON.stringify({ 
+                    message: msg, 
+                    room_id: roomId,
+                    room_title: title
+                })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                console.error('AI Response Error:', data.error);
+            }
+        }
+
+        // Attach image functionality
+        const attachBtn = document.getElementById('chat-attach-btn');
+        const attachInput = document.getElementById('chat-image-attach-input');
+
+        attachBtn?.addEventListener('click', () => {
+            attachInput.click();
+        });
+
+        attachInput?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (attachBtn) {
+                attachBtn.disabled = true;
+                attachBtn.innerHTML = '<span class="material-symbols-outlined text-xl animate-spin">sync</span>';
+            }
+
+            try {
+                const fileExt = file.name.split('.').pop();
+                const filePath = `${currentUser.id}/${Date.now()}.${fileExt}`;
+
+                // Upload to Supabase storage
+                const { data, error } = await supabaseClient.storage
+                    .from('chat-images')
+                    .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+                if (error) throw error;
+
+                // Get public URL
+                const { data: urlData } = supabaseClient.storage
+                    .from('chat-images')
+                    .getPublicUrl(filePath);
+
+                const publicUrl = urlData.publicUrl;
+
+                // Send markdown image message
+                const res = await fetch(`${API_URL}/chat/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({
+                        roomId,
+                        content: `![image](${publicUrl})`
+                    })
+                });
+
+                const sendData = await res.json();
+                if (!sendData.success) throw new Error(sendData.error);
+            } catch (err) {
+                console.error('Image attachment failed:', err);
+                alert('이미지 첨부 중 오류가 발생했습니다: ' + err.message);
+            } finally {
+                if (attachBtn) {
+                    attachBtn.disabled = false;
+                    attachBtn.innerHTML = '<span class="material-symbols-outlined text-xl">add_circle</span>';
+                }
+                attachInput.value = '';
+            }
+        });
+
+        // Setup real-time channel
+        function subscribeRealtime() {
+            chatChannel = supabaseClient.channel(`room:${roomId}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `room_id=eq.${roomId}`
+                }, (payload) => {
+                    console.log('--- [CHAT POP] Realtime message received ---', payload.new);
+                    appendMessage(payload.new);
+                })
+                .subscribe((status) => {
+                    console.log(`--- [CHAT POP] Subscription Status: ${status} ---`);
+                    if (status === 'SUBSCRIBED') {
+                        loadMessages();
+                    }
+                });
+        }
+
+        // Call systems setup
+        document.getElementById('send-btn')?.addEventListener('click', sendMessage);
+        document.getElementById('message-input-field')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize Everything
+        async function init() {
+            await prefetchAiPersona();
+            subscribeRealtime();
+        }
+
+        init();
+    </script>
+</body>
+</html>

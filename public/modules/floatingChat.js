@@ -81,6 +81,25 @@ export async function openChatWindow(roomId, title) {
         return;
     }
 
+    // 2. PC 데스크톱 처리: 카카오톡 PC 프로그램 스타일로 브라우저 탭 밖의 실제 팝업 창을 생성
+    console.log('--- [CHAT] Desktop Mode: Opening chat in a new standalone popup window ---');
+    const width = 380;
+    const height = 540;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    
+    const popUrl = `/chat-pop.html?roomId=${encodeURIComponent(roomId)}&title=${encodeURIComponent(title)}`;
+    const winName = `chat_pop_${roomId.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    
+    const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,status=no,toolbar=no,resizable=yes`;
+    const popWin = window.open(popUrl, winName, features);
+    if (popWin) {
+        popWin.focus();
+    } else {
+        alert('팝업 차단이 활성화되어 있을 수 있습니다. 브라우저 주소창 우측에서 이 사이트의 팝업 허용을 해주세요.');
+    }
+    return;
+
     // 2. 중복 열기 방지
     if (store.activeChatWindows[roomId]) {
         focusChatWindow(roomId);
