@@ -201,7 +201,7 @@ function setupAuth() {
         const { data, error } = await store.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.href.split('?')[0],
+                redirectTo: window.location.origin,
                 scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                 queryParams: {
                     access_type: 'offline',
@@ -793,7 +793,7 @@ function setupGoogleCalendarConnect() {
                 const { error } = await store.supabaseClient.auth.linkIdentity({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.href.split('?')[0],
+                        redirectTo: window.location.origin,
                         scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
                         queryParams: {
                             access_type: 'offline',

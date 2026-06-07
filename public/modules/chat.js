@@ -822,7 +822,7 @@ export async function loadContacts() {
                 await store.supabaseClient.auth.linkIdentity({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.href.split('?')[0],
+                        redirectTo: window.location.origin,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
