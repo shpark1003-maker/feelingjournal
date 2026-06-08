@@ -27,6 +27,7 @@ export async function loadNotebooks() {
         });
         const dataHistory = await resHistory.json();
         const allPages = dataHistory.history || [];
+        store.history = allPages;
 
         v2Accordion.innerHTML = notebooks.map(nb => {
             const nbPages = allPages.filter(p => p.notebookId === nb.id || ((!p.notebookId || p.notebookId === 'nb-1') && nb.id === 'nb-1'));
@@ -94,7 +95,7 @@ export async function loadNotebooks() {
                 // 1. 개별 페이지 클릭 핸들링
                 if (target.classList.contains('page-item')) {
                     e.preventDefault();
-                    selectPage(target.dataset.id, allPages);
+                    selectPage(target.dataset.id, store.history || []);
                     return;
                 }
 
