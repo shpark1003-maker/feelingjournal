@@ -28,6 +28,13 @@ module.exports = async (req, res) => {
     const url = req.url || '';
     const path = url.split('?')[0];
 
+    // [V2 ROUTE REDIRECT FOR BACKWARD COMPATIBILITY]
+    if (path === '/v2' || path.startsWith('/v2/')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+    }
+
     // [IN-APP BROWSER DETECT & OUTLINK REDIRECT]
     if (path === '/' || path === '/index.html') {
         const userAgent = req.headers['user-agent'] || '';

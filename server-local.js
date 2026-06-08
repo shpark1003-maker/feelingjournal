@@ -44,7 +44,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/v2', express.static(path.join(__dirname, 'public_v2')));
+app.use('/v2', (req, res) => {
+    res.redirect(302, '/');
+});
 
 app.get('/favicon.ico', (req, res) => {
     res.status(204).end();

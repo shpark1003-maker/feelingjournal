@@ -65,7 +65,7 @@ export async function loadNotebooks() {
                                 <span class="material-symbols-outlined text-[18px]">delete</span>
                             </button>
                             ` : ''}
-                            <span class="material-symbols-outlined group-open:rotate-180 transition-transform duration-300 pointer-events-none" data-icon="expand_less">expand_less</span>
+                            <span class="material-symbols-outlined group-open:rotate-180 transition-transform duration-300 pointer-events-none" data-icon="expand_more">expand_more</span>
                         </div>
                     </summary>
                     <div class="px-4 pb-4 pt-0 flex flex-col" style="max-height: 360px;">

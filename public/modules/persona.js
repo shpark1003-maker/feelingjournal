@@ -398,6 +398,7 @@ export async function loadBriefing() {
             url += `?region=off`;
         }
 
+        console.log("--- [BRIEFING] Requesting briefing from backend API...");
         const res = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -407,10 +408,12 @@ export async function loadBriefing() {
 
         const data = await res.json();
         if (data.success && data.briefing) {
+            console.log("--- [BRIEFING] Successfully loaded briefing from server.");
             content.innerHTML = data.briefing
                 .replace(/\n/g, '<br>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-color)">$1</strong>');
         } else {
+            console.error("--- [BRIEFING] Server failed to generate briefing:", data.error);
             content.innerHTML = `<span style="color:#ee5253;">⚠️ ${data.error || '브리핑을 생성할 수 없습니다. 나중에 다시 시도해 주세요.'}</span>`;
         }
     } catch (e) {
