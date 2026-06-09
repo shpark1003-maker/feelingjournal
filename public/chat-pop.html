@@ -445,6 +445,31 @@
             }
         });
 
+        const triggerParentCall = (mode) => {
+            try {
+                if (window.opener && !window.opener.closed) {
+                    if (window.opener.location.origin === window.location.origin) {
+                        const fjChat = window.opener.FeelingJournalChat;
+                        if (fjChat && typeof fjChat.startCall === 'function') {
+                            fjChat.startCall(mode);
+                        } else {
+                            alert('부모창의 통화 시스템이 아직 준비되지 않았습니다.');
+                        }
+                    } else {
+                        alert('보안 정책(Cross-Origin)으로 인해 통화를 요청할 수 없습니다.');
+                    }
+                } else {
+                    alert('메인 창이 닫혀 있어 통화 기능을 시작할 수 없습니다.');
+                }
+            } catch (err) {
+                console.error('Cross-origin or parent window access error:', err);
+                alert('부모 창의 통화 시스템에 연결할 수 없습니다. 보안 정책 및 메인 창 상태를 확인해 주세요.');
+            }
+        };
+
+        document.getElementById('pop-call-btn')?.addEventListener('click', () => triggerParentCall('voice'));
+        document.getElementById('pop-videocam-btn')?.addEventListener('click', () => triggerParentCall('video'));
+
         // Initialize Everything
         async function init() {
             await prefetchAiPersona();

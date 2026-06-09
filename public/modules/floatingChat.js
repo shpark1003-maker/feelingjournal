@@ -379,7 +379,7 @@ async function loadWindowMessages(roomId) {
 }
 
 // 윈도우 내 개별 메시지 추가 및 Deduplication
-function appendWindowMessage(roomId, msg) {
+export function appendWindowMessage(roomId, msg) {
     const winEl = document.querySelector(`#v2-floating-chat-container [data-room-id="${roomId}"]`);
     if (!winEl || !msg.id) return;
 
@@ -391,11 +391,14 @@ function appendWindowMessage(roomId, msg) {
     if (!body) return;
 
     const userEmailFromDom = document.getElementById('user-email')?.innerText || '';
-    const isMyMessage = (store.currentUser?.id && (
-        msg.sender_id === store.currentUser.id || 
-        msg.user_email === store.currentUser.email
-    )) || (msg.user_email && userEmailFromDom && msg.user_email === userEmailFromDom);
-    const isAiMessage = msg.user_email === 'ai@feeling.journal';
+    const isAiMessage = msg.user_email === 'ai@feeling.journal' || msg.sender_id === '00000000-0000-0000-0000-000000000000';
+    const isFriendMessage = msg.user_email && msg.user_email.startsWith('friend-');
+    const isMyMessage = !isAiMessage && !isFriendMessage && (
+        (store.currentUser?.id && (
+            msg.sender_id === store.currentUser.id || 
+            msg.user_email === store.currentUser.email
+        )) || (msg.user_email && userEmailFromDom && msg.user_email === userEmailFromDom)
+    );
 
     const msgDiv = document.createElement('div');
     msgDiv.className = `flex flex-col ${isMyMessage ? 'items-end self-end' : 'items-start self-start'} space-y-1 w-full`;

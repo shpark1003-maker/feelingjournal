@@ -1801,3 +1801,8 @@ export function switchSocialTab(tab) {
     }
 }
 
+// Global namespace binding for popup windows
+window.FeelingJournalChat = window.FeelingJournalChat || {};
+window.FeelingJournalChat.startCall = startCall;
+
+

@@ -336,7 +336,10 @@ export async function loadBriefing() {
 
     try {
         const token = await store.getSessionToken();
-        if (!token) return;
+        if (!token) {
+            card.style.display = 'none';
+            return;
+        }
 
         const aiName = document.getElementById('ai-name')?.value || '비서';
         const titleEl = document.getElementById('briefing-title-text');

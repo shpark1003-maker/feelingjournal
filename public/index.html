@@ -411,8 +411,10 @@
 <span class="font-label-sm text-primary uppercase tracking-wider" id="briefing-title-text">Cloud Wisdom</span>
 </div>
 <div id="briefing-content" class="font-body-md text-on-surface-variant leading-relaxed mb-4 z-10 relative">
-<h2 class="font-headline-lg-mobile text-on-surface mb-3">오늘은 "제주도 가족 여행" 준비를 시작하는 날이에요.</h2>
-<p class="mb-4">잊지 말아야 할 체크리스트를 Cloud Fairy가 정리해 두었어요. 따뜻한 차 한 잔과 함께 가볍게 훑어보세요.</p>
+    <div style="display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 0.9rem;" class="animate-pulse">
+        <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+        <span>오늘의 일과 브리핑을 가져오고 있습니다...</span>
+    </div>
 </div>
 <div class="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
 <span class="material-symbols-outlined text-[80px]" data-icon="cloud">cloud</span>
@@ -1607,6 +1609,13 @@
                 <textarea class="w-full bg-surface-container/50 rounded-xl border-0 focus:ring-1 focus:ring-primary p-3 placeholder:text-on-surface-variant/40 resize-none font-body-md" placeholder="여기에 자기 성찰 내용을 작성해 주세요..." rows="3" id="v2-task-reflection-input"></textarea>
             </div>
         </div>
+        
+        <!-- 삭제 버튼 컨테이너 -->
+        <div id="v2-task-delete-container" class="hidden mt-4 pt-4 border-t border-outline-variant/30 flex justify-center">
+            <button id="v2-task-editor-delete" class="px-6 py-3 w-full rounded-xl bg-error/10 text-error hover:bg-error hover:text-on-error font-bold transition-all active:scale-95 duration-200">
+                일정 삭제하기
+            </button>
+        </div>
         </div>
     </div>
 </div>
@@ -1650,157 +1659,6 @@
         </div>
     </main>
 </div>
-
-<!-- Calendar Modals -->
-<div id="calendar-event-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-card bg-surface paper-texture rounded-[2.5rem] border-4 border-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden watercolor-border"
-            style="max-width: 500px; width: 100%;">
-            <div class="p-8" style="text-align: left;">
-                <div class="flex justify-between items-center mb-6">
-                    <div class="flex items-center gap-3">
-                        <img alt="Mascot" class="w-10 h-10 object-contain floating-cloud" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8dVj1rnxsPpvYt8rRI3QZiLeLyLUCfeuqo1BLW7-oQs-DNs7iQ-Nub2Y0nCTikwa3D9nfrIA-0XThBoppM8UUUWscJIRqKSlzbyvjPam4_wT4bRk5o0BkVEEC3uhoyFn6fps2TR4tgdWqmllTikdK90LpomoN3-YXZ8K3KjdradO4DW_94KKKtf3ouPnj9BdnpjJlRB9dKUwg3NhIDN2reHv2nkgostNlaXCHZ0yhA32dt7qyLRrS-qCfMwAhNdrnGgvoisGuoDHU"
-                            style="width: 40px; height: 40px; border-radius: 50%;" />
-                        <h3 id="calendar-modal-title" class="text-2xl font-bold font-headline text-on-surface"
-                            style="margin: 0;">New Sweet Event</h3>
-                    </div>
-                    <button id="close-calendar-modal" type="button"
-                        class="w-10 h-10 rounded-full hover:bg-surface-dim flex items-center justify-center transition-colors text-on-surface-variant"
-                        style="background: none; border: none; cursor: pointer;">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-                <form id="calendar-event-form" class="space-y-5">
-                    <input type="hidden" id="calendar-event-id">
-                    <div>
-                        <label for="calendar-event-summary"
-                            class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Event
-                            Title</label>
-                        <input id="calendar-event-summary"
-                            class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface placeholder-on-surface/30"
-                            placeholder="e.g. Nap with the clouds" type="text" required />
-                    </div>
-                    <div class="grid grid-cols-2 gap-4"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        <div>
-                            <label for="calendar-event-start"
-                                class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Start
-                                Time</label>
-                            <input id="calendar-event-start"
-                                class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface"
-                                type="datetime-local" required />
-                        </div>
-                        <div>
-                            <label for="calendar-event-end"
-                                class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">End
-                                Time</label>
-                            <input id="calendar-event-end"
-                                class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface"
-                                type="datetime-local" required />
-                        </div>
-                    </div>
-                    <div>
-                        <label for="calendar-event-desc"
-                            class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Description</label>
-                        <textarea id="calendar-event-desc"
-                            class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface placeholder-on-surface/30"
-                            placeholder="일정에 대한 추가 메모" style="height: 100px; resize: none;"></textarea>
-                    </div>
-
-                    <!-- AI Secretary Advice Frame -->
-                    <div class="bg-primary/5 border-2 border-primary/20 rounded-[1.5rem] p-5 mt-4 flex gap-4 relative"
-                        id="calendar-event-advice-group" style="display: none; align-items: flex-start;">
-                        <div class="text-primary" style="color: var(--primary);">
-                            <span class="material-symbols-outlined text-3xl"
-                                style="font-variation-settings: 'FILL' 1;">sparkles</span>
-                        </div>
-                        <div>
-                            <h4 class="text-primary font-bold text-sm mb-1 font-headline"
-                                style="color: var(--primary); margin: 0 0 4px 0;">Cloudie's Suggestion</h4>
-                            <p id="calendar-event-advice-text"
-                                class="text-sm text-on-surface/80 leading-relaxed font-handwritten text-lg leading-tight"
-                                style="margin: 0; font-family: 'Caveat', cursive; font-size: 1.25rem; font-weight: 500;">
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 flex gap-3" style="display: flex; gap: 12px;">
-                        <button id="delete-calendar-event-btn"
-                            class="w-1/3 bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-2xl shadow-lg transition-all text-base"
-                            type="button" style="display: none; border: none; cursor: pointer;">
-                            Delete
-                        </button>
-                        <button id="save-calendar-event-btn"
-                            class="flex-1 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all text-base"
-                            type="submit" style="border: none; cursor: pointer;">
-                            Confirm Schedule
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    
-<div class="fixed inset-0 z-[110] hidden flex-col justify-end transition-all duration-300" id="dayViewContainer"
-        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
-        <div class="absolute inset-0 bg-surface-dim/40 backdrop-blur-md" id="dayViewCloseBg"
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(253, 248, 225, 0.4); backdrop-filter: blur(6px);">
-        </div>
-        <div class="relative w-full h-[70%] bg-surface paper-texture rounded-t-[3rem] border-t-4 border-white ghibli-shadow flex flex-col transform translate-y-full transition-transform duration-500 ease-out"
-            id="dayViewCard"
-            style="position: relative; border-top-left-radius: 3rem; border-top-right-radius: 3rem; background-color: #fffcf2;">
-            <div class="w-12 h-1.5 bg-on-surface/10 rounded-full mx-auto mt-4 mb-6"
-                style="width: 48px; height: 6px; background-color: rgba(74, 63, 53, 0.1); border-radius: 9999px; margin: 16px auto 24px auto;">
-            </div>
-            <div class="flex-1 overflow-y-auto px-8 pb-12"
-                style="padding: 0 32px 48px 32px; overflow-y: auto; flex: 1;">
-                <div class="flex justify-between items-start mb-8"
-                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
-                    <div>
-                        <h3 class="text-4xl font-bold font-headline text-on-surface mb-1" id="day-view-day-name"
-                            style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #4a3f35;">Tuesday</h3>
-                        <p class="text-xl text-on-surface-variant font-medium" id="day-view-date-text"
-                            style="margin: 4px 0 0 0; font-size: 1.25rem; color: #8c7e6d; font-weight: 500;">March 12,
-                            2024</p>
-                    </div>
-                    <button class="p-3 rounded-full hover:bg-surface-dim transition-colors text-on-surface-variant"
-                        id="day-view-close-btn"
-                        style="background: none; border: none; cursor: pointer; border-radius: 50%; color: #8c7e6d; padding: 12px;">
-                        <span class="material-symbols-outlined text-3xl" style="font-size: 1.875rem;">close</span>
-                    </button>
-                </div>
-                <!-- 날짜별 일정 목록 컨테이너 -->
-                <div class="space-y-6 mb-10" id="day-view-events-list"
-                    style="margin-bottom: 40px; display: flex; flex-direction: column; gap: 24px;">
-                    <!-- JS에 의해 동적 생성 -->
-                </div>
-                <div class="flex gap-4 mb-10" style="display: flex; gap: 16px; margin-bottom: 40px;">
-                    <button
-                        class="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-white border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all"
-                        id="day-view-add-btn"
-                        style="flex: 1; border: 2px solid rgba(125, 161, 204, 0.2); border-radius: 16px; background: white; color: #7da1cc; font-weight: 700; padding: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span class="material-symbols-outlined">edit_note</span> 일정 등록
-                    </button>
-                </div>
-                <div class="bg-primary/10 border-4 border-white rounded-[2.5rem] p-8 ghibli-shadow relative"
-                    id="day-view-advice-card"
-                    style="display: none; padding: 32px; border-radius: 2.5rem; border: 4px solid white; background-color: rgba(125, 161, 204, 0.1); position: relative;">
-                    <div class="absolute -top-4 -left-4 bg-white p-2 rounded-2xl ghibli-shadow"
-                        style="position: absolute; top: -16px; left: -16px; background: white; padding: 8px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-                        <span class="material-symbols-outlined text-3xl text-primary"
-                            style="font-size: 1.875rem; color: #7da1cc;">auto_awesome</span>
-                    </div>
-                    <h4 class="text-primary font-bold text-lg mb-3 font-headline uppercase tracking-widest"
-                        style="color: #7da1cc; font-size: 1.125rem; font-weight: 700; margin: 0 0 12px 0;">Daily Spirit
-                        Insight</h4>
-                    <p class="text-2xl text-on-surface leading-snug font-handwritten" id="day-view-advice-text"
-                        style="margin: 0; font-family: 'Caveat', cursive; font-size: 1.5rem; color: #4a3f35; line-height: 1.3;">
-                        "The stars align for a magical evening."
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
 
     
 <!-- Extra Modals & Helpers -->
