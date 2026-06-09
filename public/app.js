@@ -265,9 +265,14 @@ async function onUserAuthenticated(session) {
     const emailEl = document.getElementById('user-email');
     if (emailEl) emailEl.innerText = session.user.email;
 
-    if (session.provider_token) {
+    const activeProviderToken = session.provider_token || localStorage.getItem('google_provider_token');
+    const activeRefreshToken = session.provider_refresh_token || localStorage.getItem('google_provider_refresh_token');
+
+    if (activeProviderToken && activeProviderToken !== 'null' && activeProviderToken !== 'undefined') {
         try {
-            localStorage.setItem('google_provider_token', session.provider_token);
+            if (session.provider_token) {
+                localStorage.setItem('google_provider_token', session.provider_token);
+            }
             if (session.provider_refresh_token) {
                 localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
             }
@@ -278,12 +283,11 @@ async function onUserAuthenticated(session) {
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
-            'x-provider-token': session.provider_token
+            'x-provider-token': activeProviderToken
         };
 
-        const storedRefreshToken = session.provider_refresh_token || localStorage.getItem('google_provider_refresh_token');
-        if (storedRefreshToken) {
-            headers['x-provider-refresh-token'] = storedRefreshToken;
+        if (activeRefreshToken && activeRefreshToken !== 'null' && activeRefreshToken !== 'undefined') {
+            headers['x-provider-refresh-token'] = activeRefreshToken;
         }
 
         // Sync provider token to Redis
