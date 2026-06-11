@@ -46,6 +46,16 @@ module.exports = async (req, res) => {
             return res.json({ success: true });
         }
 
+        // 4.6 환경변수 검사 엔드포인트
+        if (req.method === 'GET' && path.includes('/env-check')) {
+            return res.json({
+                success: true,
+                GOOGLE_CLIENT_ID_EXISTS: !!process.env.GOOGLE_CLIENT_ID,
+                GOOGLE_CLIENT_SECRET_EXISTS: !!process.env.GOOGLE_CLIENT_SECRET,
+                GOOGLE_CLIENT_ID_VAL: process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 10)}...` : 'undefined'
+            });
+        }
+
         // 4.5 구글 연동 해제 엔드포인트
         if (req.method === 'POST' && path.includes('/unlink-google')) {
             const authHeader = req.headers.authorization;
