@@ -747,8 +747,7 @@ function setupUserProfileUpload() {
 window.checkGoogleCalendarStatus = checkGoogleCalendarStatus;
 async function checkGoogleCalendarStatus() {
     const statusText = document.getElementById('google-cal-status-text');
-    const connectBtn = document.getElementById('settings-google-connect-btn');
-    if (!statusText || !connectBtn) return;
+    if (!statusText) return;
     
     try {
         const token = await store.getSessionToken();
@@ -764,17 +763,117 @@ async function checkGoogleCalendarStatus() {
         });
         const data = await res.json();
         
+        const connStatusContainer = document.getElementById('drawer-conn-status');
+        const calendarsList = document.getElementById('drawer-calendars-list');
+        
         if (data.success) {
             if (data.unlinked) {
                 statusText.innerText = '연결되어 있지 않습니다.';
                 statusText.className = 'font-label-sm text-xs text-outline';
-                connectBtn.innerText = '연결하기';
-                connectBtn.className = 'px-5 py-2 bg-primary text-on-primary rounded-full font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm';
+                
+                if (connStatusContainer) {
+                    connStatusContainer.innerHTML = `
+                        <div class="w-12 h-12 rounded-full bg-outline/10 flex items-center justify-center text-outline">
+                            <span class="material-symbols-outlined text-[32px]">sync_disabled</span>
+                        </div>
+                        <div class="text-center">
+                            <p class="font-title-sm text-sm text-on-surface font-semibold">Google 캘린더 연동 대기</p>
+                            <p class="text-xs text-on-surface-variant mt-1">캘린더를 연동하면 감성 비서가 일정을 브리핑해 드립니다.</p>
+                        </div>
+                        <button id="drawer-google-connect-btn" class="w-full py-2.5 bg-primary text-on-primary rounded-2xl font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                            Google 계정 연동하기
+                        </button>
+                    `;
+                    const connBtn = document.getElementById('drawer-google-connect-btn');
+                    if (connBtn) {
+                        connBtn.addEventListener('click', handleGoogleConnectAction);
+                    }
+                }
+                
+                if (calendarsList) {
+                    calendarsList.innerHTML = `
+                        <div class="text-center py-6 text-xs text-on-surface-variant">
+                            연동된 캘린더가 없습니다.
+                        </div>
+                    `;
+                }
             } else {
                 statusText.innerText = '정상적으로 연동되었습니다.';
                 statusText.className = 'font-label-sm text-xs text-[#10ac84] font-semibold';
-                connectBtn.innerText = '연결 해제';
-                connectBtn.className = 'px-5 py-2 bg-surface-container-highest text-error border border-outline-variant/30 rounded-full font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm';
+                
+                if (connStatusContainer) {
+                    connStatusContainer.innerHTML = `
+                        <div class="w-12 h-12 rounded-full bg-[#10ac84]/10 flex items-center justify-center text-[#10ac84]">
+                            <span class="material-symbols-outlined text-[32px]">sync</span>
+                        </div>
+                        <div class="text-center">
+                            <p class="font-title-sm text-sm text-on-surface font-semibold">Google 캘린더 연동 완료</p>
+                            <p class="text-xs text-on-surface-variant mt-1">사용자의 일정을 안전하게 동기화하고 있습니다.</p>
+                        </div>
+                        <button id="drawer-google-disconnect-btn" class="w-full py-2.5 bg-surface-container-highest text-error border border-outline-variant/30 rounded-2xl font-label-md text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                            연동 해제하기
+                        </button>
+                    `;
+                    const disconnBtn = document.getElementById('drawer-google-disconnect-btn');
+                    if (disconnBtn) {
+                        disconnBtn.addEventListener('click', handleGoogleDisconnectAction);
+                    }
+                }
+                
+                if (calendarsList) {
+                    if (!data.calendars || data.calendars.length === 0) {
+                        calendarsList.innerHTML = `
+                            <div class="text-center py-6 text-xs text-on-surface-variant">
+                                활성화된 캘린더가 없습니다.
+                            </div>
+                        `;
+                    } else {
+                        calendarsList.innerHTML = data.calendars.map(cal => {
+                            let badgeText = '📅 일반';
+                            let badgeClass = 'bg-primary/10 text-primary border-primary/20';
+                            const name = cal.summary.toLowerCase();
+                            if (name.includes('삼성') || name.includes('samsung')) {
+                                badgeText = '📱 삼성';
+                                badgeClass = 'bg-[#4b7bec]/10 text-[#4b7bec] border-[#4b7bec]/20';
+                            } else if (name.includes('카카오') || name.includes('kakao') || name.includes('톡캘린더')) {
+                                badgeText = '💬 카카오';
+                                badgeClass = 'bg-[#f7b731]/10 text-[#f7b731] border-[#f7b731]/20';
+                            } else if (name.includes('apple') || name.includes('icloud') || name.includes('아이클라우드') || name.includes('iphone')) {
+                                badgeText = '🍎 Apple';
+                                badgeClass = 'bg-[#eb3b5a]/10 text-[#eb3b5a] border-[#eb3b5a]/20';
+                            } else if (cal.id === 'primary' || name.includes('기본')) {
+                                badgeText = '⭐ 기본';
+                                badgeClass = 'bg-[#10ac84]/10 text-[#10ac84] border-[#10ac84]/20';
+                            }
+                            
+                            function escapeHtml(str) {
+                                if (!str) return '';
+                                return str.replace(/&/g, '&amp;')
+                                          .replace(/</g, '&lt;')
+                                          .replace(/>/g, '&gt;')
+                                          .replace(/"/g, '&quot;')
+                                          .replace(/'/g, '&#039;');
+                            }
+                            
+                            return `
+                                <div class="flex items-center justify-between p-3.5 bg-white/60 rounded-2xl border border-white/40 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold">
+                                            📅
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="text-xs font-semibold text-on-surface">${escapeHtml(cal.summary)}</p>
+                                            <p class="text-[10px] text-on-surface-variant max-w-[180px] truncate">${escapeHtml(cal.id)}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full border ${badgeClass}">
+                                        ${badgeText}
+                                    </span>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
             }
         }
     } catch (err) {
@@ -783,51 +882,73 @@ async function checkGoogleCalendarStatus() {
     }
 }
 
-function setupGoogleCalendarConnect() {
-    const connectBtn = document.getElementById('settings-google-connect-btn');
-    if (!connectBtn) return;
+async function handleGoogleConnectAction(e) {
+    const connBtn = e.target;
+    connBtn.disabled = true;
+    connBtn.innerText = '연결 중...';
+    try {
+        const token = await store.getSessionToken();
+        if (!token) throw new Error('세션 토큰을 찾을 수 없습니다.');
+        window.location.href = `${API_URL}/auth/google?access_token=${encodeURIComponent(token)}`;
+    } catch (err) {
+        alert('구글 로그인 실패: ' + err.message);
+        connBtn.disabled = false;
+        connBtn.innerText = 'Google 계정 연동하기';
+    }
+}
+
+async function handleGoogleDisconnectAction(e) {
+    const disconnBtn = e.target;
+    if (!confirm('정말로 Google 캘린더 연동을 해제하시겠습니까?')) return;
     
-    connectBtn.addEventListener('click', async () => {
-        const isConnected = connectBtn.innerText === '연결 해제';
-        
-        if (isConnected) {
-            if (!confirm('정말로 Google 캘린더 연동을 해제하시겠습니까?')) return;
-            
-            connectBtn.disabled = true;
-            connectBtn.innerText = '해제 중...';
-            try {
-                const token = await store.getSessionToken();
-                const res = await fetch(`${API_URL}/auth/unlink-google`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Google 캘린더 연동이 성공적으로 해제되었습니다.');
-                    await checkGoogleCalendarStatus();
-                    if (window.loadCalendar) await window.loadCalendar();
-                } else {
-                    alert('연동 해제에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
-                }
-            } catch (err) {
-                console.error(err);
-                alert('연동 해제 중 오류가 발생했습니다.');
-            } finally {
-                connectBtn.disabled = false;
-            }
+    disconnBtn.disabled = true;
+    disconnBtn.innerText = '해제 중...';
+    try {
+        const token = await store.getSessionToken();
+        const res = await fetch(`${API_URL}/auth/unlink-google`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('Google 캘린더 연동이 성공적으로 해제되었습니다.');
+            await checkGoogleCalendarStatus();
+            if (window.loadCalendar) await window.loadCalendar();
         } else {
-            // Connect
-            connectBtn.disabled = true;
-            connectBtn.innerText = '연결 중...';
-            try {
-                const token = await store.getSessionToken();
-                if (!token) throw new Error('세션 토큰을 찾을 수 없습니다.');
-                window.location.href = `${API_URL}/auth/google?access_token=${encodeURIComponent(token)}`;
-            } catch (err) {
-                alert('구글 로그인 실패: ' + err.message);
-                connectBtn.disabled = false;
-                connectBtn.innerText = '연결하기';
-            }
+            alert('연동 해제에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
         }
-    });
+    } catch (err) {
+        console.error(err);
+        alert('연동 해제 중 오류가 발생했습니다.');
+    } finally {
+        disconnBtn.disabled = false;
+        disconnBtn.innerText = '연동 해제하기';
+    }
+}
+
+function setupGoogleCalendarConnect() {
+    const openBtn = document.getElementById('open-calendar-sync-drawer-btn');
+    const overlay = document.getElementById('calendar-sync-drawer-overlay');
+    const closeBtn = document.getElementById('close-calendar-sync-drawer');
+    
+    if (openBtn && overlay) {
+        openBtn.addEventListener('click', () => {
+            overlay.classList.add('active');
+            checkGoogleCalendarStatus();
+        });
+    }
+    
+    if (closeBtn && overlay) {
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+        });
+    }
+    
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        });
+    }
 }

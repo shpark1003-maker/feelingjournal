@@ -693,6 +693,8 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
         const listRes = await fetchWithTimeout(listUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000);
         
         let calendars = [{ id: 'primary', summary: '기본 캘린더' }];
+        let isTokenEvicted = false;
+        
         if (listRes.ok) {
             const listData = await listRes.json();
             if (listData.items && listData.items.length > 0) {
@@ -708,6 +710,12 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
                 }
             }
         } else {
+            if (listRes.status === 401 || listRes.status === 403) {
+                await redis.del(`user:${userId}:google_provider_token`);
+                await redis.del(`user:${userId}:google_provider_refresh_token`);
+                console.warn(`--- [fetchGoogleCalendarEvents] Invalid token detected on calendarList (Status ${listRes.status}). Evicted Google tokens for user ${userId} ---`);
+                return { events: [], unlinked: true, partialFailure: false, failedCalendars: [] };
+            }
             console.warn('--- [fetchGoogleCalendarEvents] Failed to fetch Google calendarList, falling back to primary ---');
         }
 
@@ -731,6 +739,12 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
                         // Attach calendar metadata to each event
                         return items.map(item => ({ ...item, _calendarId: cal.id }));
                     } else {
+                        if (res.status === 401 || res.status === 403) {
+                            isTokenEvicted = true;
+                            await redis.del(`user:${userId}:google_provider_token`);
+                            await redis.del(`user:${userId}:google_provider_refresh_token`);
+                            console.warn(`--- [fetchGoogleCalendarEvents] Invalid token detected on event fetch (Status ${res.status}). Evicted Google tokens for user ${userId} ---`);
+                        }
                         throw new Error(`Google API returned status ${res.status}`);
                     }
                 } catch (err) {
@@ -791,7 +805,8 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
 
         return {
             events: deduplicatedEvents,
-            unlinked: false,
+            calendars: calendars.map(c => ({ id: c.id, summary: c.summary })),
+            unlinked: isTokenEvicted,
             partialFailure,
             failedCalendars
         };

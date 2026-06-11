@@ -5919,4 +5919,13 @@ body {
     background-image: none !important;
 }
 
+/* Calendar Sync Drawer */
+#calendar-sync-drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+#calendar-sync-drawer-overlay.active #calendar-sync-drawer {
+    transform: translateX(0);
+}
+
 

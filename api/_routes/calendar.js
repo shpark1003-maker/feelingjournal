@@ -162,9 +162,10 @@ module.exports = async (req, res) => {
                 let isUnlinked = false;
                 let partialFailure = false;
                 let failedCalendars = [];
+                let calResult = {};
                 try {
                     const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-                    const calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
+                    calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
                     isUnlinked = calResult.unlinked;
                     partialFailure = calResult.partialFailure;
                     failedCalendars = calResult.failedCalendars;
@@ -201,7 +202,7 @@ module.exports = async (req, res) => {
                 // 3. 통합 분석 기법 적용 (Gemini 단일 호출)
                 const analyzedEvents = await analyzeCalendarEventsAndDiaries(googleEvents, diaryContent, currentTimeStr);
 
-                return res.json({ success: true, events: analyzedEvents, unlinked: isUnlinked, partialFailure, failedCalendars });
+                return res.json({ success: true, events: analyzedEvents, calendars: calResult.calendars || [], unlinked: isUnlinked, partialFailure, failedCalendars });
             }
 
             const { summary, startTime, endTime, description } = req.body;
@@ -276,10 +277,11 @@ module.exports = async (req, res) => {
         let isUnlinked = false;
         let partialFailure = false;
         let failedCalendars = [];
+        let calResult = {};
         try {
             // Fetch events from 30 days ago to 90 days in the future to keep a complete view
             const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-            const calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
+            calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
             isUnlinked = calResult.unlinked;
             partialFailure = calResult.partialFailure;
             failedCalendars = calResult.failedCalendars;
@@ -317,7 +319,7 @@ module.exports = async (req, res) => {
             if (cached) {
                 const { fingerprint, analyzedEvents } = JSON.parse(cached);
                 if (fingerprint === currentFingerprint) {
-                    return res.json({ success: true, events: analyzedEvents, cached: true, unlinked: isUnlinked, partialFailure, failedCalendars });
+                    return res.json({ success: true, events: analyzedEvents, calendars: calResult.calendars || [], cached: true, unlinked: isUnlinked, partialFailure, failedCalendars });
                 }
             }
         }
@@ -352,7 +354,7 @@ module.exports = async (req, res) => {
         const cacheTTL = isFallback ? 15 : 3600;
         await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', cacheTTL);
         
-        return res.json({ success: true, events: analyzedEvents, unlinked: isUnlinked, partialFailure, failedCalendars });
+        return res.json({ success: true, events: analyzedEvents, calendars: calResult.calendars || [], unlinked: isUnlinked, partialFailure, failedCalendars });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
