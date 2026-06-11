@@ -117,17 +117,22 @@ module.exports = async (req, res) => {
             const host = req.headers.host || 'localhost:3000';
             const redirectUrl = `${protocol}://${host}/api/auth/callback`;
             
-            console.log(`--- [OAuth Google] Redirecting to dynamic URL: ${redirectUrl} ---`);
+            console.log(`--- [OAuth Google] Redirecting to dynamic URL: ${redirectUrl} with userId: ${userId} ---`);
             
+            const queryParams = {
+                access_type: 'offline',
+                prompt: 'consent'
+            };
+            if (userId) {
+                queryParams.state = userId;
+            }
+
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
                     scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    },
+                    queryParams,
                 }
             });
             if (error) throw error;
@@ -156,24 +161,30 @@ module.exports = async (req, res) => {
 
         // 7. [OAuth] 콜백 처리 엔드포인트
         if (req.method === 'GET' && path.includes('/callback')) {
-            const { code } = req.query;
+            const { code, state } = req.query;
             if (code) {
                 const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) throw error;
 
                 if (data && data.session && data.user) {
-                    const userId = data.user.id;
+                    const targetUserId = state || data.user.id;
                     const providerToken = data.session.provider_token;
                     const providerRefreshToken = data.session.provider_refresh_token;
 
                     if (providerToken) {
-                        await redis.set(`user:${userId}:google_provider_token`, providerToken, 'EX', 3600);
-                        await redis.del(`user:${userId}:calendar-advice-cache`);
-                        console.log(`--- [OAuth Callback] Cached google_provider_token for user ${userId} and cleared calendar cache ---`);
+                        await redis.set(`user:${targetUserId}:google_provider_token`, providerToken, 'EX', 3600);
+                        await redis.del(`user:${targetUserId}:calendar-advice-cache`);
+                        console.log(`--- [OAuth Callback] Cached google_provider_token for target user ${targetUserId} and cleared calendar cache ---`);
                     }
                     if (providerRefreshToken) {
-                        await redis.set(`user:${userId}:google_provider_refresh_token`, providerRefreshToken);
-                        console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for user ${userId} ---`);
+                        await redis.set(`user:${targetUserId}:google_provider_refresh_token`, providerRefreshToken);
+                        console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for target user ${targetUserId} ---`);
+                    }
+
+                    if (state) {
+                        // User was linking their account while logged in. Keep original session and return.
+                        res.redirect('/#linked=google');
+                        return;
                     }
 
                     // 브라우저 측 Supabase SDK가 로그인을 온전히 인식할 수 있도록 hash fragment로 세션 정보 전달
