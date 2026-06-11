@@ -626,8 +626,8 @@ async function refreshGoogleAccessToken(userId) {
             return null;
         }
 
-        const clientId = process.env.GOOGLE_CLIENT_ID;
-        const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+        const clientId = (process.env.GOOGLE_CLIENT_ID || '').replace(/["']/g, '').trim();
+        const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').replace(/["']/g, '').trim();
 
         if (!clientId || !clientSecret) {
             console.warn('--- [Google OAuth Refresh] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not configured in .env ---');

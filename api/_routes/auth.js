@@ -98,7 +98,7 @@ module.exports = async (req, res) => {
             const host = req.headers.host || 'localhost:3000';
             const redirectUrl = `${protocol}://${host}/api/auth/callback`;
             
-            const clientId = process.env.GOOGLE_CLIENT_ID;
+            const clientId = (process.env.GOOGLE_CLIENT_ID || '').replace(/["']/g, '').trim();
             
             if (userId) {
                 // If logged in, we use direct Google OAuth flow to fetch tokens directly from Google!
@@ -166,8 +166,8 @@ module.exports = async (req, res) => {
             if (code && state) {
                 // This is a direct Google Calendar link flow for an active user!
                 try {
-                    const clientId = process.env.GOOGLE_CLIENT_ID;
-                    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+                    const clientId = (process.env.GOOGLE_CLIENT_ID || '').replace(/["']/g, '').trim();
+                    const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').replace(/["']/g, '').trim();
                     
                     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
                         method: 'POST',
