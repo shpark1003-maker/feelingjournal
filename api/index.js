@@ -17,6 +17,30 @@ const scrap = require('./_routes/scrap');
 const subscribe = require('./_routes/subscribe');
 
 module.exports = async (req, res) => {
+    // 민감 정보 로그 마스킹 처리 (Zero-Knowledge 보안성 확보)
+    if (req.body && typeof req.body === 'object') {
+        const sensitiveFields = ['decryptedDiaries', 'userDiaryContext', 'content', 'response'];
+        const masked = { ...req.body };
+        sensitiveFields.forEach(field => {
+            if (masked[field] !== undefined) {
+                masked[field] = '[MASKED_SENSITIVE_DATA]';
+            }
+        });
+
+        Object.defineProperty(req.body, 'toJSON', {
+            value: function() { return masked; },
+            configurable: true,
+            writable: true
+        });
+
+        const customInspect = Symbol.for('nodejs.util.inspect.custom');
+        Object.defineProperty(req.body, customInspect, {
+            value: function() { return masked; },
+            configurable: true,
+            writable: true
+        });
+    }
+
     // Enable CORS for OPTIONS preflight
     if (req.method === 'OPTIONS') {
         res.setHeader('Access-Control-Allow-Origin', '*');

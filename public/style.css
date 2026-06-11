@@ -42,18 +42,12 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: clamp(14px, 1.11vw, 20px); /* 1440px -> 16px */
 }
 
 @media (max-width: 768px) {
     html {
-        font-size: 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    html {
-        font-size: 13px;
+        font-size: clamp(12px, 2.13vw, 15px); /* 375px -> 8px, 768px -> 16px */
     }
 }
 
@@ -3943,7 +3937,7 @@ body {
     --font-sans: 'Plus Jakarta Sans', 'Outfit', 'Noto Sans KR', sans-serif !important;
     --border-radius-card: 24px !important;
     --border-radius-btn: 16px !important;
-    --shadow-premium: 0 10px 30px -10px rgba(141, 119, 95, 0.2) !important;
+    --shadow-premium: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
 }
 
 /* Background & Global layout */
@@ -4131,7 +4125,7 @@ body.ghibli-theme .container {
     background: rgba(255, 252, 242, 0.95) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    border: 2px solid #5D574D !important;
     border-radius: 28px !important;
     box-shadow: var(--shadow-premium) !important;
     padding: 28px !important;

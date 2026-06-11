@@ -124,19 +124,40 @@ module.exports = async (req, res) => {
                     currentEmotion = profile.current_emotion;
                 }
                 
-                const keys = await scanRedisKeys(`user:${req.user.id}:diary-*`);
-                if (keys && keys.length > 0) {
-                    const sortedKeys = keys.sort().reverse();
-                    const latestDiaryRaw = await redis.get(sortedKeys[0]);
-                    if (latestDiaryRaw) {
-                        const item = JSON.parse(latestDiaryRaw);
-                        latestDiaryStr = `[최근 일기 제목: ${item.title || '제목 없음'}]
+            let latestDiaryStr = '최근 기록이 없습니다.';
+            const consent = req.body?.aiContextConsent === true;
+            const clientDiaryContext = req.body?.userDiaryContext;
+
+            if (clientDiaryContext) {
+                if (!consent) {
+                    return res.status(400).json({ error: 'AI 분석 제공 동의(aiContextConsent)가 누락되었습니다.' });
+                }
+                if (typeof clientDiaryContext === 'string' && clientDiaryContext.length > 2000) {
+                    return res.status(400).json({ error: '다이어리 컨텍스트 평문 내용은 최대 2,000자까지만 허용됩니다.' });
+                }
+                latestDiaryStr = clientDiaryContext;
+            } else {
+                try {
+                    const keys = await scanRedisKeys(`user:${req.user.id}:diary-*`);
+                    if (keys && keys.length > 0) {
+                        const sortedKeys = keys.sort().reverse();
+                        const latestDiaryRaw = await redis.get(sortedKeys[0]);
+                        if (latestDiaryRaw) {
+                            const item = JSON.parse(latestDiaryRaw);
+                            const isContentEncrypted = item.content && item.content.startsWith('e2e:');
+                            const isResponseEncrypted = item.response && item.response.startsWith('e2e:');
+                            
+                            latestDiaryStr = `[최근 일기 제목: ${item.title || '제목 없음'}]
 - 작성일시: ${item.createdAt || '알수없음'}
 - 감정분석결과: [${item.emotion || '평온'}]
-- 일기 본문: ${item.content || '없음'}
-- 제공된 AI 조언: ${item.response || '없음'}`;
+- 일기 본문: ${isContentEncrypted ? '[일기는 E2E 암호화되어 있어 백엔드에서 읽을 수 없습니다]' : (item.content || '없음')}
+- 제공된 AI 조언: ${isResponseEncrypted ? '[조언은 E2E 암호화되어 있어 백엔드에서 읽을 수 없습니다]' : (item.response || '없음')}`;
+                        }
                     }
+                } catch (e) {
+                    console.error('--- [WARN] Failed to load emotion/diary context:', e);
                 }
+            }
             } catch (e) {
                 console.error('--- [WARN] Failed to load emotion/diary context:', e);
             }
@@ -196,17 +217,7 @@ module.exports = async (req, res) => {
                                 
                                 if (canShare) {
                                     friendEmotion = fProfile.current_emotion || '평온';
-                                    const fKeys = await scanRedisKeys(`user:${friendId}:diary-*`);
-                                    if (fKeys && fKeys.length > 0) {
-                                        const sortedFKeys = fKeys.sort().reverse();
-                                        const fDiaryRaw = await redis.get(sortedFKeys[0]);
-                                        if (fDiaryRaw) {
-                                            const fItem = JSON.parse(fDiaryRaw);
-                                            friendDiaryStr = `[최근 일기 제목: ${fItem.title || '제목 없음'}]
-- 감정분석결과: [${fItem.emotion || '평온'}]
-- 일기 요약: ${fItem.content ? fItem.content.slice(0, 150) + '...' : '내용 없음'}`;
-                                        }
-                                    }
+                                    friendDiaryStr = '[친구 일기는 E2E 암호화되어 있어 접근할 수 없습니다]';
                                 }
                             }
                         }

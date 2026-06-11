@@ -1,5 +1,35 @@
 import { store, API_URL, assertIds } from './state.js?v=5.2.0';
 
+function getEventLocalDateString(eventDateStr) {
+    if (!eventDateStr) return '';
+    if (typeof eventDateStr !== 'string') {
+        eventDateStr = String(eventDateStr);
+    }
+    if (eventDateStr.length === 10 && eventDateStr.includes('-')) {
+        return eventDateStr;
+    }
+    if (eventDateStr.length >= 10 && eventDateStr[4] === '-' && eventDateStr[7] === '-') {
+        return eventDateStr.slice(0, 10);
+    }
+    const d = new Date(eventDateStr);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function parseDateSafe(dateStr) {
+    if (!dateStr) return new Date();
+    if (typeof dateStr !== 'string') {
+        dateStr = String(dateStr);
+    }
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    return new Date(dateStr);
+}
 
 let initialized = false;
 let currentYear = new Date().getFullYear();
@@ -17,12 +47,10 @@ window.v2TaskDeleteTrigger = async function(id) {
     if (!confirm('정말로 이 과제를 삭제하시겠습니까?')) return;
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
         const response = await fetch(`${API_URL}/calendar/events/${id}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
         const data = await response.json();
@@ -122,7 +150,6 @@ function initCalendarUI() {
 
             try {
                 const token = await store.getSessionToken();
-                const providerToken = await store.getProviderToken();
 
                 const isEdit = !!id;
                 let url = `${API_URL}/calendar`;
@@ -142,8 +169,7 @@ function initCalendarUI() {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                        'x-provider-token': providerToken || ''
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(payload)
                 });
@@ -173,14 +199,12 @@ function initCalendarUI() {
 
             try {
                 const token = await store.getSessionToken();
-                const providerToken = await store.getProviderToken();
 
                 // 구글 캘린더 삭제 API 호출
                 const res = await fetch(`${API_URL}/calendar/events/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'x-provider-token': providerToken || ''
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
@@ -275,13 +299,11 @@ function initCalendarUI() {
 
             try {
                 const token = await store.getSessionToken();
-                const providerToken = await store.getProviderToken();
 
                 const res = await fetch(`${API_URL}/calendar/events/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'x-provider-token': providerToken || ''
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
@@ -345,7 +367,6 @@ function initCalendarUI() {
 
             try {
                 const token = await store.getSessionToken();
-                const providerToken = await store.getProviderToken();
 
                 const isEdit = mode === 'edit';
                 let url = `${API_URL}/calendar`;
@@ -373,8 +394,7 @@ function initCalendarUI() {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                        'x-provider-token': providerToken || ''
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(payload)
                 });
@@ -440,12 +460,10 @@ export async function loadCalendar(forceRefresh = false) {
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         const res = await fetch(`${API_URL}/calendar${forceRefresh ? '?refresh=true' : ''}`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -514,27 +532,9 @@ export async function loadCalendar(forceRefresh = false) {
                     linkBtn.innerText = '연동 진행 중...';
                     try {
                         const { data: { session } } = await store.supabaseClient.auth.getSession();
-                        const response = await fetch(`${API_URL}/auth/unlink-google`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${session?.access_token}`
-                            }
-                        });
-                        const resData = await response.json();
-                        if (!resData.success) throw new Error(resData.error || '연동 해제 실패');
-
-                        const { error } = await store.supabaseClient.auth.linkIdentity({
-                            provider: 'google',
-                            options: {
-                                redirectTo: window.location.origin,
-                                scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
-                                queryParams: {
-                                    access_type: 'offline',
-                                    prompt: 'consent',
-                                }
-                            }
-                        });
-                        if (error) throw error;
+                        const token = session?.access_token;
+                        if (!token) throw new Error('세션 토큰을 찾을 수 없습니다.');
+                        window.location.href = `${API_URL}/auth/google?access_token=${encodeURIComponent(token)}`;
                     } catch (err) {
                         alert('연동 실패: ' + err.message);
                         linkBtn.disabled = false;
@@ -600,8 +600,7 @@ function renderCustomGrid() {
         const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
         
         const dayEvents = calendarEvents.filter(ev => {
-            const evStart = new Date(ev.start);
-            return evStart.getFullYear() === currentYear && evStart.getMonth() === currentMonth && evStart.getDate() === day;
+            return getEventLocalDateString(ev.start) === dateStr;
         });
 
         let dotsHTML = '';
@@ -664,7 +663,7 @@ export function openDayView(dateStr) {
     const timelineTitle = document.getElementById('v2-timeline-title');
     if (!timelineList) return;
 
-    const baseDate = new Date(dateStr);
+    const baseDate = parseDateSafe(dateStr);
     const dayName = getDayName(baseDate.getDay());
     const dateText = `${baseDate.getFullYear()}년 ${baseDate.getMonth() + 1}월 ${baseDate.getDate()}일 (${dayName})`;
 
@@ -674,10 +673,7 @@ export function openDayView(dateStr) {
 
     // 해당 날짜 일정 필터링
     const dayEvents = calendarEvents.filter(ev => {
-        const evStart = new Date(ev.start);
-        return evStart.getFullYear() === baseDate.getFullYear() && 
-               evStart.getMonth() === baseDate.getMonth() && 
-               evStart.getDate() === baseDate.getDate();
+        return getEventLocalDateString(ev.start) === dateStr;
     });
 
     timelineList.innerHTML = '';
@@ -914,7 +910,7 @@ export function renderV2TaskList() {
         // 마감일/종료일이 오늘보다 과거인지 확인하여 필터링
         const dateStr = ev.end || ev.start;
         if (dateStr) {
-            const taskDate = new Date(dateStr);
+            const taskDate = parseDateSafe(dateStr);
             taskDate.setHours(23, 59, 59, 999); // 오늘인 과제는 보이도록 오늘 자정 직전으로 설정
             if (taskDate < today) {
                 return false;

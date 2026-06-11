@@ -43,7 +43,43 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// 민감 정보 로그 마스킹 미들웨어 (Zero-Knowledge 보안성 확보)
+app.use((req, res, next) => {
+    if (req.body && typeof req.body === 'object') {
+        const sensitiveFields = ['decryptedDiaries', 'userDiaryContext', 'content', 'response'];
+        const masked = { ...req.body };
+        sensitiveFields.forEach(field => {
+            if (masked[field] !== undefined) {
+                masked[field] = '[MASKED_SENSITIVE_DATA]';
+            }
+        });
+
+        // JSON.stringify(req.body) 시 자동 마스킹
+        Object.defineProperty(req.body, 'toJSON', {
+            value: function() { return masked; },
+            configurable: true,
+            writable: true
+        });
+
+        // console.log(req.body) 등 Node.js inspect 시 자동 마스킹
+        const customInspect = Symbol.for('nodejs.util.inspect.custom');
+        Object.defineProperty(req.body, customInspect, {
+            value: function() { return masked; },
+            configurable: true,
+            writable: true
+        });
+    }
+    next();
+});
+
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filepath) => {
+        if (path.basename(filepath) === 'index.html') {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        }
+    }
+}));
 app.use('/v2', (req, res) => {
     res.redirect(302, '/');
 });
@@ -81,6 +117,7 @@ app.delete('/api/calendar', verifyUser, calendarRoute);
 app.post('/api/analyze', verifyUser, analyzeRoute);
 app.get('/api/history', verifyUser, historyRoute);
 app.get('/api/briefing', verifyUser, briefingRoute);
+app.post('/api/briefing', verifyUser, briefingRoute);
 app.get('/api/contacts', verifyUser, contactsRoute);
 
 /* ==========================================================================

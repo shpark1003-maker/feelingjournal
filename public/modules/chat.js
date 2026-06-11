@@ -626,10 +626,9 @@ export async function loadContacts() {
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken() || '';
 
         const res = await fetch(`${API_URL}/contacts`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'x-provider-token': providerToken }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (!res.ok) {

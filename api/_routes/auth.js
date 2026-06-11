@@ -77,7 +77,23 @@ module.exports = async (req, res) => {
 
         // 5. [OAuth] 구글 로그인 리디렉션
         if (req.method === 'GET' && path.includes('/google')) {
-            const { userId } = req.query;
+            const { access_token } = req.query;
+            let userId = null;
+            
+            if (access_token) {
+                try {
+                    const { data: { user }, error: authError } = await supabase.auth.getUser(access_token);
+                    if (authError || !user) {
+                        console.warn('--- [OAuth Google Link] Invalid access token provided for Google Link ---');
+                        return res.status(401).json({ error: '유효하지 않은 인증 토큰입니다.' });
+                    }
+                    userId = user.id;
+                } catch (jwtErr) {
+                    console.error('--- [OAuth Google Link] Token verification error:', jwtErr.message);
+                    return res.status(401).json({ error: '인증 토큰 검증 실패' });
+                }
+            }
+
             if (userId) {
                 try {
                     const { Client } = require('pg');

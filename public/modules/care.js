@@ -70,31 +70,124 @@ export function initCareMode() {
 // 1. Settings 내 1촌 친구 목록 로딩 및 보호자 드롭다운 렌더링
 export async function populateGuardianSelect() {
     const select = document.getElementById('care-guardian-select');
+    const targetsList = document.getElementById('care-targets-list');
     if (!select) return;
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         const res = await fetch(`${API_URL}/contacts`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
         const data = await res.json();
         if (data.success && data.contacts) {
-            // 기존 옵션 리셋
+            // 1. 드롭다운 옵션 리셋 및 채우기
             select.innerHTML = '<option value="">보호자를 지정하지 않음</option>';
             data.contacts.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.email; // 보호자 구글 이메일을 식별자로 사용
-                opt.textContent = `${c.name} (${c.email})`;
+                opt.textContent = `${c.name} (${c.email || c.phone})`;
                 select.appendChild(opt);
             });
+
+            // 2. 동적 1촌 지인 목록 UI 렌더링 (#care-targets-list)
+            if (targetsList) {
+                if (data.contacts.length === 0) {
+                    targetsList.innerHTML = `
+                        <div class="text-center py-6 px-4 text-on-surface-variant/70 text-xs bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-2 block">group_off</span>
+                            <span>연동된 1촌 지인이 없습니다.<br>친구를 먼저 초대해 마음을 나누어 보세요!</span>
+                        </div>
+                    `;
+                } else {
+                    targetsList.innerHTML = '';
+                    data.contacts.forEach((c, index) => {
+                        const isGuardian = store.settings?.care?.enabled && (store.settings?.care?.guardianEmail === c.email);
+                        
+                        // 아바타 색상 다양화
+                        const colors = ['#d98c9e', '#5b8266', '#8ba88e', '#645e49', '#7d525c'];
+                        const avatarColor = colors[index % colors.length];
+                        const initials = c.name ? c.name.slice(0, 2) : '지인';
+
+                        const card = document.createElement('div');
+                        card.className = `bg-white/60 p-3 rounded-2xl border ${isGuardian ? 'border-primary bg-primary/5' : 'border-white/40'} flex items-center justify-between shadow-sm transition-all hover:shadow-md duration-300`;
+                        card.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm" style="background-color: ${avatarColor};">
+                                    ${initials}
+                                </div>
+                                <div class="max-w-[150px] md:max-w-none">
+                                    <p class="text-sm font-bold text-on-surface truncate">${c.name}</p>
+                                    <p class="text-[10px] text-on-surface-variant truncate">${c.email || c.phone || '연락처 정보 없음'}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[9px] font-bold ${isGuardian ? 'text-primary' : 'text-on-surface-variant'}">${isGuardian ? '보호자 케어 중' : '보호자 지정'}</span>
+                                <div class="relative inline-block w-10 h-5">
+                                    <input type="checkbox" class="toggle-checkbox hidden" id="target-toggle-${index}" ${isGuardian ? 'checked' : ''}>
+                                    <label class="toggle-label block overflow-hidden h-5 rounded-full ${isGuardian ? 'bg-primary' : 'bg-outline-variant'} cursor-pointer relative after:w-4 after:h-4 after:top-[2px] after:left-[2px]" for="target-toggle-${index}"></label>
+                                </div>
+                            </div>
+                        `;
+
+                        // 토글 이벤트 바인딩
+                        const checkbox = card.querySelector(`#target-toggle-${index}`);
+                        checkbox.addEventListener('change', async (e) => {
+                            const isChecked = e.target.checked;
+                            
+                            // 모든 다른 토글 체크 해제
+                            if (isChecked) {
+                                document.querySelectorAll('#care-targets-list .toggle-checkbox').forEach(cb => {
+                                    if (cb.id !== checkbox.id) cb.checked = false;
+                                });
+                            }
+
+                            // settings UI 엘리먼트 값 변경
+                            const careModeActive = document.getElementById('care-mode-active');
+                            const careGuardianSelect = document.getElementById('care-guardian-select');
+
+                            if (careModeActive) careModeActive.checked = isChecked;
+                            if (careGuardianSelect) {
+                                careGuardianSelect.value = isChecked ? c.email : '';
+                            }
+
+                            // 저장 API 실행 및 동기화
+                            try {
+                                await updateSettings({
+                                    care: {
+                                        enabled: isChecked,
+                                        guardianEmail: isChecked ? c.email : '',
+                                        guardianName: isChecked ? c.name : ''
+                                    }
+                                });
+                                // 헤더 버튼 동기화
+                                syncCareModeHeaderButton(isChecked);
+                                // 목록 새로고침
+                                await populateGuardianSelect();
+                            } catch (err) {
+                                console.error('Failed to update care settings via toggle:', err);
+                                alert('설정 업데이트에 실패했습니다: ' + err.message);
+                                e.target.checked = !isChecked; // 원복
+                            }
+                        });
+
+                        targetsList.appendChild(card);
+                    });
+                }
+            }
         }
     } catch (e) {
         console.error('Failed to populate guardians from contacts:', e);
+        if (targetsList) {
+            targetsList.innerHTML = `
+                <div class="text-center py-6 px-4 text-error text-xs bg-error-container/10 border border-error/20 rounded-2xl">
+                    <span class="material-symbols-outlined text-3xl text-error mb-2 block">warning</span>
+                    <span>주소록 데이터를 불러오지 못했습니다.</span>
+                </div>
+            `;
+        }
     }
 }
 
@@ -130,6 +223,7 @@ function setupCareSettingsUI() {
             alert('🏡 안심 케어 모드 연동 설정이 완벽하게 저장되었습니다.');
             // 헤더 버튼 노출 동기화
             syncCareModeHeaderButton(careActive);
+            await populateGuardianSelect();
         } catch (e) {
             console.error('Save Care Settings error:', e);
             alert('케어 설정 저장 실패: ' + e.message);
@@ -185,7 +279,6 @@ async function speakWelcomeAndReminders() {
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         // 1. 보호자 닉네임/이름 설정
         const guardianSelect = document.getElementById('care-guardian-select');
@@ -195,8 +288,7 @@ async function speakWelcomeAndReminders() {
         // 2. 오늘 약 복용 캘린더 추출
         const res = await fetch(`${API_URL}/calendar`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
         const data = await res.json();
@@ -328,14 +420,12 @@ async function processVoiceDiary(text) {
 
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         const res = await fetch(`${API_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 title: `${new Date().toLocaleDateString('ko-KR')} 음성 일기 (케어모드)`,

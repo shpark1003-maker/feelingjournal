@@ -35,11 +35,6 @@ export const store = {
     async getSessionToken() {
         const { data: { session } } = await this.supabaseClient.auth.getSession();
         return session ? session.access_token : null;
-    },
-    
-    async getProviderToken() {
-        const { data: { session } } = await this.supabaseClient.auth.getSession();
-        return session ? session.provider_token || localStorage.getItem('google_provider_token') : null;
     }
 };
 

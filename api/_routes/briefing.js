@@ -7,16 +7,16 @@ const {
     getLiveWeather,
     getNewsHeadlines,
     supabaseAdmin,
-    decrypt,
-    getGoogleAccessToken
+    getGoogleAccessToken,
+    fetchGoogleCalendarEvents
 } = require('./shared');
 
 // [MODULAR] ⏰ 데일리 브리핑 코어 스케줄러 & 과거 회상(Reminiscence) 공용 엔진
-async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
+async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '') {
     const cacheKey = `user:${userId}:briefing-cache`;
     
-    // E2E 활성화 모드가 아닐 때만 기존 일반 캐시 사용
-    if (!e2eKey) {
+    // E2E 활성화 모드(클라이언트 전송 다이어리가 있는 경우)가 아닐 때만 기존 일반 캐시 사용
+    if (clientDiaries.length === 0) {
         try {
             const cachedBriefing = await redis.get(cacheKey);
             if (cachedBriefing) {
@@ -94,45 +94,36 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
     const tomorrow = new Date(tomorrowKST.getTime() - kstOffset);
 
     let contextEvents = '일정 정보 없음';
-    if (providerToken) {
-        try {
-            const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(yesterday.toISOString())}&timeMax=${encodeURIComponent(tomorrow.toISOString())}&singleEvents=true&orderBy=startTime`;
-            const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
-            if (calRes.status === 401 || calRes.status === 403) {
-                await redis.del(`user:${userId}:google_provider_token`);
-                await redis.del(`user:${userId}:google_provider_refresh_token`);
-                console.warn(`--- [BRIEFING] Invalid token detected (Status ${calRes.status}). Evicted Google tokens from Redis for user ${userId} ---`);
-            }
-            const calData = await calRes.json();
-            if (calData.items) {
-                contextEvents = calData.items
-                    .map((event) => {
-                        const rawStart = event.start?.dateTime || event.start?.date;
-                        let startStr = rawStart;
-                        if (rawStart) {
-                            const d = new Date(rawStart);
-                            if (!isNaN(d.getTime())) {
-                                const isAllDay = !event.start?.dateTime;
-                                startStr = d.toLocaleString('ko-KR', {
-                                    timeZone: 'Asia/Seoul',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    weekday: 'short',
-                                    hour: isAllDay ? undefined : 'numeric',
-                                    minute: isAllDay ? undefined : 'numeric',
-                                    hour12: !isAllDay
-                                });
-                                if (isAllDay) startStr += ' (종일)';
-                            }
+    try {
+        const calResult = await fetchGoogleCalendarEvents(userId, yesterday.toISOString(), tomorrow.toISOString(), userEmail);
+        if (calResult && calResult.events && calResult.events.length > 0) {
+            contextEvents = calResult.events
+                .map((event) => {
+                    const rawStart = event.start?.dateTime || event.start?.date;
+                    let startStr = rawStart;
+                    if (rawStart) {
+                        const d = new Date(rawStart);
+                        if (!isNaN(d.getTime())) {
+                            const isAllDay = !event.start?.dateTime;
+                            startStr = d.toLocaleString('ko-KR', {
+                                timeZone: 'Asia/Seoul',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'short',
+                                hour: isAllDay ? undefined : 'numeric',
+                                minute: isAllDay ? undefined : 'numeric',
+                                hour12: !isAllDay
+                            });
+                            if (isAllDay) startStr += ' (종일)';
                         }
-                        return `- ${event.summary || '제목 없음'} (${startStr})`;
-                    })
-                    .join('\n');
-            }
-        } catch (e) {
-            console.error('Briefing Calendar Fetch Error:', e.message);
+                    }
+                    return `- ${event.summary || '제목 없음'} (${startStr})`;
+                })
+                .join('\n');
         }
+    } catch (e) {
+        console.error('Briefing Calendar Fetch Error:', e.message);
     }
 
     const pattern = `user:${userId}:diary-*`;
@@ -143,7 +134,7 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
     if (keys.length > 0) {
         const sortedKeys = keys.sort().reverse();
         
-        // 1. 최근 3일의 일기 데이터 요약 (E2E 복호화 적용)
+        // 1. 최근 3일의 일기 데이터 요약 (암호화되지 않은 것만 요약)
         const latestKeys = sortedKeys.slice(0, 3);
         const values = await redis.mget(latestKeys);
         recentDiaries = values
@@ -151,10 +142,11 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
             .map((value) => {
                 try {
                     const item = JSON.parse(value);
-                    const plainContent = decrypt(item.content, e2eKey);
-                    if (!plainContent) return '';
+                    if (item.content && item.content.startsWith('e2e:')) {
+                        return ''; // E2E 암호화된 일기는 백엔드에서 복호화하지 않고 생략
+                    }
                     const dateStr = new Date(item.createdAt || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-                    return `[일기 작성일: ${dateStr}]\n내용: ${plainContent}`;
+                    return `[일기 작성일: ${dateStr}]\n내용: ${item.content}`;
                 } catch {
                     return '';
                 }
@@ -173,14 +165,15 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
             if (!historyValues[i]) continue;
             try {
                 const item = JSON.parse(historyValues[i]);
-                const plainContent = decrypt(item.content, e2eKey) || '';
+                if (item.content && item.content.startsWith('e2e:')) continue; // Skip encrypted
+                const plainContent = item.content || '';
                 if (!plainContent || plainContent.length < 10) continue;
 
                 const words = upcomingEventLower.match(/[가-힣a-zA-Z0-9]{2,}/g) || [];
                 const matchedWord = words.find(w => w !== '일정' && w !== '제목' && w !== '시간' && w !== '생일' && w !== '회의' && plainContent.toLowerCase().includes(w));
 
                 if (matchedWord) {
-                    const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+                      const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
                     foundMemory = {
                         date: dateStr,
                         content: plainContent,
@@ -199,7 +192,8 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
                 if (!historyValues[i]) continue;
                 try {
                     const item = JSON.parse(historyValues[i]);
-                    const plainContent = decrypt(item.content, e2eKey) || '';
+                    if (item.content && item.content.startsWith('e2e:')) continue; // Skip encrypted
+                    const plainContent = item.content || '';
                     if (!plainContent || plainContent.length < 10) continue;
 
                     const emo = item.emotion || '';
@@ -224,6 +218,19 @@ async function generateBriefing(userId, providerToken, regionOverride, e2eKey) {
                 reminiscenceMemory = `[${foundMemory.date}의 눈부셨던 과거의 기록 (당시 감정: ${foundMemory.emotion})]\n내용: ${foundMemory.content}`;
             }
         }
+    }
+
+    // 3. 클라이언트 전송 컨텍스트 병합 (사용자 동의 시)
+    if (clientDiaries.length > 0 && consent) {
+        const clientContent = clientDiaries.map(d => {
+            const dateStr = new Date(d.date || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+            return `[일기 작성일(명시적 전송): ${dateStr}]\n내용: ${d.content}`;
+        }).join('\n---\n');
+        
+        recentDiaries = [
+            recentDiaries === '일기 기록 없음' ? '' : recentDiaries,
+            clientContent
+        ].filter(Boolean).join('\n---\n') || '일기 기록 없음';
     }
 
     const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -263,8 +270,8 @@ ${reminiscenceMemory}
     const data = await callGemini(briefingPrompt, {}, 3, null, true);
     const briefing = data?.candidates?.[0]?.content?.parts?.[0]?.text || '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
 
-    // 성공적인 브리핑 생성 시 Redis 캐시 저장 (E2E가 아닐 때만)
-    if (!e2eKey && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    // 성공적인 브리핑 생성 시 Redis 캐시 저장 (E2E 암호화가 아닌 경우에만)
+    if (clientDiaries.length === 0 && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
         const isFallback = briefing.includes('API 할당량 초과');
         const cacheTTL = isFallback ? 15 : 300;
         await redis.set(cacheKey, briefing, 'EX', cacheTTL);
@@ -294,10 +301,32 @@ module.exports = async (req, res) => {
             providerToken = req.headers['x-provider-token'];
         }
 
-        const e2eKey = req.headers['x-e2e-key'] || null;
         const regionOverride = req.query.region || null;
         
-        const briefing = await generateBriefing(user.id, providerToken, regionOverride, e2eKey);
+        let clientDiaries = [];
+        let consent = false;
+
+        if (req.method === 'POST') {
+            consent = req.body?.aiContextConsent === true;
+            clientDiaries = req.body?.decryptedDiaries || [];
+            const isAnalyzeRequest = consent || clientDiaries.length > 0;
+
+            if (isAnalyzeRequest) {
+                if (!consent) {
+                    return res.status(400).json({ error: 'AI 분석 제공 동의(aiContextConsent)가 누락되었습니다.' });
+                }
+                if (clientDiaries.length > 5) {
+                    return res.status(400).json({ error: '최대 5개의 다이어리만 분석할 수 있습니다.' });
+                }
+                for (const d of clientDiaries) {
+                    if (d.content && d.content.length > 2000) {
+                        return res.status(400).json({ error: '다이어리 평문 내용은 최대 2,000자까지만 허용됩니다.' });
+                    }
+                }
+            }
+        }
+
+        const briefing = await generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email);
         return res.json({ success: true, briefing });
     } catch (error) {
         console.error('Briefing Error:', error.message);

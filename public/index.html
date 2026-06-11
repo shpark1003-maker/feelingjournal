@@ -96,14 +96,14 @@
                         "headline-lg": ["Manrope"]
                     },
                     "fontSize": {
-                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-lg-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
-                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
-                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                        "display-lg": ["3rem", {"lineHeight": "3.5rem", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["1.625rem", {"lineHeight": "2rem", "fontWeight": "700"}],
+                        "body-lg": ["1.125rem", {"lineHeight": "1.75rem", "fontWeight": "400"}],
+                        "headline-md": ["1.5rem", {"lineHeight": "2rem", "fontWeight": "600"}],
+                        "label-md": ["0.875rem", {"lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "body-md": ["1rem", {"lineHeight": "1.5rem", "fontWeight": "400"}],
+                        "label-sm": ["0.75rem", {"lineHeight": "1rem", "fontWeight": "500"}],
+                        "headline-lg": ["2rem", {"lineHeight": "2.5rem", "letterSpacing": "-0.02em", "fontWeight": "700"}]
                     }
                 },
             },
@@ -301,10 +301,10 @@
 <!-- Aura Glow -->
 <div class="absolute inset-0 bg-primary/10 rounded-full blur-3xl group-hover:blur-[48px] transition-all duration-1000"></div>
 <!-- Angel Image (Ghibli Style) -->
-<img alt="Aetheric Sanctuary Angel Mascot" class="relative z-10 w-full h-full object-contain transform group-hover:translate-y-[-8px] transition-transform duration-700 ease-in-out" src="https://lh3.googleusercontent.com/aida/AP1WRLst-NR1SFyMCY3SLiAvqo2YuYocQzgVMsrZSJki4sHoz6-Rn4eP9adAuGB6S6tRJQpHZKZVnXic03q3t8yVOaDlflSXilWZbTsvx_tiOfAGP2IFP4UxamsOUqwtgIMdUUBa7OzssopbfBQdJM39l2aHRao5aqhzf0WGEyEM1I8fsgmfUh4FP1z901UHJXPI3IdbDkj25CTOP7ZTgZSeaLeFqOfMuhlQUl3bxSpBPTsLtTu98-qUZpDj6Mvb">
+<img alt="Aetheric Sanctuary Angel Mascot" class="relative z-10 w-full h-full object-contain transform group-hover:translate-y-[-8px] transition-transform duration-700 ease-in-out" src="./angel_mascot.png">
 </div>
 <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Welcome Home</h1>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-[280px]">Step back into your digital sanctuary and find your peace.</p>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[17.5rem]">Step back into your digital sanctuary and find your peace.</p>
 </div>
 <!-- Authentication Container -->
 <div class="w-full max-w-sm flex flex-col gap-5">
@@ -386,9 +386,9 @@
 <div class="flex justify-between items-center w-full">
 <div class="flex items-center gap-3">
 <div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center overflow-hidden border border-primary/20">
-<img alt="Mascot" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8dVj1rnxsPpvYt8rRI3QZiLeLyLUCfeuqo1BLW7-oQs-DNs7iQ-Nub2Y0nCTikwa3D9nfrIA-0XThBoppM8UUUWscJIRqKSlzbyvjPam4_wT4bRk5o0BkVEEC3uhoyFn6fps2TR4tgdWqmllTikdK90LpomoN3-YXZ8K3KjdradO4DW_94KKKtf3ouPnj9BdnpjJlRB9dKUwg3NhIDN2reHv2nkgostNlaXCHZ0yhA32dt7qyLRrS-qCfMwAhNdrnGgvoisGuoDHU">
+<img alt="Mascot" class="w-full h-full object-cover" src="./angel_mascot.png">
 </div>
-<h1 class="font-headline-lg text-[22px] text-primary italic tracking-tight">감성노트</h1>
+<h1 class="font-headline-lg text-[1.375rem] text-primary italic tracking-tight">감성노트</h1>
 </div>
 <div class="flex items-center gap-1">
 <button id="care-mode-start-btn" class="items-center gap-1.5 bg-tertiary-container/30 text-tertiary border border-tertiary/20 rounded-full px-3 py-1 font-label-sm text-xs shadow-sm hover:bg-tertiary-container/50 active:scale-95 transition-all cursor-pointer mr-2" style="display: none;">
@@ -400,10 +400,10 @@
 </div>
 </div>
 </header>
-<main id="journal-view" class="tab-content active pt-20 pb-28 px-margin-mobile md:px-margin-desktop max-w-[1200px] mx-auto min-h-screen watercolor-bg">
+<main id="journal-view" class="tab-content active pt-20 pb-28 px-margin-mobile md:px-margin-desktop max-w-[75rem] mx-auto min-h-screen watercolor-bg">
 <div class="flex flex-col md:flex-row gap-6 lg:gap-10 items-start w-full">
 <!-- AI Briefing Section (Cloud Wisdom) -->
-<aside class="w-full md:w-[320px] lg:w-[360px] shrink-0 sticky top-24">
+<aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-24">
 <section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
 <div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
 <div class="flex items-center gap-2 mb-2">
@@ -429,7 +429,7 @@
 <details class="group/main" open>
 <summary class="flex justify-between items-center mb-4 cursor-pointer list-none">
 <div class="flex items-center gap-2">
-    <h3 class="font-headline-lg-mobile text-on-surface">나의 노트 보관함</h3>
+    <h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">나의 노트 보관함</h3>
     <button id="v2-quick-add-nb-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-primary/10 text-primary transition-all" title="새 노트 추가">
         <span class="material-symbols-outlined text-[20px]">add</span>
     </button>
@@ -437,54 +437,17 @@
 <span class="material-symbols-outlined transition-transform duration-300 text-on-surface-variant text-[24px] expand-icon-main">expand_more</span>
 </summary>
 <div class="space-y-3" id="v2-notebook-accordion-list">
-<details class="group bg-surface-container/60 rounded-xl border border-outline-variant/30 overflow-hidden soft-shadow" open="">
-<summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-surface-container-high/80 transition-colors">
-<div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary" data-icon="menu_book">menu_book</span>
-<span class="font-label-sm text-on-surface">Personal Diary</span>
-</div>
-<span class="material-symbols-outlined group-open:rotate-180 transition-transform duration-300" data-icon="expand_more">expand_more</span>
-</summary>
-<div class="px-4 pb-4 pt-0 space-y-2">
-<a class="p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/10 flex justify-between items-center shadow-sm hover:bg-primary-container/10 transition-colors group/item" href="#">
-<div class="flex items-center gap-2 overflow-hidden">
-<span class="material-symbols-outlined text-primary text-[18px]">description</span>
-<span class="font-body-md text-on-surface truncate">어느 여름날의 오후 산책</span>
-</div>
-<span class="text-[12px] text-outline whitespace-nowrap">24.05.12</span>
-</a>
-<a class="p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/10 flex justify-between items-center shadow-sm hover:bg-primary-container/10 transition-colors group/item" href="#">
-<div class="flex items-center gap-2 overflow-hidden">
-<span class="material-symbols-outlined text-primary text-[18px]">description</span>
-<span class="font-body-md text-on-surface truncate">비 오는 날의 플레이리스트</span>
-</div>
-<span class="text-[12px] text-outline whitespace-nowrap">24.05.10</span>
-</a>
-</div>
-</details>
-<details class="group bg-surface-container/60 rounded-xl border border-outline-variant/30 overflow-hidden soft-shadow">
-<summary class="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-surface-container-high/80 transition-colors">
-<div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-secondary" data-icon="work">work</span>
-<span class="font-label-sm text-on-surface">Work &amp; Projects</span>
-</div>
-<span class="material-symbols-outlined group-open:rotate-180 transition-transform duration-300" data-icon="expand_more">expand_more</span>
-</summary>
-<div class="px-4 pb-4 pt-0">
-<p class="font-label-sm text-outline italic py-2">아직 작성된 노트가 없습니다.</p>
-</div>
-</details>
-<button class="w-full py-3 border-2 border-dashed border-outline-variant/30 rounded-xl text-outline font-label-sm hover:border-primary/40 hover:text-primary transition-all flex items-center justify-center gap-2 bg-surface/40">
-<span class="material-symbols-outlined text-[18px]">add_circle</span>
-                    새 노트
-                </button>
+    <div class="flex items-center gap-2 p-4 text-on-surface-variant text-sm animate-pulse bg-surface-container/30 rounded-xl border border-outline-variant/20">
+        <span class="material-symbols-outlined animate-spin text-primary">sync</span>
+        <span>나의 노트를 불러오고 있습니다...</span>
+    </div>
 </div>
 </details>
 </section>
 <!-- Memory Fragments Grid Preview -->
 <section class="mb-gutter">
 <div class="flex justify-between items-center mb-4">
-<h3 class="font-headline-lg-mobile text-on-surface">기억의 조각들</h3>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">기억의 조각들</h3>
 <button id="v2-gallery-more-btn" class="text-primary font-label-sm hover:underline flex items-center">더보기 <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
 </div>
 <div class="swiper" id="memory-swiper" style="width: 100%; padding-top: 20px; padding-bottom: 50px;">
@@ -499,11 +462,11 @@
 </main>
 
 
-<div id="calendar-view" class="tab-content w-full max-w-[1000px] mx-auto pt-6 px-margin-mobile relative">
+<div id="calendar-view" class="tab-content w-full max-w-[62.5rem] mx-auto pt-6 px-margin-mobile relative">
     <!-- Monthly Grid Calendar Section -->
     <section class="bg-surface-container-low rounded-xl p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-outline-variant/30" id="calendar-container">
         <div class="flex justify-between items-center mb-4">
-            <h2 id="calendar-month-year-text" class="font-headline-md text-[18px] text-on-surface">2024년 5월</h2>
+            <h2 id="calendar-month-year-text" class="font-headline-md text-[1.125rem] text-on-surface">2024년 5월</h2>
             <div class="flex gap-1">
                 <button id="calendar-prev-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
                     <span class="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -514,7 +477,7 @@
                 <button id="calendar-refresh-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
                     <span class="material-symbols-outlined text-[20px]">sync</span>
                 </button>
-                <div class="w-[1px] h-4 bg-outline-variant/30 my-auto mx-1"></div>
+                <div class="w-[0.0625rem] h-4 bg-outline-variant/30 my-auto mx-1"></div>
 
 
                 <button id="v2-calendar-add-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm">
@@ -539,7 +502,7 @@
     <!-- Tasks Section -->
     <section class="space-y-3 mt-6" id="task-list-container">
         <div class="flex items-center justify-between px-2">
-            <h3 class="font-headline-md text-[16px] text-on-surface flex items-center gap-2">
+            <h3 class="font-headline-md text-[1rem] text-on-surface flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">eco</span>
                 과제 관리
             </h3>
@@ -559,8 +522,8 @@
 
     <!-- Selected Date Detail Timeline -->
     <section class="space-y-3 pb-32 mt-6">
-        <h3 class="font-headline-md text-[16px] text-on-surface px-2" id="v2-timeline-title">기록</h3>
-        <div class="relative space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30" id="v2-timeline-list">
+        <h3 class="font-headline-md text-[1rem] text-on-surface px-2" id="v2-timeline-title">기록</h3>
+        <div class="relative space-y-6 before:content-[''] before:absolute before:left-[0.6875rem] before:top-2 before:bottom-2 before:w-[0.125rem] before:bg-outline-variant/30" id="v2-timeline-list">
              <p class="text-on-surface-variant text-center py-4 text-sm ml-6">선택된 날짜의 기록이 없습니다.</p>
         </div>
     </section>
@@ -568,10 +531,10 @@
 
 
 <!-- Chat / Social View -->
-<div id="chat-view" class="tab-content w-full max-w-[800px] mx-auto pt-16 relative pb-32 min-h-screen bg-background">
+<div id="chat-view" class="tab-content w-full max-w-[50rem] mx-auto pt-16 relative pb-32 min-h-screen bg-background">
     <!-- Inner Tabs -->
     <div class="w-full bg-background border-b border-outline-variant/30">
-        <div class="flex max-w-[600px] mx-auto bg-transparent">
+        <div class="flex max-w-[37.5rem] mx-auto bg-transparent">
             <button class="flex-1 py-3 text-center border-b-2 transition-all border-transparent text-on-surface-variant" id="tab-people" data-action="switch-social-tab" data-tab="people">
                 <div class="flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
@@ -611,7 +574,7 @@
         <div class="space-y-2" id="chat-room-list">
             <!-- AI Chat Room Entry -->
             <div data-action="open-chat-ai" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
-                <img id="v2-chat-list-ai-avatar" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS7-FAJ0ER6ZpwlaqQGfnq_BPKwN9LVVv2TOADLSc6aF2fjuk3VwIaycmeRHRsDVWNPcbckpdNwrjGOrU6hUcu96vnnzLguwTCLMy3R8YIS54RVi2OqrB7o84jj5PZF_SWrgj5m4wQmPp8mb50P8MdVB_SnM_sFkelKyBO9u6EwtlPlYwW4pTMT6TyeGQyKtXrHRbyUjJqqmkaI0J7tFNwH4wuINzB2kedoM6PiqV40UOQqnA20ekdYzqgzftADds_0hNQwvDnMyEy" alt="AI"/>
+                <img id="v2-chat-list-ai-avatar" class="w-12 h-12 rounded-full object-cover" src="./angel_mascot.png" alt="AI"/>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline">
                         <h3 class="font-bold truncate text-primary" id="v2-chat-list-ai-name">✨ 비서와 대화</h3>
@@ -621,31 +584,10 @@
                 </div>
             </div>
 
-            <div data-action="open-chat-room" data-room-id="room-lunch" data-title="우리들의 점심시간 🍱" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
-                <div class="relative flex -space-x-3">
-                    <img class="w-12 h-12 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEXBjRSnmkCR1yVywnofzFwlKZo4_ZRQAtmM897Texzo1E7GmQmPJo0FJfn7Jxh5GzOeH94eNJT4EbuLx8WdQJV9CZg1PRzvfoie9APp2aY91jG0EQSMlxRbXOV4L3DiIVe7tueL6j6THkWk8rzQHpN46Uv9YeQjd4aLsYfj1-5PXawWiNwfEsXDXmLfEXOyP2jJhcF-MepbZw848g9lUstNGrR3C5YZEz0ZpFDBnKuSRqbCT6alFLUCOQNXdzyuAYH_K172uD2k54"/>
-                    <img class="w-12 h-12 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNUCPGIQEFTAGiWBi3grcpTZink_hE0-vCE6HGPMJlmsmSzFTa5OkX8o5_zxTGch-rzpC1rSoqjma6hrC6RGbfz2y39WFpaAF-oqGR6sWjmDbsd4eSdN_3zoyYoBstQtksi_YkW-D_W1NuChgHm9Cyj49yH-kaWfX7_9qIGm1IiKPTw_NibutlGm0uGwAMl0fYNFDJQb2wt58U-fo5cx7X2Tv8IJGnWR0ab5RP8qTcaufHsNXeud2-LOjxXN74ZnC2cSrXGyJBt8iA"/>
-                </div>
-                <div class="flex-1 min-w-0" data-action="open-chat-room" data-room-id="room-lunch" data-title="우리들의 점심시간 🍱">
-                    <div class="flex justify-between items-baseline">
-                        <h3 class="font-bold truncate">우리들의 점심시간 🍱</h3>
-                        <span class="text-[10px] text-on-surface-variant">오후 2:30</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <p class="text-[12px] text-on-surface-variant truncate">내일은 뭐 먹을까요? 저번에 갔던...</p>
-                        <span class="bg-tertiary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">12</span>
-                    </div>
-                </div>
-            </div>
-            <div data-action="open-chat-room" data-room-id="room-Friend-f-2-mock-use" data-title="💬 서유나님과의 대화" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
-                <img class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMcbF5RB87uAoa3eUlp6g50nQvVZRO2fjb5HxwC8o8sSLyEXpWJRBqRO_tDhag5hTNf0ZzJPWp9nafYLoUZq-GxvMN_kHe0Hiw3v2CAl77EPJaCxWdJEad2ozK0ZIFmWnprTZINoGibsyubzd_U515Un6G-6BiOUXwFv2P5UrLNWNi2XjxyUqaH1ejdz8Tiy3bj4xtDuxNo8GG1tpP_zN7oTwLJ5M5H6CvWmvD6bE7Iha9cjhy0u4OJi_-5TxMxP-MPGf7LaQqo2OJ"/>
-                <div class="flex-1 min-w-0" data-action="open-chat-room" data-room-id="room-Friend-f-2-mock-use" data-title="💬 서유나님과의 대화">
-                    <div class="flex justify-between items-baseline">
-                        <h3 class="font-bold truncate">서유나</h3>
-                        <span class="text-[10px] text-on-surface-variant">어제</span>
-                    </div>
-                    <p class="text-[12px] text-on-surface-variant truncate">사진 잘 도착했어! 고마워~</p>
-                </div>
+            <!-- 대화방 목록 로딩 플레이스홀더 -->
+            <div id="v2-chat-rooms-placeholder" class="flex items-center gap-2 p-4 text-on-surface-variant text-sm animate-pulse bg-white/40 backdrop-blur-sm rounded-xl border border-outline-variant/10">
+                <span class="material-symbols-outlined animate-spin text-primary">sync</span>
+                <span>대화방 목록을 불러오고 있습니다...</span>
             </div>
         </div>
     </section>
@@ -653,9 +595,9 @@
 
 
 <!-- Settings & Atelier View -->
-<div id="persona-view" class="tab-content w-full max-w-[800px] mx-auto pt-6 pb-32 px-margin-mobile relative space-y-6">
+<div id="persona-view" class="tab-content w-full max-w-[50rem] mx-auto pt-6 pb-32 px-margin-mobile relative space-y-6">
     <div class="flex items-center gap-4 mb-6">
-        <h1 class="font-headline-lg-mobile text-[26px] font-bold text-primary tracking-tight">설정 및 아틀리에</h1>
+        <h1 class="font-headline-lg-mobile text-[1.625rem] font-bold text-primary tracking-tight">설정 및 아틀리에</h1>
     </div>
 
     <!-- User Profile Section -->
@@ -663,7 +605,7 @@
     <div class="bg-surface-container-low rounded-3xl p-6 custom-shadow relative overflow-hidden border border-white/40">
     <div class="flex flex-col items-center gap-4">
     <div class="relative">
-    <img id="user-profile-avatar" alt="User Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHkN1UdL5GkmSNbLAFJL2l9LaRxRTIFHfqXIq7sBFE8V97vgI192KFHbhtA0gCpdv-yWZzDZcia-WLItmHlfP0jb4OplCQi7Zy5pNjcVp04kQPqHYUcvNyaboxwTR2lkmQH_CKiOy3fNoZSbUzRRroyJCkdgESs-2aod6mocPc5t_AkEXsMaZcnmpvyEgo5ENkwjIqDSv4-XvU6o76uWKYxw37u1KGBpOdlUrMM4ZGcym1BV381cnmp6Lyj3tSVDNuEqoxLbiLipHO">
+    <img id="user-profile-avatar" alt="User Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer" src="./angel_mascot.png">
     <button id="user-profile-avatar-btn" class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
     <span class="material-symbols-outlined text-sm">edit</span>
     </button>
@@ -723,19 +665,21 @@
     </div>
     <div class="space-y-4">
     <p class="text-on-surface-variant font-label-sm ml-1">색상 테마 선택</p>
-    <div class="flex gap-4 px-1">
-    <div class="flex flex-col items-center gap-2">
-    <button class="w-12 h-12 rounded-full border-2 border-white shadow-md transition-transform active:scale-95" style="background-color: #5b8266;"></button>
-    <span class="text-[10px] font-medium text-on-surface-variant">그린</span>
-    </div>
-    <div class="flex flex-col items-center gap-2">
-    <div class="relative">
-    <button class="w-12 h-12 rounded-full border-2 border-primary shadow-md transition-transform active:scale-95 flex items-center justify-center" style="background-color: #d98c9e;">
-    <span class="material-symbols-outlined text-white text-xl">check</span>
-    </button>
-    </div>
-    <span class="text-[10px] font-bold text-primary">핑크 (선택됨)</span>
-    </div>
+    <div class="flex gap-4 px-1" id="theme-select-container">
+        <!-- 기본 핑크 테마 -->
+        <div class="flex flex-col items-center gap-2">
+            <button id="theme-btn-pink" type="button" class="w-12 h-12 rounded-full border-2 border-transparent shadow-md transition-transform active:scale-95 flex items-center justify-center" style="background-color: #d98c9e;">
+                <span id="theme-check-pink" class="material-symbols-outlined text-white text-xl hidden">check</span>
+            </button>
+            <span id="theme-text-pink" class="text-[10px] font-medium text-on-surface-variant">핑크</span>
+        </div>
+        <!-- 지브리 그린 테마 -->
+        <div class="flex flex-col items-center gap-2">
+            <button id="theme-btn-ghibli" type="button" class="w-12 h-12 rounded-full border-2 border-transparent shadow-md transition-transform active:scale-95 flex items-center justify-center" style="background-color: #4A6741;">
+                <span id="theme-check-ghibli" class="material-symbols-outlined text-white text-xl hidden">check</span>
+            </button>
+            <span id="theme-text-ghibli" class="text-[10px] font-medium text-on-surface-variant">그린</span>
+        </div>
     </div>
     </div>
     </div>
@@ -749,7 +693,7 @@
         <div class="flex flex-col items-center mb-6">
             <div class="relative mb-3">
                 <div id="ai-avatar-preview" class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg bg-surface-container">
-                    <img alt="Assistant Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLttNtM6K8i8h4Si_CnNGsryb1GbwGSfk8XDQMaGqJ9wX9tyZERzzRuQb0MBlYGYaLSFwhsrLEwkBd6VijuYqbhMdSv8aLOPvnnN5sCrq2tODM4mG1IJ2D7ZtKzhWTjeTGCD4HPcdrzuS0qQnk-n7P4Zkacykva_TYCaNGmw1PJxrDJqKaWNNYQxKP5hGwGwoKkH0JQMuFwAAx8Ppqm4_jGPn_e2tSXGECYtACDquEEQmUA7y2EKvHBVNiai">
+                    <img alt="Assistant Avatar" class="w-full h-full object-cover" src="./angel_mascot.png">
                 </div>
                 <button id="upload-avatar-btn" type="button" class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
                     <span class="material-symbols-outlined text-sm">photo_camera</span>
@@ -962,7 +906,13 @@
             <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">keyboard_arrow_down</span>
         </div>
     </div>
-    <div class="relative mb-4"><input class="w-full bg-white/40 border-none rounded-xl p-3 pl-10 text-xs focus:ring-2 focus:ring-primary-container text-on-surface-variant placeholder:text-on-surface-variant/30" placeholder="이름 또는 주소 입력" type="text"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-base">search</span></div><div class="bg-white/60 p-3 rounded-2xl border border-white/40 flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><img alt="김영희" class="h-10 w-10 rounded-full border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHkN1UdL5GkmSNbLAFJL2l9LaRxRTIFHfqXIq7sBFE8V97vgI192KFHbhtA0gCpdv-yWZzDZcia-WLItmHlfP0jb4OplCQi7Zy5pNjcVp04kQPqHYUcvNyaboxwTR2lkmQH_CKiOy3fNoZSbUzRRroyJCkdgESs-2aod6mocPc5t_AkEXsMaZcnmpvyEgo5ENkwjIqDSv4-XvU6o76uWKYxw37u1KGBpOdlUrMM4ZGcym1BV381cnmp6Lyj3tSVDNuEqoxLbiLipHO"><div><p class="text-sm font-bold text-on-surface">김영희</p><p class="text-[10px] text-on-surface-variant">어머니</p></div></div><div class="flex flex-col items-end gap-1"><span class="text-[9px] font-bold text-primary">케어 하기</span><div class="relative inline-block w-10 h-5"><input checked="" class="toggle-checkbox hidden" id="role-toggle-1" type="checkbox"><label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer relative after:w-4 after:h-4 after:top-[2px] after:left-[2px]" for="role-toggle-1"></label></div></div></div><div class="bg-white/60 p-3 rounded-2xl border border-white/40 flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><img alt="박철수" class="h-10 w-10 rounded-full border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDflC_nGevtBkec15wN7nUhKvM34TepRyCIVoItsigZgpd2B0bN6wIf1sR1Y7cRxXl9BA_QqhcAyAKWJU5wzfKtFEZNX8cT--whdke3cQOE17Q9-wgVSAYmcpLZ_SQ_cPF-u_2zJoJ4vY1gazp4ceEunJ9xD9A8iizq3f6MDnWkph87q-CIc84l2EOeZTNZqHUYzTgKo1vadoQZWE2CEkyen9Pcn0jDC6h_GyCp_aJXkE68G8IOxft4--Ds7m7hDcyaeqrond6DKy_N"><div><p class="text-sm font-bold text-on-surface">박철수</p><p class="text-[10px] text-on-surface-variant">아버지</p></div></div><div class="flex flex-col items-end gap-1"><span class="text-[9px] font-bold text-on-surface-variant">케어 받기</span><div class="relative inline-block w-10 h-5"><input class="toggle-checkbox hidden" id="role-toggle-2" type="checkbox"><label class="toggle-label block overflow-hidden h-5 rounded-full bg-outline-variant cursor-pointer relative after:w-4 after:h-4 after:top-[2px] after:left-[2px]" for="role-toggle-2"></label></div></div></div></div><div class="space-y-4 mt-6">
+    <div id="care-targets-list" class="space-y-3">
+        <div class="flex items-center gap-2 p-4 text-on-surface-variant text-sm animate-pulse bg-white/40 backdrop-blur-sm rounded-xl border border-outline-variant/10">
+            <span class="material-symbols-outlined animate-spin text-primary">sync</span>
+            <span>보호자/대상자 목록을 불러오고 있습니다...</span>
+        </div>
+    </div>
+</div></div><div class="space-y-4 mt-6">
     <div class="space-y-2">
     <label class="block text-on-surface-variant font-label-sm ml-1">케어 항목 추가</label>
     <div class="flex gap-2">
@@ -1251,7 +1201,7 @@
         </button>
 </header>
 <!-- Editor Content Area -->
-<main class="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-margin-desktop py-4 max-w-[800px] mx-auto w-full">
+<main class="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-margin-desktop py-4 max-w-[50rem] mx-auto w-full">
 <!-- Metadata Selection -->
 <div class="space-y-4 mb-6">
 <input id="note-title" class="w-full bg-transparent border-none focus:ring-0 text-headline-lg font-headline-lg text-on-surface placeholder:text-on-surface-variant/30 p-0" placeholder="오늘의 제목을 지어주세요" type="text">
@@ -1259,7 +1209,7 @@
 <select id="v2-notebook-select" class="bg-surface-container-low px-3 py-1.5 rounded-full text-on-surface-variant/80 border border-surface-container font-label-sm text-[12px] focus:ring-0">
     <option value="nb-1">내 일기장</option>
 </select>
-<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="h-4 w-[0.0625rem] bg-outline-variant"></div>
 <div class="flex items-center gap-1.5 text-primary">
 <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
 <span class="font-label-sm text-[11px] opacity-70">AI 비서 대기 중</span>
@@ -1287,12 +1237,12 @@
 <button class="ql-bold p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
 <button class="ql-italic p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
 <button class="ql-list p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors" value="bullet"></button>
-<div class="w-[1px] h-6 bg-surface-container-highest mx-1"></div>
+<div class="w-[0.0625rem] h-6 bg-surface-container-highest mx-1"></div>
 <button class="ql-image p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
 <button id="emoji-picker-btn" class="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors">😀</button>
 </div>
 <div class="relative cursor-pointer" id="writing-helper-btn">
-<img alt="Mascot" class="w-8 h-8 rounded-full border-2 border-white shadow-sm ring-1 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxIO9hrEZfpxuJtSf5cXNoYmduSuXFnidkQ1aGfohErXH72dfnIgnDJTJRQGw-dA4ZvtNSoTfs1vHRoF3ObHU1WPTyHG9OjH0xeml95E5id6J1zbFituFvXN0_l4e7ZvxX1c1Regum6Yy_HwvkTbFSuqRs5ZSNmq0WzAznSoPwC3O0iEvgGHvS_nxhUqITij5FQdB6XlxmNqaK6T_tZuzUrIOcPIHLohCTFwcqCoRV1yHY0T1OcFrWhxljDO9WOaGNg6s9zVMKJ63r">
+<img alt="Mascot" class="w-8 h-8 rounded-full border-2 border-white shadow-sm ring-1 ring-primary/20" src="./angel_mascot.png">
 <div class="absolute -top-1 -right-1 bg-primary text-on-primary rounded-full p-0.5">
 <span class="material-symbols-outlined text-[10px] block" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
 </div>
@@ -1379,7 +1329,7 @@
 <div class="w-10"></div> <!-- Empty div for flex centering -->
 </header>
 <!-- Gallery Content Area -->
-<main class="flex-1 overflow-y-auto custom-scrollbar p-4 max-w-[800px] mx-auto w-full pb-20">
+<main class="flex-1 overflow-y-auto custom-scrollbar p-4 max-w-[50rem] mx-auto w-full pb-20">
     <!-- Filter Tabs -->
     <div class="flex justify-center mb-8 mt-2 bg-surface-container-low p-1.5 rounded-full w-fit mx-auto shadow-inner">
         <button class="active-tab px-6 py-2 rounded-full font-label-sm transition-all" id="tab-all">전체</button>
@@ -1444,7 +1394,7 @@
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto custom-scrollbar pt-4 pb-24 max-w-[600px] mx-auto w-full relative">
+    <main class="flex-1 overflow-y-auto custom-scrollbar pt-4 pb-24 max-w-[37.5rem] mx-auto w-full relative">
         <!-- Photo Detail Section -->
         <section class="p-4 space-y-4">
             <!-- Polaroid Style Card -->
@@ -1492,7 +1442,7 @@
 
     <!-- Floating Comment Input Bar -->
     <div class="absolute bottom-0 left-0 w-full p-4 pb-safe bg-surface/95 backdrop-blur-xl border-t border-outline-variant/20 z-50">
-        <div class="max-w-[600px] mx-auto flex items-center gap-3">
+        <div class="max-w-[37.5rem] mx-auto flex items-center gap-3">
             <div class="relative flex-1">
                 <input class="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-primary/20 rounded-full px-5 py-3 text-sm placeholder:text-outline/70 transition-all" placeholder="따뜻한 한마디를 남겨주세요..." type="text" id="detail-comment-input">
                 <button class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full squishy shadow-md">
@@ -1509,7 +1459,7 @@
 
 <!-- Task Editor Bottom Sheet -->
 <div class="fixed inset-0 bg-on-surface/10 backdrop-blur-[4px] transition-opacity duration-300 z-[100] hidden opacity-0" id="v2-editor-scrim"></div>
-<div class="fixed bottom-0 left-0 right-0 max-w-[600px] mx-auto z-[101] transition-transform duration-500 bg-surface-container-lowest rounded-t-[32px] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain paper-texture overflow-hidden translate-y-[100%]" id="v2-task-editor-container">
+<div class="fixed bottom-0 left-0 right-0 max-w-[37.5rem] mx-auto z-[101] transition-transform duration-500 bg-surface-container-lowest rounded-t-[2rem] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain paper-texture overflow-hidden translate-y-[100%]" id="v2-task-editor-container">
     <div class="flex justify-center py-3">
         <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
     </div>
@@ -1632,7 +1582,7 @@
             </div>
         </div>
     </header>
-    <main class="flex-1 overflow-y-auto px-5 pt-6 space-y-4 pb-24 max-w-[600px] mx-auto w-full custom-scrollbar">
+    <main class="flex-1 overflow-y-auto px-5 pt-6 space-y-4 pb-24 max-w-[37.5rem] mx-auto w-full custom-scrollbar">
         <section class="space-y-2">
             <h2 class="font-bold text-[24px] text-on-surface leading-tight" id="v2-task-detail-title">과제 제목</h2>
         </section>
@@ -1662,7 +1612,7 @@
 
     
 <!-- Extra Modals & Helpers -->
-<div id="emoji-panel" class="hidden absolute z-[100] bg-surface rounded-xl shadow-lg border border-surface-container-highest w-[280px] p-3 top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
+<div id="emoji-panel" class="hidden absolute z-[100] bg-surface rounded-xl shadow-lg border border-surface-container-highest w-[17.5rem] p-3 top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
     <div class="flex gap-2 mb-2 overflow-x-auto pb-1 custom-scrollbar">
         <button class="emoji-tab active text-[12px] font-bold px-2 py-1" data-cat="emotion">감정</button>
         <button class="emoji-tab text-[12px] font-bold px-2 py-1 text-on-surface-variant/50" data-cat="nature">자연</button>
@@ -1743,7 +1693,7 @@
 <!-- Elegant Small Day View Overlay -->
 <div class="fixed inset-0 z-[110] hidden flex-col justify-end transition-all duration-300" id="dayViewContainer">
     <div class="absolute inset-0 bg-surface-dim/40 backdrop-blur-sm" id="dayViewCloseBg"></div>
-    <div class="relative w-full max-w-[500px] mx-auto h-auto max-h-[60vh] bg-surface-container-lowest paper-texture rounded-t-[2rem] border-t border-outline-variant/20 shadow-2xl flex flex-col transform translate-y-full transition-transform duration-500 ease-out" id="dayViewCard">
+    <div class="relative w-full max-w-[31.25rem] mx-auto h-auto max-h-[60vh] bg-surface-container-lowest paper-texture rounded-t-[2rem] border-t border-outline-variant/20 shadow-2xl flex flex-col transform translate-y-full transition-transform duration-500 ease-out" id="dayViewCard">
         <div class="w-12 h-1.5 bg-outline-variant/40 rounded-full mx-auto mt-4 mb-4"></div>
         <div class="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
             <div class="flex justify-between items-start mb-6">
@@ -1885,7 +1835,7 @@
 <!-- Chat Detail Overlay -->
 <div class="fixed inset-0 z-[100] bg-background hidden" id="chat-detail-overlay">
     <div class="fixed inset-0 z-0 watercolor-bg opacity-40 blur-3xl scale-110"></div>
-    <div class="relative z-10 h-screen flex flex-col max-w-[600px] mx-auto bg-background/30 shadow-2xl">
+    <div class="relative z-10 h-screen flex flex-col max-w-[37.5rem] mx-auto bg-background/30 shadow-2xl">
         <!-- Top App Bar -->
         <header class="flex justify-between items-center h-16 px-4 z-50 glass-panel shadow-[0_4px_20px_rgba(93,64,55,0.08)]">
             <div class="flex items-center gap-3">
@@ -1893,7 +1843,7 @@
                     <span class="material-symbols-outlined">arrow_back_ios_new</span>
                 </button>
                 <div class="flex items-center gap-2">
-                    <img alt="Ningning AI" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS7-FAJ0ER6ZpwlaqQGfnq_BPKwN9LVVv2TOADLSc6aF2fjuk3VwIaycmeRHRsDVWNPcbckpdNwrjGOrU6hUcu96vnnzLguwTCLMy3R8YIS54RVi2OqrB7o84jj5PZF_SWrgj5m4wQmPp8mb50P8MdVB_SnM_sFkelKyBO9u6EwtlPlYwW4pTMT6TyeGQyKtXrHRbyUjJqqmkaI0J7tFNwH4wuINzB2kedoM6PiqV40UOQqnA20ekdYzqgzftADds_0hNQwvDnMyEy"/>
+                    <img alt="Ningning AI" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="./angel_mascot.png"/>
                     <div>
                         <h1 id="chat-room-title-text" class="font-headline-md text-[18px] leading-tight text-primary">Ningning AI Assistant</h1>
                         <p class="text-[10px] text-primary/70 uppercase tracking-widest font-bold">Deep Reflection Mode Active</p>
@@ -1983,7 +1933,7 @@
 <!-- Invite Friends Overlay -->
 <div class="fixed inset-0 z-[120] pointer-events-none" id="invite-modal">
     <div class="absolute inset-0 bg-on-surface/20 transition-opacity duration-300 pointer-events-none opacity-0" id="overlay-backdrop" data-action="close-invite"></div>
-    <div class="slide-up absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-4 pb-12 shadow-2xl pointer-events-auto max-w-[600px] mx-auto transform translate-y-full transition-transform duration-300" id="overlay-panel">
+    <div class="slide-up absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-4 pb-12 shadow-2xl pointer-events-auto max-w-[37.5rem] mx-auto transform translate-y-full transition-transform duration-300" id="overlay-panel">
         <div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-6"></div>
         <h2 class="font-headline-md text-[24px] mb-6 text-center text-primary font-bold">Invite Your Soulmates</h2>
         <div class="space-y-4">

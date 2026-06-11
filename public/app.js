@@ -96,10 +96,80 @@ function copyToClipboard(text) {
 }
 
 /* ==========================================================================
+   [THEME MANAGEMENT]
+   ========================================================================== */
+export function applyTheme(theme) {
+    const htmlEl = document.documentElement;
+    const bodyEl = document.body;
+    if (theme === 'ghibli') {
+        htmlEl.classList.add('ghibli-theme');
+        bodyEl.classList.add('ghibli-theme');
+        localStorage.setItem('selected-theme', 'ghibli');
+    } else {
+        htmlEl.classList.remove('ghibli-theme');
+        bodyEl.classList.remove('ghibli-theme');
+        localStorage.setItem('selected-theme', 'pink');
+    }
+    updateThemeUI(theme);
+}
+
+function updateThemeUI(theme) {
+    const checkGhibli = document.getElementById('theme-check-ghibli');
+    const checkPink = document.getElementById('theme-check-pink');
+    const btnGhibli = document.getElementById('theme-btn-ghibli');
+    const btnPink = document.getElementById('theme-btn-pink');
+    const textGhibli = document.getElementById('theme-text-ghibli');
+    const textPink = document.getElementById('theme-text-pink');
+
+    if (theme === 'ghibli') {
+        if (checkGhibli) checkGhibli.classList.remove('hidden');
+        if (checkPink) checkPink.classList.add('hidden');
+        
+        if (btnGhibli) {
+            btnGhibli.style.borderColor = 'var(--primary)';
+        }
+        if (btnPink) {
+            btnPink.style.borderColor = 'transparent';
+        }
+        if (textGhibli) {
+            textGhibli.classList.add('font-bold', 'text-primary');
+            textGhibli.innerText = '그린 (선택됨)';
+        }
+        if (textPink) {
+            textPink.classList.remove('font-bold', 'text-primary');
+            textPink.innerText = '핑크';
+        }
+    } else {
+        if (checkGhibli) checkGhibli.classList.add('hidden');
+        if (checkPink) checkPink.classList.remove('hidden');
+        
+        if (btnGhibli) {
+            btnGhibli.style.borderColor = 'transparent';
+        }
+        if (btnPink) {
+            btnPink.style.borderColor = 'var(--primary)';
+        }
+        if (textGhibli) {
+            textGhibli.classList.remove('font-bold', 'text-primary');
+            textGhibli.innerText = '그린';
+        }
+        if (textPink) {
+            textPink.classList.add('font-bold', 'text-primary');
+            textPink.innerText = '핑크 (선택됨)';
+        }
+    }
+}
+window.applyTheme = applyTheme;
+
+/* ==========================================================================
    [INITIALIZATION]
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('--- [INIT] Feeling Journal Application Started ---');
+    
+    // 테마 설정 복원 및 반영
+    const savedTheme = localStorage.getItem('selected-theme') || 'pink';
+    applyTheme(savedTheme);
 
     // 1단계: 글로벌 상태 및 세션/설정 데이터를 최우선적으로 서버에서 fetch
     await initState();
@@ -197,19 +267,8 @@ function setupAuth() {
         else alert('인증 이메일을 확인해 주세요!');
     });
 
-    googleBtn?.addEventListener('click', async () => {
-        const { data, error } = await store.supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin,
-                scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                }
-            }
-        });
-        if (error) alert('구글 로그인 실패: ' + error.message);
+    googleBtn?.addEventListener('click', () => {
+        window.location.href = `${API_URL}/auth/google`;
     });
 
 
@@ -265,40 +324,7 @@ async function onUserAuthenticated(session) {
     const emailEl = document.getElementById('user-email');
     if (emailEl) emailEl.innerText = session.user.email;
 
-    const activeProviderToken = session.provider_token || localStorage.getItem('google_provider_token');
-    const activeRefreshToken = session.provider_refresh_token || localStorage.getItem('google_provider_refresh_token');
 
-    if (activeProviderToken && activeProviderToken !== 'null' && activeProviderToken !== 'undefined') {
-        try {
-            if (session.provider_token) {
-                localStorage.setItem('google_provider_token', session.provider_token);
-            }
-            if (session.provider_refresh_token) {
-                localStorage.setItem('google_provider_refresh_token', session.provider_refresh_token);
-            }
-        } catch (storageErr) {
-            console.warn('Failed to save google provider tokens to localStorage:', storageErr);
-        }
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-            'x-provider-token': activeProviderToken
-        };
-
-        if (activeRefreshToken && activeRefreshToken !== 'null' && activeRefreshToken !== 'undefined') {
-            headers['x-provider-refresh-token'] = activeRefreshToken;
-        }
-
-        // Sync provider token to Redis
-        fetch(`${API_URL}/subscribe`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                settings: { providerTokenOnly: true }
-            })
-        }).catch(err => console.error('Failed to sync provider token to Redis:', err));
-    }
 
 
     // Check/Prompt Nickname
@@ -341,11 +367,13 @@ async function onUserAuthenticated(session) {
     setInterval(sendPresenceHeartbeat, 15000);
     setInterval(checkFriendSos, 30000);
 
-    setTimeout(() => {
-        loadBriefing();
-        loadPersona();
-        loadSettings();
-    }, 1000);
+    Promise.all([
+        loadBriefing(),
+        loadPersona(),
+        loadSettings()
+    ]).catch(err => {
+        console.error('Failed to parallel load initial modules:', err);
+    });
 }
 
 async function sendPresenceHeartbeat() {
@@ -724,7 +752,6 @@ async function checkGoogleCalendarStatus() {
     
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
         if (!token) {
             statusText.innerText = '로그인이 필요합니다.';
             return;
@@ -732,8 +759,7 @@ async function checkGoogleCalendarStatus() {
         
         const res = await fetch(`${API_URL}/calendar`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
         const data = await res.json();
@@ -794,18 +820,9 @@ function setupGoogleCalendarConnect() {
             connectBtn.disabled = true;
             connectBtn.innerText = '연결 중...';
             try {
-                const { error } = await store.supabaseClient.auth.linkIdentity({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.origin,
-                        scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/contacts.readonly',
-                        queryParams: {
-                            access_type: 'offline',
-                            prompt: 'consent'
-                        }
-                    }
-                });
-                if (error) throw error;
+                const token = await store.getSessionToken();
+                if (!token) throw new Error('세션 토큰을 찾을 수 없습니다.');
+                window.location.href = `${API_URL}/auth/google?access_token=${encodeURIComponent(token)}`;
             } catch (err) {
                 alert('구글 로그인 실패: ' + err.message);
                 connectBtn.disabled = false;

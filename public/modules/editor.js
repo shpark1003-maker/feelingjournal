@@ -93,14 +93,12 @@ export async function analyzeDiary() {
     try {
         console.log('Sending analyze request...');
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         const res = await fetch(`${API_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ content, richContent, title, notebookId, image })
         });
@@ -152,14 +150,12 @@ export async function analyzeDiary() {
 export async function registerEventToGoogle(event) {
     try {
         const token = await store.getSessionToken();
-        const providerToken = await store.getProviderToken();
 
         const res = await fetch(`${API_URL}/calendar/add`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(event)
         });

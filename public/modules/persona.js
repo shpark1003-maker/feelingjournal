@@ -229,6 +229,14 @@ export function setupPersonaUI() {
         voiceSelect.innerHTML = voices.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
     }
 
+    // 6. 테마 설정 이벤트 바인딩
+    document.getElementById('theme-btn-ghibli')?.addEventListener('click', () => {
+        if (window.applyTheme) window.applyTheme('ghibli');
+    });
+    document.getElementById('theme-btn-pink')?.addEventListener('click', () => {
+        if (window.applyTheme) window.applyTheme('pink');
+    });
+
     setupLearningCenter();
 }
 
@@ -347,14 +355,20 @@ export async function loadBriefing() {
 
         card.style.display = 'block';
         card.classList.remove('hidden');
+
+        // [1. Loading State] Premium Skeleton Loader
         content.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; color:#6366f1;">
-                <div class="loading" style="width:20px; height:20px;"></div> 
-                <span>${aiName}가 오늘의 일정을 분석하여 브리핑을 준비하고 있습니다...</span>
+            <div class="animate-pulse space-y-3 py-2">
+                <div class="flex items-center gap-3 text-primary">
+                    <span class="material-symbols-outlined animate-spin text-xl">sync</span>
+                    <span class="font-medium text-sm">${aiName}가 오늘의 일정을 분석하여 브리핑을 준비하고 있습니다...</span>
+                </div>
+                <div class="h-3 bg-primary/10 rounded-full w-3/4"></div>
+                <div class="h-3 bg-primary/10 rounded-full w-5/6"></div>
+                <div class="h-3 bg-primary/10 rounded-full w-2/3"></div>
             </div>
         `;
 
-        const providerToken = await store.getProviderToken();
         const weatherOff = document.getElementById('weather-off')?.checked;
         
         let url = `${API_URL}/briefing`;
@@ -404,23 +418,48 @@ export async function loadBriefing() {
         console.log("--- [BRIEFING] Requesting briefing from backend API...");
         const res = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'x-provider-token': providerToken || ''
+                'Authorization': `Bearer ${token}`
             }
         });
 
         const data = await res.json();
+        
+        // [2. Loaded State / Empty State / Error State split]
         if (data.success && data.briefing) {
-            console.log("--- [BRIEFING] Successfully loaded briefing from server.");
-            content.innerHTML = data.briefing
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-color)">$1</strong>');
+            const briefingText = data.briefing.trim();
+            if (briefingText.length === 0) {
+                // [3. Empty State]
+                content.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-2 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant/40 animate-bounce">coffee</span>
+                        <p class="text-sm font-medium">오늘 예정된 특별한 일정이나 기록이 없어 한결 가뿐한 하루입니다. ☕</p>
+                    </div>
+                `;
+            } else {
+                // [4. Loaded State]
+                console.log("--- [BRIEFING] Successfully loaded briefing from server.");
+                content.innerHTML = data.briefing
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-color)">$1</strong>');
+            }
         } else {
+            // [5. Error State (Server failed)]
             console.error("--- [BRIEFING] Server failed to generate briefing:", data.error);
-            content.innerHTML = `<span style="color:#ee5253;">⚠️ ${data.error || '브리핑을 생성할 수 없습니다. 나중에 다시 시도해 주세요.'}</span>`;
+            content.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-6 text-center text-error gap-2 bg-error-container/10 border border-error/20 rounded-2xl p-4">
+                    <span class="material-symbols-outlined text-3xl text-error">warning</span>
+                    <p class="text-sm font-medium">⚠️ ${data.error || '브리핑을 생성할 수 없습니다. 나중에 다시 시도해 주세요.'}</p>
+                </div>
+            `;
         }
     } catch (e) {
+        // [6. Error State (Runtime/Network error)]
         console.error('Briefing Error:', e);
-        content.innerHTML = '<span style="color:#ee5253;">연결 오류로 브리핑을 가져오지 못했습니다.</span>';
+        content.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-6 text-center text-error gap-2 bg-error-container/10 border border-error/20 rounded-2xl p-4">
+                <span class="material-symbols-outlined text-3xl text-error">warning</span>
+                <p class="text-sm font-medium">⚠️ 연결 오류로 브리핑을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+            </div>
+        `;
     }
 }
