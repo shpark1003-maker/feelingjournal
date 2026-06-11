@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.2.0';
+import { store, API_URL, assertIds } from './state.js?v=5.3.0';
 
 
 let localStream = null;
@@ -484,7 +484,7 @@ export function setupChatUI() {
             e.stopPropagation();
             const roomId = target.dataset.roomId;
             const title = target.dataset.title;
-            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.3.0');
             await openChatWindow(roomId, title);
         }
     });
@@ -529,7 +529,7 @@ export async function openChatWithAi() {
 
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.3.0');
             await openChatWindow(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
         } else {
             console.error('Failed to get/create chat room:', data.error);
@@ -1152,7 +1152,7 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js?v=5.2.0');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.3.0');
             await openChatWindow(data.room.id, `💬 ${friendNickname}님과의 대화`);
         } else {
             console.error('Room registration failed:', data.error);
