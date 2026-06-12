@@ -314,14 +314,14 @@
             <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="email">Email Address</label>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">mail</span>
-                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md" id="email" placeholder="hello@forest.com" type="email" required/>
+                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="email" placeholder="hello@forest.com" type="email" required/>
             </div>
         </div>
         <div class="space-y-1">
             <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="password">Password</label>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">lock</span>
-                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md" id="password" placeholder="••••••••" type="password" required/>
+                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="password" placeholder="••••••••" type="password" required/>
             </div>
         </div>
         <div class="flex gap-2 pt-2">
@@ -709,7 +709,7 @@
         </div>
         <div>
             <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">비서 이름</label>
-            <input id="ai-name" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" type="text" value="닝닝">
+            <input id="ai-name" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" type="text" value="비서" placeholder="비서의 이름을 정해주세요">
         </div>
     <div class="grid grid-cols-2 gap-4">
     <div>
@@ -725,24 +725,21 @@
     <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">연령대</label>
     <div class="relative">
     <select id="ai-age" class="w-full bg-surface-container border-none rounded-2xl p-4 pr-10 focus:ring-2 focus:ring-primary-container text-body-md appearance-none">
-    <option>20대</option>
-    <option selected="">30대</option>
-    <option>40대</option>
+        <option>10대</option>
+        <option>20대</option>
+        <option selected="">30대</option>
+        <option>40대</option>
+        <option>50대</option>
+        <option>60대</option>
+        <option>70대</option>
     </select>
     <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">keyboard_arrow_down</span>
     </div>
     </div>
     </div>
     <div>
-    <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">관계</label>
-    <div class="relative">
-    <select id="ai-relationship" class="w-full bg-surface-container border-none rounded-2xl p-4 pr-10 focus:ring-2 focus:ring-primary-container text-body-md appearance-none">
-    <option>친한 친구</option>
-    <option selected="">수석 비서</option>
-    <option>멘토</option>
-    </select>
-    <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">keyboard_arrow_down</span>
-    </div>
+    <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">관계 및 역할 설정</label>
+    <input id="ai-relationship" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" type="text" placeholder="예: 엄하지만 다정하고 때로는 친구같은 수학교사" value="수석 비서">
     </div>
     <div>
         <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">성격 및 지침</label>
@@ -948,6 +945,112 @@
             케어 설정 저장
         </button>
     </div>
+    </div>
+    </section>
+
+    <!-- AI Capabilities (API Integration Corner) -->
+    <section id="api-integration-settings" class="mt-8">
+    <div class="bg-surface-container-highest rounded-3xl p-6 custom-shadow border-l-[6px] border-primary">
+    <div class="flex items-center gap-3 mb-6">
+    <span class="material-symbols-outlined text-primary">extension</span>
+    <h3 class="font-headline-md text-headline-md text-primary">AI 능력 확장 (API 연동)</h3>
+    </div>
+    
+    <!-- API Section Tabs -->
+    <div class="flex bg-surface-container rounded-2xl p-1.5 mb-6" id="api-tab-container">
+        <button type="button" class="flex-1 py-2 rounded-xl bg-white shadow-sm text-primary font-label-md" id="api-tab-free">무료 API</button>
+        <button type="button" class="flex-1 py-2 rounded-xl text-on-surface-variant font-label-md" id="api-tab-paid">유료 API</button>
+    </div>
+
+    <!-- Free APIs Section -->
+    <div id="api-free-section" class="space-y-4">
+        <!-- Weather API Card -->
+        <div class="bg-white/45 p-4 rounded-2xl border border-white/40 shadow-sm flex items-center justify-between">
+            <div>
+                <strong class="text-body-md text-on-surface block">실시간 기상 정보 (Weather API)</strong>
+                <span class="text-xs text-on-surface-variant/70">지역별 날씨 분석 및 옷차림 가이드 제공</span>
+            </div>
+            <div class="relative inline-block w-12 h-6">
+                <input class="toggle-checkbox hidden api-toggle" id="api-weather-toggle" type="checkbox" checked>
+                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="api-weather-toggle"></label>
+            </div>
+        </div>
+        
+        <!-- News RSS API Card -->
+        <div class="bg-white/45 p-4 rounded-2xl border border-white/40 shadow-sm flex items-center justify-between">
+            <div>
+                <strong class="text-body-md text-on-surface block">실시간 시사 뉴스 (News RSS API)</strong>
+                <span class="text-xs text-on-surface-variant/70">매일 아침 최신 뉴스 정보 자동 브리핑 반영</span>
+            </div>
+            <div class="relative inline-block w-12 h-6">
+                <input class="toggle-checkbox hidden api-toggle" id="api-news-toggle" type="checkbox" checked>
+                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="api-news-toggle"></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paid APIs Section (Hidden by default) -->
+    <div id="api-paid-section" class="space-y-4 hidden">
+        <!-- nsight API Card -->
+        <div class="bg-white/45 p-4 rounded-2xl border border-white/40 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <strong class="text-body-md text-on-surface block">nsight 투자 컨설팅 API</strong>
+                    <span class="text-xs text-on-surface-variant/70">실시간 경제 분석 및 전문 투자 정보 컨설팅 활성화</span>
+                </div>
+                <div class="relative inline-block w-12 h-6">
+                    <input class="toggle-checkbox hidden api-toggle" id="api-nsight-toggle" type="checkbox">
+                    <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="api-nsight-toggle"></label>
+                </div>
+            </div>
+            <div class="space-y-2 hidden" id="nsight-credentials-container">
+                <label class="block text-xs text-on-surface-variant ml-1">nsight API Key</label>
+                <input id="api-nsight-key" class="w-full bg-surface-container border-none rounded-xl p-3 text-body-md" type="password" placeholder="nsight API 키 입력 (또는 데모 연동)" value="demo-api-key-active">
+            </div>
+        </div>
+
+        <!-- ElevenLabs API Card -->
+        <div class="bg-white/45 p-4 rounded-2xl border border-white/40 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <strong class="text-body-md text-on-surface block">ElevenLabs 고품질 음성 API</strong>
+                    <span class="text-xs text-on-surface-variant/70">유명인 보이스 복제 및 자연스러운 음성 대화 연동</span>
+                </div>
+                <div class="relative inline-block w-12 h-6">
+                    <input class="toggle-checkbox hidden api-toggle" id="api-eleven-toggle" type="checkbox">
+                    <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="api-eleven-toggle"></label>
+                </div>
+            </div>
+            <div class="space-y-2 hidden" id="eleven-credentials-container">
+                <label class="block text-xs text-on-surface-variant ml-1">ElevenLabs API Key</label>
+                <input id="api-eleven-key" class="w-full bg-surface-container border-none rounded-xl p-3 text-body-md" type="password" placeholder="ElevenLabs API 키 입력">
+            </div>
+        </div>
+
+        <!-- Gemini Pro Advanced Card -->
+        <div class="bg-white/45 p-4 rounded-2xl border border-white/40 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <strong class="text-body-md text-on-surface block">Gemini 1.5 Pro (고고도 인지 모델)</strong>
+                    <span class="text-xs text-on-surface-variant/70">더 똑똑하고 긴 맥락의 사고 및 고차원 분석 수행</span>
+                </div>
+                <div class="relative inline-block w-12 h-6">
+                    <input class="toggle-checkbox hidden api-toggle" id="api-geminipro-toggle" type="checkbox">
+                    <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="api-geminipro-toggle"></label>
+                </div>
+            </div>
+            <div class="space-y-2 hidden" id="geminipro-credentials-container">
+                <label class="block text-xs text-on-surface-variant ml-1">Gemini API Key</label>
+                <input id="api-geminipro-key" class="w-full bg-surface-container border-none rounded-xl p-3 text-body-md" type="password" placeholder="나의 전용 Gemini API 키 입력">
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="pt-6">
+        <button id="save-api-settings-btn" class="w-full bg-primary text-white py-3 rounded-full font-label-md active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-md">
+            API 연동 설정 적용
+        </button>
     </div>
     </div>
     </section>
@@ -2116,7 +2219,7 @@
         </div>
 
         <div class="call-info">
-            <h2 id="call-ai-name">수석 비서 (원이)</h2>
+            <h2 id="call-ai-name">수석 비서</h2>
             <p id="call-status-text">통화 중...</p>
             <div id="ai-speech-bubble" class="ai-speech-bubble hidden"></div>
         </div>
@@ -2183,13 +2286,15 @@
 
 <div id="writing-helper-panel" class="writing-helper-panel hidden">
     <div class="helper-header">
-        <h4>✍️ 글 도우미</h4><button id="close-helper-btn">✕</button>
+        <h4>✍️ 글 도우미 (AI 동반자)</h4><button id="close-helper-btn">✕</button>
     </div>
     <div id="helper-chat-area" class="helper-chat-area"></div>
     <div class="helper-footer">
-        <input type="text" id="helper-reply-input" placeholder="이야기 들려주기...">
-        <button id="send-helper-reply-btn">전송</button>
-        <button id="finish-helper-btn">일기 생성</button>
+        <input type="text" id="helper-reply-input" placeholder="오늘 있었던 일을 편하게 들려주세요...">
+        <div class="helper-footer-btns">
+            <button id="send-helper-reply-btn">이야기 전송</button>
+            <button id="finish-helper-btn">일기 완성하기</button>
+        </div>
     </div>
 </div>
 
@@ -2238,7 +2343,7 @@
             🎩</div>
         <h2 id="care-ai-title"
             style="color: white; margin: 10px 0 0 0; font-size: 2.5rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-            수석 비서 원이</h2>
+            수석 비서</h2>
 
         <!-- 실시간 대화 자막 상자 (노안을 위한 특대형 폰트!) -->
         <div

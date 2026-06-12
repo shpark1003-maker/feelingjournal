@@ -298,15 +298,34 @@ ${friendDiaryStr}
 `;
                 }
 
+                // nsight (Economic/Investment) API 활성화 여부 확인
+                let nsightPromptAddition = '';
+                try {
+                    const apiSettingsRaw = await redis.get(`user:${req.user.id}:api-settings`);
+                    const apiSettings = apiSettingsRaw ? JSON.parse(apiSettingsRaw) : {};
+                    if (apiSettings.nsightEnabled) {
+                        nsightPromptAddition = `
+[nsight 실시간 경제/투자 컨설팅 API 활성화됨]
+- 사용자가 주식, 전세, 대출, 예적금, 부동산, 투자, 가상자산 등 금융/자산관리 관련 이야기를 하면, 전문 경제 컨설턴트(nsight API)로서 대응하여 팩트 기반의 세밀한 가이드라인 및 조언을 융합해 제공하세요.
+- 친절하고 알기 쉽게 용어를 풀어서 리스크 관리 및 포트폴리오 다각화 관점으로 조언해 주어야 합니다.
+`;
+                    }
+                } catch (apiErr) {
+                    console.warn('Failed to load apiSettings inside chat:', apiErr);
+                }
+
                 prompt = `
 당신은 "Feeling Journal"의 캐릭터 AI입니다. 사용자가 설정한 아래의 페르소나와 관계 지침에 완벽히 빙의하여 대답하세요.
 
 [당신의 페르소나]
 - 이름: ${p.name || '나의 동반자'}
+- 성별: ${p.gender || '미지정'}
+- 나이(연령대): ${p.age || '미지정'}
 - 나와의 관계: ${rel}
 - 성격: ${p.personality || '다정하고 사려 깊음'}
 
 ${roleInstruction}
+${nsightPromptAddition}
 ${searchPromptAddition}
 
 [사용자의 최근 상태 정보]

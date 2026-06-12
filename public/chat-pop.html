@@ -336,22 +336,55 @@
         }
 
         async function callChatAI(msg) {
-            const res = await fetch(`${API_URL}/chat/ai-response`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionToken}`
-                },
-                body: JSON.stringify({ 
-                    message: msg, 
-                    room_id: roomId,
-                    room_title: title
-                })
-            });
-            const data = await res.json();
-            if (!data.success) {
-                console.error('AI Response Error:', data.error);
+            try {
+                const res = await fetch(`${API_URL}/chat/ai-response`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ 
+                        message: msg, 
+                        room_id: roomId,
+                        room_title: title
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Server error');
+                }
+            } catch (err) {
+                console.error('AI Response Error:', err);
+                appendChatErrorMsg(msg);
             }
+        }
+
+        function appendChatErrorMsg(retryMsg) {
+            const container = document.getElementById('chat-history');
+            if (!container) return;
+            
+            const div = document.createElement('div');
+            div.className = 'message received ai-message error-bubble';
+            
+            div.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%;">
+                    <div class="chat-msg-avatar-fallback" style="width: 34px; height: 34px; border-radius: 50%; background: #ffebee; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #5d574d; margin-right: 8px; color: #d63031; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);">⚠️</div>
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
+                        <span class="message-sender" style="font-size: clamp(10px, 2vw + 6px, 13px); color: #5d574d; font-weight: 700; margin-bottom: 2px;">${currentAvatarName}</span>
+                        <div class="message-content paper-note active-bubble" style="padding: 10px 14px; border-radius: 2px 12px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: #ffebee; border: 2px solid #d63031; color: #c0392b; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); display: flex; flex-direction: column; gap: 8px;">
+                            <span>비서가 답변을 작성하지 못했습니다. (연결 상태 확인 필요)</span>
+                            <button class="chat-retry-btn" style="align-self: flex-start; background: #D4A373; border: 1.5px solid #5D574D; border-radius: 8px; padding: 4px 10px; font-size: 0.75rem; color: white; cursor: pointer; font-weight: bold; box-shadow: 1px 1px 0px rgba(0,0,0,0.15); transition: transform 0.1s;">다시 보내기 ↻</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const btn = div.querySelector('.chat-retry-btn');
+            btn.addEventListener('click', () => {
+                div.remove();
+                callChatAI(retryMsg);
+            });
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
         // Attach image functionality

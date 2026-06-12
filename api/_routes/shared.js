@@ -228,6 +228,7 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 20000, retries = 
 
                 if (options.failFast && delay > 3000) {
                     console.log(`--- [RETRY BYPASS] 429 Detected but retry delay (${delay}ms) is too long for real-time request. Skipping retry. ---`);
+                    lastError = new Error(`429 Too Many Requests (Retry delay ${delay}ms is too long for failFast)`);
                     break;
                 }
 
@@ -355,8 +356,9 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
             console.warn(`--- [GEMINI WARN] Model ${model} failed: ${err.message}`);
             lastError = err;
         } catch (err) {
-            console.warn(`--- [GEMINI WARN] Model ${model} fetch failed: ${err.message}`);
-            lastError = err;
+            const msg = err ? (err.message || String(err)) : 'Unknown Fetch Error';
+            console.warn(`--- [GEMINI WARN] Model ${model} fetch failed: ${msg}`);
+            lastError = err || new Error('Unknown Fetch Error');
         }
     }
 
@@ -728,7 +730,7 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
             const chunk = calendars.slice(i, i + concurrencyLimit);
             const chunkPromises = chunk.map(async (cal) => {
                 try {
-                    let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?singleEvents=true&maxResults=100`;
+                    let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?singleEvents=true&maxResults=250`;
                     if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
                     if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
                     

@@ -107,7 +107,7 @@ ${googleSummary || '등록된 구글 일정 없음'}
 
         return [...googleAnalyzed, ...taskAnalyzed];
     } catch (err) {
-        console.error('--- [CALENDAR GEMINI COMBINED ERROR] Fallback logic triggered:', err.message);
+        console.error('--- [CALENDAR GEMINI COMBINED ERROR] Fallback logic triggered:', err?.message || err);
         return googleEvents.map(ge => ({
             ...ge,
             advice: '일정을 확인했습니다. (AI 분석 생략됨)'
@@ -129,7 +129,7 @@ module.exports = async (req, res) => {
         try {
             providerToken = await getGoogleAccessToken(user.id);
         } catch (redisErr) {
-            console.warn('--- [CALENDAR] Redis connection offline/error, falling back to header:', redisErr.message);
+            console.warn('--- [CALENDAR] Redis connection offline/error, falling back to header:', redisErr?.message || redisErr);
         }
 
         if (!providerToken) {
@@ -165,7 +165,8 @@ module.exports = async (req, res) => {
                 let calResult = {};
                 try {
                     const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-                    calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
+                    const timeMax = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+                    calResult = await fetchGoogleCalendarEvents(user.id, timeMin, timeMax, user.email);
                     isUnlinked = calResult.unlinked;
                     partialFailure = calResult.partialFailure;
                     failedCalendars = calResult.failedCalendars;
@@ -187,7 +188,7 @@ module.exports = async (req, res) => {
                         });
                     }
                 } catch (err) {
-                    console.warn('--- [CALENDAR POST] Google Calendar Fetch Failed:', err.message);
+                    console.warn('--- [CALENDAR POST] Google Calendar Fetch Failed:', err?.message || err);
                 }
 
                 // 2. 다이어리 내용 가공
@@ -281,7 +282,8 @@ module.exports = async (req, res) => {
         try {
             // Fetch events from 30 days ago to 90 days in the future to keep a complete view
             const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-            calResult = await fetchGoogleCalendarEvents(user.id, timeMin, null, user.email);
+            const timeMax = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+            calResult = await fetchGoogleCalendarEvents(user.id, timeMin, timeMax, user.email);
             isUnlinked = calResult.unlinked;
             partialFailure = calResult.partialFailure;
             failedCalendars = calResult.failedCalendars;
@@ -303,7 +305,7 @@ module.exports = async (req, res) => {
                 });
             }
         } catch (err) {
-            console.warn('--- [CALENDAR] Google Calendar API Failed. Error:', err.message);
+            console.warn('--- [CALENDAR] Google Calendar API Failed. Error:', err?.message || err);
         }
 
         // Scan user's diary keys to generate a cache invalidation fingerprint based on diary count/timestamps
@@ -356,6 +358,6 @@ module.exports = async (req, res) => {
         
         return res.json({ success: true, events: analyzedEvents, calendars: calResult.calendars || [], unlinked: isUnlinked, partialFailure, failedCalendars });
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error?.message || error });
     }
 };

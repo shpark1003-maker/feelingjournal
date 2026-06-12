@@ -531,11 +531,13 @@ export function setupWritingHelper() {
 
     closeBtn?.addEventListener('click', () => panel.classList.add('hidden'));
 
-    const sendMsg = async () => {
-        const text = input.value.trim();
+    const sendMsg = async (retryText) => {
+        const text = (typeof retryText === 'string') ? retryText : input.value.trim();
         if (!text) return;
-        appendHelperMsg('user', text);
-        input.value = '';
+        if (typeof retryText !== 'string') {
+            appendHelperMsg('user', text);
+            input.value = '';
+        }
 
         try {
             const token = await store.getSessionToken();
@@ -545,15 +547,58 @@ export function setupWritingHelper() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ message: text, context: '사용자가 일기를 쓰기 위해 도움을 요청하고 있습니다.' })
+                body: JSON.stringify({
+                    message: text,
+                    context: `당신은 사용자의 일기 작성을 돕는 다정하고 유능한 "글쓰기 동반자이자 코치(Writing Guide)"입니다.
+단순히 사용자가 한 말을 받아 적어 요약만 해주는 기계적인 비서가 되지 마십시오.
+사용자가 자신의 하루를 성찰하고, 보다 풍부하고 감성적인 일기를 스스로 작성할 수 있도록 다음 원칙에 따라 가이드하십시오.
+
+[대화 및 가이드 원칙]
+1. 사용자가 단답형이나 짧은 단어(예: "힘들었어", "재밌었어")로 답하더라도, 공감과 경청의 리액션을 따뜻하게 건넨 후 구체적인 꼬리 질문을 던져 이야기를 이끌어내세요.
+   * 예: "많이 지치셨겠어요. 오늘 어떤 일 때문에 가장 마음이 힘드셨는지 비서에게 조금만 더 들려주실 수 있나요?"
+2. 일기를 쉽게 쓸 수 있도록 구체적인 글감(질문)을 한 번에 하나씩만 제안하세요. 
+   - (1단계) 오늘 있었던 가장 인상 깊은 사건이나 행동
+   - (2단계) 그 사건 속에서 느꼈던 감정이나 생각 (왜 그런 기분이 들었는지)
+   - (3단계) 그 하루를 통해 얻은 작은 배움이나 내일 나에게 바라는 점
+3. 문장 교정 팁이나 표현 추천도 자연스럽게 섞어주세요. (예: "이 감정은 '아쉬움'보다는 '뿌듯한 그리움'에 가까운 것 같네요. 일기에 쓸 때 '마음 한구석이 몽글몽글해졌다'고 표현해 보면 어떨까요?")
+4. 존댓말과 따뜻하고 정제된 비서의 말투를 유지하되, 사용자가 편안함을 느끼도록 정서적으로 깊이 지지해 주세요.`
+                })
             });
             const data = await res.json();
-            if (data.success) appendHelperMsg('bot', data.answer);
+            if (data.success) {
+                appendHelperMsg('bot', data.answer);
+            } else {
+                throw new Error(data.error || 'Server error');
+            }
         } catch (err) {
             console.error(err);
-            appendHelperMsg('bot', '답변을 가져오는 도중 오류가 발생했습니다.');
+            appendHelperErrorMsg(text);
         }
     };
+
+    function appendHelperErrorMsg(retryText) {
+        const area = document.getElementById('helper-chat-area');
+        if (!area) return;
+        const div = document.createElement('div');
+        div.className = 'bot-msg error-bubble';
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        div.style.gap = '8px';
+        div.style.background = '#ffebee';
+        div.style.color = '#c0392b';
+        div.style.borderColor = '#d63031';
+        div.innerHTML = `
+            <span>⚠️ 답변을 가져오는 도중 오류가 발생했습니다.</span>
+            <button class="retry-helper-btn" style="align-self: flex-start; background: #D4A373; border: 2px solid #5D574D; border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; color: white; cursor: pointer; font-weight: bold; box-shadow: 1px 1px 0px rgba(0,0,0,0.15); transition: transform 0.1s;">다시 보내기 ↻</button>
+        `;
+        const btn = div.querySelector('.retry-helper-btn');
+        btn.addEventListener('click', () => {
+            div.remove();
+            sendMsg(retryText);
+        });
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
+    }
 
     sendBtn?.addEventListener('click', sendMsg);
     input?.addEventListener('keypress', (e) => {
@@ -589,21 +634,101 @@ export function setupWritingHelper() {
 
             const data = await res.json();
             if (data.success) {
-                if (store.quillEditor) {
-                    const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-                    document.getElementById('note-title').value = `${todayStr}의 기록`;
-                    store.quillEditor.root.innerHTML = `<p>${data.answer.replace(/\n/g, '</p><p>')}</p>`;
+                // Remove previous edit containers if any
+                const existingEditBox = document.getElementById('helper-edit-container');
+                if (existingEditBox) existingEditBox.remove();
+
+                const editContainer = document.createElement('div');
+                editContainer.id = 'helper-edit-container';
+                editContainer.style.marginTop = '16px';
+                editContainer.style.padding = '12px';
+                editContainer.style.background = '#F5EFEB';
+                editContainer.style.border = '2px solid #5D574D';
+                editContainer.style.borderRadius = '16px';
+                editContainer.style.display = 'flex';
+                editContainer.style.flexDirection = 'column';
+                editContainer.style.gap = '10px';
+
+                const titleLabel = document.createElement('label');
+                titleLabel.innerText = '📝 일기 제목';
+                titleLabel.style.fontWeight = 'bold';
+                titleLabel.style.fontSize = '0.85rem';
+                titleLabel.style.color = '#4A6741';
+
+                const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.value = `${todayStr}의 기록`;
+                titleInput.style.width = '100%';
+                titleInput.style.padding = '8px 12px';
+                titleInput.style.border = '2px solid #5D574D';
+                titleInput.style.borderRadius = '12px';
+                titleInput.style.fontSize = '0.85rem';
+                titleInput.style.background = '#ffffff';
+
+                const contentLabel = document.createElement('label');
+                contentLabel.innerText = '✍️ 초안 내용 (마음껏 수정해 보세요)';
+                contentLabel.style.fontWeight = 'bold';
+                contentLabel.style.fontSize = '0.85rem';
+                contentLabel.style.color = '#4A6741';
+
+                const contentTextarea = document.createElement('textarea');
+                contentTextarea.rows = 8;
+                contentTextarea.value = data.answer;
+                contentTextarea.style.width = '100%';
+                contentTextarea.style.padding = '8px 12px';
+                contentTextarea.style.border = '2px solid #5D574D';
+                contentTextarea.style.borderRadius = '12px';
+                contentTextarea.style.fontSize = '0.85rem';
+                contentTextarea.style.resize = 'vertical';
+                contentTextarea.style.background = '#ffffff';
+                contentTextarea.style.lineHeight = '1.5';
+
+                const insertBtn = document.createElement('button');
+                insertBtn.innerText = '에디터에 적용하기 ✨';
+                insertBtn.style.background = '#4A6741';
+                insertBtn.style.color = 'white';
+                insertBtn.style.border = '2px solid #5D574D';
+                insertBtn.style.padding = '10px';
+                insertBtn.style.borderRadius = '12px';
+                insertBtn.style.fontWeight = 'bold';
+                insertBtn.style.cursor = 'pointer';
+                insertBtn.style.fontSize = '0.85rem';
+                insertBtn.style.transition = 'transform 0.1s';
+
+                insertBtn.addEventListener('click', () => {
+                    const finalTitle = titleInput.value.trim();
+                    const finalContent = contentTextarea.value.trim();
+
+                    if (store.quillEditor) {
+                        document.getElementById('note-title').value = finalTitle;
+                        store.quillEditor.root.innerHTML = `<p>${finalContent.replace(/\n/g, '</p><p>')}</p>`;
+                    }
+                    alert('일기 본문이 에디터에 적용되었습니다! 노트를 저장하여 작성을 완료하세요.');
+                    panel.classList.add('hidden');
+                    editContainer.remove();
+                });
+
+                editContainer.appendChild(titleLabel);
+                editContainer.appendChild(titleInput);
+                editContainer.appendChild(contentLabel);
+                editContainer.appendChild(contentTextarea);
+                editContainer.appendChild(insertBtn);
+
+                const area = document.getElementById('helper-chat-area');
+                if (area) {
+                    area.appendChild(editContainer);
+                    area.scrollTop = area.scrollHeight;
                 }
-                alert('대화 내용을 기반으로 일기 초안이 작성되었습니다! 에디터에서 자유롭게 편집해 보세요.');
-                panel.classList.add('hidden');
             } else {
                 alert('일기 생성 실패: ' + data.error);
             }
         } catch (err) {
+            console.error(err);
             alert('일기 생성 중 오류 발생');
         } finally {
             finishBtn.disabled = false;
-            finishBtn.innerText = '일기 생성';
+            finishBtn.innerText = '일기 완성하기';
         }
     });
 }
@@ -612,7 +737,7 @@ function startHelperConversation() {
     const area = document.getElementById('helper-chat-area');
     if (!area) return;
     area.innerHTML = '';
-    appendHelperMsg('bot', '안녕하세요! 오늘 하루는 어떠셨나요? 무엇이든 이야기해 주시면 제가 일기로 정리해 드릴게요.');
+    appendHelperMsg('bot', '안녕하세요! 오늘 하루도 참 고생 많으셨습니다. 숲속의 작은 서재에 오신 것을 환영해요. 숲속의 정령 비서가 당신의 하루를 아름다운 기록으로 함께 엮어 드릴게요. 😊\n\n오늘 하루 중 가장 기억에 남는 하나의 순간이나 머릿속에 맴도는 생각은 무엇인가요? 편안하게 들려주세요.');
 }
 
 function appendHelperMsg(type, text) {

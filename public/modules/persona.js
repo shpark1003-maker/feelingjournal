@@ -44,6 +44,10 @@ export async function loadPersona() {
         store.currentAvatarUrl = p.avatarUrl;
         renderPersonaAvatar(p);
     }
+    // API 연동 설정 함께 로드
+    if (typeof loadApiSettings === 'function') {
+        loadApiSettings();
+    }
 }
 
 export function renderPersonaAvatar(p) {
@@ -238,6 +242,7 @@ export function setupPersonaUI() {
     });
 
     setupLearningCenter();
+    setupApiIntegrationUI();
 }
 
 export function setupLearningCenter() {
@@ -461,5 +466,159 @@ export async function loadBriefing() {
                 <p class="text-sm font-medium">⚠️ 연결 오류로 브리핑을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
             </div>
         `;
+    }
+}
+
+export function setupApiIntegrationUI() {
+    const tabFree = document.getElementById('api-tab-free');
+    const tabPaid = document.getElementById('api-tab-paid');
+    const freeSection = document.getElementById('api-free-section');
+    const paidSection = document.getElementById('api-paid-section');
+
+    const toggleNsight = document.getElementById('api-nsight-toggle');
+    const containerNsight = document.getElementById('nsight-credentials-container');
+    const toggleEleven = document.getElementById('api-eleven-toggle');
+    const containerEleven = document.getElementById('eleven-credentials-container');
+    const toggleGeminiPro = document.getElementById('api-geminipro-toggle');
+    const containerGeminiPro = document.getElementById('geminipro-credentials-container');
+
+    const saveBtn = document.getElementById('save-api-settings-btn');
+
+    // Tab switching
+    tabFree?.addEventListener('click', () => {
+        tabFree.className = 'flex-1 py-2 rounded-xl bg-white shadow-sm text-primary font-label-md';
+        tabPaid.className = 'flex-1 py-2 rounded-xl text-on-surface-variant font-label-md';
+        freeSection?.classList.remove('hidden');
+        paidSection?.classList.add('hidden');
+    });
+
+    tabPaid?.addEventListener('click', () => {
+        tabPaid.className = 'flex-1 py-2 rounded-xl bg-white shadow-sm text-primary font-label-md';
+        tabFree.className = 'flex-1 py-2 rounded-xl text-on-surface-variant font-label-md';
+        paidSection?.classList.remove('hidden');
+        freeSection?.classList.add('hidden');
+    });
+
+    // Toggle sub-containers
+    toggleNsight?.addEventListener('change', () => {
+        if (toggleNsight.checked) {
+            containerNsight?.classList.remove('hidden');
+            alert('💡 nsight 투자 컨설팅 API 연동이 활성화되었습니다! 설정을 저장하시면 대화창에서 AI 비서에게 고도화된 경제/주식/자산 컨설팅 지침이 장착됩니다.');
+        } else {
+            containerNsight?.classList.add('hidden');
+        }
+    });
+
+    toggleEleven?.addEventListener('change', () => {
+        if (toggleEleven.checked) {
+            containerEleven?.classList.remove('hidden');
+            alert('💡 ElevenLabs 음성 합성 API 연동이 활성화되었습니다! API Key와 보이스를 기반으로 작동합니다.');
+        } else {
+            containerEleven?.classList.add('hidden');
+        }
+    });
+
+    toggleGeminiPro?.addEventListener('change', () => {
+        if (toggleGeminiPro.checked) {
+            containerGeminiPro?.classList.remove('hidden');
+            alert('💡 Gemini 1.5 Pro 모델이 활성화되었습니다! 더 높은 수준의 사고와 인지 능력을 발휘합니다.');
+        } else {
+            containerGeminiPro?.classList.add('hidden');
+        }
+    });
+
+    // Save action
+    saveBtn?.addEventListener('click', async () => {
+        try {
+            const token = await store.getSessionToken();
+            if (!token) return;
+
+            const payload = {
+                settings: {
+                    weatherEnabled: document.getElementById('api-weather-toggle')?.checked !== false,
+                    newsEnabled: document.getElementById('api-news-toggle')?.checked !== false,
+                    nsightEnabled: !!toggleNsight?.checked,
+                    nsightKey: document.getElementById('api-nsight-key')?.value || '',
+                    elevenEnabled: !!toggleEleven?.checked,
+                    elevenKey: document.getElementById('api-eleven-key')?.value || '',
+                    geminiProEnabled: !!toggleGeminiPro?.checked,
+                    geminiProKey: document.getElementById('api-geminipro-key')?.value || ''
+                }
+            };
+
+            const res = await fetch(`${API_URL}/api-settings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('✨ API 연동 설정이 성공적으로 저장 및 반영되었습니다!');
+                loadApiSettings();
+            } else {
+                alert('API 설정 저장 실패: ' + (data.error || '알 수 없는 오류'));
+            }
+        } catch (err) {
+            console.error('Failed to save API settings:', err);
+            alert('API 설정 저장 중 서버 오류가 발생했습니다.');
+        }
+    });
+}
+
+export async function loadApiSettings() {
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
+
+        const res = await fetch(`${API_URL}/api-settings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success && data.settings) {
+            const s = data.settings;
+            
+            const weatherToggle = document.getElementById('api-weather-toggle');
+            if (weatherToggle) weatherToggle.checked = s.weatherEnabled !== false;
+
+            const newsToggle = document.getElementById('api-news-toggle');
+            if (newsToggle) newsToggle.checked = s.newsEnabled !== false;
+
+            const nsightToggle = document.getElementById('api-nsight-toggle');
+            if (nsightToggle) {
+                nsightToggle.checked = !!s.nsightEnabled;
+                const container = document.getElementById('nsight-credentials-container');
+                if (s.nsightEnabled) container?.classList.remove('hidden');
+                else container?.classList.add('hidden');
+            }
+            const nsightKey = document.getElementById('api-nsight-key');
+            if (nsightKey) nsightKey.value = s.nsightKey || 'demo-api-key-active';
+
+            const elevenToggle = document.getElementById('api-eleven-toggle');
+            if (elevenToggle) {
+                elevenToggle.checked = !!s.elevenEnabled;
+                const container = document.getElementById('eleven-credentials-container');
+                if (s.elevenEnabled) container?.classList.remove('hidden');
+                else container?.classList.add('hidden');
+            }
+            const elevenKey = document.getElementById('api-eleven-key');
+            if (elevenKey) elevenKey.value = s.elevenKey || '';
+
+            const geminiProToggle = document.getElementById('api-geminipro-toggle');
+            if (geminiProToggle) {
+                geminiProToggle.checked = !!s.geminiProEnabled;
+                const container = document.getElementById('geminipro-credentials-container');
+                if (s.geminiProEnabled) container?.classList.remove('hidden');
+                else container?.classList.add('hidden');
+            }
+            const geminiProKey = document.getElementById('api-geminipro-key');
+            if (geminiProKey) geminiProKey.value = s.geminiProKey || '';
+        }
+    } catch (err) {
+        console.warn('Failed to load API settings:', err);
     }
 }

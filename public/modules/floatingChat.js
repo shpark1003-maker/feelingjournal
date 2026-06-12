@@ -486,7 +486,6 @@ function subscribeRoomRealtime(roomId) {
         });
 }
 
-// AI 자동 응답 트리거
 async function triggerWindowAiResponse(roomId, text) {
     const winEl = document.querySelector(`#v2-floating-chat-container [data-room-id="${roomId}"]`);
     if (!winEl) return;
@@ -520,11 +519,38 @@ async function triggerWindowAiResponse(roomId, text) {
 
         if (data.success && data.message) {
             appendWindowMessage(roomId, data.message);
+        } else {
+            throw new Error(data.error || 'Server error');
         }
     } catch (e) {
         console.error('Window AI response error:', e);
         typingIndicator.remove();
+        appendWindowChatErrorMsg(roomId, text);
     }
+}
+
+function appendWindowChatErrorMsg(roomId, retryMsg) {
+    const winEl = document.querySelector(`#v2-floating-chat-container [data-room-id="${roomId}"]`);
+    if (!winEl) return;
+    const body = winEl.querySelector('.floating-chat-body');
+    if (!body) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `flex flex-col items-start self-start space-y-1 w-full error-bubble`;
+    msgDiv.innerHTML = `
+        <span class="text-[10px] text-red-400 px-1">비서 원이 • 오류</span>
+        <div class="px-3 py-2 rounded-2xl text-xs max-w-[240px] break-words shadow-sm bg-red-100 text-red-800 border-2 border-red-300 flex flex-col gap-2">
+            <span>비서가 답변을 작성하지 못했습니다.</span>
+            <button class="chat-win-retry-btn" style="align-self: flex-start; background: #D4A373; border: 1.5px solid #5D574D; border-radius: 6px; padding: 2px 8px; font-size: 10px; color: white; cursor: pointer; font-weight: bold; box-shadow: 1px 1px 0px rgba(0,0,0,0.15); transition: transform 0.1s;">다시 보내기 ↻</button>
+        </div>
+    `;
+    const btn = msgDiv.querySelector('.chat-win-retry-btn');
+    btn.addEventListener('click', () => {
+        msgDiv.remove();
+        triggerWindowAiResponse(roomId, retryMsg);
+    });
+    body.appendChild(msgDiv);
+    scrollToBottom(body);
 }
 
 // 스크롤 최하단 헬퍼

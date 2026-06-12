@@ -110,6 +110,8 @@ const nicknameRoute = require('./api/_routes/nickname');
 const friendsRoute = require('./api/_routes/friends');
 const inviteRoute = require('./api/_routes/invite');
 const presenceRoute = require('./api/_routes/presence');
+const ttsRoute = require('./api/_routes/tts');
+const apiSettingsRoute = require('./api/_routes/api-settings');
 
 app.get('/api/calendar', verifyUser, calendarRoute);
 app.post('/api/calendar', verifyUser, calendarRoute);
@@ -119,6 +121,9 @@ app.get('/api/history', verifyUser, historyRoute);
 app.get('/api/briefing', verifyUser, briefingRoute);
 app.post('/api/briefing', verifyUser, briefingRoute);
 app.get('/api/contacts', verifyUser, contactsRoute);
+app.post('/api/tts', verifyUser, ttsRoute);
+app.get('/api/api-settings', verifyUser, apiSettingsRoute);
+app.post('/api/api-settings', verifyUser, apiSettingsRoute);
 
 /* ==========================================================================
    [REMAINING LIGHTWEIGHT ROUTES & CONTROLLERS]

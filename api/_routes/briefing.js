@@ -28,55 +28,6 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
         }
     }
 
-    // 사용자 예보 지역 설정 조회
-    let region = '서울';
-    let newsCategories = ['business'];
-    if (regionOverride) {
-        region = regionOverride;
-    } else {
-        try {
-            const client = supabaseAdmin || supabase;
-            const { data: profile } = await client
-                .from('profiles')
-                .select('weather_region, news_categories')
-                .eq('id', userId)
-                .maybeSingle();
-            
-            if (profile?.weather_region) {
-                region = profile.weather_region;
-            }
-            if (profile?.news_categories && profile.news_categories.length > 0) {
-                newsCategories = profile.news_categories;
-            }
-        } catch (e) {
-            console.error('Briefing profile fetch failed, fallback to defaults:', e.message);
-        }
-    }
-
-    // 실시간 날씨 및 경제/선택분야 헤드라인 크롤링 (병렬 비동기 수행으로 응답 최적화)
-    let weatherStr = '날씨 정보 조회 불가';
-    let newsStr = '주요 뉴스 헤드라인 정보 없음';
-
-    const weatherPromise = region === 'off'
-        ? Promise.resolve(null)
-        : getLiveWeather(region);
-
-    const [weatherRes, newsRes] = await Promise.allSettled([
-        weatherPromise,
-        getNewsHeadlines(newsCategories)
-    ]);
-
-    if (region === 'off') {
-        weatherStr = '날씨 안내 비활성화됨';
-    } else if (weatherRes.status === 'fulfilled' && weatherRes.value) {
-        const w = weatherRes.value;
-        weatherStr = `[${w.region} 날씨] 상태: ${w.sky}, 기온: ${w.temp}℃, 강수 확률: ${w.rainProb}%, 강수 형태: ${w.rainType}`;
-    }
-    
-    if (newsRes.status === 'fulfilled' && newsRes.value && newsRes.value.length > 0) {
-        newsStr = newsRes.value.map((title, idx) => `${idx + 1}. ${title}`).join('\n');
-    }
-
     // 서버 시간대(UTC 등)와 관계없이 KST(한국 표준시, UTC+9) 기준으로 정확한 날짜 계산
     const kstOffset = 9 * 60 * 60 * 1000;
     const nowKST = new Date(Date.now() + kstOffset);
@@ -93,101 +44,137 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
     tomorrowKST.setUTCHours(23, 59, 59, 999);
     const tomorrow = new Date(tomorrowKST.getTime() - kstOffset);
 
-    let contextEvents = '일정 정보 없음';
-    try {
-        const calResult = await fetchGoogleCalendarEvents(userId, yesterday.toISOString(), tomorrow.toISOString(), userEmail);
-        if (calResult && calResult.events && calResult.events.length > 0) {
-            contextEvents = calResult.events
-                .map((event) => {
-                    const rawStart = event.start?.dateTime || event.start?.date;
-                    let startStr = rawStart;
-                    if (rawStart) {
-                        const d = new Date(rawStart);
-                        if (!isNaN(d.getTime())) {
-                            const isAllDay = !event.start?.dateTime;
-                            startStr = d.toLocaleString('ko-KR', {
-                                timeZone: 'Asia/Seoul',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                weekday: 'short',
-                                hour: isAllDay ? undefined : 'numeric',
-                                minute: isAllDay ? undefined : 'numeric',
-                                hour12: !isAllDay
-                            });
-                            if (isAllDay) startStr += ' (종일)';
+    const currentTimeStr = nowKST.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    const nicknameKey = `user:${userId}:nickname`;
+
+    // 1. 구글 캘린더 일정 조회 Promise 정의
+    const contextEventsPromise = (async () => {
+        try {
+            const calResult = await fetchGoogleCalendarEvents(userId, yesterday.toISOString(), tomorrow.toISOString(), userEmail);
+            if (calResult && calResult.events && calResult.events.length > 0) {
+                return calResult.events
+                    .map((event) => {
+                        const rawStart = event.start?.dateTime || event.start?.date;
+                        let startStr = rawStart;
+                        if (rawStart) {
+                            const d = new Date(rawStart);
+                            if (!isNaN(d.getTime())) {
+                                const isAllDay = !event.start?.dateTime;
+                                startStr = d.toLocaleString('ko-KR', {
+                                    timeZone: 'Asia/Seoul',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    weekday: 'short',
+                                    hour: isAllDay ? undefined : 'numeric',
+                                    minute: isAllDay ? undefined : 'numeric',
+                                    hour12: !isAllDay
+                                });
+                                if (isAllDay) startStr += ' (종일)';
+                            }
                         }
-                    }
-                    return `- ${event.summary || '제목 없음'} (${startStr})`;
-                })
-                .join('\n');
+                        return `- ${event.summary || '제목 없음'} (${startStr})`;
+                    })
+                    .join('\n');
+            }
+        } catch (e) {
+            console.error('Briefing Calendar Fetch Error:', e.message);
         }
-    } catch (e) {
-        console.error('Briefing Calendar Fetch Error:', e.message);
-    }
+        return '일정 정보 없음';
+    })();
 
-    const pattern = `user:${userId}:diary-*`;
-    const keys = await scanRedisKeys(pattern);
-    let recentDiaries = '일기 기록 없음';
-    let reminiscenceMemory = '특별한 과거 회상 없음';
-
-    if (keys.length > 0) {
-        const sortedKeys = keys.sort().reverse();
-        
-        // 1. 최근 3일의 일기 데이터 요약 (암호화되지 않은 것만 요약)
-        const latestKeys = sortedKeys.slice(0, 3);
-        const values = await redis.mget(latestKeys);
-        recentDiaries = values
-            .filter(Boolean)
-            .map((value) => {
-                try {
-                    const item = JSON.parse(value);
-                    if (item.content && item.content.startsWith('e2e:')) {
-                        return ''; // E2E 암호화된 일기는 백엔드에서 복호화하지 않고 생략
-                    }
-                    const dateStr = new Date(item.createdAt || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-                    return `[일기 작성일: ${dateStr}]\n내용: ${item.content}`;
-                } catch {
-                    return '';
-                }
-            })
-            .filter(Boolean)
-            .join('\n---\n') || '일기 기록 없음';
-
-        // 2. [과거 회상 엔진] 일정이나 중요 키워드와 연계된 15개 이전 일기 검색
-        const historyKeys = sortedKeys.slice(0, 15);
-        const historyValues = await redis.mget(historyKeys);
-        let foundMemory = null;
-        const upcomingEventLower = contextEvents.toLowerCase();
-
-        // 2-1. 키워드 매칭 우선 기법 (캘린더 키워드가 과거 일기에 있는지 스캔)
-        for (let i = 3; i < historyValues.length; i++) {
-            if (!historyValues[i]) continue;
+    // 2. 날씨 및 뉴스 비동기 처리 Promise 정의 (Supabase 프로필 조회를 내포)
+    const weatherNewsPromise = (async () => {
+        let region = '서울';
+        let newsCategories = ['business'];
+        if (regionOverride) {
+            region = regionOverride;
+        } else {
             try {
-                const item = JSON.parse(historyValues[i]);
-                if (item.content && item.content.startsWith('e2e:')) continue; // Skip encrypted
-                const plainContent = item.content || '';
-                if (!plainContent || plainContent.length < 10) continue;
-
-                const words = upcomingEventLower.match(/[가-힣a-zA-Z0-9]{2,}/g) || [];
-                const matchedWord = words.find(w => w !== '일정' && w !== '제목' && w !== '시간' && w !== '생일' && w !== '회의' && plainContent.toLowerCase().includes(w));
-
-                if (matchedWord) {
-                      const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-                    foundMemory = {
-                        date: dateStr,
-                        content: plainContent,
-                        emotion: item.emotion || '평온',
-                        type: 'keyword',
-                        keyword: matchedWord
-                    };
-                    break;
+                const client = supabaseAdmin || supabase;
+                const { data: profile } = await client
+                    .from('profiles')
+                    .select('weather_region, news_categories')
+                    .eq('id', userId)
+                    .maybeSingle();
+                
+                if (profile?.weather_region) {
+                    region = profile.weather_region;
                 }
-            } catch (e) {}
+                if (profile?.news_categories && profile.news_categories.length > 0) {
+                    newsCategories = profile.news_categories;
+                }
+            } catch (e) {
+                console.error('Briefing profile fetch failed, fallback to defaults:', e.message);
+            }
         }
 
-        // 2-2. 차선책: 감정이 매우 긍정적이었던 과거 다이어리 기억 소환
-        if (!foundMemory) {
+        let weatherStr = '날씨 정보 조회 불가';
+        let newsStr = '주요 뉴스 헤드라인 정보 없음';
+
+        const weatherPromise = region === 'off'
+            ? Promise.resolve(null)
+            : getLiveWeather(region);
+
+        const [weatherRes, newsRes] = await Promise.allSettled([
+            weatherPromise,
+            getNewsHeadlines(newsCategories)
+        ]);
+
+        if (region === 'off') {
+            weatherStr = '날씨 안내 비활성화됨';
+        } else if (weatherRes.status === 'fulfilled' && weatherRes.value) {
+            const w = weatherRes.value;
+            weatherStr = `[${w.region} 날씨] 상태: ${w.sky}, 기온: ${w.temp}℃, 강수 확률: ${w.rainProb}%, 강수 형태: ${w.rainType}`;
+        }
+        
+        if (newsRes.status === 'fulfilled' && newsRes.value && newsRes.value.length > 0) {
+            newsStr = newsRes.value.map((title, idx) => `${idx + 1}. ${title}`).join('\n');
+        }
+
+        return { weatherStr, newsStr };
+    })();
+
+    // 3. 일기 데이터 조회 및 과거 회상 매칭 Promise 정의 (구글 일정이 완료되어야 하므로 contextEventsPromise 대입)
+    const diariesPromise = (async () => {
+        const pattern = `user:${userId}:diary-*`;
+        const keys = await scanRedisKeys(pattern);
+        let recentDiaries = '일기 기록 없음';
+        let reminiscenceMemory = '특별한 과거 회상 없음';
+
+        if (keys.length > 0) {
+            const sortedKeys = keys.sort().reverse();
+            
+            // 1. 최근 3일의 일기 데이터 요약 (암호화되지 않은 것만 요약)
+            const latestKeys = sortedKeys.slice(0, 3);
+            const values = await redis.mget(latestKeys);
+            recentDiaries = values
+                .filter(Boolean)
+                .map((value) => {
+                    try {
+                        const item = JSON.parse(value);
+                        if (item.content && item.content.startsWith('e2e:')) {
+                            return ''; // E2E 암호화된 일기는 백엔드에서 복호화하지 않고 생략
+                        }
+                        const dateStr = new Date(item.createdAt || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+                        return `[일기 작성일: ${dateStr}]\n내용: ${item.content}`;
+                    } catch {
+                        return '';
+                    }
+                })
+                .filter(Boolean)
+                .join('\n---\n') || '일기 기록 없음';
+
+            // 2. [과거 회상 엔진] 일정이나 중요 키워드와 연계된 15개 이전 일기 검색
+            const historyKeys = sortedKeys.slice(0, 15);
+            const historyValues = await redis.mget(historyKeys);
+            let foundMemory = null;
+            
+            // 구글 캘린더 일정이 조회 완료되면 매칭 시작
+            const contextEvents = await contextEventsPromise;
+            const upcomingEventLower = contextEvents.toLowerCase();
+
+            // 2-1. 키워드 매칭 우선 기법 (캘린더 키워드가 과거 일기에 있는지 스캔)
             for (let i = 3; i < historyValues.length; i++) {
                 if (!historyValues[i]) continue;
                 try {
@@ -196,29 +183,74 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
                     const plainContent = item.content || '';
                     if (!plainContent || plainContent.length < 10) continue;
 
-                    const emo = item.emotion || '';
-                    if (emo.includes('행복') || emo.includes('기쁨') || emo.includes('설렘') || emo.includes('보람') || emo.includes('🥰') || emo.includes('😊')) {
+                    const words = upcomingEventLower.match(/[가-힣a-zA-Z0-9]{2,}/g) || [];
+                    const matchedWord = words.find(w => w !== '일정' && w !== '제목' && w !== '시간' && w !== '생일' && w !== '회의' && plainContent.toLowerCase().includes(w));
+
+                    if (matchedWord) {
                         const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
                         foundMemory = {
                             date: dateStr,
                             content: plainContent,
-                            emotion: emo,
-                            type: 'happy'
+                            emotion: item.emotion || '평온',
+                            type: 'keyword',
+                            keyword: matchedWord
                         };
                         break;
                     }
                 } catch (e) {}
             }
-        }
 
-        if (foundMemory) {
-            if (foundMemory.type === 'keyword') {
-                reminiscenceMemory = `[${foundMemory.date}의 추억 (다가올 일정 관련 단어 '${foundMemory.keyword}' 연계)]\n당시 감정 상태: ${foundMemory.emotion}\n내용: ${foundMemory.content}`;
-            } else {
-                reminiscenceMemory = `[${foundMemory.date}의 눈부셨던 과거의 기록 (당시 감정: ${foundMemory.emotion})]\n내용: ${foundMemory.content}`;
+            // 2-2. 차선책: 감정이 매우 긍정적이었던 과거 다이어리 기억 소환
+            if (!foundMemory) {
+                for (let i = 3; i < historyValues.length; i++) {
+                    if (!historyValues[i]) continue;
+                    try {
+                        const item = JSON.parse(historyValues[i]);
+                        if (item.content && item.content.startsWith('e2e:')) continue; // Skip encrypted
+                        const plainContent = item.content || '';
+                        if (!plainContent || plainContent.length < 10) continue;
+
+                        const emo = item.emotion || '';
+                        if (emo.includes('행복') || emo.includes('기쁨') || emo.includes('설렘') || emo.includes('보람') || emo.includes('🥰') || emo.includes('😊')) {
+                            const dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+                            foundMemory = {
+                                date: dateStr,
+                                content: plainContent,
+                                emotion: emo,
+                                type: 'happy'
+                            };
+                            break;
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            if (foundMemory) {
+                if (foundMemory.type === 'keyword') {
+                    reminiscenceMemory = `[${foundMemory.date}의 추억 (다가올 일정 관련 단어 '${foundMemory.keyword}' 연계)]\n당시 감정 상태: ${foundMemory.emotion}\n내용: ${foundMemory.content}`;
+                } else {
+                    reminiscenceMemory = `[${foundMemory.date}의 눈부셨던 과거의 기록 (당시 감정: ${foundMemory.emotion})]\n내용: ${foundMemory.content}`;
+                }
             }
         }
-    }
+
+        return { recentDiaries, reminiscenceMemory };
+    })();
+
+    // 4. 모든 핵심 데이터 가져오기 병렬 대기
+    const [
+        contextEvents,
+        { weatherStr, newsStr },
+        { recentDiaries: rawRecentDiaries, reminiscenceMemory },
+        storedNickname
+    ] = await Promise.all([
+        contextEventsPromise,
+        weatherNewsPromise,
+        diariesPromise,
+        redis.get(nicknameKey)
+    ]);
+
+    let recentDiaries = rawRecentDiaries;
 
     // 3. 클라이언트 전송 컨텍스트 병합 (사용자 동의 시)
     if (clientDiaries.length > 0 && consent) {
@@ -233,13 +265,9 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
         ].filter(Boolean).join('\n---\n') || '일기 기록 없음';
     }
 
-    const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-    
-    // 사용자 호칭 조회 및 중복 '님' 제거 정제
-    const nicknameKey = `user:${userId}:nickname`;
-    const storedNickname = await redis.get(nicknameKey);
     const rawNickname = storedNickname || '사용자';
     const userNickname = rawNickname.endsWith('님') ? rawNickname.slice(0, -1) : rawNickname;
+
 
     const briefingPrompt = `
 너는 사용자의 하루를 책임지는 완벽하고 꼼꼼한 감성 수석 비서다. 아래 데이터를 참고하여 품격 있고 깊이감 있는 오늘의 데일리 브리핑을 작성하라.
@@ -272,8 +300,8 @@ ${reminiscenceMemory}
 
     // 성공적인 브리핑 생성 시 Redis 캐시 저장 (E2E 암호화가 아닌 경우에만)
     if (clientDiaries.length === 0 && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        const isFallback = briefing.includes('API 할당량 초과');
-        const cacheTTL = isFallback ? 15 : 300;
+        const isFallback = briefing.includes('API 할당량 초과') || briefing.includes('바쁘네요') || briefing.includes('준비하지 못했습니다');
+        const cacheTTL = isFallback ? 15 : 3600;
         await redis.set(cacheKey, briefing, 'EX', cacheTTL);
     }
 
@@ -329,10 +357,10 @@ module.exports = async (req, res) => {
         const briefing = await generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email);
         return res.json({ success: true, briefing });
     } catch (error) {
-        console.error('Briefing Error:', error.message);
+        console.error('Briefing Error:', error?.message || error);
         return res.json({
             success: true,
-            briefing: `비서가 지금 조금 바쁘네요. (원인: ${error.message}) 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩`
+            briefing: `비서가 지금 조금 바쁘네요. (원인: ${error?.message || error}) 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩`
         });
     }
 };

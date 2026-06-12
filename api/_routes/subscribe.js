@@ -84,6 +84,13 @@ module.exports = async (req, res) => {
                 }
             }
 
+            // 설정 변경 시 데일리 브리핑 캐시 초기화
+            try {
+                await redis.del(`user:${user.id}:briefing-cache`);
+            } catch (cacheErr) {
+                console.error('Failed to clear briefing cache on settings change:', cacheErr);
+            }
+
             const pushEnabled = !!process.env.VAPID_PUBLIC_KEY && !!process.env.VAPID_PRIVATE_KEY;
             return res.json({ success: true, pushEnabled });
         }

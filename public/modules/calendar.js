@@ -35,6 +35,7 @@ let initialized = false;
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-indexed
 let calendarEvents = [];
+let selectedDateStr = null;
 
 window.v2TaskEditTrigger = function(id) {
     const task = calendarEvents.find(t => t.id === id);
@@ -554,9 +555,11 @@ export async function loadCalendar(forceRefresh = false) {
         renderCustomGrid();
         renderV2TaskList();
         
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        openDayView(todayStr);
+        if (!selectedDateStr) {
+            const today = new Date();
+            selectedDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
+        openDayView(selectedDateStr);
     } catch (e) {
         console.error(e);
         container.innerHTML = `<div style="grid-column: span 7; text-align: center; padding: 40px; color: #ff4d4d;">캘린더 로드 실패: ${e.message}</div>`;
@@ -579,22 +582,32 @@ function renderCustomGrid() {
 
     const prevMonthLastDate = new Date(currentYear, currentMonth, 0).getDate();
 
+    // 1. 이전 달 날짜들 렌더링
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
         const prevDayNum = prevMonthLastDate - i;
         const cell = document.createElement('div');
-        cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer';
-        cell.innerHTML = prevDayNum;
         const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
-        cell.addEventListener('click', () => openDayView(dateStr));
+        
+        let selectedClass = '';
+        if (dateStr === selectedDateStr) {
+            selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
+        }
+        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer${selectedClass}`;
+        cell.innerHTML = prevDayNum;
+        cell.addEventListener('click', () => {
+            selectedDateStr = dateStr;
+            openDayView(dateStr);
+            renderCustomGrid();
+        });
         grid.appendChild(cell);
     }
 
+    // 2. 이번 달 날짜들 렌더링
     for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const cellDate = new Date(currentYear, currentMonth, day);
         
         const cell = document.createElement('div');
-        cell.className = 'h-10 flex flex-col items-center justify-center relative cursor-pointer text-label-md';
         
         const today = new Date();
         const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
@@ -621,8 +634,13 @@ function renderCustomGrid() {
             dotsHTML += `</div>`;
         }
         
+        let activeBorder = '';
+        if (dateStr === selectedDateStr) {
+            activeBorder = ' border-2 border-primary rounded-lg bg-surface-container';
+        }
+
         if (isToday) {
-            cell.className = 'h-10 flex flex-col items-center justify-center text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30';
+            cell.className = `h-10 flex flex-col items-center justify-center text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30${activeBorder}`;
             cell.innerHTML = `
                 ${day}
                 <div class="absolute inset-0 flex items-center justify-center -z-10">
@@ -631,29 +649,44 @@ function renderCustomGrid() {
                 ${dotsHTML}
             `;
         } else {
+            let colorClass = 'text-on-surface';
             if (cellDate.getDay() === 0) {
-                cell.className = 'h-10 flex flex-col items-center justify-center text-error text-label-md relative';
+                colorClass = 'text-error';
             } else if (cellDate.getDay() === 6) {
-                cell.className = 'h-10 flex flex-col items-center justify-center text-primary text-label-md relative';
-            } else {
-                cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface text-label-md relative';
+                colorClass = 'text-primary';
             }
+            
+            cell.className = `h-10 flex flex-col items-center justify-center relative cursor-pointer text-label-md ${colorClass}${activeBorder}`;
             cell.innerHTML = `${day}${dotsHTML}`;
         }
         
-        cell.addEventListener('click', () => openDayView(dateStr));
+        cell.addEventListener('click', () => {
+            selectedDateStr = dateStr;
+            openDayView(dateStr);
+            renderCustomGrid();
+        });
         grid.appendChild(cell);
     }
 
+    // 3. 다음 달 날짜들 렌더링
     const totalRendered = startDayOfWeek + totalDays;
     const remaining = (totalRendered % 7 === 0) ? 0 : 7 - (totalRendered % 7);
     for (let i = 1; i <= remaining; i++) {
         const cell = document.createElement('div');
-        cell.className = 'h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer';
+        const dateStr = `${currentMonth === 11 ? currentYear + 1 : currentYear}-${String(currentMonth === 11 ? 1 : currentMonth + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        
+        let selectedClass = '';
+        if (dateStr === selectedDateStr) {
+            selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
+        }
+        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer${selectedClass}`;
         cell.innerHTML = i;
         
-        const dateStr = `${currentMonth === 11 ? currentYear + 1 : currentYear}-${String(currentMonth === 11 ? 1 : currentMonth + 2).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        cell.addEventListener('click', () => openDayView(dateStr));
+        cell.addEventListener('click', () => {
+            selectedDateStr = dateStr;
+            openDayView(dateStr);
+            renderCustomGrid();
+        });
         grid.appendChild(cell);
     }
 }
