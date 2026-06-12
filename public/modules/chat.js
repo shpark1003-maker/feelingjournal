@@ -488,7 +488,7 @@ export function setupChatUI() {
     bindSortChips('friend-sort-options-v2');
 
     // [NEW] HTML onclick 전면 제거에 따른 이벤트 위임(Event Delegation)
-    document.getElementById('chat-view')?.addEventListener('click', async (e) => {
+    document.addEventListener('click', async (e) => {
         const target = e.target.closest('[data-action]');
         if (!target) return;
 
