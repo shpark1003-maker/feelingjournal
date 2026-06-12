@@ -29,20 +29,19 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
     }
 
     // 서버 시간대(UTC 등)와 관계없이 KST(한국 표준시, UTC+9) 기준으로 정확한 날짜 계산
-    const kstOffset = 9 * 60 * 60 * 1000;
-    const nowKST = new Date(Date.now() + kstOffset);
+    const nowKST = new Date();
     
     // KST 기준 어제 00:00:00
-    const yesterdayKST = new Date(nowKST);
+    const yesterdayKST = new Date(nowKST.getTime() + 9 * 60 * 60 * 1000);
     yesterdayKST.setDate(yesterdayKST.getDate() - 1);
     yesterdayKST.setUTCHours(0, 0, 0, 0);
-    const yesterday = new Date(yesterdayKST.getTime() - kstOffset);
+    const yesterday = new Date(yesterdayKST.getTime() - 9 * 60 * 60 * 1000);
 
     // KST 기준 내일 23:59:59
-    const tomorrowKST = new Date(nowKST);
+    const tomorrowKST = new Date(nowKST.getTime() + 9 * 60 * 60 * 1000);
     tomorrowKST.setDate(tomorrowKST.getDate() + 1);
     tomorrowKST.setUTCHours(23, 59, 59, 999);
-    const tomorrow = new Date(tomorrowKST.getTime() - kstOffset);
+    const tomorrow = new Date(tomorrowKST.getTime() - 9 * 60 * 60 * 1000);
 
     const currentTimeStr = nowKST.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
     const nicknameKey = `user:${userId}:nickname`;
