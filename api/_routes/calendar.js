@@ -273,6 +273,47 @@ module.exports = async (req, res) => {
             return res.json({ success: true });
         }
 
+        // Handle PATCH (Update Event)
+        if (req.method === 'PATCH') {
+            const { id } = req.query;
+            const { summary, start, end, description } = req.body;
+            if (!id) return res.status(400).json({ error: 'Missing event id' });
+            if (!summary || !start || !end) {
+                return res.status(400).json({ error: 'Missing summary, start, or end time' });
+            }
+
+            if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+                return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
+            }
+
+            const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(id)}`;
+            const updateRes = await fetchWithTimeout(calendarUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${providerToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    summary,
+                    description: description || '',
+                    start: { dateTime: new Date(start).toISOString() },
+                    end: { dateTime: new Date(end).toISOString() }
+                }),
+                failFast: true
+            });
+
+            const updateData = await updateRes.json();
+            if (updateData.error) {
+                return res.status(400).json({ error: updateData.error.message || 'Failed to update event' });
+            }
+
+            // Clear cache
+            const cacheKey = `user:${user.id}:calendar-advice-cache`;
+            await redis.del(cacheKey);
+
+            return res.json({ success: true, event: updateData });
+        }
+
         // Handle GET (Load Calendar)
         let googleEvents = [];
         let isUnlinked = false;
