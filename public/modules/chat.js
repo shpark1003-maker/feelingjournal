@@ -985,6 +985,60 @@ export async function checkFriendSos() {
 
         list.innerHTML = htmlContent;
     }
+
+    // [NEW] Chats Tab (chat-room-list) Dynamic Rendering
+    const chatRoomList = document.getElementById('chat-room-list');
+    if (chatRoomList) {
+        const isAiActive = store.currentRoomId && !friends.some(f => f.id === store.currentRoomId);
+        const aiAvatarUrl = store.currentAvatarUrl || './angel_mascot.png';
+        const aiName = store.currentAvatarName || '원이';
+
+        // Render AI chat room item
+        let roomsHtml = `
+        <div data-action="open-chat-ai" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border ${isAiActive ? 'border-primary bg-white/70' : 'border-transparent'} hover:border-primary-container/30">
+            <img class="w-12 h-12 rounded-full object-cover" src="${aiAvatarUrl}" alt="AI"/>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-baseline">
+                    <h3 class="font-bold truncate text-primary">✨ ${aiName}와 대화</h3>
+                    <span class="text-[10px] text-on-surface-variant">실시간</span>
+                </div>
+                <p class="text-[12px] text-on-surface-variant truncate">무엇이든 이야기해 주세요. 든든한 동반자가 되어 드릴게요.</p>
+            </div>
+        </div>
+        `;
+
+        // Render other friend chat rooms
+        roomsHtml += friends.map(f => {
+            const isSos = data.sosList?.some(s => s.id === f.id);
+            const isRoomActive = store.currentRoomId === f.id;
+            const onlineDot = f.is_online
+                ? `<span style="display:inline-block; width:6px; height:6px; background:#2ed573; border-radius:50%; margin-left:4px; box-shadow: 0 0 6px #2ed573;"></span>`
+                : `<span style="display:inline-block; width:6px; height:6px; background:#a4b0be; border-radius:50%; margin-left:4px;"></span>`;
+
+            return `
+            <div data-action="open-chat-friend" data-id="${f.id}" data-nickname="${f.nickname}" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border ${isRoomActive ? 'border-primary bg-white/70' : 'border-transparent'} hover:border-primary-container/30">
+                <div style="background:#8b8273; color:white; font-weight:bold; display:flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; flex-shrink:0; font-size:1.1rem; border:2px solid #5d574d;">
+                    ${f.nickname?.[0] || '👤'}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline">
+                        <h3 class="font-bold truncate text-on-surface" style="display:flex; align-items:center; gap:4px;">
+                            <span>${f.nickname || '익명'}</span>
+                            ${onlineDot}
+                        </h3>
+                        <span class="text-[10px] text-on-surface-variant">${f.my_stealth ? '🤫 스텔스' : '1촌'}</span>
+                    </div>
+                    <p class="text-[12px] text-on-surface-variant truncate" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>상태: ${f.current_emotion || '평온'}</span>
+                        ${isSos ? '<span style="background:#ff4757; color:white; font-size:8px; padding:1px 4px; border-radius:3px; font-weight:bold;">위로 필요</span>' : ''}
+                    </p>
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        chatRoomList.innerHTML = roomsHtml;
+    }
 }
 
 // 1촌 소셜 설정 및 전역 제어 함수 바인딩
