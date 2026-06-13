@@ -3078,6 +3078,37 @@ body {
     min-width: 120px;
 }
 
+#bottom-nav .tab-btn {
+    min-width: 0 !important;
+}
+
+#bottom-nav .tab-btn,
+.ghibli-theme #bottom-nav .tab-btn {
+    width: 25% !important;
+    max-width: 25% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 2px !important;
+    font-size: 0.7rem !important;
+    gap: 2px !important;
+    text-align: center !important;
+    border-radius: 12px !important;
+}
+
+#bottom-nav .tab-btn span:not(.material-symbols-outlined),
+.ghibli-theme #bottom-nav .tab-btn span:not(.material-symbols-outlined) {
+    font-size: 0.7rem !important;
+}
+
+#bottom-nav .tab-btn .material-symbols-outlined,
+.ghibli-theme #bottom-nav .tab-btn .material-symbols-outlined {
+    font-size: 1.3rem !important;
+    margin-bottom: 2px !important;
+}
+
 .chat-
 
 @media (max-width: 768px) {

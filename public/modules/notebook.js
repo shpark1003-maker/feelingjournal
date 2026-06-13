@@ -477,7 +477,7 @@ export function setupNotebooksAndPages() {
     // 4. 사이드바 Resizers 이벤트 바인딩
     setupResizers();
     
-    // 5. 기억 조각 직접 업로드 초기화
+    // 5. 기억 편린 직접 업로드 초기화
     setupDirectFragmentUpload();
 }
 
@@ -617,7 +617,7 @@ function renderV2MemoryFragments(allPages) {
     const fullGalleryGrid = document.getElementById('v2-full-gallery-grid');
     if (fullGalleryGrid) {
         if (fragments.length === 0) {
-            fullGalleryGrid.innerHTML = '<p class="text-on-surface-variant font-label-sm col-span-2 md:col-span-3 text-center py-10">보관된 조각이 아직 없습니다.</p>';
+            fullGalleryGrid.innerHTML = '<p class="text-on-surface-variant font-label-sm col-span-2 md:col-span-3 text-center py-10">보관된 편린이 아직 없습니다.</p>';
         } else {
             fullGalleryGrid.innerHTML = fragments.map(f => `
             <div class="photo-card full-memory-item cursor-pointer" data-id="${f.id}">
@@ -1050,7 +1050,7 @@ export function setupDirectFragmentUpload() {
             const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             
             // Format richContent to include image and short description
-            const title = `기억 조각 - ${todayStr}`;
+            const title = `기억 편린 - ${todayStr}`;
             const richContent = `<p><img src="${base64Image}"></p><p>${description || '설명이 없습니다.'}</p>`;
             
             const res = await fetch(`${API_URL}/analyze`, {
@@ -1070,7 +1070,7 @@ export function setupDirectFragmentUpload() {
 
             const data = await res.json();
             if (data.success) {
-                alert('기억 조각이 성공적으로 등록되었습니다.');
+                alert('기억 편린이 성공적으로 등록되었습니다.');
                 closeModal();
                 // Reload Notebooks list and gallery fragments
                 await loadNotebooks();
