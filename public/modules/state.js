@@ -89,6 +89,8 @@ export async function initState() {
     }
 }
 
+import { registerDailyBriefingPush } from './pushClient.js?v=5.3.0';
+
 // 6. 설정 업데이트 및 Rollback 트랜잭션 함수
 export async function updateSettings(newSettings) {
     const prevSettings = typeof structuredClone === 'function'
@@ -100,6 +102,21 @@ export async function updateSettings(newSettings) {
     try {
         const token = await store.getSessionToken();
         if (!token) throw new Error('No user session token found');
+
+        // 푸시 토큰 등록 시도 (VAPID 키 조회 후 권한 요청 및 SW 구독 생성)
+        let subscription = null;
+        try {
+            const getRes = await fetch(`${API_URL}/subscribe`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const getData = await getRes.json();
+            if (getData.success && getData.pushEnabled && getData.vapidPublicKey) {
+                // 사용자가 알림 권한을 승인한 경우 실제 구독 객체를 반환받고, 거부하거나 오류 시 null을 반환
+                subscription = await registerDailyBriefingPush(getData.vapidPublicKey);
+            }
+        } catch (pushErr) {
+            console.warn('[STATE] Push subscription registration bypassed:', pushErr.message);
+        }
 
         // 서버 전송을 위해 중첩 settings 객체를 백엔드가 수용 가능한 단층 구조로 평탄화(Flatten)
         const flatSettings = {
@@ -121,12 +138,13 @@ export async function updateSettings(newSettings) {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                subscription: null,
+                subscription, // 생성된 실제 구독 객체 (권한 거부 시 null)
                 settings: flatSettings
             })
         });
 
         const data = await res.json();
+
         if (!data.success) {
             throw new Error(data.error || 'Server rejected settings update');
         }

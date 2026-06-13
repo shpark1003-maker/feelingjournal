@@ -14,7 +14,6 @@ const persona = require('./_routes/persona');
 const presence = require('./_routes/presence');
 const push = require('./_routes/push');
 const scrap = require('./_routes/scrap');
-const subscribe = require('./_routes/subscribe');
 
 module.exports = async (req, res) => {
     // 민감 정보 로그 마스킹 처리 (Zero-Knowledge 보안성 확보)

@@ -1,26 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const webpush = require('web-push');
 
 const { 
     redis, 
     verifyUser, 
     sendError, 
-    pushEnabled, 
-    scanRedisKeys, 
-    fetchWithTimeout,
     supabase,
     supabaseAdmin
 } = require('./shared');
 
-// [NEW] 1. 푸시 알림 및 브리핑 설정 정보 조회 엔드포인트
+const pushRepository = require('../_repositories/pushRepository');
+const pushService = require('../_services/pushService');
+
+// 1. 푸시 알림 및 브리핑 설정 정보 조회 엔드포인트
 router.get('/subscribe', verifyUser, async (req, res) => {
     try {
         const user = req.user;
-        const subKey = `user:${user.id}:push-config`;
-        const configRaw = await redis.get(subKey);
-        
-        let config = configRaw ? JSON.parse(configRaw) : null;
+        const config = await pushRepository.getUserSubscriptions(user.id);
         
         // Redis 설정이 없거나 신규 시간/지역 정보가 없으면 Supabase에서 복구 및 초기화
         if (!config || !config.settings || !config.settings.briefingTime) {
@@ -31,29 +27,24 @@ router.get('/subscribe', verifyUser, async (req, res) => {
                 .eq('id', user.id)
                 .maybeSingle();
             
-            const settings = {
+            config.settings = {
                 alarm60: config?.settings?.alarm60 ?? false,
                 alarm30: config?.settings?.alarm30 ?? true,
                 alarm10: config?.settings?.alarm10 ?? true,
                 briefingTime: profile?.briefing_time || '08:00',
                 weatherRegion: profile?.weather_region || '서울'
             };
-            
-            config = {
-                subscription: config?.subscription || null,
-                settings,
-                providerToken: config?.providerToken || '',
-                email: user.email
-            };
+            config.email = user.email;
             
             // Redis 캐시 갱신
-            await redis.set(subKey, JSON.stringify(config));
+            await pushRepository.saveUserSubscriptions(user.id, config);
         }
         
         return res.json({
             success: true,
             config,
-            pushEnabled
+            pushEnabled: pushService.isPushEnabled(),
+            vapidPublicKey: pushService.getVapidPublicKey()
         });
     } catch (error) {
         console.error('Get Subscription Error:', error);
@@ -72,17 +63,13 @@ router.post('/subscribe', verifyUser, async (req, res) => {
             return sendError(res, 400, '알림 설정이 필요합니다.');
         }
 
-        const subKey = `user:${user.id}:push-config`;
-
-        // Redis 저장
-        await redis.set(
-            subKey,
-            JSON.stringify({
-                subscription,
-                settings,
-                providerToken,
-                email: user.email
-            })
+        // Upsert를 통해 다중 기기/브라우저 구독 정보가 덮어씌워지지 않고 중복 없이 축적되도록 설정
+        const config = await pushRepository.upsertSubscription(
+            user.id,
+            subscription,
+            settings,
+            user.email,
+            providerToken
         );
 
         // Supabase Profiles 테이블 동기화 (예약 발송 시간, 기상 정보 설정 지역)
@@ -101,7 +88,7 @@ router.post('/subscribe', verifyUser, async (req, res) => {
 
         return res.json({
             success: true,
-            pushEnabled
+            pushEnabled: pushService.isPushEnabled()
         });
     } catch (error) {
         console.error('Subscription Error:', error);
@@ -109,7 +96,40 @@ router.post('/subscribe', verifyUser, async (req, res) => {
     }
 });
 
-// 2. 1촌 예약 메시지/선물 등록 엔드포인트
+// 3. 테스트 푸시 발송 엔드포인트
+router.post('/subscribe/test', verifyUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const config = await pushRepository.getUserSubscriptions(user.id);
+        
+        if (!config || !config.subscriptions || config.subscriptions.length === 0) {
+            return res.json({
+                success: false,
+                message: '등록된 푸시 알림 구독 정보가 없습니다. 설정을 먼저 저장하고 알림 권한을 승인해주세요.'
+            });
+        }
+
+        const payload = {
+            title: `🔔 테스트 푸시 알람`,
+            body: `테스트 알람이 정상 작동 중입니다! 수석 비서관 브리핑 수신 준비 완료.`
+        };
+
+        const successCount = await pushService.sendToUserSubscriptions(config, payload);
+        
+        // 만약 유효하지 않은 구독 정보가 지워진 경우 변경사항 반영
+        await pushRepository.saveUserSubscriptions(user.id, config);
+
+        return res.json({
+            success: true,
+            message: `테스트 푸시가 성공적으로 전송되었습니다. (성공 디바이스: ${successCount}개)`
+        });
+    } catch (error) {
+        console.error('Test Push Error:', error);
+        return sendError(res, 500, `테스트 푸시 전송 실패: ${error.message}`);
+    }
+});
+
+// 4. 1촌 예약 메시지/선물 등록 엔드포인트
 router.post('/schedule-message', verifyUser, async (req, res) => {
     try {
         const { toId, roomId, message, sendAt } = req.body;
@@ -153,9 +173,9 @@ router.post('/schedule-message', verifyUser, async (req, res) => {
     }
 });
 
-// 3. 백그라운드 푸시 알람 디스패처 기동 함수
+// 5. 백그라운드 푸시 알람 디스패처 기동 함수
 async function dispatchPushNotifications() {
-    if (!pushEnabled) {
+    if (!pushService.isPushEnabled()) {
         console.warn('--- [PUSH DISPATCHER] Push notifications disabled. Dispatch skipped. ---');
         return;
     }
@@ -163,7 +183,7 @@ async function dispatchPushNotifications() {
     const { generateBriefing } = require('./briefing');
     
     try {
-        // [💌 FEATURE C] 1촌 간의 예약 메시지 & 선물 발송 디스패처 (E2E 독립 및 푸시 구독 독립)
+        // [💌 FEATURE C] 1촌 간의 예약 메시지 & 선물 발송 디스패처
         const scheduledKeys = await scanRedisKeys('user:*:scheduled-msg:*');
         if (scheduledKeys.length > 0) {
             const nowTime = new Date();
@@ -196,18 +216,17 @@ async function dispatchPushNotifications() {
                             console.error('Failed to insert scheduled message:', dbError.message);
                         }
                         
-                        // 2. 수신자의 push-config 조회하여 Web Push 발송
-                        const subKey = `user:${item.toId}:push-config`;
-                        const subRaw = await redis.get(subKey);
-                        if (subRaw) {
-                            const parsedSub = JSON.parse(subRaw);
-                            if (parsedSub?.subscription) {
-                                const payload = JSON.stringify({
-                                    title: `💌 예약된 마음 배달 완료`,
-                                    body: item.message.length > 100 ? item.message.substring(0, 97) + '...' : item.message
-                                });
-                                await webpush.sendNotification(parsedSub.subscription, payload);
-                                console.log(`[Push Sent] Scheduled Message Push Sent successfully.`);
+                        // 2. 수신자의 push-subscriptions 조회하여 Web Push 발송
+                        const toUserConfig = await pushRepository.getUserSubscriptions(item.toId);
+                        if (toUserConfig && toUserConfig.subscriptions && toUserConfig.subscriptions.length > 0) {
+                            const payload = {
+                                title: `💌 예약된 마음 배달 완료`,
+                                body: item.message.length > 100 ? item.message.substring(0, 97) + '...' : item.message
+                            };
+                            const sent = await pushService.sendToUserSubscriptions(toUserConfig, payload);
+                            if (sent > 0) {
+                                console.log(`[Push Sent] Scheduled Message Push Sent successfully to ${sent} devices.`);
+                                await pushRepository.saveUserSubscriptions(item.toId, toUserConfig);
                             }
                         }
                         
@@ -220,8 +239,8 @@ async function dispatchPushNotifications() {
             }
         }
 
-        const keys = await scanRedisKeys('user:*:push-config');
-        if (keys.length === 0) return;
+        const usersList = await pushRepository.getAllUsersSubscriptions();
+        if (usersList.length === 0) return;
 
         const now = new Date();
         
@@ -239,28 +258,18 @@ async function dispatchPushNotifications() {
 
         const todayStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }).substring(0, 12).replace(/\s/g, '');
 
-        for (const key of keys) {
-            const data = await redis.get(key);
-            if (!data) continue;
-
-            let parsed;
-            try {
-                parsed = JSON.parse(data);
-            } catch {
-                continue;
-            }
-
-            const { subscription, settings, providerToken, email } = parsed;
-            if (!subscription || !settings) continue;
+        for (const { userId, config } of usersList) {
+            if (!config.settings) continue;
+            if (!config.subscriptions || config.subscriptions.length === 0) continue;
             
-            const userId = key.split(':')[1];
+            const { settings, providerToken, email } = config;
 
             // ----------------------------------------------------
             // [⏰ FEATURE A] 사용자가 지정한 아침 예약 브리핑 푸시 알림
             // ----------------------------------------------------
             const targetBriefingTime = settings.briefingTime || '08:00';
             if (currentHourMin === targetBriefingTime) {
-                const briefingSentKey = `push:${key}:briefing_sent:${todayStr}`;
+                const briefingSentKey = `push:${userId}:briefing_sent:${todayStr}`;
                 const alreadyBriefed = await redis.get(briefingSentKey);
                 
                 if (!alreadyBriefed) {
@@ -276,13 +285,14 @@ async function dispatchPushNotifications() {
                             .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
                             .replace(/\*\*(.*?)\*\*/g, '$1');
                         
-                        const payload = JSON.stringify({
+                        const payload = {
                             title: `🎩 오늘의 수석 비서관 브리핑`,
                             body: cleanBriefing.length > 200 ? cleanBriefing.substring(0, 197) + '...' : cleanBriefing
-                        });
+                        };
 
-                        await webpush.sendNotification(subscription, payload);
-                        console.log(`[Push Sent] Daily Briefing To: ${email} successfully sent.`);
+                        const sent = await pushService.sendToUserSubscriptions(config, payload);
+                        console.log(`[Push Sent] Daily Briefing To: ${email} successfully sent to ${sent} devices.`);
+                        await pushRepository.saveUserSubscriptions(userId, config);
                     } catch (err) {
                         console.error(`[Push Sent Failed] Daily Briefing To: ${email}, Error:`, err.message);
                     }
@@ -292,7 +302,7 @@ async function dispatchPushNotifications() {
             // ----------------------------------------------------
             // [🔔 FEATURE B] 구글 캘린더 약속 일정 10분/30분/60분 전 푸시 알람
             // ----------------------------------------------------
-            if (providerToken && providerToken !== 'mock' && providerToken !== 'null') {
+            if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
                 const timeMin = now.toISOString();
                 const timeMax = new Date(now.getTime() + 65 * 60 * 1000).toISOString();
 
@@ -303,6 +313,7 @@ async function dispatchPushNotifications() {
                     '&singleEvents=true';
 
                 try {
+                    const { fetchWithTimeout } = require('./shared');
                     const calRes = await fetchWithTimeout(
                         calUrl,
                         {
@@ -326,24 +337,25 @@ async function dispatchPushNotifications() {
 
                             if (!shouldNotify) continue;
 
-                            const notifyKey = `push:${key}:${event.id}:${diffMin}`;
+                            const notifyKey = `push:${userId}:${event.id}:${diffMin}`;
                             const alreadySent = await redis.get(notifyKey);
                             if (alreadySent) continue;
 
                             await redis.set(notifyKey, '1', 'EX', 120);
 
-                            const payload = JSON.stringify({
+                            const payload = {
                                 title: `🔔 일정 알람 (${diffMin}분 전)`,
                                 body: `[${event.summary || '제목 없음'}] 일정이 곧 시작됩니다. 준비되셨나요?`
-                            });
+                            };
 
                             try {
-                                await webpush.sendNotification(subscription, payload);
+                                const sent = await pushService.sendToUserSubscriptions(config, payload);
                                 console.log(
-                                    `[Push Sent] To: ${email}, Event: ${event.summary}, Time: ${diffMin}m before`
+                                    `[Push Sent] To: ${email}, Event: ${event.summary}, Time: ${diffMin}m before on ${sent} devices`
                                 );
+                                await pushRepository.saveUserSubscriptions(userId, config);
                             } catch (error) {
-                                    console.error('Push Send Error:', error.message);
+                                console.error('Push Send Error:', error.message);
                             }
                         }
                     }
@@ -358,7 +370,7 @@ async function dispatchPushNotifications() {
 }
 
 function startPushDispatcher() {
-    if (!pushEnabled) {
+    if (!pushService.isPushEnabled()) {
         console.warn('--- [PUSH DISPATCHER] Push notifications disabled. Background worker skipped. ---');
         return;
     }
