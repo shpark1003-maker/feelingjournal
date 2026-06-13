@@ -63,6 +63,7 @@ export function setupEditor() {
     setupScrapLogic();
     setupWritingHelper();
     setupVoiceRecognition();
+    setupLocalUpload();
 }
 
 export async function analyzeDiary() {
@@ -816,5 +817,39 @@ export function setupVoiceRecognition() {
                 console.error(err);
             }
         }
+    });
+}
+
+export function setupLocalUpload() {
+    const uploadBtn = document.getElementById('local-upload-btn');
+    const fileInput = document.getElementById('editor-local-file-input');
+
+    if (!uploadBtn || !fileInput) return;
+
+    uploadBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('사진 크기는 최대 5MB를 초과할 수 없습니다.');
+            fileInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const imgUrl = event.target.result;
+            if (store.quillEditor) {
+                const range = store.quillEditor.getSelection(true);
+                store.quillEditor.insertEmbed(range.index, 'image', imgUrl);
+                store.quillEditor.setSelection(range.index + 1);
+            }
+            fileInput.value = ''; // Reset to allow same file selection
+        };
+        reader.readAsDataURL(file);
     });
 }
