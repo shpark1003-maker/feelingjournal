@@ -173,17 +173,25 @@ module.exports = async (req, res) => {
                     if (calResult.events && calResult.events.length > 0) {
                         googleEvents = calResult.events.map(item => {
                             const isShared = (item.organizer && item.organizer.email && item.organizer.email !== user.email) || (item.attendees && item.attendees.length > 1);
+                            const isTask = item.description?.includes('[Task]');
                             return {
                                 id: item.id,
                                 title: item.summary || '제목 없음',
                                 start: item.start?.dateTime || item.start?.date,
                                 end: item.end?.dateTime || item.end?.date,
                                 allDay: !item.start?.dateTime,
-                                type: isShared ? 'shared' : 'event',
-                                advice: isShared ? '공유된 일정입니다.' : '구글 캘린더 일정입니다.',
-                                backgroundColor: isShared ? 'rgba(251, 113, 133, 0.12)' : 'rgba(56, 189, 248, 0.12)',
-                                borderColor: isShared ? '#fb7185' : '#38bdf8',
-                                textColor: isShared ? '#e11d48' : '#0284c7'
+                                type: isShared ? 'shared' : (isTask ? 'task' : 'event'),
+                                advice: isShared ? '공유된 일정입니다.' : (isTask ? '과제(할 일) 일정입니다.' : '구글 캘린더 일정입니다.'),
+                                description: item.description || '',
+                                backgroundColor: isShared 
+                                    ? 'rgba(251, 113, 133, 0.12)' 
+                                    : (isTask ? 'rgba(129, 140, 248, 0.12)' : 'rgba(56, 189, 248, 0.12)'),
+                                borderColor: isShared 
+                                    ? '#fb7185' 
+                                    : (isTask ? '#818cf8' : '#38bdf8'),
+                                textColor: isShared 
+                                    ? '#e11d48' 
+                                    : (isTask ? '#4f46e5' : '#0284c7')
                             };
                         });
                     }
@@ -331,17 +339,25 @@ module.exports = async (req, res) => {
             if (calResult.events && calResult.events.length > 0) {
                 googleEvents = calResult.events.map(item => {
                     const isShared = (item.organizer && item.organizer.email && item.organizer.email !== user.email) || (item.attendees && item.attendees.length > 1);
+                    const isTask = item.description?.includes('[Task]');
                     return {
                         id: item.id,
                         title: item.summary || '제목 없음',
                         start: item.start?.dateTime || item.start?.date,
                         end: item.end?.dateTime || item.end?.date,
                         allDay: !item.start?.dateTime,
-                        type: isShared ? 'shared' : 'event',
-                        advice: isShared ? '공유된 일정입니다.' : '구글 캘린더 일정입니다.',
-                        backgroundColor: isShared ? 'rgba(251, 113, 133, 0.12)' : 'rgba(56, 189, 248, 0.12)',
-                        borderColor: isShared ? '#fb7185' : '#38bdf8',
-                        textColor: isShared ? '#e11d48' : '#0284c7'
+                        type: isShared ? 'shared' : (isTask ? 'task' : 'event'),
+                        advice: isShared ? '공유된 일정입니다.' : (isTask ? '과제(할 일) 일정입니다.' : '구글 캘린더 일정입니다.'),
+                        description: item.description || '',
+                        backgroundColor: isShared 
+                            ? 'rgba(251, 113, 133, 0.12)' 
+                            : (isTask ? 'rgba(129, 140, 248, 0.12)' : 'rgba(56, 189, 248, 0.12)'),
+                        borderColor: isShared 
+                            ? '#fb7185' 
+                            : (isTask ? '#818cf8' : '#38bdf8'),
+                        textColor: isShared 
+                            ? '#e11d48' 
+                            : (isTask ? '#4f46e5' : '#0284c7')
                     };
                 });
             }

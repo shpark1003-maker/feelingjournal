@@ -476,6 +476,9 @@ export function setupNotebooksAndPages() {
 
     // 4. 사이드바 Resizers 이벤트 바인딩
     setupResizers();
+    
+    // 5. 기억 조각 직접 업로드 초기화
+    setupDirectFragmentUpload();
 }
 
 function setupResizers() {
@@ -940,4 +943,146 @@ export async function deleteV2Page(pageId) {
         console.error('Failed to delete page:', err);
         alert('삭제 중 서버 통신 오류가 발생했습니다.');
     }
+}
+
+export function setupDirectFragmentUpload() {
+    const addBtn = document.getElementById('v2-direct-add-fragment-btn');
+    const scrim = document.getElementById('v2-fragment-scrim');
+    const container = document.getElementById('v2-fragment-upload-container');
+    const closeBtn = document.getElementById('v2-fragment-upload-close');
+    const saveBtn = document.getElementById('v2-fragment-upload-save');
+    const fileInput = document.getElementById('v2-fragment-file-input');
+    const placeholder = document.getElementById('v2-fragment-dropzone-placeholder');
+    const preview = document.getElementById('v2-fragment-preview');
+    const descTextarea = document.getElementById('v2-fragment-desc');
+    const notebookSelect = document.getElementById('v2-fragment-notebook-select');
+
+    if (!addBtn || !container) return;
+
+    let base64Image = null;
+
+    // Open Modal
+    addBtn.addEventListener('click', async () => {
+        // Reset form
+        base64Image = null;
+        if (fileInput) fileInput.value = '';
+        if (preview) {
+            preview.src = '';
+            preview.classList.add('hidden');
+        }
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (descTextarea) descTextarea.value = '';
+
+        // Populate notebook options
+        if (notebookSelect) {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/notebooks`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+                cache: 'no-store'
+            });
+            const data = await res.json();
+            const notebooks = (data.success && data.notebooks?.length > 0) ? data.notebooks : [{ id: 'nb-1', name: '내 일기장' }];
+            notebookSelect.innerHTML = notebooks.map(nb => `<option value="${nb.id}" ${nb.id === store.currentNotebookId ? 'selected' : ''}>${nb.name}</option>`).join('');
+        }
+
+        // Show Container
+        container.classList.remove('hidden');
+        scrim?.classList.remove('hidden');
+        setTimeout(() => {
+            scrim?.classList.remove('opacity-0');
+            scrim?.classList.add('opacity-100');
+            container.style.transform = 'translateY(0)';
+        }, 10);
+    });
+
+    // Close Modal
+    const closeModal = () => {
+        container.style.transform = 'translateY(100%)';
+        scrim?.classList.remove('opacity-100');
+        scrim?.classList.add('opacity-0');
+        setTimeout(() => {
+            container.classList.add('hidden');
+            scrim?.classList.add('hidden');
+        }, 400);
+    };
+
+    closeBtn?.addEventListener('click', closeModal);
+    scrim?.addEventListener('click', closeModal);
+
+    // File selection
+    fileInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('사진 크기는 최대 5MB를 초과할 수 없습니다.');
+            fileInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            base64Image = event.target.result;
+            if (preview) {
+                preview.src = base64Image;
+                preview.classList.remove('hidden');
+            }
+            if (placeholder) placeholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Save Fragment
+    saveBtn?.addEventListener('click', async () => {
+        if (!base64Image) {
+            alert('사진을 선택해 주세요.');
+            return;
+        }
+
+        const description = descTextarea ? descTextarea.value.trim() : '';
+        const notebookId = notebookSelect ? notebookSelect.value : 'nb-1';
+        
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner"></span> 저장 중...';
+
+        try {
+            const token = await store.getSessionToken();
+            const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Format richContent to include image and short description
+            const title = `기억 조각 - ${todayStr}`;
+            const richContent = `<p><img src="${base64Image}"></p><p>${description || '설명이 없습니다.'}</p>`;
+            
+            const res = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    content: description,
+                    richContent,
+                    title,
+                    notebookId,
+                    image: base64Image
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('기억 조각이 성공적으로 등록되었습니다.');
+                closeModal();
+                // Reload Notebooks list and gallery fragments
+                await loadNotebooks();
+            } else {
+                alert('저장 실패: ' + (data.error || '알 수 없는 오류'));
+            }
+        } catch (err) {
+            console.error('Failed to save fragment:', err);
+            alert('저장 중 오류가 발생했습니다.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '저장';
+        }
+    });
 }

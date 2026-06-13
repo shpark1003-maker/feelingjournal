@@ -1429,7 +1429,9 @@
 <h1 class="text-on-surface font-headline-sm text-[16px]">모든 조각들</h1>
 <p class="text-[10px] text-on-surface-variant/60 font-label-sm">나의 전체 기억 보관소</p>
 </div>
-<div class="w-10"></div> <!-- Empty div for flex centering -->
+<button class="flex items-center justify-center w-10 h-10 -mr-2 text-primary hover:bg-surface-container-high rounded-full transition-all" id="v2-direct-add-fragment-btn" title="조각 추가">
+<span class="material-symbols-outlined text-[22px]">add_a_photo</span>
+</button>
 </header>
 <!-- Gallery Content Area -->
 <main class="flex-1 overflow-y-auto custom-scrollbar p-4 max-w-[50rem] mx-auto w-full pb-20">
@@ -1458,6 +1460,51 @@
     });
 </script>
 </main>
+</div>
+
+
+<!-- Direct Photo/Fragment Upload Modal -->
+<div class="fixed inset-0 bg-on-surface/10 backdrop-blur-[4px] transition-opacity duration-300 z-[100] hidden opacity-0" id="v2-fragment-scrim"></div>
+<div class="fixed bottom-0 left-0 right-0 max-w-[37.5rem] mx-auto z-[101] transition-transform duration-500 bg-surface-container-lowest rounded-t-[2rem] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain paper-texture overflow-hidden translate-y-[100%] hidden" id="v2-fragment-upload-container">
+    <div class="flex justify-center py-3">
+        <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+    </div>
+    <header class="flex items-center justify-between px-5 pb-4 border-b border-outline-variant/10">
+        <button class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center active:scale-90 duration-200" id="v2-fragment-upload-close">
+            <span class="material-symbols-outlined text-on-surface-variant">close</span>
+        </button>
+        <h2 class="text-[16px] font-bold text-on-surface">기억 조각 추가</h2>
+        <button class="text-primary font-bold px-3 py-1.5 rounded-full hover:bg-primary/5 active:scale-95 transition-all text-sm" id="v2-fragment-upload-save">저장</button>
+    </header>
+    <div class="flex-1 overflow-y-auto px-5 space-y-6 py-6 pb-24 custom-scrollbar">
+        <!-- Image Selector -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold">사진 선택</label>
+            <div class="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/50 rounded-2xl p-6 bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer relative min-h-[160px]" id="v2-fragment-dropzone">
+                <input type="file" id="v2-fragment-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                <div class="flex flex-col items-center gap-2 text-center" id="v2-fragment-dropzone-placeholder">
+                    <span class="material-symbols-outlined text-[40px] text-primary">add_photo_alternate</span>
+                    <span class="font-label-sm text-on-surface-variant/80">클릭하여 사진을 올리세요</span>
+                    <span class="text-[10px] text-on-surface-variant/50">PNG, JPG (최대 5MB)</span>
+                </div>
+                <img id="v2-fragment-preview" class="hidden w-full max-h-[200px] object-contain rounded-lg shadow-sm">
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold" for="v2-fragment-desc">짧은 설명</label>
+            <textarea id="v2-fragment-desc" class="w-full bg-surface-container/50 rounded-xl border-0 focus:ring-1 focus:ring-primary p-3 placeholder:text-on-surface-variant/40 resize-none font-body-md" placeholder="사진에 담긴 기억이나 짧은 설명을 적어주세요..." rows="3"></textarea>
+        </div>
+
+        <!-- Notebook/Folder selection -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold" for="v2-fragment-notebook-select">저장할 일기장</label>
+            <select id="v2-fragment-notebook-select" class="w-full bg-surface-container/50 p-3 rounded-xl border border-outline-variant/10 focus:ring-1 focus:ring-primary font-body-md text-on-surface">
+                <!-- Dynamically populated -->
+            </select>
+        </div>
+    </div>
 </div>
 
 
