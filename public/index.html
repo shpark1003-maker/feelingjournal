@@ -6,8 +6,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="./style.css?v=5.5.2">
-<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.2">
+<link rel="stylesheet" href="./style.css?v=5.5.3">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.3">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -603,14 +603,14 @@
 
 
 <!-- Settings & Atelier View -->
-<div id="persona-view" class="tab-content w-full max-w-[50rem] mx-auto pt-6 pb-32 px-margin-mobile relative space-y-6">
+<div id="persona-view" class="tab-content w-full max-w-[50rem] mx-auto pt-6 pb-32 px-margin-mobile relative space-y-4">
     <div class="flex items-center gap-4 mb-6">
         <h1 class="font-headline-lg-mobile text-[1.625rem] font-bold text-primary tracking-tight">설정 및 아틀리에</h1>
     </div>
 
     <!-- User Profile Section -->
     <section>
-    <div class="bg-surface-container-low rounded-3xl p-6 custom-shadow relative overflow-hidden border border-white/40">
+    <div class="bg-surface-container-low rounded-2xl p-5 custom-shadow relative overflow-hidden border border-white/40">
     <div class="flex flex-col items-center gap-4">
     <div class="relative">
     <img id="user-profile-avatar" alt="User Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer" src="./angel_mascot.png">
@@ -639,7 +639,7 @@
 
     <!-- Integrations Section -->
     <section>
-    <div class="bg-surface-container-low rounded-3xl p-6 custom-shadow relative overflow-hidden border border-white/40">
+    <div class="bg-surface-container-low rounded-2xl p-5 custom-shadow relative overflow-hidden border border-white/40">
     <h3 class="font-headline-md text-headline-md text-primary mb-4 flex items-center gap-2">
         <span class="material-symbols-outlined">link</span>
         연동 서비스 관리
@@ -666,7 +666,7 @@
 
     <!-- Atelier Assistant Settings -->
     <section id="theme-settings-section">
-    <div class="bg-white/60 backdrop-blur-sm rounded-3xl p-6 custom-shadow border border-surface-variant/50">
+    <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/50">
     <div class="flex items-center gap-3 mb-6">
     <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">palette</span>
     <h3 class="font-headline-md text-headline-md text-primary">테마 설정</h3>
@@ -692,7 +692,7 @@
     </div>
     </div>
     </section><section id="ai-assistant-settings">
-    <div class="bg-white/60 backdrop-blur-sm rounded-3xl p-6 custom-shadow border border-surface-variant/50">
+    <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/50">
     <div class="flex items-center gap-3 mb-6">
     <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
     <h3 class="font-headline-md text-headline-md text-primary">아틀리에 어시스턴트</h3>
@@ -717,7 +717,7 @@
         </div>
         <div>
             <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">비서 이름</label>
-            <input id="ai-name" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" type="text" value="비서" placeholder="비서의 이름을 정해주세요">
+            <input id="ai-name" class="w-full bg-surface-container border-none rounded-xl p-3 focus:ring-2 focus:ring-primary-container text-body-md" type="text" value="비서" placeholder="비서의 이름을 정해주세요">
         </div>
     <div class="grid grid-cols-2 gap-4">
     <div>
@@ -732,7 +732,7 @@
     <div>
     <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">연령대</label>
     <div class="relative">
-    <select id="ai-age" class="w-full bg-surface-container border-none rounded-2xl p-4 pr-10 focus:ring-2 focus:ring-primary-container text-body-md appearance-none">
+    <select id="ai-age" class="w-full bg-surface-container border-none rounded-xl p-3 pr-10 focus:ring-2 focus:ring-primary-container text-body-md appearance-none">
         <option>10대</option>
         <option>20대</option>
         <option selected="">30대</option>
@@ -747,11 +747,11 @@
     </div>
     <div>
     <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">관계 및 역할 설정</label>
-    <input id="ai-relationship" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" type="text" placeholder="예: 엄하지만 다정하고 때로는 친구같은 수학교사" value="수석 비서">
+    <input id="ai-relationship" class="w-full bg-surface-container border-none rounded-xl p-3 focus:ring-2 focus:ring-primary-container text-body-md" type="text" placeholder="예: 엄하지만 다정하고 때로는 친구같은 수학교사" value="수석 비서">
     </div>
     <div>
         <label class="block text-on-surface-variant font-label-sm ml-1 mb-1">성격 및 지침</label>
-        <textarea id="ai-personality" class="w-full bg-surface-container border-none rounded-2xl p-4 focus:ring-2 focus:ring-primary-container text-body-md" placeholder="예: 다정하고 따뜻한 어조로 말해줘." rows="3"></textarea>
+        <textarea id="ai-personality" class="w-full bg-surface-container border-none rounded-xl p-3 focus:ring-2 focus:ring-primary-container text-body-md" placeholder="예: 다정하고 따뜻한 어조로 말해줘." rows="3"></textarea>
     </div>
     <div class="flex items-center justify-between bg-primary-container/10 p-4 rounded-2xl border border-primary-container/20">
     <div class="flex items-center gap-3 w-full mr-4">
@@ -792,7 +792,7 @@
     </section>
     <!-- AI Personality Learning Center -->
     <section>
-    <div class="bg-gradient-to-br from-secondary-container/20 to-surface-container rounded-3xl p-6 custom-shadow border-2 border-dashed border-secondary/20">
+    <div class="bg-gradient-to-br from-secondary-container/20 to-surface-container rounded-2xl p-5 custom-shadow border-2 border-dashed border-secondary/20">
     <div class="flex items-center justify-between mb-6">
     <h3 class="font-headline-md text-headline-md text-secondary flex items-center gap-2">
     <span class="material-symbols-outlined">psychology</span>
@@ -821,7 +821,7 @@
     </section>
     <!-- Briefing & Schedule Settings -->
     <section>
-    <div class="bg-surface-container-high rounded-3xl p-6 custom-shadow">
+    <div class="bg-surface-container-high rounded-2xl p-5 custom-shadow">
     <!-- Hidden compatibility fields for Module 6 -->
     <input type="time" id="briefing-time-input" class="hidden" value="08:00">
     <input type="radio" id="weather-on" name="weather-toggle" class="hidden" checked>
@@ -920,7 +920,7 @@
     </section>
     <!-- Safe Care Mode -->
     <section id="safe-care-settings">
-    <div class="bg-surface-container-highest rounded-3xl p-6 custom-shadow border-l-[6px] border-tertiary">
+    <div class="bg-surface-container-highest rounded-2xl p-5 custom-shadow border-l-[6px] border-tertiary">
     <div class="flex items-center gap-3 mb-6">
     <span class="material-symbols-outlined text-tertiary">health_and_safety</span>
     <h3 class="font-headline-md text-headline-md text-tertiary">안심 케어</h3><div class="relative inline-block w-12 h-6 ml-auto"><input checked="" class="toggle-checkbox hidden" id="care-mode-active" type="checkbox"><label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="care-mode-active"></label></div>
@@ -984,7 +984,7 @@
 
     <!-- AI Capabilities (API Integration Corner) -->
     <section id="api-integration-settings" class="mt-8">
-    <div class="bg-surface-container-highest rounded-3xl p-6 custom-shadow border-l-[6px] border-primary">
+    <div class="bg-surface-container-highest rounded-2xl p-5 custom-shadow border-l-[6px] border-primary">
     <div class="flex items-center gap-3 mb-6">
     <span class="material-symbols-outlined text-primary">extension</span>
     <h3 class="font-headline-md text-headline-md text-primary">AI 능력 확장 (API 연동)</h3>
@@ -1091,7 +1091,7 @@
 
     <!-- Privacy & Security FAQ Section -->
     <section id="privacy-policy-faq-section" class="mt-8">
-        <div class="bg-surface-container-highest rounded-3xl p-6 custom-shadow border-l-[6px] border-tertiary">
+        <div class="bg-surface-container-highest rounded-2xl p-5 custom-shadow border-l-[6px] border-tertiary">
             <div class="flex items-center gap-3 mb-6">
                 <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">security</span>
                 <h3 class="font-headline-md text-headline-md text-tertiary">개인정보 및 보안 FAQ</h3>
@@ -1973,7 +1973,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.5.2"></script>
+    <script type="module" src="/app.js?v=5.5.3"></script>
 
     <script>
 
