@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.9';
+import { store, API_URL, assertIds } from './state.js?v=5.5.0';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -1259,7 +1259,16 @@ export function setupGallerySharing() {
     const selectCountText = document.getElementById('v2-gallery-select-count');
     const cancelBtn = document.getElementById('v2-gallery-select-cancel-btn');
     const shareBtn = document.getElementById('v2-gallery-share-btn');
-    const deleteBtn = document.getElementById('v2-gallery-delete-btn');
+    let deleteBtn = document.getElementById('v2-gallery-delete-btn');
+
+    if (shareBtn && !deleteBtn) {
+        console.log("--- [DEBUG SELECTION] Delete button not found in HTML. Dynamically injecting fallback button.");
+        deleteBtn = document.createElement('button');
+        deleteBtn.id = 'v2-gallery-delete-btn';
+        deleteBtn.className = 'px-5 py-2 bg-error text-white hover:bg-red-700 active:scale-95 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 shadow-md opacity-50 pointer-events-none';
+        deleteBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">delete</span> 삭제하기';
+        shareBtn.parentNode.insertBefore(deleteBtn, shareBtn);
+    }
     
     const shareConfirmModal = document.getElementById('v2-share-confirm-modal');
     const shareConfirmScrim = document.getElementById('v2-share-confirm-scrim');
