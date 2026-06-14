@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.6';
+import { store, API_URL, assertIds } from './state.js?v=5.4.7';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -598,42 +598,52 @@ function renderV2MemoryFragments(allPages) {
         });
     }
 
-    // Initialize Swiper with a brief delay to ensure the parent container is fully visible and has layout dimensions
+    console.log(`--- [DEBUG SWIPER] Checking Swiper presence. typeof Swiper:`, typeof Swiper);
     if (typeof Swiper !== 'undefined') {
         setTimeout(() => {
+            console.log(`--- [DEBUG SWIPER] Initializing Swiper. Container:`, document.getElementById('memory-swiper'));
             if (window.memorySwiper) {
+                console.log(`--- [DEBUG SWIPER] Destroying existing Swiper instance.`);
                 window.memorySwiper.destroy(true, true);
             }
-            window.memorySwiper = new Swiper('#memory-swiper', {
-                effect: 'coverflow',
-                grabCursor: true,
-                centeredSlides: true,
-                slidesPerView: 'auto',
-                coverflowEffect: {
-                    rotate: 15,
-                    stretch: -100, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
-                    depth: 140,
-                    modifier: 1,
-                    slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
-                },
-                loop: false, // Disable loop to make Swiper coverflow calculations perfectly stable
-                slideToClickedSlide: true,
-                observer: true,
-                observeParents: true,
-                pagination: {
-                    el: '.swiper-pagination',
-                    dynamicBullets: true
-                },
-                initialSlide: Math.floor(recentFragments.length / 2) // Start at center
-            });
+            try {
+                window.memorySwiper = new Swiper('#memory-swiper', {
+                    effect: 'coverflow',
+                    grabCursor: true,
+                    centeredSlides: true,
+                    slidesPerView: 'auto',
+                    coverflowEffect: {
+                        rotate: 15,
+                        stretch: -100, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
+                        depth: 140,
+                        modifier: 1,
+                        slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
+                    },
+                    loop: false, // Disable loop to make Swiper coverflow calculations perfectly stable
+                    slideToClickedSlide: true,
+                    observer: true,
+                    observeParents: true,
+                    pagination: {
+                        el: '.swiper-pagination',
+                        dynamicBullets: true
+                    },
+                    initialSlide: Math.floor(recentFragments.length / 2) // Start at center
+                });
+                console.log(`--- [DEBUG SWIPER] Swiper successfully initialized. Instance:`, window.memorySwiper);
+            } catch (err) {
+                console.error(`--- [DEBUG SWIPER] Error during Swiper initialization:`, err);
+            }
 
             // Force recalculation of Swiper coordinates after rendering completes
             setTimeout(() => {
                 if (window.memorySwiper && typeof window.memorySwiper.update === 'function') {
+                    console.log(`--- [DEBUG SWIPER] Forcing Swiper update...`);
                     window.memorySwiper.update();
                 }
             }, 100);
         }, 50);
+    } else {
+        console.warn(`--- [DEBUG SWIPER] Swiper is NOT defined in global scope.`);
     }
 
     // Setup Filter Tabs
