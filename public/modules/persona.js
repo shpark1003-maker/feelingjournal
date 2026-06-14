@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.1';
+import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.5.2';
 
 export async function loadPersona() {
     assertIds('Persona', [
@@ -44,6 +44,13 @@ export async function loadPersona() {
         store.currentAvatarUrl = p.avatarUrl;
         renderPersonaAvatar(p);
     }
+    
+    // Sync AI Consent Toggle checkbox from store settings
+    const aiConsentToggle = document.getElementById('settings-ai-consent-toggle');
+    if (aiConsentToggle) {
+        aiConsentToggle.checked = store.settings.aiConsent === true;
+    }
+
     // API 연동 설정 함께 로드
     if (typeof loadApiSettings === 'function') {
         loadApiSettings();
@@ -104,9 +111,26 @@ export function setupPersonaUI() {
             const chatTitleEl = document.getElementById('chat-room-title-text');
             if (chatTitleEl && chatTitleEl.innerText.includes('와 대화')) {
                 chatTitleEl.innerText = `✨ ${aiName}와 대화`;
-            }
         }
     });
+
+    // AI Consent Toggle event binding
+    const aiConsentToggle = document.getElementById('settings-ai-consent-toggle');
+    if (aiConsentToggle && !aiConsentToggle.dataset.bound) {
+        aiConsentToggle.dataset.bound = "true";
+        aiConsentToggle.addEventListener('change', async (e) => {
+            try {
+                const checked = e.target.checked;
+                await updateSettings({ aiConsent: checked });
+                console.log('AI Consent Toggle updated:', checked);
+            } catch (err) {
+                console.error('Failed to save AI Consent setting:', err);
+                alert('설정 저장 중 오류가 발생했습니다.');
+                // Revert switch state
+                e.target.checked = !e.target.checked;
+            }
+        });
+    }
 
     // 2. AI 얼굴 생성 버튼
     document.getElementById('generate-avatar-btn')?.addEventListener('click', async () => {

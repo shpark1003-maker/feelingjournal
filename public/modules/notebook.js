@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.1';
+import { store, API_URL, assertIds } from './state.js?v=5.5.2';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -274,13 +274,31 @@ export function selectPage(pageId, history) {
 
     document.getElementById('note-title').value = page.title || '';
     if (store.quillEditor) {
-        store.quillEditor.root.innerHTML = page.richContent || `<p>${page.originalContent || ''}</p>`;
+        const rawContent = page.richContent || `<p>${page.originalContent || ''}</p>`;
+        if (isE2e) {
+            const e2ePassword = localStorage.getItem('e2e_password');
+            import('./localEmotionAnalyzer.js').then(async (cryptoMod) => {
+                const decrypted = await cryptoMod.decryptClientSide(rawContent, e2ePassword);
+                store.quillEditor.root.innerHTML = decrypted;
+            });
+        } else {
+            store.quillEditor.root.innerHTML = rawContent;
+        }
     }
 
     const resultArea = document.getElementById('analysis-result-area');
     const resultContent = document.getElementById('analysis-content');
     if (resultContent) {
-        resultContent.innerHTML = (page.aiResponse || '비서가 대기 중입니다.').replace(/\n/g, '<br>');
+        const rawResponse = page.aiResponse || '비서가 대기 중입니다.';
+        if (isE2e) {
+            const e2ePassword = localStorage.getItem('e2e_password');
+            import('./localEmotionAnalyzer.js').then(async (cryptoMod) => {
+                const decrypted = await cryptoMod.decryptClientSide(rawResponse, e2ePassword);
+                resultContent.innerHTML = decrypted.replace(/\n/g, '<br>');
+            });
+        } else {
+            resultContent.innerHTML = rawResponse.replace(/\n/g, '<br>');
+        }
     }
     if (resultArea) {
         if (page.aiResponse) {

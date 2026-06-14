@@ -5,7 +5,8 @@
   "main": "server-local.js",
   "scripts": {
     "start": "node server-local.js",
-    "dev": "node --watch server-local.js"
+    "dev": "node --watch server-local.js",
+    "test:consent": "node test/ai_consent.test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

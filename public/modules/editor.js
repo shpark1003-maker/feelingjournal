@@ -1,5 +1,5 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.1';
-import { loadPages } from './notebook.js?v=5.5.1';
+import { store, API_URL, assertIds } from './state.js?v=5.5.2';
+import { loadPages } from './notebook.js?v=5.5.2';
 
 let cropperInstance = null;
 let cameraStream = null;
@@ -43,6 +43,34 @@ export function setupEditor() {
     });
 
     document.getElementById('analyze-btn')?.addEventListener('click', analyzeDiary);
+
+    const editorLock = document.getElementById('v2-editor-e2e-lock');
+    if (editorLock && !editorLock.dataset.bound) {
+        editorLock.dataset.bound = "true";
+        editorLock.style.cursor = 'pointer';
+        editorLock.addEventListener('click', () => {
+            const hasPass = localStorage.getItem('e2e_password');
+            if (hasPass) {
+                if (confirm('현재 E2E 암호화 비밀번호가 설정되어 있습니다. 비밀번호를 변경하거나 삭제하시겠습니까?\n확인(예)을 누르면 변경/삭제가 진행됩니다.')) {
+                    const act = prompt('비밀번호를 새로 입력하시거나, 공백으로 두어 E2E 암호화를 비활성화하십시오:', hasPass);
+                    if (act === null) return;
+                    if (act.trim() === '') {
+                        localStorage.removeItem('e2e_password');
+                        alert('E2E 암호화가 비활성화되었습니다. (서버 평문 저장 정책 적용)');
+                    } else {
+                        localStorage.setItem('e2e_password', act.trim());
+                        alert('E2E 암호화 비밀번호가 새롭게 설정되었습니다.');
+                    }
+                }
+            } else {
+                const pass = prompt('E2E 종단간 암호화 비밀번호를 입력해주세요. (입력 시 브라우저에서 직접 데이터를 암호화하여 저장합니다. 비밀번호는 서버로 전송되지 않습니다.):');
+                if (pass && pass.trim() !== '') {
+                    localStorage.setItem('e2e_password', pass.trim());
+                    alert('E2E 암호화 비밀번호가 설정되었습니다. 이제 일기가 저장될 때 로컬에서 안전하게 암호화됩니다.');
+                }
+            }
+        });
+    }
 
     // V2 Toggle logic for share options
     const shareToggle = document.getElementById('share-toggle-input');
@@ -95,13 +123,43 @@ export async function analyzeDiary() {
         console.log('Sending analyze request...');
         const token = await store.getSessionToken();
 
+        let payload = { content, richContent, title, notebookId, image, aiConsent: true };
+        const hasConsent = store.settings.aiConsent !== false;
+
+        if (!hasConsent) {
+            const { analyzeEmotionLocally, encryptClientSide } = await import('./localEmotionAnalyzer.js');
+            const emotion = analyzeEmotionLocally(content);
+            const e2ePassword = localStorage.getItem('e2e_password');
+
+            let finalContent = content;
+            let finalRich = richContent;
+            let finalResponse = "AI 분석 동의가 비활성화되어 비서의 심층 조언이 제공되지 않습니다.";
+
+            if (e2ePassword) {
+                finalContent = await encryptClientSide(content, e2ePassword);
+                finalRich = await encryptClientSide(richContent, e2ePassword);
+                finalResponse = await encryptClientSide(finalResponse, e2ePassword);
+            }
+
+            payload = {
+                content: finalContent,
+                richContent: finalRich,
+                response: finalResponse,
+                title,
+                notebookId,
+                image,
+                aiConsent: false,
+                emotion
+            };
+        }
+
         const res = await fetch(`${API_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ content, richContent, title, notebookId, image })
+            body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -112,17 +170,26 @@ export async function analyzeDiary() {
             if (data.id) {
                 store.currentPageId = data.id;
             }
-            const resultArea = document.getElementById('analysis-result-area');
-            const resultContent = document.getElementById('analysis-content');
-            if (resultArea && resultContent) {
-                resultArea.classList.remove('hidden');
-                // Trigger reflow to apply transition properly
-                void resultArea.offsetWidth;
-                resultArea.classList.remove('opacity-0', 'translate-y-4');
-                resultArea.classList.add('opacity-100', 'translate-y-0');
-                resultContent.innerHTML = data.answer.replace(/\n/g, '<br>');
+            
+            if (hasConsent) {
+                const resultArea = document.getElementById('analysis-result-area');
+                const resultContent = document.getElementById('analysis-content');
+                if (resultArea && resultContent) {
+                    resultArea.classList.remove('hidden');
+                    // Trigger reflow to apply transition properly
+                    void resultArea.offsetWidth;
+                    resultArea.classList.remove('opacity-0', 'translate-y-4');
+                    resultArea.classList.add('opacity-100', 'translate-y-0');
+                    resultContent.innerHTML = data.answer.replace(/\n/g, '<br>');
+                }
+                alert('비서가 분석을 완료하고 기록을 저장했습니다.');
+            } else {
+                const resultArea = document.getElementById('analysis-result-area');
+                if (resultArea) {
+                    resultArea.classList.add('hidden');
+                }
+                alert('기록이 안전하게 저장되었습니다.');
             }
-            alert('비서가 분석을 완료하고 기록을 저장했습니다.');
             loadPages();
             // Scroll to the result area so the user sees the analysis
             if (resultArea) {

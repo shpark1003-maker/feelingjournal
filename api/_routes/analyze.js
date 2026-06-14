@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Invalid user' });
         }
 
-        const { image, title, mediaId, notebookId, richContent } = req.body;
+        const { image, title, mediaId, notebookId, richContent, aiConsent } = req.body;
         const content = sanitizeContent(req.body.content);
         
         if (!content && !image && !richContent) {
@@ -97,33 +97,47 @@ EVENT_JSON_END
 ${content || '(이미지 분석 요청)'}
 """`;
 
-        let inlineData = null;
-        if (image) {
-            inlineData = {
-                mimeType: image.split(';')[0].split(':')[1],
-                data: image.split(',')[1]
-            };
-        }
+        let text;
+        let emotion = '평온';
+        let detectedEvent = null;
 
-        const data = await callGemini(prompt, {}, 3, inlineData, true);
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (!text) {
-            throw new Error('Gemini 응답이 비어 있습니다.');
-        }
+        if (aiConsent === false) {
+            // Validate client-supplied emotion Enum
+            const validEmotions = ['기쁨', '슬픔', '분노', '불안', '평온'];
+            const clientEmotion = req.body.emotion;
+            emotion = validEmotions.includes(clientEmotion) ? clientEmotion : '평온';
+            
+            text = req.body.response || "AI 분석 동의가 비활성화되어 비서의 심층 조언이 제공되지 않습니다.";
+        } else {
+            let inlineData = null;
+            if (image) {
+                inlineData = {
+                    mimeType: image.split(';')[0].split(':')[1],
+                    data: image.split(',')[1]
+                };
+            }
 
-        const emotionMatch = text.match(/감정:\[(.*?)\]/);
-        const emotion = emotionMatch ? emotionMatch[1].trim() : '평온';
-        const detectedEvent = extractEventJson(text);
+            const data = await callGemini(prompt, {}, 3, inlineData, true);
+            text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (!text) {
+                throw new Error('Gemini 응답이 비어 있습니다.');
+            }
+
+            const emotionMatch = text.match(/감정:\[(.*?)\]/);
+            emotion = emotionMatch ? emotionMatch[1].trim() : '평온';
+            detectedEvent = extractEventJson(text);
+        }
 
         const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
         const diaryKey = `user:${user.id}:diary-${timestamp}`;
         
         // E2E 영지식 암호화 적용 (x-e2e-key가 유효한 경우 content, richContent, response 필드 암호화 저장)
+        // 단, aiConsent가 false일 때는 클라이언트가 자체 암호화를 이미 진행해서 보내므로, 여기서는 추가 암호화 없이 그대로 저장함
         const diaryData = {
             title: title || '제목 없는 메모',
-            content: encrypt(content, e2eKey),
-            richContent: richContent ? encrypt(richContent, e2eKey) : null,
-            response: encrypt(text, e2eKey),
+            content: aiConsent === false ? content : encrypt(content, e2eKey),
+            richContent: richContent ? (aiConsent === false ? richContent : encrypt(richContent, e2eKey)) : null,
+            response: aiConsent === false ? text : encrypt(text, e2eKey),
             createdAt: new Date().toISOString(),
             emotion,
             mediaId: mediaId || null,
@@ -185,8 +199,8 @@ ${content || '(이미지 분석 요청)'}
             title: diaryData.title
         };
 
-        // E2E 암호화 모드가 아닐 때만 Redis 캐시 등록
-        if (!e2eKey) {
+        // E2E 암호화 모드가 아니고 AI 분석 동의가 활성화된 상태일 때만 Redis 캐시 등록
+        if (!e2eKey && aiConsent !== false) {
             await redis.set(cacheKey, JSON.stringify({ hash: contentHash, result: finalResult }), 'EX', 3600);
         }
 

@@ -6,8 +6,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="./style.css?v=5.5.1">
-<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.1">
+<link rel="stylesheet" href="./style.css?v=5.5.2">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.2">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -768,7 +768,24 @@
     </div>
     <button id="test-voice-btn" type="button" class="bg-primary-container text-on-primary-container p-2 rounded-full active:scale-90 transition-transform shadow-sm">
     <span class="material-symbols-outlined">play_arrow</span>
-    </button>
+    <!-- AI Consent Toggle -->
+    <div class="bg-primary-container/10 p-4 rounded-2xl border border-primary-container/20 flex items-center justify-between mt-4">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">security</span>
+            <div class="flex-1">
+                <strong class="text-body-md text-on-surface block font-bold">AI 감정 분석 및 피드백 제공 동의</strong>
+                <span class="text-[10px] text-on-surface-variant/70 leading-relaxed block mt-0.5">
+                    동의 시 Gemini API를 통해 전문적인 위로와 일정을 조율하는 조언을 받습니다.
+                    비동의 시 외부 AI API 전송이 전면 차단되며 브라우저 내 로컬 분석만 수행됩니다.
+                </span>
+            </div>
+        </div>
+        <div class="relative inline-block w-12 h-6 shrink-0 ml-2">
+            <input class="toggle-checkbox hidden" id="settings-ai-consent-toggle" type="checkbox">
+            <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer relative" for="settings-ai-consent-toggle"></label>
+        </div>
+    </div>
+
     </div>
     </div>
     </div>
@@ -1459,9 +1476,10 @@
     <div class="flex-1">
         <p class="text-[11px] text-on-surface font-bold">🔒 데이터 보안 및 안심 보호 안내</p>
         <p class="text-[10px] text-on-surface-variant/70 leading-relaxed mt-1">
-            작성하신 일기는 브라우저 수준에서 회원님의 비밀키로 <strong>종단간(E2E) 암호화</strong>되어 안전하게 보관됩니다.
-            AI 분석 동의 시 브라우저에서 복호화된 일부 텍스트가 요청에 포함될 수 있으며, 
-            유료 Gemini API 사용 시 Google은 해당 프롬프트와 응답을 제품 개선 및 학습용으로 사용하지 않습니다.
+            작성하신 일기는 설정에 따라 <strong>종단간(E2E) 암호화</strong>되어 안전하게 보관됩니다.<br>
+            AI 분석 비동의 시 외부 AI API(Gemini) 전송이 차단되며 브라우저 로컬 감정 분석만 동작합니다. 
+            E2E 암호화가 비활성화된 상태에서 AI 비동의 시 자체 서버로 평문이 전송 및 보존되므로, 
+            최고 수준의 정보 보호를 위해 화면 상단의 자물쇠 아이콘을 눌러 E2E 암호화를 활성화할 것을 적극 권장합니다.
         </p>
     </div>
 </div>
@@ -1955,7 +1973,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.5.1"></script>
+    <script type="module" src="/app.js?v=5.5.2"></script>
 
     <script>
 
