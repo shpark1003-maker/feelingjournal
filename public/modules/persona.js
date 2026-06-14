@@ -448,25 +448,20 @@ export async function loadBriefing() {
 
             if (data.weather && weatherWidget && weatherIcon && weatherTemp) {
                 const w = data.weather;
-                let iconName = 'sunny';
-                let iconColor = '#f59e0b'; // Amber
+                let weatherImgName = 'weather_sunny.png';
 
                 const skyLower = (w.sky || '').toLowerCase();
                 const rainTypeLower = (w.rainType || '').toLowerCase();
 
                 if ((rainTypeLower.includes('강수') && !rainTypeLower.includes('없음')) || skyLower.includes('rain') || skyLower.includes('drizzle') || skyLower.includes('비')) {
-                    iconName = 'rainy';
-                    iconColor = '#3b82f6'; // Blue
+                    weatherImgName = 'weather_rainy.png';
                 } else if (skyLower.includes('snow') || skyLower.includes('눈') || skyLower.includes('freeze')) {
-                    iconName = 'snowing';
-                    iconColor = '#38bdf8'; // Sky blue
+                    weatherImgName = 'weather_snowy.png';
                 } else if (skyLower.includes('cloud') || skyLower.includes('흐림') || skyLower.includes('구름') || skyLower.includes('overcast') || skyLower.includes('mist') || skyLower.includes('haze')) {
-                    iconName = 'cloudy';
-                    iconColor = '#64748b'; // Slate
+                    weatherImgName = 'weather_cloudy.png';
                 }
 
-                weatherIcon.innerText = iconName;
-                weatherIcon.style.color = iconColor;
+                weatherIcon.src = `./${weatherImgName}`;
                 weatherTemp.innerText = `${Math.round(w.temp)}°C`;
                 weatherWidget.classList.remove('hidden');
                 weatherWidget.style.display = 'flex';
