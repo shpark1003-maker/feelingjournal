@@ -6165,6 +6165,7 @@ body {
 #memory-swiper .swiper-slide {
     width: 280px; /* Specific width required for slidesPerView: 'auto' */
     height: auto;
+    margin-right: -100px; /* Force overlap to create an accordion look */
 }
 
 /* Memory card hover image zoom effect */
