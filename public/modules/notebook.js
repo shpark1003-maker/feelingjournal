@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.8';
+import { store, API_URL, assertIds } from './state.js?v=5.4.9';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -726,8 +726,12 @@ function renderV2MemoryFragments(allPages) {
             fullGalleryGrid.querySelectorAll('.full-memory-item').forEach(art => {
                 art.addEventListener('click', (e) => {
                     const id = art.dataset.id;
+                    console.log(`--- [DEBUG SELECTION] Clicked card id:`, id, `selectModeActive:`, selectModeActive);
                     const page = allPages.find(p => p.id === id);
-                    if (!page) return;
+                    if (!page) {
+                        console.warn(`--- [DEBUG SELECTION] Corresponding page not found for id:`, id);
+                        return;
+                    }
 
                     if (selectModeActive) {
                         if (page.isE2e) {
@@ -742,6 +746,7 @@ function renderV2MemoryFragments(allPages) {
                         } else {
                             selectedPageIds.add(id);
                         }
+                        console.log(`--- [DEBUG SELECTION] Current selected ids:`, Array.from(selectedPageIds));
 
                         // Toggle active border ring
                         if (selectedPageIds.has(id)) {
@@ -765,6 +770,16 @@ function renderV2MemoryFragments(allPages) {
                                 shareBtn.classList.add('opacity-50', 'pointer-events-none');
                             } else {
                                 shareBtn.classList.remove('opacity-50', 'pointer-events-none');
+                            }
+                        }
+
+                        const deleteBtn = document.getElementById('v2-gallery-delete-btn');
+                        if (deleteBtn) {
+                            deleteBtn.disabled = selectedPageIds.size === 0;
+                            if (selectedPageIds.size === 0) {
+                                deleteBtn.classList.add('opacity-50', 'pointer-events-none');
+                            } else {
+                                deleteBtn.classList.remove('opacity-50', 'pointer-events-none');
                             }
                         }
                         return;
@@ -1244,6 +1259,7 @@ export function setupGallerySharing() {
     const selectCountText = document.getElementById('v2-gallery-select-count');
     const cancelBtn = document.getElementById('v2-gallery-select-cancel-btn');
     const shareBtn = document.getElementById('v2-gallery-share-btn');
+    const deleteBtn = document.getElementById('v2-gallery-delete-btn');
     
     const shareConfirmModal = document.getElementById('v2-share-confirm-modal');
     const shareConfirmScrim = document.getElementById('v2-share-confirm-scrim');
@@ -1296,6 +1312,14 @@ export function setupGallerySharing() {
                 shareBtn.classList.remove('opacity-50', 'pointer-events-none');
             }
         }
+        if (deleteBtn) {
+            deleteBtn.disabled = selectedPageIds.size === 0;
+            if (selectedPageIds.size === 0) {
+                deleteBtn.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                deleteBtn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
     };
 
     selectBtn.addEventListener('click', () => {
@@ -1304,6 +1328,62 @@ export function setupGallerySharing() {
 
     cancelBtn?.addEventListener('click', () => {
         toggleSelectMode(false);
+    });
+
+    // Bulk Delete Click Handler
+    deleteBtn?.addEventListener('click', async () => {
+        if (selectedPageIds.size === 0) return;
+
+        if (!confirm(`선택한 ${selectedPageIds.size}개의 기억 조각(일기 페이지)을 정말 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.`)) {
+            return;
+        }
+
+        const token = await store.getSessionToken();
+        if (!token) return;
+
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = '삭제 중...';
+
+        const promises = Array.from(selectedPageIds).map(pageId => {
+            return fetch(`${API_URL}/history/${encodeURIComponent(pageId)}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Server error');
+                }
+                return { pageId, success: true };
+            }).catch(err => {
+                return { pageId, success: false, error: err.message };
+            });
+        });
+
+        try {
+            const results = await Promise.allSettled(promises);
+            let successes = 0;
+            let failures = 0;
+
+            results.forEach(res => {
+                if (res.status === 'fulfilled' && res.value.success) {
+                    successes++;
+                } else {
+                    failures++;
+                }
+            });
+
+            alert(`${successes}개의 기억 조각이 삭제되었습니다.`);
+            
+            // Reset state
+            toggleSelectMode(false);
+            await loadNotebooks();
+        } catch (err) {
+            console.error(err);
+            alert('삭제 과정 중 오류가 발생했습니다.');
+        } finally {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">delete</span> 삭제하기';
+        }
     });
 
     // Close confirm modal
@@ -1317,8 +1397,8 @@ export function setupGallerySharing() {
         }, 300);
     };
 
-    shareConfirmClose?.addEventListener('click', closeShareModal);
     shareConfirmScrim?.addEventListener('click', closeShareModal);
+    shareConfirmClose?.addEventListener('click', closeShareModal);
 
     // Open Share Modal
     shareBtn?.addEventListener('click', async () => {

@@ -6,8 +6,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="./style.css?v=5.4.8">
-<link rel="stylesheet" href="/css/floating_chat.css?v=5.4.8">
+<link rel="stylesheet" href="./style.css?v=5.4.9">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.4.9">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -1497,6 +1497,9 @@
         </div>
         <div class="flex gap-2">
             <button class="px-4 py-2 bg-outline-variant/20 text-on-surface-variant hover:bg-outline-variant/30 rounded-full font-semibold text-xs transition-colors" id="v2-gallery-select-cancel-btn">취소</button>
+            <button class="px-5 py-2 bg-error text-white hover:bg-red-700 active:scale-95 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 shadow-md" id="v2-gallery-delete-btn">
+                <span class="material-symbols-outlined text-[16px]">delete</span> 삭제하기
+            </button>
             <button class="px-5 py-2 bg-primary text-white hover:bg-primary-hover active:scale-95 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 shadow-md" id="v2-gallery-share-btn">
                 <span class="material-symbols-outlined text-[16px]">share</span> 공유하기
             </button>
@@ -1903,7 +1906,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.4.8"></script>
+    <script type="module" src="/app.js?v=5.4.9"></script>
 
     <script>
 
