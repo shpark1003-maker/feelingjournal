@@ -111,6 +111,7 @@ export function setupPersonaUI() {
             const chatTitleEl = document.getElementById('chat-room-title-text');
             if (chatTitleEl && chatTitleEl.innerText.includes('와 대화')) {
                 chatTitleEl.innerText = `✨ ${aiName}와 대화`;
+            }
         }
     });
 

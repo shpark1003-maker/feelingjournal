@@ -112,6 +112,7 @@ async function runTests() {
     console.log('=> Emotion Enum validation test PASSED!');
 
     // Case 2c: Consent = true (Gemini count must be 1)
+    await shared.redis.del(`user:${mockUser.id}:last-analyze-cache`);
     geminiCallCount = 0;
     const reqTrue = {
         method: 'POST',
