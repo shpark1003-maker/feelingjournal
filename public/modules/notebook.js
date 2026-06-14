@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.2';
+import { store, API_URL, assertIds } from './state.js?v=5.4.3';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -594,34 +594,42 @@ function renderV2MemoryFragments(allPages) {
         });
     }
 
-    if (window.memorySwiper) {
-        window.memorySwiper.destroy(true, true);
-    }
-    
-    // Initialize Swiper after rendering
+    // Initialize Swiper with a brief delay to ensure the parent container is fully visible and has layout dimensions
     if (typeof Swiper !== 'undefined') {
-        window.memorySwiper = new Swiper('#memory-swiper', {
-            effect: 'coverflow',
-            grabCursor: true,
-            centeredSlides: true,
-            slidesPerView: 'auto',
-            coverflowEffect: {
-                rotate: 25,
-                stretch: -110, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
-                depth: 140,
-                modifier: 1,
-                slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
-            },
-            loop: recentFragments.length > 5, // Enable infinite loop only if plenty of slides
-            slideToClickedSlide: true,
-            observer: true,
-            observeParents: true,
-            pagination: {
-                el: '.swiper-pagination',
-                dynamicBullets: true
-            },
-            initialSlide: Math.floor(recentFragments.length / 2) // Start at center
-        });
+        setTimeout(() => {
+            if (window.memorySwiper) {
+                window.memorySwiper.destroy(true, true);
+            }
+            window.memorySwiper = new Swiper('#memory-swiper', {
+                effect: 'coverflow',
+                grabCursor: true,
+                centeredSlides: true,
+                slidesPerView: 'auto',
+                coverflowEffect: {
+                    rotate: 25,
+                    stretch: -110, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
+                    depth: 140,
+                    modifier: 1,
+                    slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
+                },
+                loop: recentFragments.length > 5, // Enable infinite loop only if plenty of slides
+                slideToClickedSlide: true,
+                observer: true,
+                observeParents: true,
+                pagination: {
+                    el: '.swiper-pagination',
+                    dynamicBullets: true
+                },
+                initialSlide: Math.floor(recentFragments.length / 2) // Start at center
+            });
+
+            // Force recalculation of Swiper coordinates after rendering completes
+            setTimeout(() => {
+                if (window.memorySwiper && typeof window.memorySwiper.update === 'function') {
+                    window.memorySwiper.update();
+                }
+            }, 100);
+        }, 50);
     }
 
     // Setup Filter Tabs

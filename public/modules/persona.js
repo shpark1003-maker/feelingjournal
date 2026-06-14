@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.2';
+import { store, API_URL, assertIds } from './state.js?v=5.4.3';
 
 export async function loadPersona() {
     assertIds('Persona', [
