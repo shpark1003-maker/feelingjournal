@@ -535,9 +535,15 @@ function renderV2MemoryFragments(allPages) {
     const memoryGrid = document.getElementById('v2-memory-grid');
     if (!memoryGrid) return;
     
+    console.log(`--- [DEBUG FRAGMENTS] renderV2MemoryFragments started. Pages size:`, allPages.length);
+    
     let fragments = [];
     allPages.forEach(p => {
-        if (p.richContent) {
+        const isE2e = p.richContent && p.richContent.startsWith('e2e:');
+        if (isE2e) {
+            console.log(`--- [DEBUG FRAGMENTS] Page "${p.title || '무제'}" (${p.id}) is E2E Encrypted. Decryption required for image extraction.`);
+        }
+        if (p.richContent && !isE2e) {
             const regex = /<img[^>]+src="([^">]+)"/g;
             let match;
             while ((match = regex.exec(p.richContent)) !== null) {
@@ -550,6 +556,7 @@ function renderV2MemoryFragments(allPages) {
             }
         }
     });
+    console.log(`--- [DEBUG FRAGMENTS] Total extracted fragments:`, fragments.length);
 
     fragments.sort((a,b) => b.date - a.date);
     

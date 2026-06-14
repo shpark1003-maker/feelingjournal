@@ -6151,6 +6151,19 @@ body {
     overflow: hidden;
 }
 
+/* Weather briefing angel hover zoom-in style */
+.briefing-angel {
+    z-index: 30 !important; /* Force to overlay above other content layers */
+    pointer-events: auto !important; /* Enable mouse hover detection */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.briefing-angel:hover {
+    transform: scale(1.3) !important;
+    opacity: 0.95 !important;
+}
+
+
 
 
 
