@@ -374,6 +374,7 @@ export async function loadBriefing() {
             </div>
         `;
 
+        const weatherOff = document.getElementById('weather-off')?.checked;
         let url = `${API_URL}/briefing`;
         if (!weatherOff) {
             const gpsBtn = document.getElementById('weather-gps-btn');
