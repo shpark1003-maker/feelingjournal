@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.4.1';
+import { store, API_URL } from './state.js?v=5.4.2';
 
 const MAX_FLOATING_CHAT_WINDOWS = 4;
 const WINDOW_WIDTH = 360;
@@ -68,7 +68,7 @@ export async function openChatWindow(roomId, title) {
             if (titleEl) titleEl.innerText = title;
 
             // Switch room to load messages and bind realtime events
-            import('./chat.js?v=5.4.1').then(async (chatMod) => {
+            import('./chat.js?v=5.4.2').then(async (chatMod) => {
                 await chatMod.switchChatRoom(roomId, title);
             }).catch(err => {
                 console.error('Failed to import chat.js for mobile switchChatRoom:', err);
