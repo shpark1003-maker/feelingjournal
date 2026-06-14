@@ -374,47 +374,55 @@ export async function loadBriefing() {
             </div>
         `;
 
-        const weatherOff = document.getElementById('weather-off')?.checked;
-        
         let url = `${API_URL}/briefing`;
-        if (!weatherOff && navigator.geolocation) {
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
-                });
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
-                const cities = [
-                    { name: '서울', lat: 37.5665, lon: 126.9780 },
-                    { name: '인천', lat: 37.4563, lon: 126.7052 },
-                    { name: '수원', lat: 37.2636, lon: 127.0286 },
-                    { name: '춘천', lat: 37.8813, lon: 127.7298 },
-                    { name: '대전', lat: 36.3504, lon: 127.3845 },
-                    { name: '청주', lat: 36.6424, lon: 127.4890 },
-                    { name: '광주', lat: 35.1595, lon: 126.8526 },
-                    { name: '전주', lat: 35.8242, lon: 127.1480 },
-                    { name: '대구', lat: 35.8714, lon: 128.6014 },
-                    { name: '부산', lat: 35.1796, lon: 129.0756 },
-                    { name: '울산', lat: 35.5389, lon: 129.3114 },
-                    { name: '제주', lat: 33.4996, lon: 126.5312 }
-                ];
-                
-                let closestCity = '서울';
-                let minDistance = Infinity;
-                for (const city of cities) {
-                    const dLat = lat - city.lat;
-                    const dLon = lon - city.lon;
-                    const dist = Math.sqrt(dLat * dLat + dLon * dLon);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestCity = city.name;
+        if (!weatherOff) {
+            const gpsBtn = document.getElementById('weather-gps-btn');
+            const isGpsMode = gpsBtn ? gpsBtn.classList.contains('bg-white') : true;
+
+            if (isGpsMode && navigator.geolocation) {
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+                    });
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    const cities = [
+                        { name: '서울', lat: 37.5665, lon: 126.9780 },
+                        { name: '인천', lat: 37.4563, lon: 126.7052 },
+                        { name: '수원', lat: 37.2636, lon: 127.0286 },
+                        { name: '춘천', lat: 37.8813, lon: 127.7298 },
+                        { name: '대전', lat: 36.3504, lon: 127.3845 },
+                        { name: '청주', lat: 36.6424, lon: 127.4890 },
+                        { name: '광주', lat: 35.1595, lon: 126.8526 },
+                        { name: '전주', lat: 35.8242, lon: 127.1480 },
+                        { name: '대구', lat: 35.8714, lon: 128.6014 },
+                        { name: '부산', lat: 35.1796, lon: 129.0756 },
+                        { name: '울산', lat: 35.5389, lon: 129.3114 },
+                        { name: '제주', lat: 33.4996, lon: 126.5312 }
+                    ];
+                    
+                    let closestCity = '서울';
+                    let minDistance = Infinity;
+                    for (const city of cities) {
+                        const dLat = lat - city.lat;
+                        const dLon = lon - city.lon;
+                        const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestCity = city.name;
+                        }
                     }
+                    url += `?region=${encodeURIComponent(closestCity)}`;
+                    console.log(`--- [GPS DYNAMIC BRIEFING] Resolved active region: ${closestCity} ---`);
+                } catch (err) {
+                    console.warn('Real-time GPS capture skipped or denied, fallback to saved region.', err);
                 }
-                url += `?region=${encodeURIComponent(closestCity)}`;
-                console.log(`--- [GPS DYNAMIC BRIEFING] Resolved active region: ${closestCity} ---`);
-            } catch (err) {
-                console.warn('Real-time GPS capture skipped or denied, fallback to saved region.', err);
+            } else {
+                const locationInput = document.getElementById('weather-location-input');
+                const fixedRegion = locationInput?.value?.trim() || store.settings?.weatherRegion || '서울';
+                url += `?region=${encodeURIComponent(fixedRegion)}`;
+                console.log(`--- [FIXED BRIEFING] Using fixed region: ${fixedRegion} ---`);
             }
         } else if (weatherOff) {
             url += `?region=off`;
@@ -479,7 +487,7 @@ export async function loadBriefing() {
                 console.log("--- [BRIEFING] Successfully loaded briefing from server.");
                 content.innerHTML = data.briefing
                     .replace(/\n/g, '<br>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-color)">$1</strong>');
+                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary)">$1</strong>');
             }
         } else {
             // [5. Error State (Server failed)]

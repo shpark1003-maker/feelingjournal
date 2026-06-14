@@ -300,6 +300,7 @@ ${reminiscenceMemory}
 6. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
 7. 전체 브리핑은 뉴스 영역을 제외하면 4~5문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하고, 불필요한 장문을 배제하여 생성 속도를 단축하라.
 8. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
+9. 뉴스정리는 반드시 '[뉴스정리]'라는 소제목 하위에 카테고리별로 기사 제목 한 줄 요약만 나열해야 합니다. 절대 설명조 문장으로 길게 쓰지 말고 딱 한 줄로만 요약하십시오.
 `;
 
     const data = await callGemini(briefingPrompt, {}, 3, null, true);
@@ -363,7 +364,7 @@ module.exports = async (req, res) => {
 
         const briefing = await generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email);
 
-        // Fetch weather from Redis to return to frontend
+        // Fetch weather to return to frontend
         let weather = null;
         try {
             const client = supabaseAdmin || supabase;
@@ -374,10 +375,7 @@ module.exports = async (req, res) => {
                 .maybeSingle();
             const region = regionOverride || profile?.weather_region || '서울';
             if (region !== 'off') {
-                const cachedWeather = await redis.get(`system:weather-cache:${region}`);
-                if (cachedWeather) {
-                    weather = JSON.parse(cachedWeather);
-                }
+                weather = await getLiveWeather(region);
             }
         } catch (e) {
             console.error('Failed to get weather for response:', e.message);
