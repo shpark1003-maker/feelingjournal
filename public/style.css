@@ -6167,6 +6167,15 @@ body {
     height: auto !important;
 }
 
+/* Memory card hover image zoom effect */
+.memory-item img {
+    transition: transform 0.4s ease-in-out !important;
+}
+
+.memory-item:hover img {
+    transform: scale(1.1) !important;
+}
+
 
 
 
