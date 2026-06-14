@@ -1,5 +1,6 @@
 const { 
     supabase, 
+    supabaseAdmin,
     redis, 
     callGemini, 
     sanitizeContent, 
@@ -129,6 +130,28 @@ ${content || '(이미지 분석 요청)'}
             notebookId: notebookId || 'nb-1'
         };
         await redis.set(diaryKey, JSON.stringify(diaryData), 'EX', 3600 * 24 * 30);
+
+        // PostgreSQL public.diaries 테이블에도 영구보존 동기화
+        try {
+            const dbClient = supabaseAdmin || supabase;
+            await dbClient
+                .from('diaries')
+                .upsert({
+                    id: diaryKey,
+                    user_id: user.id,
+                    title: diaryData.title,
+                    content: diaryData.content,
+                    rich_content: diaryData.richContent,
+                    response: diaryData.response,
+                    emotion: diaryData.emotion,
+                    media_id: diaryData.mediaId,
+                    notebook_id: diaryData.notebookId,
+                    shared: false,
+                    shared_with: []
+                }, { onConflict: 'id' });
+        } catch (dbErr) {
+            console.error('--- [ANALYZE DB ERROR] Failed to sync new diary to Postgres:', dbErr?.message || dbErr);
+        }
 
         // 새 일기 작성 시 캘린더 분석 및 데일리 브리핑 캐시 초기화
         try {

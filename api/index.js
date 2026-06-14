@@ -1,4 +1,5 @@
 const analyze = require('./_routes/analyze');
+const apiSettings = require('./_routes/api-settings');
 const auth = require('./_routes/auth');
 const briefing = require('./_routes/briefing');
 const calendar = require('./_routes/calendar');
@@ -9,6 +10,7 @@ const friends = require('./_routes/friends');
 const history = require('./_routes/history');
 const invite = require('./_routes/invite');
 const nickname = require('./_routes/nickname');
+const userSearch = require('./_routes/user-search');
 const notebooks = require('./_routes/notebooks');
 const persona = require('./_routes/persona');
 const presence = require('./_routes/presence');
@@ -134,6 +136,9 @@ module.exports = async (req, res) => {
     }
 
     try {
+        if (path === '/api/api-settings' || path.startsWith('/api/api-settings/')) {
+            return await apiSettings(req, res);
+        }
         if (path === '/api/analyze' || path.startsWith('/api/analyze/')) {
             return await analyze(req, res);
         }
@@ -175,6 +180,9 @@ module.exports = async (req, res) => {
         }
         if (path === '/api/presence' || path.startsWith('/api/presence/')) {
             return await presence(req, res);
+        }
+        if (path === '/api/users/search') {
+            return await userSearch(req, res);
         }
         if (path === '/api/push' || path.startsWith('/api/push/')) {
             const originalUrl = req.url;

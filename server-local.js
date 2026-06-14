@@ -114,6 +114,7 @@ const ttsRoute = require('./api/_routes/tts');
 const apiSettingsRoute = require('./api/_routes/api-settings');
 
 app.use('/api/calendar', verifyUser, calendarRoute);
+app.get('/api/users/search', verifyUser, require('./api/_routes/user-search'));
 app.post('/api/analyze', verifyUser, analyzeRoute);
 app.get('/api/history', verifyUser, historyRoute);
 app.get('/api/briefing', verifyUser, briefingRoute);

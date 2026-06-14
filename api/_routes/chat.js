@@ -124,7 +124,7 @@ module.exports = async (req, res) => {
                     currentEmotion = profile.current_emotion;
                 }
                 
-            let latestDiaryStr = '최근 기록이 없습니다.';
+            latestDiaryStr = '최근 기록이 없습니다.';
             const consent = req.body?.aiContextConsent === true;
             const clientDiaryContext = req.body?.userDiaryContext;
 

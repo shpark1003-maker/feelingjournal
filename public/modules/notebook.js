@@ -1,4 +1,8 @@
-import { store, API_URL, assertIds } from './state.js?v=5.3.0';
+import { store, API_URL, assertIds } from './state.js?v=5.4.0';
+
+let selectModeActive = false;
+let selectedPageIds = new Set();
+let customAddedRecipients = [];
 
 export async function loadNotebooks() {
     assertIds('Notebook', ['v2-notebook-accordion-list']);
@@ -479,6 +483,9 @@ export function setupNotebooksAndPages() {
     
     // 5. 기억 조각 직접 업로드 초기화
     setupDirectFragmentUpload();
+
+    // 6. 기억 조각 다중 선택 및 공유 초기화
+    setupGallerySharing();
 }
 
 function setupResizers() {
@@ -565,7 +572,7 @@ function renderV2MemoryFragments(allPages) {
     }
 
     memoryGrid.innerHTML = recentFragments.map(f => `
-    <article class="swiper-slide bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" data-id="${f.id}" style="width: 220px; height: 280px;">
+    <article class="swiper-slide bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" data-id="${f.id}">
         <div class="h-40 relative overflow-hidden">
             <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
         </div>
@@ -597,9 +604,9 @@ function renderV2MemoryFragments(allPages) {
             centeredSlides: true,
             slidesPerView: 'auto',
             coverflowEffect: {
-                rotate: 40,
-                stretch: 0,
-                depth: 150,
+                rotate: 30,
+                stretch: -30, // Negative stretch overlaps slides to create an accordion-like visual stack
+                depth: 120,
                 modifier: 1,
                 slideShadows: true,
             },
@@ -613,61 +620,165 @@ function renderV2MemoryFragments(allPages) {
         });
     }
 
+    // Setup Filter Tabs
+    const tabs = ['tab-all', 'tab-shared', 'tab-mine'];
+    tabs.forEach(tabId => {
+        const tabEl = document.getElementById(tabId);
+        if (tabEl && !tabEl.hasAttribute('data-bound')) {
+            tabEl.setAttribute('data-bound', 'true');
+            tabEl.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    const el = document.getElementById(t);
+                    if (el) {
+                        el.classList.remove('active-tab');
+                        el.classList.add('text-on-surface-variant');
+                    }
+                });
+                tabEl.classList.remove('text-on-surface-variant');
+                tabEl.classList.add('active-tab');
+                renderV2MemoryFragments(allPages);
+            });
+        }
+    });
+
+    const activeTab = document.querySelector('.active-tab')?.id || 'tab-all';
+    let filteredFragments = fragments;
+    if (activeTab === 'tab-mine') {
+        filteredFragments = fragments.filter(f => !f.isSharedIncoming);
+    } else if (activeTab === 'tab-shared') {
+        filteredFragments = fragments.filter(f => f.isSharedIncoming || f.shared);
+    }
+
     // Render Full Gallery
     const fullGalleryGrid = document.getElementById('v2-full-gallery-grid');
     if (fullGalleryGrid) {
-        if (fragments.length === 0) {
+        if (filteredFragments.length === 0) {
             fullGalleryGrid.innerHTML = '<p class="text-on-surface-variant font-label-sm col-span-2 md:col-span-3 text-center py-10">보관된 기억 조각이 아직 없습니다.</p>';
         } else {
-            fullGalleryGrid.innerHTML = fragments.map(f => `
-            <div class="photo-card full-memory-item cursor-pointer" data-id="${f.id}">
-                <div class="aspect-square overflow-hidden rounded-md bg-surface-container">
-                    <img class="w-full h-full object-cover" src="${f.imgUrl}" alt="${f.title}">
-                </div>
-                <p class="mt-1.5 text-[10px] text-outline text-center font-medium">${new Date(f.createdAt).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</p>
-            </div>`).join('');
+            fullGalleryGrid.innerHTML = filteredFragments.map(f => {
+                const isSelected = selectedPageIds.has(f.id);
+                const isE2e = !!f.isE2e;
+                return `
+                <div class="photo-card full-memory-item cursor-pointer relative ${isSelected ? 'ring-2 ring-primary' : ''}" data-id="${f.id}">
+                    <div class="aspect-square overflow-hidden rounded-md bg-surface-container relative">
+                        <img class="w-full h-full object-cover" src="${f.imgUrl}" alt="${f.title}">
+                        
+                        ${selectModeActive ? `
+                        <!-- Checkbox overlay -->
+                        <div class="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center bg-black/40 rounded-full">
+                            <input type="checkbox" class="w-4 h-4 rounded border-outline focus:ring-primary text-primary gallery-item-checkbox" data-id="${f.id}" ${isSelected ? 'checked' : ''} ${isE2e ? 'disabled' : ''}>
+                        </div>
+                        ` : ''}
+
+                        ${isE2e ? `
+                        <!-- E2E indicator -->
+                        <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-2 text-center" title="E2E 암호화된 일기는 공유할 수 없습니다.">
+                            <span class="material-symbols-outlined text-xl mb-1 text-warning">lock</span>
+                            <span class="text-[9px]">공유 불가 (E2E)</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Shared incoming indicator badge -->
+                    ${f.isSharedIncoming ? `
+                    <div class="absolute top-2 left-2 bg-secondary text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow">
+                        ${f.sharedBy?.nickname || '친구'}의 기억
+                    </div>
+                    ` : ''}
+
+                    <!-- Shared outgoing indicator badge -->
+                    ${(!f.isSharedIncoming && f.shared) ? `
+                    <div class="absolute top-2 left-2 bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow">
+                        공유 중
+                    </div>
+                    ` : ''}
+
+                    <p class="mt-1.5 text-[10px] text-outline text-center font-medium">${new Date(f.createdAt).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</p>
+                </div>`;
+            }).join('');
 
             fullGalleryGrid.querySelectorAll('.full-memory-item').forEach(art => {
-                art.addEventListener('click', () => {
+                art.addEventListener('click', (e) => {
                     const id = art.dataset.id;
                     const page = allPages.find(p => p.id === id);
-                    if (page) {
-                        // Populate Photo Detail UI
-                        const fragment = fragments.find(f => f.id === id);
-                        const imgUrl = fragment ? fragment.imgUrl : '';
-                        const imgEl = document.getElementById('detail-photo-img');
-                        if (imgEl) imgEl.src = imgUrl || 'https://via.placeholder.com/400x500';
-                        
-                        const titleEl = document.getElementById('detail-photo-title');
-                        if (titleEl) titleEl.textContent = page.title || '무제';
-                        
-                        const dateEl = document.getElementById('detail-photo-date');
-                        if (dateEl) {
-                            dateEl.textContent = new Date(page.createdAt).toLocaleDateString('ko-KR', { 
-                                year: 'numeric', month: 'long', day: 'numeric' 
-                            });
+                    if (!page) return;
+
+                    if (selectModeActive) {
+                        if (page.isE2e) {
+                            alert('E2E 암호화된 일기는 공유할 수 없습니다.');
+                            return;
+                        }
+                        e.stopPropagation();
+                        e.preventDefault();
+
+                        if (selectedPageIds.has(id)) {
+                            selectedPageIds.delete(id);
+                        } else {
+                            selectedPageIds.add(id);
                         }
 
-                        // Set current page id in detail view
-                        const detailContainer = document.getElementById('v2-photo-detail-container');
-                        if (detailContainer) {
-                            detailContainer.setAttribute('data-current-page-id', page.id);
-                            detailContainer.classList.remove('hidden');
-                            detailContainer.style.transform = 'translateY(0)';
+                        // Toggle active border ring
+                        if (selectedPageIds.has(id)) {
+                            art.classList.add('ring-2', 'ring-primary');
+                        } else {
+                            art.classList.remove('ring-2', 'ring-primary');
                         }
 
-                        // Close share menu if open
-                        const shareMenu = document.getElementById('v2-photo-share-menu');
-                        if (shareMenu) shareMenu.classList.add('hidden');
+                        // Sync checkbox input state
+                        const cb = art.querySelector('.gallery-item-checkbox');
+                        if (cb) cb.checked = selectedPageIds.has(id);
 
-                        // Update share badge visibility
-                        const shareBadge = document.getElementById('v2-photo-share-badge');
-                        if (shareBadge) {
-                            if (page.shared) {
-                                shareBadge.classList.remove('hidden');
+                        // Update selected count
+                        const countText = document.getElementById('v2-gallery-select-count');
+                        if (countText) countText.textContent = `${selectedPageIds.size}개 선택됨`;
+
+                        const shareBtn = document.getElementById('v2-gallery-share-btn');
+                        if (shareBtn) {
+                            shareBtn.disabled = selectedPageIds.size === 0;
+                            if (selectedPageIds.size === 0) {
+                                shareBtn.classList.add('opacity-50', 'pointer-events-none');
                             } else {
-                                shareBadge.classList.add('hidden');
+                                shareBtn.classList.remove('opacity-50', 'pointer-events-none');
                             }
+                        }
+                        return;
+                    }
+
+                    // Original View Detail
+                    const fragment = filteredFragments.find(f => f.id === id);
+                    const imgUrl = fragment ? fragment.imgUrl : '';
+                    const imgEl = document.getElementById('detail-photo-img');
+                    if (imgEl) imgEl.src = imgUrl || 'https://via.placeholder.com/400x500';
+                    
+                    const titleEl = document.getElementById('detail-photo-title');
+                    if (titleEl) titleEl.textContent = page.title || '무제';
+                    
+                    const dateEl = document.getElementById('detail-photo-date');
+                    if (dateEl) {
+                        dateEl.textContent = new Date(page.createdAt).toLocaleDateString('ko-KR', { 
+                            year: 'numeric', month: 'long', day: 'numeric' 
+                        });
+                    }
+
+                    // Set current page id in detail view
+                    const detailContainer = document.getElementById('v2-photo-detail-container');
+                    if (detailContainer) {
+                        detailContainer.setAttribute('data-current-page-id', page.id);
+                        detailContainer.classList.remove('hidden');
+                        detailContainer.style.transform = 'translateY(0)';
+                    }
+
+                    // Close share menu if open
+                    const shareMenu = document.getElementById('v2-photo-share-menu');
+                    if (shareMenu) shareMenu.classList.add('hidden');
+
+                    // Update share badge visibility
+                    const shareBadge = document.getElementById('v2-photo-share-badge');
+                    if (shareBadge) {
+                        if (page.shared) {
+                            shareBadge.classList.remove('hidden');
+                        } else {
+                            shareBadge.classList.add('hidden');
                         }
                     }
                 });
@@ -946,7 +1057,8 @@ export async function deleteV2Page(pageId) {
 }
 
 export function setupDirectFragmentUpload() {
-    const addBtn = document.getElementById('v2-direct-add-fragment-btn');
+    const cameraBtn = document.getElementById('v2-camera-btn');
+    const uploadBtn = document.getElementById('v2-upload-btn');
     const scrim = document.getElementById('v2-fragment-scrim');
     const container = document.getElementById('v2-fragment-upload-container');
     const closeBtn = document.getElementById('v2-fragment-upload-close');
@@ -957,15 +1069,22 @@ export function setupDirectFragmentUpload() {
     const descTextarea = document.getElementById('v2-fragment-desc');
     const notebookSelect = document.getElementById('v2-fragment-notebook-select');
 
-    if (!addBtn || !container) return;
+    if ((!cameraBtn && !uploadBtn) || !container) return;
 
     let base64Image = null;
 
-    // Open Modal
-    addBtn.addEventListener('click', async () => {
+    // Open Modal logic helper
+    const openUploadModal = async (isCamera) => {
         // Reset form
         base64Image = null;
-        if (fileInput) fileInput.value = '';
+        if (fileInput) {
+            fileInput.value = '';
+            if (isCamera) {
+                fileInput.setAttribute('capture', 'environment');
+            } else {
+                fileInput.removeAttribute('capture');
+            }
+        }
         if (preview) {
             preview.src = '';
             preview.classList.add('hidden');
@@ -992,8 +1111,14 @@ export function setupDirectFragmentUpload() {
             scrim?.classList.remove('opacity-0');
             scrim?.classList.add('opacity-100');
             container.style.transform = 'translateY(0)';
+            
+            // Auto click input to open camera or file system selector immediately
+            fileInput?.click();
         }, 10);
-    });
+    };
+
+    cameraBtn?.addEventListener('click', () => openUploadModal(true));
+    uploadBtn?.addEventListener('click', () => openUploadModal(false));
 
     // Close Modal
     const closeModal = () => {
@@ -1083,6 +1208,317 @@ export function setupDirectFragmentUpload() {
         } finally {
             saveBtn.disabled = false;
             saveBtn.innerHTML = '저장';
+        }
+    });
+}
+
+export function setupGallerySharing() {
+    const selectBtn = document.getElementById('v2-gallery-select-btn');
+    const selectBar = document.getElementById('v2-gallery-select-bar');
+    const selectCountText = document.getElementById('v2-gallery-select-count');
+    const cancelBtn = document.getElementById('v2-gallery-select-cancel-btn');
+    const shareBtn = document.getElementById('v2-gallery-share-btn');
+    
+    const shareConfirmModal = document.getElementById('v2-share-confirm-modal');
+    const shareConfirmScrim = document.getElementById('v2-share-confirm-scrim');
+    const shareConfirmClose = document.getElementById('v2-share-confirm-close');
+    const finalizeShareBtn = document.getElementById('v2-finalize-share-btn');
+    
+    const searchBtn = document.getElementById('v2-share-search-btn');
+    const searchInput = document.getElementById('v2-share-search-input');
+    const searchResultsContainer = document.getElementById('v2-share-search-results-container');
+    const searchResults = document.getElementById('v2-share-search-results');
+    
+    if (!selectBtn || !selectBar) return;
+
+    // Toggle Select Mode
+    const toggleSelectMode = (active) => {
+        selectModeActive = active;
+        selectedPageIds.clear();
+        
+        const allPages = store.history || [];
+        
+        if (active) {
+            selectBtn.textContent = '취소';
+            selectBtn.classList.add('bg-primary/10');
+            selectBar.classList.remove('hidden');
+            setTimeout(() => {
+                selectBar.classList.remove('translate-y-full');
+            }, 10);
+        } else {
+            selectBtn.textContent = '선택';
+            selectBtn.classList.remove('bg-primary/10');
+            selectBar.classList.add('translate-y-full');
+            setTimeout(() => {
+                selectBar.classList.add('hidden');
+            }, 300);
+        }
+        
+        updateSelectCount();
+        renderV2MemoryFragments(allPages);
+    };
+
+    const updateSelectCount = () => {
+        if (selectCountText) {
+            selectCountText.textContent = `${selectedPageIds.size}개 선택됨`;
+        }
+        if (shareBtn) {
+            shareBtn.disabled = selectedPageIds.size === 0;
+            if (selectedPageIds.size === 0) {
+                shareBtn.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                shareBtn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+    };
+
+    selectBtn.addEventListener('click', () => {
+        toggleSelectMode(!selectModeActive);
+    });
+
+    cancelBtn?.addEventListener('click', () => {
+        toggleSelectMode(false);
+    });
+
+    // Close confirm modal
+    const closeShareModal = () => {
+        shareConfirmModal.classList.add('translate-y-full');
+        shareConfirmScrim?.classList.remove('opacity-100');
+        shareConfirmScrim?.classList.add('opacity-0');
+        setTimeout(() => {
+            shareConfirmModal.classList.add('hidden');
+            shareConfirmScrim?.classList.add('hidden');
+        }, 300);
+    };
+
+    shareConfirmClose?.addEventListener('click', closeShareModal);
+    shareConfirmScrim?.addEventListener('click', closeShareModal);
+
+    // Open Share Modal
+    shareBtn?.addEventListener('click', async () => {
+        if (selectedPageIds.size === 0) return;
+
+        customAddedRecipients = [];
+        const customContainer = document.getElementById('v2-share-custom-recipients-container');
+        if (customContainer) customContainer.classList.add('hidden');
+        
+        // 1. Render Previews
+        const previewsContainer = document.getElementById('v2-share-selected-previews');
+        if (previewsContainer) {
+            const selectedImages = [];
+            document.querySelectorAll('.full-memory-item').forEach(el => {
+                const id = el.dataset.id;
+                if (selectedPageIds.has(id)) {
+                    const img = el.querySelector('img')?.src;
+                    if (img) selectedImages.push(img);
+                }
+            });
+
+            previewsContainer.innerHTML = selectedImages.map(img => `
+                <div class="w-16 h-16 rounded-lg overflow-hidden border border-outline-variant/30 flex-shrink-0 relative shadow-sm">
+                    <img class="w-full h-full object-cover" src="${img}">
+                </div>
+            `).join('');
+        }
+
+        // 2. Fetch 1촌 Friends
+        const friendsList = document.getElementById('v2-share-friends-list');
+        const badge = document.getElementById('v2-friends-count-badge');
+        if (friendsList) {
+            friendsList.innerHTML = '<p class="text-xs text-on-surface-variant/50 text-center py-4"><span class="spinner"></span> 친구 목록 로드 중...</p>';
+            try {
+                const token = await store.getSessionToken();
+                const res = await fetch(`${API_URL}/friends/sos`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.success && data.friends?.length > 0) {
+                    const friends = data.friends;
+                    if (badge) badge.textContent = `${friends.length}명`;
+                    friendsList.innerHTML = friends.map(f => `
+                        <label class="flex items-center justify-between p-2 hover:bg-surface-container rounded-lg cursor-pointer transition-colors">
+                            <div class="flex items-center gap-2.5">
+                                <img src="${f.avatar_url || 'https://via.placeholder.com/32'}" class="w-8 h-8 rounded-full object-cover border border-outline-variant/30">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-on-surface">${f.nickname}</span>
+                                    <span class="text-[9px] text-on-surface-variant/60">1촌 친구</span>
+                                </div>
+                            </div>
+                            <input type="checkbox" class="friend-share-checkbox w-4 h-4 rounded text-primary focus:ring-primary border-outline-variant" data-id="${f.id}" data-nickname="${f.nickname}" checked>
+                        </label>
+                    `).join('');
+                } else {
+                    if (badge) badge.textContent = '0명';
+                    friendsList.innerHTML = '<p class="text-xs text-on-surface-variant/50 text-center py-4">등록된 1촌 친구가 없습니다.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                friendsList.innerHTML = '<p class="text-xs text-error/70 text-center py-4">친구 목록 로드 실패</p>';
+            }
+        }
+
+        // Show Modal
+        shareConfirmModal.classList.remove('hidden');
+        shareConfirmScrim?.classList.remove('hidden');
+        setTimeout(() => {
+            shareConfirmScrim?.classList.remove('opacity-0');
+            shareConfirmScrim?.classList.add('opacity-100');
+            shareConfirmModal.classList.remove('translate-y-full');
+        }, 10);
+    });
+
+    // Handle user search by nickname
+    searchBtn?.addEventListener('click', async () => {
+        const query = searchInput?.value?.trim();
+        if (!query) return;
+
+        searchBtn.disabled = true;
+        searchResultsContainer.classList.remove('hidden');
+        searchResults.innerHTML = '<div class="text-xs text-on-surface-variant/50 text-center py-4"><span class="spinner"></span> 사용자 검색 중...</div>';
+
+        try {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/users/search?nickname=${encodeURIComponent(query)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            if (data.success && data.users?.length > 0) {
+                searchResults.innerHTML = data.users.map(u => `
+                    <div class="flex items-center justify-between p-2 bg-surface rounded-lg border border-outline-variant/10 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <img src="${u.avatar_url || 'https://via.placeholder.com/32'}" class="w-8 h-8 rounded-full object-cover">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-on-surface">${u.nickname}</span>
+                                <span class="text-[9px] text-on-surface-variant/50">${u.email}</span>
+                            </div>
+                        </div>
+                        <button class="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full hover:bg-primary-hover active:scale-95 transition-all add-custom-recipient-btn" data-id="${u.id}" data-nickname="${u.nickname}">
+                            추가
+                        </button>
+                    </div>
+                `).join('');
+
+                searchResults.querySelectorAll('.add-custom-recipient-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const nickname = btn.dataset.nickname;
+                        
+                        if (!customAddedRecipients.some(r => r.id === id)) {
+                            customAddedRecipients.push({ id, nickname });
+                            renderCustomRecipients();
+                        }
+                        searchResultsContainer.classList.add('hidden');
+                        if (searchInput) searchInput.value = '';
+                    });
+                });
+            } else {
+                searchResults.innerHTML = '<div class="text-xs text-on-surface-variant/50 text-center py-4">검색 결과가 없습니다.</div>';
+            }
+        } catch (err) {
+            console.error(err);
+            searchResults.innerHTML = '<div class="text-xs text-error/70 text-center py-4">검색 오류 발생</div>';
+        } finally {
+            searchBtn.disabled = false;
+        }
+    });
+
+    const renderCustomRecipients = () => {
+        const customContainer = document.getElementById('v2-share-custom-recipients-container');
+        const customList = document.getElementById('v2-share-custom-recipients-list');
+        if (!customContainer || !customList) return;
+
+        if (customAddedRecipients.length > 0) {
+            customContainer.classList.remove('hidden');
+            customList.innerHTML = customAddedRecipients.map(r => `
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">
+                    <span>${r.nickname}</span>
+                    <button class="w-4 h-4 flex items-center justify-center hover:bg-primary/20 rounded-full remove-custom-recipient-btn" data-id="${r.id}">
+                        <span class="material-symbols-outlined text-[10px]">close</span>
+                    </button>
+                </div>
+            `).join('');
+
+            customList.querySelectorAll('.remove-custom-recipient-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    customAddedRecipients = customAddedRecipients.filter(r => r.id !== id);
+                    renderCustomRecipients();
+                });
+            });
+        } else {
+            customContainer.classList.add('hidden');
+        }
+    };
+
+    // Finalize Share Click
+    finalizeShareBtn?.addEventListener('click', async () => {
+        const checkedFriends = [];
+        document.querySelectorAll('.friend-share-checkbox:checked').forEach(cb => {
+            checkedFriends.push({
+                id: cb.dataset.id,
+                nickname: cb.dataset.nickname
+            });
+        });
+
+        const allRecipients = [...checkedFriends, ...customAddedRecipients];
+        const token = await store.getSessionToken();
+        if (!token) return;
+
+        finalizeShareBtn.disabled = true;
+        finalizeShareBtn.textContent = '공유 중...';
+
+        const promises = Array.from(selectedPageIds).map(pageId => {
+            return fetch(`${API_URL}/history/${encodeURIComponent(pageId)}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    shared: allRecipients.length > 0,
+                    sharedWith: allRecipients
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Server error');
+                }
+                return { pageId, success: true };
+            }).catch(err => {
+                return { pageId, success: false, error: err.message };
+            });
+        });
+
+        try {
+            const results = await Promise.allSettled(promises);
+            let successes = 0;
+            let failures = 0;
+
+            results.forEach(res => {
+                if (res.status === 'fulfilled' && res.value.success) {
+                    successes++;
+                } else {
+                    failures++;
+                }
+            });
+
+            if (failures === 0) {
+                alert(`${successes}개의 기억 조각이 성공적으로 공유되었습니다.`);
+            } else {
+                alert(`공유 결과: ${successes}개 성공, ${failures}개 실패`);
+            }
+
+            closeShareModal();
+            toggleSelectMode(false);
+            await loadNotebooks();
+        } catch (err) {
+            console.error(err);
+            alert('공유 일괄 요청 중 심각한 오류가 발생했습니다.');
+        } finally {
+            finalizeShareBtn.disabled = false;
+            finalizeShareBtn.textContent = '공유 완료';
         }
     });
 }

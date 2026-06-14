@@ -1,6 +1,8 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 // 1. 환경 변수 초기화 (.env 로드)
 dotenv.config({
     path: path.join(__dirname, '../../.env'),

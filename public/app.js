@@ -470,7 +470,7 @@ function setupTabs() {
                 if (tabId === 'calendar') loadCalendar();
                 else if (tabId === 'chat') {
                     // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.3.0').then(chatMod => {
+                    import('./modules/chat.js?v=5.4.0').then(chatMod => {
                         chatMod.initializeChat();
                     });
                 }

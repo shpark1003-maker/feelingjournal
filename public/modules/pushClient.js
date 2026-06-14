@@ -1,4 +1,4 @@
-import { API_URL } from './state.js?v=5.3.0';
+import { API_URL } from './state.js?v=5.4.0';
 
 /**
  * Convert VAPID public key base64 string to Uint8Array.

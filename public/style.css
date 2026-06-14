@@ -6118,4 +6118,39 @@ body {
     transition: font-size 0.2s ease-out;
 }
 
+/* 7. Memory fragment card (Watercolor Card style) */
+.memory-item {
+    width: 220px;
+    height: 280px;
+    background: #ffffff !important;
+    border: 2px solid #5D574D !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px -10px rgba(184, 166, 142, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.memory-item:hover {
+    border-color: #4A6741 !important; /* Forest Green Accent hover */
+    transform: translateY(-5px) scale(1.02);
+}
+
+/* Custom clamp utilities for non-Tailwind environment */
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+}
+
+
+
 
