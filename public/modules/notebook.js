@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.4';
+import { store, API_URL, assertIds } from './state.js?v=5.4.5';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -570,7 +570,7 @@ function renderV2MemoryFragments(allPages) {
 
     memoryGrid.innerHTML = recentFragments.map(f => `
     <div class="swiper-slide" style="width: 280px;">
-        <article class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item h-full" data-id="${f.id}">
+        <article class="w-full bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item h-full" data-id="${f.id}">
             <div class="h-40 relative overflow-hidden">
                 <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
             </div>
@@ -611,7 +611,7 @@ function renderV2MemoryFragments(allPages) {
                 slidesPerView: 'auto',
                 coverflowEffect: {
                     rotate: 25,
-                    stretch: -110, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
+                    stretch: -130, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
                     depth: 140,
                     modifier: 1,
                     slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
