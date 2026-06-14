@@ -487,32 +487,45 @@ const ZONE_MAP = {
 async function getLiveWeather(region) {
     const axios = require('axios');
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+    const cacheKey = `system:weather-cache:${region}`;
+
+    // Redis 캐시 확인 (30분 간 유지)
+    try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+    } catch (cacheErr) {
+        console.warn(`--- [WEATHER CACHE READ ERROR] Region: ${region}, Error: ${cacheErr.message} ---`);
+    }
     
     if (apiKey && apiKey !== '여기에_OpenWeather_API키_입력') {
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(region)}&appid=${apiKey}&units=metric&lang=kr`;
         try {
-            const res = await axios.get(url, { timeout: 5000 });
+            const res = await axios.get(url, { timeout: 1500 });
             const temp = res.data.main.temp;
             const sky = res.data.weather[0]?.description || '맑음';
             const rainVol = res.data.rain ? (res.data.rain['1h'] || 0) : 0;
             
-            return {
+            const weatherResult = {
                 region,
                 temp,
                 sky,
                 rainProb: rainVol > 0 ? 100 : 0,
                 rainType: rainVol > 0 ? '강수 있음' : '강수 없음'
             };
+
+            await redis.set(cacheKey, JSON.stringify(weatherResult), 'EX', 1800); // 30분 캐시 저장
+            return weatherResult;
         } catch (e) {
             console.error(`--- [WEATHER API ERROR] Region: ${region}, Error: ${e.message} ---`);
-            // Fall through to fallback
         }
     }
     
-    // Fallback: wttr.in
+    // Fallback: wttr.in (타임아웃 1.5초 단축)
     const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
     try {
-        const res = await axios.get(url, { timeout: 5000 });
+        const res = await axios.get(url, { timeout: 1500 });
         const current = res.data.current_condition?.[0];
         if (!current) return null;
         
@@ -520,13 +533,16 @@ async function getLiveWeather(region) {
         const temp = parseFloat(current.temp_C || 0);
         const pop = res.data.weather?.[0]?.hourly?.[0]?.chanceofrain || '0';
         
-        return {
+        const weatherResult = {
             region,
             temp: temp,
             sky: sky,
             rainProb: parseInt(pop, 10) || 0,
             rainType: parseInt(pop, 10) > 30 ? '강수 가능성 있음' : '강수 없음'
         };
+
+        await redis.set(cacheKey, JSON.stringify(weatherResult), 'EX', 1800); // 30분 캐시 저장
+        return weatherResult;
     } catch (e) {
         console.error(`--- [WEATHER FETCH ERROR] Region: ${region}, Error: ${e.message} ---`);
         return null;
@@ -535,52 +551,61 @@ async function getLiveWeather(region) {
 
 async function getNewsHeadlines(categories = ['business']) {
     const axios = require('axios');
-    const apiKey = process.env.NEWSAPI_KEY;
+    const cheerio = require('cheerio');
+    
+    const activeCategories = Array.isArray(categories) && categories.length > 0 ? categories : ['business'];
+    
+    const YONHAP_RSS_MAP = {
+        politics: 'https://www.yna.co.kr/rss/politics.xml',
+        business: 'https://www.yna.co.kr/rss/economy.xml',
+        society: 'https://www.yna.co.kr/rss/society.xml',
+        culture: 'https://www.yna.co.kr/rss/culture.xml',
+        science: 'https://www.yna.co.kr/rss/industry.xml',
+        world: 'https://www.yna.co.kr/rss/international.xml',
+        entertainment: 'https://www.yna.co.kr/rss/entertainment.xml',
+        sports: 'https://www.yna.co.kr/rss/sports.xml'
+    };
 
-    if (apiKey && apiKey !== '여기에_NewsAPI_키_입력') {
+    const headlines = [];
+    const fetchPromises = activeCategories.map(async (cat) => {
+        const cacheKey = `system:news-cache:${cat}`;
         try {
-            const headlines = [];
-            const fetchPromises = categories.map(async (cat) => {
-                const url = `https://newsapi.org/v2/top-headlines?country=kr&category=${cat}&pageSize=2&apiKey=${apiKey}`;
-                const res = await axios.get(url, { timeout: 5000 });
-                if (res.data && res.data.articles) {
-                    res.data.articles.forEach(article => {
-                        if (article.title) headlines.push(`[${cat}] ${article.title}`);
-                    });
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed && parsed.length > 0) {
+                    parsed.forEach(title => headlines.push(`[${cat}] ${title}`));
+                    return;
+                }
+            }
+        } catch (cacheErr) {
+            console.warn(`--- [NEWS CACHE READ ERROR] Category: ${cat}, Error: ${cacheErr.message} ---`);
+        }
+
+        const url = YONHAP_RSS_MAP[cat] || 'https://www.yna.co.kr/rss/news.xml';
+        try {
+            const res = await axios.get(url, { timeout: 1500 });
+            const $ = cheerio.load(res.data, { xmlMode: true });
+            const catHeadlines = [];
+            
+            $('item').slice(0, 3).each((i, el) => {
+                const title = $(el).find('title').text().replace(/ - [^-]+$/, '').trim();
+                if (title) {
+                    catHeadlines.push(title);
+                    headlines.push(`[${cat}] ${title}`);
                 }
             });
-            await Promise.allSettled(fetchPromises);
-            const finalHeadlines = [...new Set(headlines)].slice(0, 4);
-            if (finalHeadlines.length > 0) {
-                return finalHeadlines;
-            } else {
-                console.warn('--- [NEWS API] Returned empty results. Falling back to Naver RSS... ---');
-            }
-        } catch (e) {
-            console.error(`--- [NEWS API ERROR] Error: ${e.message} ---`);
-            // Fall through to fallback
-        }
-    }
 
-    const cheerio = require('cheerio');
-    // Fallback: Google News RSS (경제/비즈니스)
-    const url = 'https://news.google.com/rss/search?q=%EA%B2%BD%EC%A0%9C&hl=ko&gl=KR&ceid=KR:ko';
-    
-    try {
-        const res = await axios.get(url, { timeout: 5000 });
-        const $ = cheerio.load(res.data, { xmlMode: true });
-        const headlines = [];
-        
-        $('item').slice(0, 3).each((i, el) => {
-            const title = $(el).find('title').text().replace(/ - [^-]+$/, '').trim();
-            if (title) headlines.push(title);
-        });
-        
-        return headlines;
-    } catch (e) {
-        console.error(`--- [NEWS CRAWL ERROR] Error: ${e.message} ---`);
-        return [];
-    }
+            if (catHeadlines.length > 0) {
+                await redis.set(cacheKey, JSON.stringify(catHeadlines), 'EX', 3600); // 1시간 캐시 저장
+            }
+        } catch (fetchErr) {
+            console.error(`--- [NEWS FETCH ERROR] URL: ${url}, Error: ${fetchErr.message} ---`);
+        }
+    });
+
+    await Promise.allSettled(fetchPromises);
+    return headlines;
 }
 
 const crypto = require('crypto');

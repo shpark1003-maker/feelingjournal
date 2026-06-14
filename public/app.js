@@ -517,6 +517,22 @@ function setupSettingsUI() {
     console.log('--- [UI] Settings (Notification) UI Setup ---');
     setupUserProfileUpload();
     setupGoogleCalendarConnect();
+
+    // 관심 뉴스 카테고리 span 토글 핸들러 등록
+    document.querySelectorAll('#news-category-grid span').forEach(span => {
+        // 기존 중복 방지를 위해 리스너 초기화
+        span.onclick = null;
+        span.addEventListener('click', () => {
+            span.classList.toggle('bg-primary');
+            span.classList.toggle('text-white');
+            span.classList.toggle('shadow-sm');
+            span.classList.toggle('bg-surface-container-highest');
+            span.classList.toggle('text-on-surface-variant');
+            span.classList.toggle('border');
+            span.classList.toggle('border-outline-variant/30');
+        });
+    });
+
     const saveBtn = document.getElementById('save-settings-btn');
     if (!saveBtn) return;
 
@@ -534,8 +550,8 @@ function setupSettingsUI() {
             briefingTime
         };
 
-        const newsCheckboxes = document.querySelectorAll('input[name="news-category"]:checked');
-        const newsCategories = Array.from(newsCheckboxes).map(cb => cb.value);
+        const selectedSpans = document.querySelectorAll('#news-category-grid span.bg-primary');
+        const newsCategories = Array.from(selectedSpans).map(span => span.getAttribute('data-category'));
         if (newsCategories.length === 0) newsCategories.push('business'); // Fallback if none selected
         config.newsCategories = newsCategories;
 
@@ -627,8 +643,17 @@ async function loadSettings() {
             }
 
             if (s.newsCategories && Array.isArray(s.newsCategories)) {
-                document.querySelectorAll('input[name="news-category"]').forEach(cb => {
-                    cb.checked = s.newsCategories.includes(cb.value);
+                document.querySelectorAll('#news-category-grid span').forEach(span => {
+                    const cat = span.getAttribute('data-category');
+                    const isSelected = s.newsCategories.includes(cat);
+                    
+                    span.classList.remove('bg-primary', 'text-white', 'shadow-sm', 'bg-surface-container-highest', 'text-on-surface-variant', 'border', 'border-outline-variant/30');
+                    
+                    if (isSelected) {
+                        span.classList.add('bg-primary', 'text-white', 'shadow-sm');
+                    } else {
+                        span.classList.add('bg-surface-container-highest', 'text-on-surface-variant', 'border', 'border-outline-variant/30');
+                    }
                 });
             }
 

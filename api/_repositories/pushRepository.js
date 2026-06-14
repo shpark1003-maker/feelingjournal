@@ -25,7 +25,8 @@ async function getUserSubscriptions(userId) {
                     alarm30: true,
                     alarm10: true,
                     briefingTime: '08:00',
-                    weatherRegion: '서울'
+                    weatherRegion: '서울',
+                    newsCategories: ['business']
                 },
                 email: oldConfig.email || '',
                 providerToken: oldConfig.providerToken || '',
@@ -49,7 +50,8 @@ async function getUserSubscriptions(userId) {
             alarm30: true,
             alarm10: true,
             briefingTime: '08:00',
-            weatherRegion: '서울'
+            weatherRegion: '서울',
+            newsCategories: ['business']
         },
         email: '',
         providerToken: '',

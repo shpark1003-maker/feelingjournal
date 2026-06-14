@@ -8,7 +8,7 @@
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="./style.css?v=5.3.0">
 <link rel="stylesheet" href="/css/floating_chat.css?v=5.3.0">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -86,14 +86,15 @@
                         "stack-sm": "12px"
                     },
                     "fontFamily": {
-                        "display-lg": ["Plus Jakarta Sans"],
-                        "headline-lg-mobile": ["Manrope"],
-                        "body-lg": ["Be Vietnam Pro"],
-                        "headline-md": ["Manrope"],
-                        "label-md": ["Be Vietnam Pro"],
-                        "body-md": ["Be Vietnam Pro"],
-                        "label-sm": ["Be Vietnam Pro"],
-                        "headline-lg": ["Manrope"]
+                        "display-lg": ["Gowun Dodum", "Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Gowun Dodum", "Manrope"],
+                        "body-lg": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "headline-md": ["Gowun Dodum", "Manrope"],
+                        "label-md": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "body-md": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "label-sm": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "headline-lg": ["Gowun Dodum", "Manrope"],
+                        "sans": ["Gowun Dodum", "Plus Jakarta Sans", "sans-serif"]
                     },
                     "fontSize": {
                         "display-lg": ["3rem", {"lineHeight": "3.5rem", "letterSpacing": "-0.02em", "fontWeight": "700"}],
@@ -111,7 +112,7 @@
     </script>
 <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Gowun Dodum', 'Plus Jakarta Sans', sans-serif;
             background-color: #fdf9f3;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(139, 168, 142, 0.15) 0, transparent 50%),
@@ -411,9 +412,16 @@
 <aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-24">
 <section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
 <div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
-<div class="flex items-center gap-2 mb-2">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
 <span class="material-symbols-outlined text-primary text-[20px]" data-icon="auto_awesome">auto_awesome</span>
 <span class="font-label-sm text-primary uppercase tracking-wider" id="briefing-title-text">Cloud Wisdom</span>
+</div>
+<!-- 실시간 날씨 요약 위젯 (눈비맑음 아이콘 + 온도만 표시) -->
+<div id="briefing-weather-widget" class="flex items-center gap-1 text-xs text-on-surface-variant font-label-md bg-white/40 px-2 py-0.5 rounded-full border border-white/20 hidden">
+<span id="briefing-weather-icon" class="material-symbols-outlined text-[15px] text-primary">sunny</span>
+<span id="briefing-weather-temp">15°C</span>
+</div>
 </div>
 <div id="briefing-content" class="font-body-md text-on-surface-variant leading-relaxed mb-4 z-10 relative">
     <div style="display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 0.9rem;" class="animate-pulse">
@@ -421,8 +429,8 @@
         <span>오늘의 일과 브리핑을 가져오고 있습니다...</span>
     </div>
 </div>
-<div class="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
-<span class="material-symbols-outlined text-[80px]" data-icon="cloud">cloud</span>
+<div class="absolute -right-2 -bottom-2 opacity-15 pointer-events-none w-28 h-28 select-none z-0">
+<img src="./angel_mascot.png" class="w-full h-full object-contain" alt="Angel Mascot Background">
 </div>
 </div>
 </section>
@@ -452,7 +460,7 @@
 <!-- Memory Fragments Grid Preview -->
 <section class="mb-gutter">
 <div class="flex justify-between items-center mb-4">
-<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">기억의 편린</h3>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">기억 조각들</h3>
 <button id="v2-gallery-more-btn" class="text-primary font-label-sm hover:underline flex items-center">더보기 <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
 </div>
 <div class="swiper" id="memory-swiper" style="width: 100%; padding-top: 20px; padding-bottom: 50px;">
@@ -874,7 +882,16 @@
     <span class="material-symbols-outlined chevron transition-transform duration-300 text-sm">expand_more</span>
     </button>
     <div class="hidden transition-all duration-300">
-    <div class="grid grid-cols-3 gap-2 p-1"><span class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">정치</span><span class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">경제</span><span class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">사회</span><span class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">생활/문화</span><span class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">IT/과학</span><span class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">세계</span><span class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">연예</span><span class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">스포츠</span></div>
+    <div class="grid grid-cols-3 gap-2 p-1" id="news-category-grid">
+        <span data-category="politics" class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">정치</span>
+        <span data-category="business" class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">경제</span>
+        <span data-category="society" class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">사회</span>
+        <span data-category="culture" class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">생활/문화</span>
+        <span data-category="science" class="bg-primary text-white px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center shadow-sm">IT/과학</span>
+        <span data-category="world" class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">세계</span>
+        <span data-category="entertainment" class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">연예</span>
+        <span data-category="sports" class="bg-surface-container-highest text-on-surface-variant px-3 py-2 rounded-full text-xs font-label-md cursor-pointer text-center border border-outline-variant/30">스포츠</span>
+    </div>
     </div>
     </div>
     <div class="pt-4 border-t border-outline-variant/30">
@@ -1435,10 +1452,10 @@
 <span class="material-symbols-outlined" data-icon="close">close</span>
 </button>
 <div class="flex flex-col items-center">
-<h1 class="text-on-surface font-headline-sm text-[16px]">모든 편린</h1>
+<h1 class="text-on-surface font-headline-sm text-[16px]">모든 기억 조각</h1>
 <p class="text-[10px] text-on-surface-variant/60 font-label-sm">나의 전체 기억 보관소</p>
 </div>
-<button class="flex items-center justify-center w-10 h-10 -mr-2 text-primary hover:bg-surface-container-high rounded-full transition-all" id="v2-direct-add-fragment-btn" title="편린 추가">
+<button class="flex items-center justify-center w-10 h-10 -mr-2 text-primary hover:bg-surface-container-high rounded-full transition-all" id="v2-direct-add-fragment-btn" title="조각 추가">
 <span class="material-symbols-outlined text-[22px]">add_a_photo</span>
 </button>
 </header>
@@ -1482,7 +1499,7 @@
         <button class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center active:scale-90 duration-200" id="v2-fragment-upload-close">
             <span class="material-symbols-outlined text-on-surface-variant">close</span>
         </button>
-        <h2 class="text-[16px] font-bold text-on-surface">기억 편린 추가</h2>
+        <h2 class="text-[16px] font-bold text-on-surface">기억 조각 추가</h2>
         <button class="text-primary font-bold px-3 py-1.5 rounded-full hover:bg-primary/5 active:scale-95 transition-all text-sm" id="v2-fragment-upload-save">저장</button>
     </header>
     <div class="flex-1 overflow-y-auto px-5 space-y-6 py-6 pb-24 custom-scrollbar">
@@ -1526,7 +1543,7 @@
         <button class="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-surface-container-high transition-all squishy" id="v2-photo-detail-back-btn">
             <span class="material-symbols-outlined text-primary">arrow_back</span>
         </button>
-        <h1 class="text-lg font-bold text-primary tracking-tight">감성 편린</h1>
+        <h1 class="text-lg font-bold text-primary tracking-tight">감성 조각</h1>
         <div class="flex items-center gap-2 relative">
             <!-- 공유 상태 선택 버튼 -->
             <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all squishy relative" id="v2-photo-detail-share-btn" title="공유 설정">

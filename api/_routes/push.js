@@ -23,7 +23,7 @@ router.get('/subscribe', verifyUser, async (req, res) => {
             const client = supabaseAdmin || supabase;
             const { data: profile } = await client
                 .from('profiles')
-                .select('briefing_time, weather_region')
+                .select('briefing_time, weather_region, news_categories')
                 .eq('id', user.id)
                 .maybeSingle();
             
@@ -32,7 +32,8 @@ router.get('/subscribe', verifyUser, async (req, res) => {
                 alarm30: config?.settings?.alarm30 ?? true,
                 alarm10: config?.settings?.alarm10 ?? true,
                 briefingTime: profile?.briefing_time || '08:00',
-                weatherRegion: profile?.weather_region || '서울'
+                weatherRegion: profile?.weather_region || '서울',
+                newsCategories: config?.settings?.newsCategories || profile?.news_categories || ['business']
             };
             config.email = user.email;
             
@@ -80,7 +81,8 @@ router.post('/subscribe', verifyUser, async (req, res) => {
                 .upsert({
                     id: user.id,
                     briefing_time: settings.briefingTime || '08:00',
-                    weather_region: settings.weatherRegion || '서울'
+                    weather_region: settings.weatherRegion || '서울',
+                    news_categories: settings.newsCategories || ['business']
                 }, { onConflict: 'id' });
         } catch (e) {
             console.error('Supabase profiles subscribe settings sync failed:', e);

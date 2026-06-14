@@ -82,29 +82,29 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
         return '일정 정보 없음';
     })();
 
-    // 2. 날씨 및 뉴스 비동기 처리 Promise 정의 (Supabase 프로필 조회를 내포)
     const weatherNewsPromise = (async () => {
         let region = '서울';
         let newsCategories = ['business'];
-        if (regionOverride) {
-            region = regionOverride;
-        } else {
-            try {
-                const client = supabaseAdmin || supabase;
-                const { data: profile } = await client
-                    .from('profiles')
-                    .select('weather_region, news_categories')
-                    .eq('id', userId)
-                    .maybeSingle();
-                
-                if (profile?.weather_region) {
-                    region = profile.weather_region;
-                }
-                if (profile?.news_categories && profile.news_categories.length > 0) {
-                    newsCategories = profile.news_categories;
-                }
-            } catch (e) {
-                console.error('Briefing profile fetch failed, fallback to defaults:', e.message);
+        try {
+            const client = supabaseAdmin || supabase;
+            const { data: profile } = await client
+                .from('profiles')
+                .select('weather_region, news_categories')
+                .eq('id', userId)
+                .maybeSingle();
+            
+            if (regionOverride) {
+                region = regionOverride;
+            } else if (profile?.weather_region) {
+                region = profile.weather_region;
+            }
+            if (profile?.news_categories && profile.news_categories.length > 0) {
+                newsCategories = profile.news_categories;
+            }
+        } catch (e) {
+            console.error('Briefing profile fetch failed, fallback to defaults:', e.message);
+            if (regionOverride) {
+                region = regionOverride;
             }
         }
 
@@ -278,7 +278,7 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
 3. 최근 생각(Diary) (작성일 포함): 
 ${recentDiaries}
 4. 실시간 기상 예보: ${weatherStr}
-5. 당일 주요 관심분야 뉴스: 
+5. 당일 주요 관심분야 뉴스 (카테고리 접두사 포함): 
 ${newsStr}
 6. 연계된 과거의 기억(Reminiscence): 
 ${reminiscenceMemory}
@@ -287,11 +287,18 @@ ${reminiscenceMemory}
 1. **당일 및 내일 일정 완벽 브리핑**: 구글 일정 중 '오늘(당일)' 예정된 일정을 시작으로 '내일'의 주요 일정까지 순차적으로 꼼꼼하게 모두 챙겨서 언급하라. 오늘 일정이 끝났더라도 남은 내일 일정을 알려주며, 성공적인 하루를 위한 준비 사항을 비서의 어조로 따뜻하게 조언하라.
    - **시간 표현 지침**: 브리핑 본문에서 구체적인 분/시 단위의 정확한 작성 시간이나 시각을 일일이 구구절절 언급할 필요는 없습니다. 날짜(오늘, 내일 등)와 함께 시간대를 **새벽, 아침, 오전, 오후, 저녁, 밤**의 6등분 범위로 유연하게 표현하여 한층 더 자연스럽게 설명해 주십시오 (예: '오늘 오후', '내일 아침' 등).
 2. **실시간 날씨 에스코트**: 실시간 기상 예보가 '날씨 안내 비활성화됨'인 경우에는 일절 날씨나 온도, 옷차림에 관련된 코멘트를 브리핑 전체에서 절대 언급하지 말고 완전히 생략하십시오. 그렇지 않고 기상 예보가 주어졌다면 오늘 외출 시 필요한 옷차림 조언이나 소지품 챙기기(예: 강수 확률에 따른 우산 소지, 환절기 겉옷 챙기기 등) 등의 섬세한 에스코트 조언을 어조에 녹여내십시오.
-3. **당일 뉴스 짧은 브리핑**: 오늘(당일) 수집된 사용자의 관심 분야 주요 헤드라인 리스트를 바탕으로 가장 중요하거나 상징적인 시사적 흐름을 짧고 간결하게 브리핑하여 생활 밀착형 인사이트를 제공하십시오.
-4. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 예를 들어, [일기 작성일: 2026-05-18]인 일기에 '내일 마트 가야지'라고 써있다면, 마트 가는 날은 2026-05-19(오늘)입니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일(2026-05-20)로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
+3. **뉴스 요약 및 메모화 지침 (중요)**: 
+   - 절대 뉴스 내용을 문장으로 길게 풀어 쓰거나 수식어로 꾸며 쓰지 마십시오.
+   - 브리핑 본문 중간에 반드시 **'뉴스정리'**를 소제목으로 잡고, 그 하위에 메모/리스트 형식으로 한 줄씩 간결하게 출력해야 합니다.
+   - 사용자가 선택한 뉴스 카테고리(정치, 경제 등)별로 각각 **딱 3개씩만** 추출하여 한 줄 요약 형태로 표기하십시오. 
+   - 예시 포맷:
+     [뉴스정리]
+     • 정치: ... 한 줄 요약
+     • 경제: ... 한 줄 요약
+4. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
 5. **(통합됨)**: 1번 지시사항에 통합됨.
-6. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 "그때의 기쁨/보람을 떠올리며 힘을 내보세요" 또는 "과거의 소중한 기억이 이번 활동에도 좋은 영감이 되길 바랍니다"라는 뉘앙스로 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
-7. 전체 브리핑은 5~6문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하라.
+6. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
+7. 전체 브리핑은 뉴스 영역을 제외하면 4~5문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하고, 불필요한 장문을 배제하여 생성 속도를 단축하라.
 8. 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
 `;
 
@@ -355,7 +362,28 @@ module.exports = async (req, res) => {
         }
 
         const briefing = await generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email);
-        return res.json({ success: true, briefing });
+
+        // Fetch weather from Redis to return to frontend
+        let weather = null;
+        try {
+            const client = supabaseAdmin || supabase;
+            const { data: profile } = await client
+                .from('profiles')
+                .select('weather_region')
+                .eq('id', user.id)
+                .maybeSingle();
+            const region = regionOverride || profile?.weather_region || '서울';
+            if (region !== 'off') {
+                const cachedWeather = await redis.get(`system:weather-cache:${region}`);
+                if (cachedWeather) {
+                    weather = JSON.parse(cachedWeather);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to get weather for response:', e.message);
+        }
+
+        return res.json({ success: true, briefing, weather });
     } catch (error) {
         console.error('Briefing Error:', error?.message || error);
         return res.json({
