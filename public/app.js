@@ -533,6 +533,33 @@ function setupSettingsUI() {
         });
     });
 
+    // 날씨 위치 설정 버튼 토글 핸들러 등록
+    const gpsBtn = document.getElementById('weather-gps-btn');
+    const fixedBtn = document.getElementById('weather-fixed-btn');
+    const fixedInputContainer = document.getElementById('weather-fixed-input-container');
+    const locationInput = document.getElementById('weather-location-input');
+
+    if (gpsBtn && fixedBtn && fixedInputContainer) {
+        gpsBtn.onclick = null;
+        gpsBtn.addEventListener('click', () => {
+            gpsBtn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+            gpsBtn.classList.remove('text-on-surface-variant');
+            fixedBtn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+            fixedBtn.classList.add('text-on-surface-variant');
+            fixedInputContainer.classList.add('opacity-50', 'pointer-events-none');
+        });
+
+        fixedBtn.onclick = null;
+        fixedBtn.addEventListener('click', () => {
+            fixedBtn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+            fixedBtn.classList.remove('text-on-surface-variant');
+            gpsBtn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+            gpsBtn.classList.add('text-on-surface-variant');
+            fixedInputContainer.classList.remove('opacity-50', 'pointer-events-none');
+            if (locationInput) locationInput.focus();
+        });
+    }
+
     const saveBtn = document.getElementById('save-settings-btn');
     if (!saveBtn) return;
 
@@ -588,24 +615,36 @@ function setupSettingsUI() {
         if (weatherOff) {
             await executeSave('off');
         } else {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        const closest = findClosestCity(lat, lon);
-                        await executeSave(closest);
-                    },
-                    async (error) => {
-                        console.warn('Geolocation permission denied or error. Fallback to Seoul.', error);
-                        alert('위치 정보 획득 실패 혹은 권한이 거부되어, 기본 기상 관측소(서울)로 설정 저장합니다.');
-                        await executeSave('서울');
-                    },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
+            const isGpsMode = gpsBtn && gpsBtn.classList.contains('bg-white');
+            if (isGpsMode) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            const closest = findClosestCity(lat, lon);
+                            await executeSave(closest);
+                        },
+                        async (error) => {
+                            console.warn('Geolocation permission denied or error. Fallback to Seoul.', error);
+                            alert('위치 정보 획득 실패 혹은 권한이 거부되어, 기본 기상 관측소(서울)로 설정 저장합니다.');
+                            await executeSave('서울');
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                } else {
+                    console.warn('Geolocation not supported. Fallback to Seoul.');
+                    await executeSave('서울');
+                }
             } else {
-                console.warn('Geolocation not supported. Fallback to Seoul.');
-                await executeSave('서울');
+                const customLocation = locationInput ? locationInput.value.trim() : '서울';
+                if (!customLocation) {
+                    alert('위치 고정 모드에서는 도시 또는 지역명을 입력해주세요.');
+                    saveBtn.disabled = false;
+                    saveBtn.innerText = '설정 저장';
+                    return;
+                }
+                await executeSave(customLocation);
             }
         }
     });
@@ -636,10 +675,26 @@ async function loadSettings() {
 
             const weatherOn = document.getElementById('weather-on');
             const weatherOff = document.getElementById('weather-off');
+            const regionInput = document.getElementById('weather-location-input');
+            const gpsBtn = document.getElementById('weather-gps-btn');
+            const fixedBtn = document.getElementById('weather-fixed-btn');
+            const fixedInputContainer = document.getElementById('weather-fixed-input-container');
+
             if (s.weatherRegion === 'off') {
                 if (weatherOff) weatherOff.checked = true;
             } else {
                 if (weatherOn) weatherOn.checked = true;
+                if (regionInput && s.weatherRegion) {
+                    regionInput.value = s.weatherRegion;
+                    // If a specific city is saved, default the UI toggle to Fixed mode
+                    if (fixedBtn && gpsBtn && fixedInputContainer) {
+                        fixedBtn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+                        fixedBtn.classList.remove('text-on-surface-variant');
+                        gpsBtn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                        gpsBtn.classList.add('text-on-surface-variant');
+                        fixedInputContainer.classList.remove('opacity-50', 'pointer-events-none');
+                    }
+                }
             }
 
             if (s.newsCategories && Array.isArray(s.newsCategories)) {

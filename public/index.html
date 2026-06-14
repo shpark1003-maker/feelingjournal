@@ -866,12 +866,12 @@
     <span class="material-symbols-outlined text-on-surface-variant text-sm">location_on</span>
     <span class="font-label-sm text-on-surface-variant">날씨 위치 설정</span>
     </div>
-    <div class="flex bg-surface-container rounded-2xl p-1.5">
-    <button class="flex-1 py-2 rounded-xl bg-white shadow-sm text-primary font-label-md text-xs">현재 위치 (GPS)</button>
-    <button class="flex-1 py-2 rounded-xl text-on-surface-variant font-label-md text-xs">위치 고정</button>
+    <div class="flex bg-surface-container rounded-2xl p-1.5" id="weather-mode-selector">
+    <button id="weather-gps-btn" type="button" class="flex-1 py-2 rounded-xl bg-white shadow-sm text-primary font-label-md text-xs transition-all duration-200">현재 위치 (GPS)</button>
+    <button id="weather-fixed-btn" type="button" class="flex-1 py-2 rounded-xl text-on-surface-variant font-label-md text-xs transition-all duration-200">위치 고정</button>
     </div>
-    <div class="relative mt-2">
-    <input class="w-full bg-surface-container/50 border-none rounded-xl p-3 text-xs focus:ring-2 focus:ring-primary-container text-on-surface-variant" placeholder="도시 또는 지역명 입력" type="text" value="서울시 강남구">
+    <div class="relative mt-2" id="weather-fixed-input-container">
+    <input id="weather-location-input" class="w-full bg-surface-container/50 border-none rounded-xl p-3 text-xs focus:ring-2 focus:ring-primary-container text-on-surface-variant transition-all duration-200" placeholder="도시 또는 지역명 입력 (예: 서울, 부산, 대구)" type="text" value="서울">
     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-base">search</span>
     </div>
     </div>
