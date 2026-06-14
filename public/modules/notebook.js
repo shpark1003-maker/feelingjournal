@@ -544,7 +544,7 @@ function renderV2MemoryFragments(allPages) {
             console.log(`--- [DEBUG FRAGMENTS] Page "${p.title || '무제'}" (${p.id}) is E2E Encrypted. Decryption required for image extraction.`);
         }
         if (p.richContent && !isE2e) {
-            const regex = /<img[^>]+src="([^">]+)"/g;
+            const regex = /<img[^>]+src=["']([^"']+)["']/g;
             let match;
             while ((match = regex.exec(p.richContent)) !== null) {
                 // Remove HTML tags for excerpt
@@ -560,18 +560,8 @@ function renderV2MemoryFragments(allPages) {
 
     fragments.sort((a,b) => b.date - a.date);
     
-    // Filter for today's fragments
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    const todaysFragments = fragments.filter(f => f.date >= startOfToday);
-    
-    let recentFragments = [];
-    if (todaysFragments.length > 0) {
-        recentFragments = todaysFragments; // All photos from today
-    } else {
-        recentFragments = fragments.slice(0, 10); // Or most recent 10 if none today
-    }
+    // Show most recent 10 fragments (naturally containing today's photos first, followed by previous days)
+    const recentFragments = fragments.slice(0, 10);
 
     if (recentFragments.length === 0) {
         memoryGrid.innerHTML = '<div class="swiper-slide w-full"><p class="font-label-sm text-outline italic py-4 text-center">아직 간직된 사진이 없습니다.</p></div>';
@@ -589,15 +579,20 @@ function renderV2MemoryFragments(allPages) {
         </div>
     </article>`).join('');
 
-    memoryGrid.querySelectorAll('.memory-item').forEach(art => {
-        art.addEventListener('click', (e) => {
+    // Setup Event Delegation for clicks (works even for duplicated slides in Swiper loop mode)
+    const memorySwiperEl = document.getElementById('memory-swiper');
+    if (memorySwiperEl && !memorySwiperEl.dataset.delegated) {
+        memorySwiperEl.dataset.delegated = "true";
+        memorySwiperEl.addEventListener('click', (e) => {
+            const art = e.target.closest('.memory-item');
+            if (!art) return;
             if (!art.classList.contains('swiper-slide-active')) {
-                return; // Let Swiper handle moving it to the center
+                return; // Let Swiper slide it to center
             }
-            selectPage(art.dataset.id, allPages);
+            selectPage(art.dataset.id, store.history || allPages);
             window.scrollTo({top: 0, behavior: 'smooth'});
         });
-    });
+    }
 
     if (window.memorySwiper) {
         window.memorySwiper.destroy(true, true);
@@ -619,6 +614,8 @@ function renderV2MemoryFragments(allPages) {
             },
             loop: recentFragments.length > 5, // Enable infinite loop only if plenty of slides
             slideToClickedSlide: true,
+            observer: true,
+            observeParents: true,
             pagination: {
                 el: '.swiper-pagination',
                 dynamicBullets: true

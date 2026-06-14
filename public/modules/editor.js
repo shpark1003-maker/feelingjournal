@@ -77,7 +77,7 @@ export async function analyzeDiary() {
 
     // Extract the first image for Gemini OCR
     let image = null;
-    const imgMatch = richContent.match(/<img[^>]+src="([^">]+)"/);
+    const imgMatch = richContent.match(/<img[^>]+src=["']([^"']+)["']/);
     if (imgMatch && imgMatch[1].startsWith('data:image')) {
         image = imgMatch[1];
     }
