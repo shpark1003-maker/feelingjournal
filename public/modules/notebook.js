@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.5';
+import { store, API_URL, assertIds } from './state.js?v=5.4.6';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -610,13 +610,13 @@ function renderV2MemoryFragments(allPages) {
                 centeredSlides: true,
                 slidesPerView: 'auto',
                 coverflowEffect: {
-                    rotate: 25,
-                    stretch: -130, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
+                    rotate: 15,
+                    stretch: -100, // Pulls the 280px wide slides closer together to create an overlapping accordion effect
                     depth: 140,
                     modifier: 1,
                     slideShadows: true, // Enable shadows to visually separate overlapping cards in 3D space
                 },
-                loop: recentFragments.length > 5, // Enable infinite loop only if plenty of slides
+                loop: false, // Disable loop to make Swiper coverflow calculations perfectly stable
                 slideToClickedSlide: true,
                 observer: true,
                 observeParents: true,

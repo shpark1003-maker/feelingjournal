@@ -6163,8 +6163,8 @@ body {
 
 /* Swiper slide width definition for memory fragments coverflow */
 #memory-swiper .swiper-slide {
-    width: 280px !important; /* Specific width required for slidesPerView: 'auto' */
-    height: auto !important;
+    width: 280px; /* Specific width required for slidesPerView: 'auto' */
+    height: auto;
 }
 
 /* Memory card hover image zoom effect */
