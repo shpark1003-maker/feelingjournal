@@ -6,8 +6,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="./style.css?v=5.5.0">
-<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.0">
+<link rel="stylesheet" href="./style.css?v=5.5.1">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.5.1">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -1072,6 +1072,40 @@
     </div>
     </section>
 
+    <!-- Privacy & Security FAQ Section -->
+    <section id="privacy-policy-faq-section" class="mt-8">
+        <div class="bg-surface-container-highest rounded-3xl p-6 custom-shadow border-l-[6px] border-tertiary">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">security</span>
+                <h3 class="font-headline-md text-headline-md text-tertiary">개인정보 및 보안 FAQ</h3>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item border-b border-outline-variant/30 pb-3">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                        <span class="text-body-md text-on-surface font-bold">Q. 내 일기가 AI 학습 데이터로 사용되나요?</span>
+                        <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
+                    </button>
+                    <p class="faq-content text-[11px] text-on-surface-variant/70 leading-relaxed mt-2 hidden">
+                        현재 사용 중인 유료 Gemini API 서비스 정책에 따르면, 전송된 프롬프트와 응답은 Google의 제품 개선이나 모델 학습에 사용되지 않는다고 안내되어 있습니다.
+                    </p>
+                </div>
+                
+                <!-- FAQ Item 2 -->
+                <div class="faq-item border-b border-outline-variant/30 pb-3">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                        <span class="text-body-md text-on-surface font-bold">Q. E2E 종단간 암호화란 무엇인가요?</span>
+                        <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
+                    </button>
+                    <p class="faq-content text-[11px] text-on-surface-variant/70 leading-relaxed mt-2 hidden">
+                        사용자가 직접 생성한 패스워드로 사용자 기기 내에서 데이터를 암호화하여 서버로 전송하는 기술입니다. 암호화 키는 서버에 전송되지 않으므로, 개발자나 데이터베이스가 물리적으로 탈취당하더라도 소유자 본인 이외에는 내용을 해독할 수 없습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </div>
 
 <!-- Floating Action Button -->
@@ -1313,7 +1347,7 @@
 <span class="material-symbols-outlined" data-icon="close">close</span>
 </button>
 <div class="flex flex-col items-center">
-<h1 class="text-primary font-label-sm text-label-sm uppercase tracking-widest">Editor</h1>
+<h1 class="text-primary font-label-sm text-label-sm uppercase tracking-widest flex items-center gap-1">Editor<span id="v2-editor-e2e-lock" class="material-symbols-outlined text-[14px] text-primary hidden" title="E2E 종단간 암호화 적용">lock</span></h1>
 <p class="text-[10px] text-on-surface-variant/60 font-label-sm">새로운 기억 쓰기</p>
 </div>
 <button class="bg-primary text-on-primary px-5 py-1.5 rounded-full font-label-sm text-label-sm watercolor-shadow hover:opacity-90 active:scale-95 transition-all" id="analyze-btn">
@@ -1418,6 +1452,18 @@
 <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
 </button>
 </div>
+</div>
+<!-- E2E and Gemini API Privacy Guidance Card -->
+<div class="mt-6 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 flex gap-3 items-start shadow-sm">
+    <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">security</span>
+    <div class="flex-1">
+        <p class="text-[11px] text-on-surface font-bold">🔒 데이터 보안 및 안심 보호 안내</p>
+        <p class="text-[10px] text-on-surface-variant/70 leading-relaxed mt-1">
+            작성하신 일기는 브라우저 수준에서 회원님의 비밀키로 <strong>종단간(E2E) 암호화</strong>되어 안전하게 보관됩니다.
+            AI 분석 동의 시 브라우저에서 복호화된 일부 텍스트가 요청에 포함될 수 있으며, 
+            유료 Gemini API 사용 시 Google은 해당 프롬프트와 응답을 제품 개선 및 학습용으로 사용하지 않습니다.
+        </p>
+    </div>
 </div>
 </main>
 <!-- Bottom Actions Bar -->
@@ -1637,7 +1683,10 @@
         <button class="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-surface-container-high transition-all squishy" id="v2-photo-detail-back-btn">
             <span class="material-symbols-outlined text-primary">arrow_back</span>
         </button>
-        <h1 class="text-lg font-bold text-primary tracking-tight">감성 조각</h1>
+        <h1 class="text-lg font-bold text-primary tracking-tight flex items-center gap-1">
+            <span id="v2-photo-detail-e2e-badge" class="material-symbols-outlined text-[16px] text-primary hidden" title="E2E 종단간 암호화 적용" style="font-variation-settings: 'FILL' 1;">lock</span>
+            <span>감성 조각</span>
+        </h1>
         <div class="flex items-center gap-2 relative">
             <!-- 공유 상태 선택 버튼 -->
             <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all squishy relative" id="v2-photo-detail-share-btn" title="공유 설정">
@@ -1906,7 +1955,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.5.0"></script>
+    <script type="module" src="/app.js?v=5.5.1"></script>
 
     <script>
 

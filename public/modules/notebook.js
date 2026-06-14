@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.0';
+import { store, API_URL, assertIds } from './state.js?v=5.5.1';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -38,11 +38,15 @@ export async function loadNotebooks() {
             
             const pagesHtml = nbPages.length > 0 ? nbPages.map(p => {
                 const dateStr = new Date(p.createdAt).toLocaleDateString('ko-KR', {year: '2-digit', month: '2-digit', day: '2-digit'});
+                const isE2e = !!(p.isE2e || (p.richContent && p.richContent.startsWith('e2e:')) || (p.originalContent && p.originalContent.startsWith('e2e:')));
                 return `
                 <a class="p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/10 flex justify-between items-center shadow-sm hover:bg-primary-container/10 transition-colors group/item page-item" href="#" data-id="${p.id}">
                     <div class="flex items-center gap-2 overflow-hidden">
                         <span class="material-symbols-outlined text-primary text-[18px]">description</span>
-                        <span class="font-body-md text-on-surface truncate">${p.title || '제목 없음'}</span>
+                        <span class="font-body-md text-on-surface truncate flex items-center gap-1">
+                            ${isE2e ? '<span class="material-symbols-outlined text-[14px] text-primary shrink-0" title="E2E 종단간 암호화 적용" style="font-variation-settings: \'FILL\' 1;">lock</span>' : ''}
+                            ${p.title || '제목 없음'}
+                        </span>
                     </div>
                     <div class="flex items-center gap-2 pr-1 pointer-events-auto">
                         <span class="text-[12px] text-outline whitespace-nowrap">${dateStr}</span>
@@ -258,6 +262,16 @@ export function selectPage(pageId, history) {
     document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
     document.querySelector(`.page-item[data-id="${pageId}"]`)?.classList.add('active');
 
+    const isE2e = !!(page.isE2e || (page.richContent && page.richContent.startsWith('e2e:')) || (page.originalContent && page.originalContent.startsWith('e2e:')));
+    const editorLock = document.getElementById('v2-editor-e2e-lock');
+    if (editorLock) {
+        if (isE2e) {
+            editorLock.classList.remove('hidden');
+        } else {
+            editorLock.classList.add('hidden');
+        }
+    }
+
     document.getElementById('note-title').value = page.title || '';
     if (store.quillEditor) {
         store.quillEditor.root.innerHTML = page.richContent || `<p>${page.originalContent || ''}</p>`;
@@ -382,6 +396,9 @@ export async function addNewPage() {
     if (store.quillEditor) store.quillEditor.root.innerHTML = '';
     const titleEl = document.getElementById('note-title');
     if (titleEl) titleEl.value = '';
+
+    const editorLock = document.getElementById('v2-editor-e2e-lock');
+    if (editorLock) editorLock.classList.add('hidden');
 
     const resultArea = document.getElementById('analysis-result-area');
     const resultContent = document.getElementById('analysis-content');
@@ -799,6 +816,27 @@ function renderV2MemoryFragments(allPages) {
                         dateEl.textContent = new Date(page.createdAt).toLocaleDateString('ko-KR', { 
                             year: 'numeric', month: 'long', day: 'numeric' 
                         });
+                    }
+
+                    // E2E Status Check for detail header and share action
+                    const isE2e = !!(page.isE2e || (page.richContent && page.richContent.startsWith('e2e:')) || (page.originalContent && page.originalContent.startsWith('e2e:')));
+                    const detailE2eBadge = document.getElementById('v2-photo-detail-e2e-badge');
+                    if (detailE2eBadge) {
+                        if (isE2e) {
+                            detailE2eBadge.classList.remove('hidden');
+                        } else {
+                            detailE2eBadge.classList.add('hidden');
+                        }
+                    }
+                    const detailShareBtn = document.getElementById('v2-photo-detail-share-btn');
+                    if (detailShareBtn) {
+                        if (isE2e) {
+                            detailShareBtn.classList.add('opacity-40', 'pointer-events-none');
+                            detailShareBtn.disabled = true;
+                        } else {
+                            detailShareBtn.classList.remove('opacity-40', 'pointer-events-none');
+                            detailShareBtn.disabled = false;
+                        }
                     }
 
                     // Set current page id in detail view
