@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.4.3';
+import { store, API_URL, assertIds } from './state.js?v=5.4.4';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -569,26 +569,30 @@ function renderV2MemoryFragments(allPages) {
     }
 
     memoryGrid.innerHTML = recentFragments.map(f => `
-    <article class="swiper-slide bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" data-id="${f.id}">
-        <div class="h-40 relative overflow-hidden">
-            <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
-        </div>
-        <div class="p-4 bg-surface h-full">
-            <h4 class="font-label-sm text-on-surface truncate mb-1">${f.title}</h4>
-            <p class="font-body-md text-on-surface-variant text-[12px] line-clamp-3 leading-snug mb-2">${f.excerpt}...</p>
-        </div>
-    </article>`).join('');
+    <div class="swiper-slide" style="width: 280px;">
+        <article class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item h-full" data-id="${f.id}">
+            <div class="h-40 relative overflow-hidden">
+                <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
+            </div>
+            <div class="p-4 bg-surface h-full">
+                <h4 class="font-label-sm text-on-surface truncate mb-1">${f.title}</h4>
+                <p class="font-body-md text-on-surface-variant text-[12px] line-clamp-3 leading-snug mb-2">${f.excerpt}...</p>
+            </div>
+        </article>
+    </div>`).join('');
 
     // Setup Event Delegation for clicks (works even for duplicated slides in Swiper loop mode)
     const memorySwiperEl = document.getElementById('memory-swiper');
     if (memorySwiperEl && !memorySwiperEl.dataset.delegated) {
         memorySwiperEl.dataset.delegated = "true";
         memorySwiperEl.addEventListener('click', (e) => {
-            const art = e.target.closest('.memory-item');
-            if (!art) return;
-            if (!art.classList.contains('swiper-slide-active')) {
+            const slide = e.target.closest('.swiper-slide');
+            if (!slide) return;
+            if (!slide.classList.contains('swiper-slide-active')) {
                 return; // Let Swiper slide it to center
             }
+            const art = slide.querySelector('.memory-item');
+            if (!art) return;
             selectPage(art.dataset.id, store.history || allPages);
             window.scrollTo({top: 0, behavior: 'smooth'});
         });
