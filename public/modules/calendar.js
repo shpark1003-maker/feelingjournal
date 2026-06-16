@@ -333,6 +333,12 @@ function initCalendarUI() {
                 const ratingInput = document.getElementById('v2-task-rating-input');
                 if (ratingInput) ratingInput.value = rating;
                 updateEditorStarsUI(rating);
+                
+                // Dynamically update hidden progress fields
+                const progressInput = document.getElementById('v2-task-progress-input');
+                const progressVal = document.getElementById('v2-task-progress-val');
+                if (progressInput) progressInput.value = rating * 20;
+                if (progressVal) progressVal.innerText = `${rating * 20}%`;
             });
         }
     });
@@ -954,6 +960,31 @@ function getDDay(endDateStr) {
     return `D+${Math.abs(diffDays)}`;
 }
 
+function getRemainingTimeStr(endDateStr) {
+    if (!endDateStr) return '';
+    const now = new Date();
+    const end = new Date(endDateStr);
+    
+    // If only date is specified (YYYY-MM-DD), set to end of that day (23:59:59)
+    if (endDateStr.length <= 10) {
+        end.setHours(23, 59, 59, 999);
+    }
+    
+    const diffMs = end.getTime() - now.getTime();
+    if (diffMs <= 0) {
+        return '만료됨';
+    }
+    
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (diffDays > 0) {
+        return `${diffDays}일 ${diffHours}시간 남음`;
+    } else {
+        return `${diffHours}시간 남음`;
+    }
+}
+
 function getTaskIconInfo(title) {
     const t = title || '';
     if (t.includes('명상') || t.includes('스트레칭') || t.includes('요가') || t.includes('마음')) {
@@ -1008,7 +1039,10 @@ export function renderV2TaskList() {
         const meta = parseTaskMetadata(desc);
         
         const dday = getDDay(t.end || t.start);
+        const remainingTimeStr = getRemainingTimeStr(t.end || t.start);
         const iconInfo = getTaskIconInfo(t.title);
+
+        const progressPercent = meta.rating > 0 ? (meta.rating * 20) : 0;
 
         let reviewSection = '';
         if (meta.rating > 0 || meta.reflection || meta.reviewDate) {
@@ -1046,9 +1080,17 @@ export function renderV2TaskList() {
                 <span class="material-symbols-outlined text-on-surface-variant expand-icon transition-transform duration-300">expand_more</span>
             </div>
             <div class="task-details">
-                <div class="flex items-center gap-2 text-label-sm text-primary font-bold mb-1">
-                    <span class="material-symbols-outlined text-[14px]">calendar_today</span> 
-                    목표일 ${dday || 'D-Day'}
+                <div class="flex items-center justify-between text-label-sm text-primary font-bold mb-1">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">calendar_today</span> 
+                        목표일 ${dday || 'D-Day'}
+                    </div>
+                    ${remainingTimeStr ? `
+                    <div class="flex items-center gap-1 text-secondary font-semibold">
+                        <span class="material-symbols-outlined text-[14px]">alarm</span>
+                        <span>${remainingTimeStr}</span>
+                    </div>
+                    ` : ''}
                 </div>
                 <p class="text-label-sm text-on-surface-variant leading-relaxed journal-texture p-3 rounded-lg bg-surface-container-high/50 border border-outline-variant/10">
                     ${meta.cleanDescription || '상세 정보가 없습니다.'}
@@ -1058,10 +1100,10 @@ export function renderV2TaskList() {
                     <div class="space-y-1">
                         <div class="flex justify-between items-center text-label-sm">
                             <span class="text-on-surface-variant">진행률</span>
-                            <span class="text-primary font-bold">${meta.progress}%</span>
+                            <span class="text-primary font-bold">${progressPercent}%</span>
                         </div>
                         <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-                            <div class="h-full bg-primary rounded-full" style="width: ${meta.progress}%"></div>
+                            <div class="h-full bg-primary rounded-full" style="width: ${progressPercent}%"></div>
                         </div>
                     </div>
                     
@@ -1186,8 +1228,9 @@ export function openTaskEditor(mode, taskData = {}, defaultType = null) {
         const meta = parseTaskMetadata(rawDesc);
         descInput.value = meta.cleanDescription;
 
-        if (progressInput) progressInput.value = meta.progress;
-        if (progressVal) progressVal.innerText = `${meta.progress}%`;
+        const calculatedProgress = meta.rating > 0 ? (meta.rating * 20) : 0;
+        if (progressInput) progressInput.value = calculatedProgress;
+        if (progressVal) progressVal.innerText = `${calculatedProgress}%`;
         if (ratingInput) ratingInput.value = meta.rating;
         updateEditorStarsUI(meta.rating);
         if (reviewDateInput) {
