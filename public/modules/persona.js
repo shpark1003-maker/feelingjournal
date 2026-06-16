@@ -30,6 +30,7 @@ export async function loadPersona() {
         const nameInput = document.getElementById('ai-name');
         if (nameInput) {
             nameInput.value = p.name || '비서';
+            store.currentAvatarName = nameInput.value;
             const friendNameEl = document.getElementById('friend-list-ai-name');
             if (friendNameEl) friendNameEl.innerText = `${nameInput.value} 비서`;
         }
@@ -104,13 +105,19 @@ export function setupPersonaUI() {
         if ((await res.json()).success) {
             alert(`${aiName}의 성격과 모습이 반영되었습니다.`);
             renderPersonaAvatar(persona);
+            store.currentAvatarName = aiName;
 
             const friendNameEl = document.getElementById('friend-list-ai-name');
             if (friendNameEl) friendNameEl.innerText = `${aiName} 비서`;
 
             const chatTitleEl = document.getElementById('chat-room-title-text');
-            if (chatTitleEl && chatTitleEl.innerText.includes('와 대화')) {
+            if (chatTitleEl && (chatTitleEl.innerText.includes('와 대화') || chatTitleEl.innerText.includes('비서'))) {
                 chatTitleEl.innerText = `✨ ${aiName}와 대화`;
+            }
+            
+            const listName = document.getElementById('v2-chat-list-ai-name');
+            if (listName) {
+                listName.innerText = `✨ ${aiName}와 대화`;
             }
         }
     });
