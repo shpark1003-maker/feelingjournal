@@ -630,12 +630,28 @@ function renderCustomGrid() {
                 }
                 
                 const cleanTitle = ev.title || '제목 없음';
+                let displayTitle = cleanTitle;
+                if (type === 'task') {
+                    const meta = parseTaskMetadata(desc);
+                    const remainingTimeStr = getRemainingTimeStr(ev.end || ev.start);
+                    const progressPercent = meta.rating > 0 ? (meta.rating * 20) : 0;
+                    
+                    let badgeInfo = '';
+                    if (remainingTimeStr) {
+                        const shortTime = remainingTimeStr.replace(' 남음', '');
+                        badgeInfo = `${shortTime} | ${progressPercent}%`;
+                    } else {
+                        badgeInfo = `${progressPercent}%`;
+                    }
+                    displayTitle = `${cleanTitle} (${badgeInfo})`;
+                }
+                
                 desktopEventsHTML += `
                     <div class="calendar-event-badge px-1.5 py-0.5 text-[10px] rounded font-semibold truncate w-full text-left cursor-pointer transition-colors hover:opacity-85"
                          style="background-color: ${badgeBg}; color: ${badgeColor};"
                          title="${cleanTitle}${desc ? ' - ' + desc : ''}"
                          data-event-id="${ev.id}">
-                        ${cleanTitle}
+                        ${displayTitle}
                     </div>
                 `;
             });
@@ -808,6 +824,30 @@ export function openDayView(dateStr) {
         const hasImage = ev.extendedProps?.imageUrl || ev.imageUrl;
         let cardHTML = '';
 
+        let taskProgressHTML = '';
+        if (type === 'task') {
+            const meta = parseTaskMetadata(desc);
+            const remainingTimeStr = getRemainingTimeStr(ev.end || ev.start);
+            const progressPercent = meta.rating > 0 ? (meta.rating * 20) : 0;
+            
+            taskProgressHTML = `
+            <div class="mt-3 space-y-2 border-t border-outline-variant/10 pt-2">
+                <div class="flex justify-between items-center text-[10px] text-on-surface-variant">
+                    <span>진행률</span>
+                    <span class="font-bold text-primary">${progressPercent}%</span>
+                </div>
+                <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: ${progressPercent}%"></div>
+                </div>
+                ${remainingTimeStr ? `
+                <div class="flex items-center gap-1 text-[10px] text-secondary font-semibold mt-1">
+                    <span class="material-symbols-outlined text-[12px]">alarm</span>
+                    <span>${remainingTimeStr}</span>
+                </div>
+                ` : ''}
+            </div>`;
+        }
+
         if (hasImage) {
             const imageUrl = ev.extendedProps?.imageUrl || ev.imageUrl;
             cardHTML = `
@@ -820,8 +860,9 @@ export function openDayView(dateStr) {
                         <h4 class="font-label-md">${evTitle}</h4>
                     </div>
                 </div>
-                <div class="p-4 journal-texture relative" style="transform: translateY(0px); transition: transform 0.3s;">
+                <div class="p-4 journal-texture relative" style="transform: translateY(0px); transition: transform 0.3s; padding-bottom: 2.5rem;">
                     <p class="text-label-sm text-on-surface-variant leading-relaxed">${cleanDesc || '설명이 없습니다.'}</p>
+                    ${taskProgressHTML}
                     <div class="absolute right-3 bottom-3 flex gap-1">
                         <button class="p-1 text-on-surface-variant hover:text-primary edit-event-btn" data-id="${evId}"><span class="material-symbols-outlined text-[18px]">edit</span></button>
                     </div>
@@ -829,13 +870,14 @@ export function openDayView(dateStr) {
             </div>`;
         } else {
             cardHTML = `
-            <div class="flex-1 bg-surface-container-highest/60 backdrop-blur-sm rounded-xl p-4 journal-texture shadow-sm border border-outline-variant/10 relative" style="transform: translateY(0px); transition: transform 0.3s;">
+            <div class="flex-1 bg-surface-container-highest/60 backdrop-blur-sm rounded-xl p-4 journal-texture shadow-sm border border-outline-variant/10 relative" style="transform: translateY(0px); transition: transform 0.3s; padding-bottom: 2.5rem;">
                 <div class="flex justify-between items-start mb-1">
                     <span class="text-label-sm ${timeColorClass} font-bold">${timeStr}</span>
                     <span class="text-[10px] text-on-surface-variant/60 uppercase font-bold tracking-widest">${statusText}</span>
                 </div>
                 <h4 class="font-label-md text-on-surface">${evTitle}</h4>
                 <p class="text-label-sm text-on-surface-variant mt-2 leading-relaxed italic">${cleanDesc || '설명이 없습니다.'}</p>
+                ${taskProgressHTML}
                 <div class="absolute right-3 bottom-3 flex gap-1">
                     <button class="p-1 text-on-surface-variant hover:text-primary edit-event-btn" data-id="${evId}"><span class="material-symbols-outlined text-[18px]">edit</span></button>
                 </div>
