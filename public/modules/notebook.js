@@ -280,9 +280,11 @@ export function selectPage(pageId, history) {
             import('./localEmotionAnalyzer.js').then(async (cryptoMod) => {
                 const decrypted = await cryptoMod.decryptClientSide(rawContent, e2ePassword);
                 store.quillEditor.root.innerHTML = decrypted;
+                store.quillEditor.update();
             });
         } else {
             store.quillEditor.root.innerHTML = rawContent;
+            store.quillEditor.update();
         }
     }
 
@@ -411,7 +413,10 @@ export async function deleteNotebook() {
 }
 
 export async function addNewPage() {
-    if (store.quillEditor) store.quillEditor.root.innerHTML = '';
+    if (store.quillEditor) {
+        store.quillEditor.root.innerHTML = '';
+        store.quillEditor.update();
+    }
     const titleEl = document.getElementById('note-title');
     if (titleEl) titleEl.value = '';
 
@@ -1139,7 +1144,10 @@ export async function deleteV2Page(pageId) {
                 store.currentPageId = null;
                 const titleEl = document.getElementById('note-title');
                 if (titleEl) titleEl.value = '';
-                if (store.quillEditor) store.quillEditor.root.innerHTML = '';
+                if (store.quillEditor) {
+                    store.quillEditor.root.innerHTML = '';
+                    store.quillEditor.update();
+                }
                 const resultArea = document.getElementById('analysis-result-area');
                 if (resultArea) resultArea.classList.add('hidden');
             }

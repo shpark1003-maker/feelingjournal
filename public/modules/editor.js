@@ -518,6 +518,7 @@ export function setupScrapLogic() {
                     if (titleEl) titleEl.value = data.title || '스크랩한 페이지';
                     if (store.quillEditor) {
                         store.quillEditor.root.innerHTML = `<p>${(data.content || '').replace(/\n/g, '</p><p>')}</p>`;
+                        store.quillEditor.update();
                     }
                     alert('화면 분석 및 텍스트 추출이 완료되었습니다.');
                     if (cropModal) {
@@ -566,6 +567,7 @@ export async function performUrlScrap(url) {
             if (titleEl) titleEl.value = data.title || '스크랩된 웹페이지';
             if (store.quillEditor) {
                 store.quillEditor.root.innerHTML = `<p>${(data.content || '').replace(/\n/g, '</p><p>')}</p>`;
+                store.quillEditor.update();
             }
             alert('웹 페이지 내용을 성공적으로 가져왔습니다.');
         } else {
@@ -770,6 +772,7 @@ export function setupWritingHelper() {
                     if (store.quillEditor) {
                         document.getElementById('note-title').value = finalTitle;
                         store.quillEditor.root.innerHTML = `<p>${finalContent.replace(/\n/g, '</p><p>')}</p>`;
+                        store.quillEditor.update();
                     }
                     alert('일기 본문이 에디터에 적용되었습니다! 노트를 저장하여 작성을 완료하세요.');
                     panel.classList.add('hidden');
@@ -862,7 +865,13 @@ export function setupVoiceRecognition() {
             }
 
             if (finalTranscript && store.quillEditor) {
-                const range = store.quillEditor.getSelection(true);
+                store.quillEditor.update();
+                let range = store.quillEditor.getSelection(true);
+                // Null-guard if editor has no focus
+                if (!range) {
+                    const length = store.quillEditor.getLength();
+                    range = { index: length > 0 ? length - 1 : 0 };
+                }
                 store.quillEditor.insertText(range.index, ' ' + finalTranscript);
                 store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
             }
@@ -910,7 +919,11 @@ export function setupLocalUpload() {
         reader.onload = (event) => {
             const imgUrl = event.target.result;
             if (store.quillEditor) {
-                const range = store.quillEditor.getSelection(true);
+                let range = store.quillEditor.getSelection(true);
+                if (!range) {
+                    const length = store.quillEditor.getLength();
+                    range = { index: length > 0 ? length - 1 : 0 };
+                }
                 store.quillEditor.insertEmbed(range.index, 'image', imgUrl);
                 store.quillEditor.setSelection(range.index + 1);
             }
