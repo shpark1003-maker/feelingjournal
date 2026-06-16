@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.3';
+import { store, API_URL, assertIds } from './state.js?v=5.5.8';
 
 function getEventLocalDateString(eventDateStr) {
     if (!eventDateStr) return '';
@@ -582,43 +582,16 @@ function renderCustomGrid() {
 
     const prevMonthLastDate = new Date(currentYear, currentMonth, 0).getDate();
 
-    // 1. 이전 달 날짜들 렌더링
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-        const prevDayNum = prevMonthLastDate - i;
-        const cell = document.createElement('div');
-        const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
+    // Helper to generate dots (mobile) and event items (desktop) for a day
+    function getDayHtml(dayNum, dateStr, isToday, isPrevOrNext) {
+        const dayEvents = calendarEvents.filter(ev => getEventLocalDateString(ev.start) === dateStr);
         
-        let selectedClass = '';
-        if (dateStr === selectedDateStr) {
-            selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
-        }
-        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer${selectedClass}`;
-        cell.innerHTML = prevDayNum;
-        cell.addEventListener('click', () => {
-            selectedDateStr = dateStr;
-            openDayView(dateStr);
-            renderCustomGrid();
-        });
-        grid.appendChild(cell);
-    }
-
-    // 2. 이번 달 날짜들 렌더링
-    for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const cellDate = new Date(currentYear, currentMonth, day);
-        
-        const cell = document.createElement('div');
-        
-        const today = new Date();
-        const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
-        
-        const dayEvents = calendarEvents.filter(ev => {
-            return getEventLocalDateString(ev.start) === dateStr;
-        });
-
         let dotsHTML = '';
+        let desktopEventsHTML = '';
+        
         if (dayEvents.length > 0) {
-            dotsHTML = `<div class="absolute bottom-1 flex gap-0.5">`;
+            // Mobile dots
+            dotsHTML = `<div class="mobile-dots absolute bottom-1 flex gap-0.5 md:hidden">`;
             dayEvents.slice(0, 3).forEach((ev, idx) => {
                 const desc = ev.extendedProps?.description || ev.description || '';
                 const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
@@ -632,7 +605,97 @@ function renderCustomGrid() {
                 dotsHTML += `<div class="w-1 h-1 rounded-full ${dotColor}"></div>`;
             });
             dotsHTML += `</div>`;
+
+            // Desktop event items
+            desktopEventsHTML = `<div class="desktop-event-list hidden md:flex flex-col gap-1 w-full px-1.5 mt-1 overflow-y-auto" style="max-height: 80px;">`;
+            dayEvents.forEach(ev => {
+                const desc = ev.extendedProps?.description || ev.description || '';
+                const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
+                
+                // Color badges based on event types
+                let badgeBg = 'rgba(217, 140, 158, 0.15)';
+                let badgeColor = '#d98c9e';
+                if (type === 'task') {
+                    badgeBg = 'rgba(93, 87, 77, 0.12)';
+                    badgeColor = '#5d574d';
+                } else if (type === 'shared') {
+                    badgeBg = 'rgba(74, 101, 78, 0.15)';
+                    badgeColor = '#4A6741';
+                }
+                
+                const cleanTitle = ev.title || '제목 없음';
+                desktopEventsHTML += `
+                    <div class="calendar-event-badge px-1.5 py-0.5 text-[10px] rounded font-semibold truncate w-full text-left cursor-pointer transition-colors hover:opacity-85"
+                         style="background-color: ${badgeBg}; color: ${badgeColor};"
+                         title="${cleanTitle}${desc ? ' - ' + desc : ''}"
+                         data-event-id="${ev.id}">
+                        ${cleanTitle}
+                    </div>
+                `;
+            });
+            desktopEventsHTML += `</div>`;
         }
+
+        const numClass = isToday ? 'day-number-wrapper relative z-0' : 'day-number-wrapper';
+        const todayCircle = isToday ? `
+            <div class="absolute inset-0 flex items-center justify-center -z-10 md:hidden">
+                <div class="w-8 h-8 rounded-full bg-primary"></div>
+            </div>
+        ` : '';
+        
+        return `
+            <div class="${numClass}">
+                ${dayNum}
+                ${todayCircle}
+            </div>
+            ${dotsHTML}
+            ${desktopEventsHTML}
+        `;
+    }
+
+    function addCellListener(cell, dateStr) {
+        cell.addEventListener('click', (e) => {
+            const badge = e.target.closest('.calendar-event-badge');
+            if (badge) {
+                e.stopPropagation();
+                const evId = badge.getAttribute('data-event-id');
+                const matchedEvent = calendarEvents.find(ev => ev.id == evId);
+                if (matchedEvent && typeof openEventModal === 'function') {
+                    openEventModal('edit', matchedEvent);
+                }
+                return;
+            }
+            selectedDateStr = dateStr;
+            openDayView(dateStr);
+            renderCustomGrid();
+        });
+    }
+
+    // 1. 이전 달 날짜들 렌더링
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+        const prevDayNum = prevMonthLastDate - i;
+        const cell = document.createElement('div');
+        const dateStr = `${currentMonth === 0 ? currentYear - 1 : currentYear}-${String(currentMonth === 0 ? 12 : currentMonth).padStart(2, '0')}-${String(prevDayNum).padStart(2, '0')}`;
+        
+        let selectedClass = '';
+        if (dateStr === selectedDateStr) {
+            selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
+        }
+        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
+        cell.innerHTML = getDayHtml(prevDayNum, dateStr, false, true);
+        addCellListener(cell, dateStr);
+        grid.appendChild(cell);
+    }
+
+    // 2. 이번 달 날짜들 렌더링
+    for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const cellDate = new Date(currentYear, currentMonth, day);
+        
+        const cell = document.createElement('div');
+        
+        const today = new Date();
+        const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === day;
         
         let activeBorder = '';
         if (dateStr === selectedDateStr) {
@@ -641,13 +704,6 @@ function renderCustomGrid() {
 
         if (isToday) {
             cell.className = `h-10 flex flex-col items-center justify-center text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30${activeBorder}`;
-            cell.innerHTML = `
-                ${day}
-                <div class="absolute inset-0 flex items-center justify-center -z-10">
-                    <div class="w-8 h-8 rounded-full bg-primary"></div>
-                </div>
-                ${dotsHTML}
-            `;
         } else {
             let colorClass = 'text-on-surface';
             if (cellDate.getDay() === 0) {
@@ -655,16 +711,11 @@ function renderCustomGrid() {
             } else if (cellDate.getDay() === 6) {
                 colorClass = 'text-primary';
             }
-            
             cell.className = `h-10 flex flex-col items-center justify-center relative cursor-pointer text-label-md ${colorClass}${activeBorder}`;
-            cell.innerHTML = `${day}${dotsHTML}`;
         }
         
-        cell.addEventListener('click', () => {
-            selectedDateStr = dateStr;
-            openDayView(dateStr);
-            renderCustomGrid();
-        });
+        cell.innerHTML = getDayHtml(day, dateStr, isToday, false);
+        addCellListener(cell, dateStr);
         grid.appendChild(cell);
     }
 
@@ -679,14 +730,9 @@ function renderCustomGrid() {
         if (dateStr === selectedDateStr) {
             selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
         }
-        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer${selectedClass}`;
-        cell.innerHTML = i;
-        
-        cell.addEventListener('click', () => {
-            selectedDateStr = dateStr;
-            openDayView(dateStr);
-            renderCustomGrid();
-        });
+        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
+        cell.innerHTML = getDayHtml(i, dateStr, false, true);
+        addCellListener(cell, dateStr);
         grid.appendChild(cell);
     }
 }

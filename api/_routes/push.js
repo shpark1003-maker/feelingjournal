@@ -6,7 +6,8 @@ const {
     verifyUser, 
     sendError, 
     supabase,
-    supabaseAdmin
+    supabaseAdmin,
+    scanRedisKeys
 } = require('./shared');
 
 const pushRepository = require('../_repositories/pushRepository');
@@ -270,7 +271,16 @@ async function dispatchPushNotifications() {
             // [⏰ FEATURE A] 사용자가 지정한 아침 예약 브리핑 푸시 알림
             // ----------------------------------------------------
             const targetBriefingTime = settings.briefingTime || '08:00';
-            if (currentHourMin === targetBriefingTime) {
+            
+            // KST 시간 기준으로 현재 분단위와 목표 분단위 비교 (Vercel 하루 1회 크론 및 로컬 24시간 대응)
+            const [targetHour, targetMin] = targetBriefingTime.split(':').map(Number);
+            const currentHour = parseInt(hour, 10);
+            const currentMin = parseInt(minute, 10);
+            
+            const targetMinutes = targetHour * 60 + targetMin;
+            const currentMinutes = currentHour * 60 + currentMin;
+            
+            if (currentMinutes >= targetMinutes) {
                 const briefingSentKey = `push:${userId}:briefing_sent:${todayStr}`;
                 const alreadyBriefed = await redis.get(briefingSentKey);
                 

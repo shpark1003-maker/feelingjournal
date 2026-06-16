@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.5.3';
+import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.5.8';
 
 export async function loadPersona() {
     assertIds('Persona', [
@@ -454,14 +454,61 @@ export async function loadBriefing() {
             url += `?region=off`;
         }
 
-        console.log("--- [BRIEFING] Requesting briefing from backend API...");
-        const res = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        console.log("--- [BRIEFING] Requesting briefing and news from backend API in parallel...");
+        
+        const briefingPromise = fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.json());
+
+        const newsPromise = fetch(`${API_URL}/news`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.json());
+
+        // Handle news response independently for instant load
+        newsPromise.then(data => {
+            const divider = document.getElementById('briefing-divider');
+            const newsArea = document.getElementById('briefing-news-area');
+            const newsList = document.getElementById('briefing-news-list');
+            if (!divider || !newsArea || !newsList) return;
+
+            if (data.success && data.news && data.news.length > 0) {
+                const YONHAP_KOREAN_MAP = {
+                    politics: '정치',
+                    business: '경제',
+                    society: '사회',
+                    culture: '생활/문화',
+                    science: 'IT/과학',
+                    world: '세계',
+                    entertainment: '연예',
+                    sports: '스포츠',
+                    general: '일반'
+                };
+
+                newsList.innerHTML = data.news.map(item => {
+                    const catLabel = YONHAP_KOREAN_MAP[item.category] || item.category;
+                    return `
+                        <div class="flex items-start gap-1.5 py-1.5 border-b border-outline-variant/5 last:border-b-0">
+                            <span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold shrink-0">${catLabel}</span>
+                            <span class="text-[11px] leading-relaxed text-on-surface-variant/90">${item.title}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                divider.classList.remove('hidden');
+                newsArea.classList.remove('hidden');
+            } else {
+                divider.classList.add('hidden');
+                newsArea.classList.add('hidden');
             }
+        }).catch(err => {
+            console.error('--- [NEWS FETCH ERROR] ---', err);
+            const divider = document.getElementById('briefing-divider');
+            const newsArea = document.getElementById('briefing-news-area');
+            if (divider) divider.classList.add('hidden');
+            if (newsArea) newsArea.classList.add('hidden');
         });
 
-        const data = await res.json();
+        const data = await briefingPromise;
         
         // [2. Loaded State / Empty State / Error State split]
         if (data.success && data.briefing) {

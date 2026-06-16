@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.3';
+import { store, API_URL, assertIds } from './state.js?v=5.5.8';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -604,14 +604,14 @@ function renderV2MemoryFragments(allPages) {
     }
 
     memoryGrid.innerHTML = recentFragments.map(f => `
-    <div class="swiper-slide" style="width: 280px;">
-        <article class="w-full bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item h-full" data-id="${f.id}">
-            <div class="h-40 relative overflow-hidden">
+    <div class="swiper-slide" style="width: 300px;">
+        <article class="w-full bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" style="height: 380px;" data-id="${f.id}">
+            <div class="h-80 relative overflow-hidden flex-1">
                 <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
             </div>
-            <div class="p-4 bg-surface h-full">
-                <h4 class="font-label-sm text-on-surface truncate mb-1">${f.title}</h4>
-                <p class="font-body-md text-on-surface-variant text-[12px] line-clamp-3 leading-snug mb-2">${f.excerpt}...</p>
+            <div class="p-2.5 bg-surface flex-none">
+                <h4 class="font-label-sm text-on-surface truncate mb-0.5 text-xs font-bold">${f.title}</h4>
+                <p class="font-body-md text-on-surface-variant text-[11px] line-clamp-1 leading-normal">${f.excerpt}...</p>
             </div>
         </article>
     </div>`).join('');

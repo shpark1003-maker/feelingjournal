@@ -1,4 +1,4 @@
-// Touch for node watch restart
+// Touch for node watch restart (Updated: 2026-06-17)
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -88,76 +88,29 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).end();
 });
 
-// 3. 모듈형 Express API 라우터 연동
-const authRoute = require('./api/_routes/auth');
-const scrapRoute = require('./api/_routes/scrap');
-const { router: pushRouter, startPushDispatcher } = require('./api/_routes/push');
+// 3. 모듈형 Express API 라우터 연동 (Registry SSOT 동적 매핑)
+const routes = require('./api/_routes/registry');
+const { startPushDispatcher } = require('./api/_routes/push');
 
-app.all('/api/auth*', authRoute);
-app.all('/api/scrap*', scrapRoute);
-app.use('/api', pushRouter);
+routes.forEach(route => {
+    if (route.customRouter) {
+        if (route.path === '/api/push') {
+            app.use('/api', route.handler);
+        }
+        return;
+    }
 
-// 4. 단일 Serverless 핸들러 모듈 바인딩 (Vercel 로컬 매핑 호환)
-const calendarRoute = require('./api/_routes/calendar');
-const analyzeRoute = require('./api/_routes/analyze');
-const historyRoute = require('./api/_routes/history');
-const briefingRoute = require('./api/_routes/briefing');
-const contactsRoute = require('./api/_routes/contacts');
-const chatRoute = require('./api/_routes/chat');
-const personaRoute = require('./api/_routes/persona');
-const notebooksRoute = require('./api/_routes/notebooks');
-const nicknameRoute = require('./api/_routes/nickname');
-const friendsRoute = require('./api/_routes/friends');
-const inviteRoute = require('./api/_routes/invite');
-const presenceRoute = require('./api/_routes/presence');
-const ttsRoute = require('./api/_routes/tts');
-const apiSettingsRoute = require('./api/_routes/api-settings');
+    const middleware = route.auth ? [verifyUser] : [];
 
-app.use('/api/calendar', verifyUser, calendarRoute);
-app.get('/api/users/search', verifyUser, require('./api/_routes/user-search'));
-app.post('/api/analyze', verifyUser, analyzeRoute);
-app.get('/api/history', verifyUser, historyRoute);
-app.get('/api/briefing', verifyUser, briefingRoute);
-app.post('/api/briefing', verifyUser, briefingRoute);
-app.get('/api/contacts', verifyUser, contactsRoute);
-app.post('/api/tts', verifyUser, ttsRoute);
-app.get('/api/api-settings', verifyUser, apiSettingsRoute);
-app.post('/api/api-settings', verifyUser, apiSettingsRoute);
-
-/* ==========================================================================
-   [REMAINING LIGHTWEIGHT ROUTES & CONTROLLERS]
-   ========================================================================== */
-
-// 1. 실시간 감성 채팅 메시지 조회 및 전송 & 백엔드 채팅방 생성 제어
-app.get('/api/chat/messages', verifyUser, chatRoute);
-app.post('/api/chat/messages', verifyUser, chatRoute);
-app.post('/api/chat/room', verifyUser, chatRoute);
-
-// 2. 역사(히스토리) 기록 삭제 및 수정
-app.delete('/api/history/:id', verifyUser, historyRoute);
-app.patch('/api/history/:id', verifyUser, historyRoute);
-
-// 5. 노트북(전자 필기장) 목록 보관 및 조회
-app.all('/api/notebooks', verifyUser, notebooksRoute);
-
-// 6. 사용자 호칭(닉네임) 관리
-app.get('/api/nickname', verifyUser, nicknameRoute);
-app.post('/api/nickname', verifyUser, nicknameRoute);
-
-// 7. 비서 페르소나 및 아바타 제어
-app.get('/api/persona', verifyUser, personaRoute);
-app.post('/api/persona', verifyUser, personaRoute);
-app.post('/api/persona/avatar', verifyUser, personaRoute);
-app.post('/api/persona/generate-avatar', verifyUser, personaRoute);
-app.post('/api/persona/learn-video', verifyUser, personaRoute);
-
-// 8. AI 비서 감성 대화 (페르소나 연동형 및 Supabase 영구 저장)
-app.post('/api/chat/ai-response', verifyUser, chatRoute);
-
-// 9. 실시간 온라인 존재(Presence) 상태 및 1촌/초대 연동 매핑 (신규 서버리스 일관 바인딩)
-app.all('/api/presence*', verifyUser, presenceRoute);
-app.all('/api/friends*', verifyUser, friendsRoute);
-app.all('/api/invite*', verifyUser, inviteRoute);
+    if (route.path === '/api/scrap') {
+        app.all('/api/scrap*', ...middleware, route.handler);
+    } else if (route.path === '/api/users/search') {
+        app.all(route.path, ...middleware, route.handler);
+    } else {
+        app.all(route.path, ...middleware, route.handler);
+        app.all(route.path + '/*', ...middleware, route.handler);
+    }
+});
 
 // 백그라운드 스케줄러(구글 캘린더 자동 푸시 등) 시작
 startPushDispatcher();
