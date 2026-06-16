@@ -171,8 +171,8 @@ export async function analyzeDiary() {
                 store.currentPageId = data.id;
             }
             
+            const resultArea = document.getElementById('analysis-result-area');
             if (hasConsent) {
-                const resultArea = document.getElementById('analysis-result-area');
                 const resultContent = document.getElementById('analysis-content');
                 if (resultArea && resultContent) {
                     resultArea.classList.remove('hidden');
@@ -184,7 +184,6 @@ export async function analyzeDiary() {
                 }
                 alert('비서가 분석을 완료하고 기록을 저장했습니다.');
             } else {
-                const resultArea = document.getElementById('analysis-result-area');
                 if (resultArea) {
                     resultArea.classList.add('hidden');
                 }
