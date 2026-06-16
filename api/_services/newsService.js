@@ -185,9 +185,12 @@ ${ruleFilteredArticles.map((a, idx) => `${idx + 1}. ${a.title}`).join('\n')}
             });
         }
 
+        // Cap output to maximum 3 headlines per category to avoid cluttering (2~3 articles)
+        const cappedHeadlines = currentCatHeadlines.slice(0, 3);
+
         // Cache the result (expire in 1 hour)
         const cacheData = {
-            headlines: currentCatHeadlines,
+            headlines: cappedHeadlines,
             aiFiltered: isAiSuccessful
         };
         
@@ -197,7 +200,7 @@ ${ruleFilteredArticles.map((a, idx) => `${idx + 1}. ${a.title}`).join('\n')}
             console.error('--- [NEWS CACHE SAVE ERROR] Failed to cache news:', cacheErr.message);
         }
 
-        currentCatHeadlines.forEach(h => finalHeadlines.push(h));
+        cappedHeadlines.forEach(h => finalHeadlines.push(h));
     }
 
     return {
