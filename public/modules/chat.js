@@ -879,35 +879,36 @@ export async function loadContacts() {
 }
 
 export async function checkFriendSos() {
-    const token = await store.getSessionToken();
-    if (!token) return;
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
 
-    const res = await fetch(`${API_URL}/friends/sos`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-
-    // [NEW] Save friends list globally for instant lookups in room switches
-    let friends = data.allFriends || [];
-
-    // 친구 목록 정렬 적용
-    if (currentFriendSortMode === 'name') {
-        friends.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || '', 'ko'));
-    } else if (currentFriendSortMode === 'degree') {
-        // 1촌(진짜 친구): Supabase 가입자 -> 2촌(데모 친구): mock-
-        friends.sort((a, b) => {
-            const aIsMock = (a.id || '').startsWith('mock-');
-            const bIsMock = (b.id || '').startsWith('mock-');
-            if (aIsMock && !bIsMock) return 1;
-            if (!aIsMock && bIsMock) return -1;
-            return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
+        const res = await fetch(`${API_URL}/friends/sos`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-    } else if (currentFriendSortMode === 'sos') {
-        friends.sort((a, b) => {
-            const aIsSos = data.sosList?.some(s => s.id === a.id);
-            const bIsSos = data.sosList?.some(s => s.id === b.id);
-            if (aIsSos && !bIsSos) return -1;
-            if (!aIsSos && bIsSos) return 1;
+        const data = await res.json();
+
+        // [NEW] Save friends list globally for instant lookups in room switches
+        let friends = data.allFriends || [];
+
+        // 친구 목록 정렬 적용
+        if (currentFriendSortMode === 'name') {
+            friends.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || '', 'ko'));
+        } else if (currentFriendSortMode === 'degree') {
+            // 1촌(진짜 친구): Supabase 가입자 -> 2촌(데모 친구): mock-
+            friends.sort((a, b) => {
+                const aIsMock = (a.id || '').startsWith('mock-');
+                const bIsMock = (b.id || '').startsWith('mock-');
+                if (aIsMock && !bIsMock) return 1;
+                if (!aIsMock && bIsMock) return -1;
+                return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
+            });
+        } else if (currentFriendSortMode === 'sos') {
+            friends.sort((a, b) => {
+                const aIsSos = data.sosList?.some(s => s.id === a.id);
+                const bIsSos = data.sosList?.some(s => s.id === b.id);
+                if (aIsSos && !bIsSos) return -1;
+                if (!aIsSos && bIsSos) return 1;
             if (a.is_online && !b.is_online) return -1;
             if (!a.is_online && b.is_online) return 1;
             return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
@@ -1038,6 +1039,9 @@ export async function checkFriendSos() {
         }).join('');
 
         chatRoomList.innerHTML = roomsHtml;
+    }
+    } catch (err) {
+        console.error('Failed to check friend SOS status:', err);
     }
 }
 
