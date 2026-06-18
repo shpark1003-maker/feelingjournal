@@ -850,11 +850,6 @@ export function setupVoiceRecognition() {
     let isActive = false;          // 실제 인식 활성화 상태
     let restarting = false;
     let initError = null;
-    
-    // iOS용 연속 자동 재시작 방어 장치
-    let iosRestartCount = 0;
-    const MAX_IOS_RESTARTS = 10;
-    let iosBackoffDelay = 500;
 
     try {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -868,9 +863,6 @@ export function setupVoiceRecognition() {
 
             recognition.onstart = () => {
                 isActive = true;
-                iosRestartCount = 0; // 시작 성공 시 카운트 리셋
-                iosBackoffDelay = 500; // 딜레이 리셋
-                
                 console.log('STT Flow: start -> onstart');
                 
                 voiceBtn.style.background = '#ff4757';
@@ -884,21 +876,8 @@ export function setupVoiceRecognition() {
                 console.log('STT Flow: onend');
 
                 if (shouldListen) {
-                    if (isIOS) {
-                        iosRestartCount++;
-                        if (iosRestartCount > MAX_IOS_RESTARTS) {
-                            console.warn('STT Flow: iOS maximum auto-restart limits exceeded. Stopping.');
-                            shouldListen = false;
-                            resetVoiceBtnState();
-                            alert('지속적인 오디오 소강 상태로 인해 음성 기록이 자동 종료되었습니다. 다시 녹음하려면 음성 버튼을 눌러주세요.');
-                            return;
-                        }
-                        // 백오프 대기 시간 증가
-                        iosBackoffDelay = Math.min(iosBackoffDelay + 300, 3000); 
-                    }
-                    
-                    console.log(`STT Flow: attempting auto-restart. (Delay: ${isIOS ? iosBackoffDelay : 500}ms)`);
-                    restartRecognitionSafely(isIOS ? iosBackoffDelay : 500);
+                    console.log('STT Flow: attempting auto-restart. (Delay: 500ms)');
+                    restartRecognitionSafely(500);
                 } else {
                     console.log('STT Flow: stop 클릭 -> shouldListen=false -> onend -> reset');
                     resetVoiceBtnState();
