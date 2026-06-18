@@ -259,6 +259,7 @@ export function selectPage(pageId, history) {
     if (!page) return;
 
     store.currentPageId = pageId;
+    store.currentPageCreatedAt = page.createdAt || null;
     document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
     document.querySelector(`.page-item[data-id="${pageId}"]`)?.classList.add('active');
 
@@ -433,6 +434,7 @@ export async function addNewPage() {
     }
 
     store.currentPageId = null;
+    store.currentPageCreatedAt = null;
     document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
 
     const v2Editor = document.getElementById('v2-editor-container');

@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Invalid user' });
         }
 
-        const { image, title, mediaId, notebookId, richContent, aiConsent } = req.body;
+        const { image, title, mediaId, notebookId, richContent, aiConsent, createdAt } = req.body;
         const content = sanitizeContent(req.body.content);
         
         if (!content && !image && !richContent) {
@@ -39,7 +39,8 @@ module.exports = async (req, res) => {
             providerToken,
             e2eKey,
             clientEmotion: req.body.emotion,
-            clientResponse: req.body.response
+            clientResponse: req.body.response,
+            createdAt
         });
 
         return res.json(result);

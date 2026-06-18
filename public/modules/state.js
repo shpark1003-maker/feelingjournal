@@ -9,6 +9,7 @@ export const store = {
     quillEditor: null,
     currentNotebookId: 'nb-1',
     currentPageId: null,
+    currentPageCreatedAt: null,
     currentRoomId: null,
     chatChannel: null,
     isAnalysisRunning: false,

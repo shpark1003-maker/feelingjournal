@@ -123,7 +123,7 @@ export async function analyzeDiary() {
         console.log('Sending analyze request...');
         const token = await store.getSessionToken();
 
-        let payload = { content, richContent, title, notebookId, image, aiConsent: true };
+        let payload = { content, richContent, title, notebookId, image, aiConsent: true, createdAt: store.currentPageCreatedAt };
         const hasConsent = store.settings.aiConsent !== false;
 
         if (!hasConsent) {
@@ -149,7 +149,8 @@ export async function analyzeDiary() {
                 notebookId,
                 image,
                 aiConsent: false,
-                emotion
+                emotion,
+                createdAt: store.currentPageCreatedAt
             };
         }
 
@@ -288,7 +289,11 @@ export function setupCamera() {
     cameraBtn.addEventListener('click', async () => {
         try {
             cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720 },
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: "user"
+                },
                 audio: false
             });
             if (webcamView) webcamView.srcObject = cameraStream;
@@ -315,8 +320,21 @@ export function setupCamera() {
         if (!cameraStream || !webcamView || !snapshotCanvas) return;
 
         const ctx = snapshotCanvas.getContext('2d');
-        snapshotCanvas.width = webcamView.videoWidth || 640;
-        snapshotCanvas.height = webcamView.videoHeight || 480;
+        let w = webcamView.videoWidth;
+        let h = webcamView.videoHeight;
+
+        // videoWidth가 0인 경우 Stream Track settings에서 시도
+        if (!w || !h) {
+            const track = cameraStream.getVideoTracks()[0];
+            if (track) {
+                const settings = track.getSettings();
+                w = settings.width;
+                h = settings.height;
+            }
+        }
+
+        snapshotCanvas.width = w || 640;
+        snapshotCanvas.height = h || 480;
 
         ctx.drawImage(webcamView, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
         const imgUrl = snapshotCanvas.toDataURL('image/jpeg', 0.85);
@@ -618,19 +636,22 @@ export function setupWritingHelper() {
                 },
                 body: JSON.stringify({
                     message: text,
-                    context: `당신은 사용자의 일기 작성을 돕는 다정하고 유능한 "글쓰기 동반자이자 코치(Writing Guide)"입니다.
+                    context: `당신은 사용자의 일기 작성을 돕는 다정하고 따뜻한 "글쓰기 가이드 천사(Writing Guide Angel)"입니다.
 단순히 사용자가 한 말을 받아 적어 요약만 해주는 기계적인 비서가 되지 마십시오.
 사용자가 자신의 하루를 성찰하고, 보다 풍부하고 감성적인 일기를 스스로 작성할 수 있도록 다음 원칙에 따라 가이드하십시오.
 
 [대화 및 가이드 원칙]
-1. 사용자가 단답형이나 짧은 단어(예: "힘들었어", "재밌었어")로 답하더라도, 공감과 경청의 리액션을 따뜻하게 건넨 후 구체적인 꼬리 질문을 던져 이야기를 이끌어내세요.
-   * 예: "많이 지치셨겠어요. 오늘 어떤 일 때문에 가장 마음이 힘드셨는지 비서에게 조금만 더 들려주실 수 있나요?"
+1. 사용자가 단답형이나 짧은 단어(예: "힘들었어", "재밌었어")로 답하더라도, 따뜻하게 경청하고 공감하는 리액션을 건넨 후 구체적인 꼬리 질문을 던져 이야기를 이끌어내세요.
+   * 예: "많이 지치셨겠어요. 오늘 어떤 일 때문에 가장 마음이 무거우셨는지 천사에게 조금만 더 들려주실 수 있나요?"
 2. 일기를 쉽게 쓸 수 있도록 구체적인 글감(질문)을 한 번에 하나씩만 제안하세요. 
    - (1단계) 오늘 있었던 가장 인상 깊은 사건이나 행동
    - (2단계) 그 사건 속에서 느꼈던 감정이나 생각 (왜 그런 기분이 들었는지)
    - (3단계) 그 하루를 통해 얻은 작은 배움이나 내일 나에게 바라는 점
 3. 문장 교정 팁이나 표현 추천도 자연스럽게 섞어주세요. (예: "이 감정은 '아쉬움'보다는 '뿌듯한 그리움'에 가까운 것 같네요. 일기에 쓸 때 '마음 한구석이 몽글몽글해졌다'고 표현해 보면 어떨까요?")
-4. 존댓말과 따뜻하고 정제된 비서의 말투를 유지하되, 사용자가 편안함을 느끼도록 정서적으로 깊이 지지해 주세요.`
+4. 존댓말과 따뜻하고 부드러운 말투를 유지하되, 사용자가 편안함을 느끼도록 정서적으로 깊이 지지해 주세요. 단, 지나치게 과보호적이거나 의존성을 유발하는 표현(예: 평생 곁을 지키겠다 등)은 지양하고 건강한 거리를 유지합니다.
+
+[⚠️ AI 안전 수칙 (위기 대응)]
+사용자가 자해, 자살, 또는 감당하기 어려운 극심한 심리적 위기 상황을 표현하거나 언급할 경우, 즉시 따뜻하게 위로하되 자해/자살 예방 상담전화(109)나 정신건강 전문의 등 전문 기관의 도움을 받을 수 있도록 친절하고 정중하게 안내 메시지를 제공하세요.`
                 })
             });
             const data = await res.json();
@@ -697,7 +718,7 @@ export function setupWritingHelper() {
                 },
                 body: JSON.stringify({
                     message: `[일기 생성 요청] 아래 나누었던 대화 기록을 바탕으로 감정이 풍부한 1인칭 시점의 일기를 완성해줘.\n\n대화 기록:\n${messages}`,
-                    context: '사용자가 비서와의 대화를 바탕으로 오늘의 일기를 작성해 달라고 요청했습니다. 대화 내용을 핵심적으로 반영하여 가슴이 따뜻해지는 아름다운 일기를 본문만 작성해 주세요. 머리말이나 인사말은 생략하고 일기 내용만 리턴해주세요.'
+                    context: '사용자가 글쓰기 가이드 천사와의 대화를 바탕으로 오늘의 일기를 작성해 달라고 요청했습니다. 대화 내용을 핵심적으로 반영하여 가슴이 따뜻해지는 아름다운 일기를 1인칭 시점으로 본문만 작성해 주세요. 머리말이나 인사말은 생략하고 일기 내용만 리턴해주세요.'
                 })
             });
 
@@ -807,7 +828,7 @@ function startHelperConversation() {
     const area = document.getElementById('helper-chat-area');
     if (!area) return;
     area.innerHTML = '';
-    appendHelperMsg('bot', '안녕하세요! 오늘 하루도 참 고생 많으셨습니다. 숲속의 작은 서재에 오신 것을 환영해요. 숲속의 정령 비서가 당신의 하루를 아름다운 기록으로 함께 엮어 드릴게요. 😊\n\n오늘 하루 중 가장 기억에 남는 하나의 순간이나 머릿속에 맴도는 생각은 무엇인가요? 편안하게 들려주세요.');
+    appendHelperMsg('bot', '안녕하세요! 오늘 하루도 참 수고 많으셨어요. 당신의 기록을 도와드리는 글쓰기 가이드 천사예요. 👼 오늘 나눈 대화들은 마음이 따뜻해지는 이쁜 일기로 함께 정성껏 엮어 드릴게요. 😊\n\n오늘 가장 기억에 남거나 마음속에 맴도는 이야기가 있다면 편안하게 들려주시겠어요?');
 }
 
 function appendHelperMsg(type, text) {
@@ -825,74 +846,194 @@ export function setupVoiceRecognition() {
     if (!voiceBtn) return;
 
     let recognition = null;
-    let isListening = false;
+    let shouldListen = false;      // 사용자 의도 상태
+    let isActive = false;          // 실제 인식 활성화 상태
+    let restarting = false;
+    let initError = null;
+    
+    // iOS용 연속 자동 재시작 방어 장치
+    let iosRestartCount = 0;
+    const MAX_IOS_RESTARTS = 10;
+    let iosBackoffDelay = 500;
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRec();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'ko-KR';
+    try {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            recognition.continuous = !isIOS; // iOS는 continuous=false 유지
+            recognition.interimResults = true;
+            recognition.lang = 'ko-KR';
 
-        recognition.onstart = () => {
-            isListening = true;
-            voiceBtn.style.background = '#ff4757';
-            voiceBtn.style.color = 'white';
-            const txt = voiceBtn.querySelector('.btn-text');
-            if (txt) txt.innerText = '듣는 중...';
-        };
+            recognition.onstart = () => {
+                isActive = true;
+                iosRestartCount = 0; // 시작 성공 시 카운트 리셋
+                iosBackoffDelay = 500; // 딜레이 리셋
+                
+                console.log('STT Flow: start -> onstart');
+                
+                voiceBtn.style.background = '#ff4757';
+                voiceBtn.style.color = 'white';
+                const txt = voiceBtn.querySelector('.btn-text');
+                if (txt) txt.innerText = '듣는 중...';
+            };
 
-        recognition.onend = () => {
-            isListening = false;
-            voiceBtn.style.background = '';
-            voiceBtn.style.color = '';
-            const txt = voiceBtn.querySelector('.btn-text');
-            if (txt) txt.innerText = '음성';
-        };
+            recognition.onend = () => {
+                isActive = false;
+                console.log('STT Flow: onend');
 
-        recognition.onerror = (e) => {
-            console.error('Speech Recognition Error:', e);
-            isListening = false;
-            recognition.stop();
-        };
-
-        recognition.onresult = (event) => {
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
+                if (shouldListen) {
+                    if (isIOS) {
+                        iosRestartCount++;
+                        if (iosRestartCount > MAX_IOS_RESTARTS) {
+                            console.warn('STT Flow: iOS maximum auto-restart limits exceeded. Stopping.');
+                            shouldListen = false;
+                            resetVoiceBtnState();
+                            alert('지속적인 오디오 소강 상태로 인해 음성 기록이 자동 종료되었습니다. 다시 녹음하려면 음성 버튼을 눌러주세요.');
+                            return;
+                        }
+                        // 백오프 대기 시간 증가
+                        iosBackoffDelay = Math.min(iosBackoffDelay + 300, 3000); 
+                    }
+                    
+                    console.log(`STT Flow: attempting auto-restart. (Delay: ${isIOS ? iosBackoffDelay : 500}ms)`);
+                    restartRecognitionSafely(isIOS ? iosBackoffDelay : 500);
+                } else {
+                    console.log('STT Flow: stop 클릭 -> shouldListen=false -> onend -> reset');
+                    resetVoiceBtnState();
                 }
-            }
+            };
 
-            if (finalTranscript && store.quillEditor) {
-                store.quillEditor.update();
-                let range = store.quillEditor.getSelection(true);
-                // Null-guard if editor has no focus
-                if (!range) {
-                    const length = store.quillEditor.getLength();
-                    range = { index: length > 0 ? length - 1 : 0 };
+            recognition.onerror = (e) => {
+                console.error('Speech Recognition Error:', e.error || e);
+
+                // 치명적인 오류들 발생 시 즉각 중단 처리
+                if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'network') {
+                    console.error(`STT Flow: Critical error [${e.error}] -> shouldListen=false -> alert -> reset`);
+                    shouldListen = false;
+                    isActive = false;
+                    
+                    if (e.error === 'not-allowed') {
+                        alert('마이크 사용 권한이 거부되었거나 설정되어 있지 않습니다. 브라우저 설정에서 마이크 권한을 허용해 주세요.');
+                    } else if (e.error === 'service-not-allowed') {
+                        alert('이 기기/브라우저에서는 현재 음성 서비스를 허용하지 않습니다. (보안 컨텍스트/HTTPS 연결 등을 확인해 주세요.)');
+                    } else if (e.error === 'network') {
+                        alert('네트워크 연결이 원활하지 않아 음성 인식을 종료합니다. 연결 상태를 확인해 주세요.');
+                    }
+                    
+                    resetVoiceBtnState();
+                    return;
                 }
-                store.quillEditor.insertText(range.index, ' ' + finalTranscript);
-                store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
+
+                // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 onend 재시작 흐름에 맡김
+                if (e.error === 'no-speech' || e.error === 'aborted') {
+                    console.log(`STT Flow: Soft error [${e.error}] -> no-speech -> passing to onend`);
+                    return;
+                }
+
+                // 기타 예상치 못한 에러 발생 시 안전하게 끔
+                shouldListen = false;
+                isActive = false;
+                resetVoiceBtnState();
+            };
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (finalTranscript && store.quillEditor) {
+                    store.quillEditor.update();
+                    let range = store.quillEditor.getSelection(true);
+                    if (!range) {
+                        const length = store.quillEditor.getLength();
+                        range = { index: length > 0 ? length - 1 : 0 };
+                    }
+                    store.quillEditor.insertText(range.index, ' ' + finalTranscript);
+                    store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
+                }
+            };
+        }
+    } catch (err) {
+        console.error('Failed to initialize SpeechRecognition constructor:', err);
+        initError = err;
+        recognition = null;
+    }
+
+    function restartRecognitionSafely(delay) {
+        if (restarting) return;
+        restarting = true;
+
+        setTimeout(() => {
+            restarting = false;
+            if (!shouldListen || isActive) return;
+
+            try {
+                console.log('STT Flow: restart -> calling recognition.start()');
+                recognition.start();
+            } catch (err) {
+                console.warn('Speech recognition restart failed:', err);
+                shouldListen = false;
+                isActive = false;
+                resetVoiceBtnState();
             }
-        };
+        }, delay);
+    }
+
+    function resetVoiceBtnState() {
+        voiceBtn.style.background = '';
+        voiceBtn.style.color = '';
+        const txt = voiceBtn.querySelector('.btn-text');
+        if (txt) txt.innerText = '음성';
     }
 
     voiceBtn.addEventListener('click', () => {
         if (!recognition) {
-            return alert('이 브라우저는 음성 인식을 지원하지 않습니다. 크롬 또는 사파리를 권장합니다.');
+            let errorMsg = '이 브라우저는 음성 인식을 지원하지 않거나 활성화되지 않았습니다. 크롬 또는 사파리를 권장합니다.';
+            if (!window.isSecureContext) {
+                errorMsg += '\n(현재 HTTPS 보안 연결이 아니어서 브라우저가 마이크 권한을 차단했을 수 있습니다.)';
+            }
+            if (initError) {
+                errorMsg += `\n[상세 오류: ${initError.message || initError}]`;
+            }
+            return alert(errorMsg);
         }
 
-        if (isListening) {
-            recognition.stop();
+        if (shouldListen) {
+            shouldListen = false;
+            console.log('STT Flow: stop 클릭 -> setting shouldListen = false');
+            try {
+                if (isActive) recognition.stop();
+            } catch (err) {
+                console.warn('recognition.stop failed:', err);
+            }
+            resetVoiceBtnState();
         } else {
+            shouldListen = true;
+            iosRestartCount = 0; // 리셋
+            iosBackoffDelay = 500;
+            console.log('STT Flow: start 클릭 -> setting shouldListen = true, calling recognition.start()');
             try {
                 recognition.start();
             } catch (err) {
-                console.error(err);
+                shouldListen = false;
+                isActive = false;
+                console.error('Start recognition failed:', err);
+                alert('음성 인식을 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+                resetVoiceBtnState();
             }
         }
     });
+
+    if (!recognition) {
+        voiceBtn.style.opacity = '0.4';
+        voiceBtn.style.cursor = 'not-allowed';
+        voiceBtn.title = '이 브라우저/기기는 음성 기록을 지원하지 않습니다 (크롬/사파리 권장)';
+    }
 }
 
 export function setupLocalUpload() {

@@ -104,9 +104,6 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
         } catch (err) {
             console.error(`--- [GEMINI ERROR] Model ${model} failed: ${err.message} ---`);
             lastError = err;
-            if (failFast) {
-                break;
-            }
         }
     }
 

@@ -11,7 +11,7 @@ const {
 const { saveDiary } = require('../_repositories/diaryRepository');
 const { getUserNickname, updateUserEmotion } = require('../_repositories/userRepository');
 
-async function analyzeDiary({ userId, userEmail, content, richContent, image, title, mediaId, notebookId, aiConsent, providerToken, e2eKey, clientEmotion, clientResponse }) {
+async function analyzeDiary({ userId, userEmail, content, richContent, image, title, mediaId, notebookId, aiConsent, providerToken, e2eKey, clientEmotion, clientResponse, createdAt }) {
     const sanitized = sanitizeContent(content);
     const contentHash = Buffer.from(sanitized || image || '').toString('base64').slice(0, 50);
     const cacheKey = `user:${userId}:last-analyze-cache`;
@@ -44,7 +44,15 @@ async function analyzeDiary({ userId, userEmail, content, richContent, image, ti
         } catch (e) {}
     }
 
-    const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    // 일기 최초 작성 시각 기준 적용 (상대 날짜 계산용)
+    let referenceDate = new Date();
+    if (createdAt) {
+        const parsed = new Date(createdAt);
+        if (!isNaN(parsed.getTime())) {
+            referenceDate = parsed;
+        }
+    }
+    const currentTimeStr = referenceDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
     
     // 사용자 호칭 조회
     const userNickname = await getUserNickname(userId, userEmail);
@@ -63,7 +71,7 @@ ${currentTimeStr}
 1. 이미지 속 텍스트와 사용자의 메모를 종합 분석하라.
 2. 기존 일정과 대조하여 충돌 여부를 확인하라.
 3. 할 일이 발견되면 EVENT_JSON_START/END 형식으로 제안하라.
-4. "내일", "다음주" 등 상대 시간은 현재 시간을 기준으로 계산하라.
+4. "내일", "다음주" 등 상대 시간은 이 일기가 작성된 위 [현재 시간] (${currentTimeStr})을 기준으로 계산하라.`;
 5. 첫 줄에 감정:[단어] 형식으로 작성하라.
 6. 전문 인지행동치료(CBT)의 임상적 노하우를 고도로 적용하되, 결코 기계적인 상담 용어(예: 'CBT', '인지오류', '치료' 등)를 드러내어 사용자가 상담실에 앉아있는 느낌을 주지 마십시오. 대신 사용자의 지친 부정적 감정이나 생각 속 편향(흑백논리, 자책, 미래 비관 등)이 감지될 때, 수석비서의 지적이고 극진한 존대 어조를 유지하면서 깊은 공감과 함께 건강하고 유연한 대안적 관점(Cognitive Restructuring)을 자연스러운 비즈니스적/생활밀착형 제안으로 깨달을 수 있게 유도하는 품격 있는 단락을 반드시 포함하십시오. 항상 "${userNickname}"님을 따뜻하게 지지하고 위로하는 비서의 태도를 견지하십시오.
 
@@ -112,7 +120,7 @@ ${sanitized || '(이미지 분석 요청)'}
         content: aiConsent === false ? sanitized : encrypt(sanitized, e2eKey),
         richContent: richContent ? (aiConsent === false ? richContent : encrypt(richContent, e2eKey)) : null,
         response: aiConsent === false ? text : encrypt(text, e2eKey),
-        createdAt: new Date().toISOString(),
+        createdAt: createdAt || new Date().toISOString(),
         emotion,
         mediaId: mediaId || null,
         notebookId: notebookId || 'nb-1'
