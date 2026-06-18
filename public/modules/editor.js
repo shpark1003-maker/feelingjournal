@@ -898,9 +898,10 @@ export function setupVoiceRecognition() {
             recognition.onerror = (e) => {
                 console.error('Speech Recognition Error:', e.error || e);
 
-                // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 passing
+                // no-speech나 aborted 등 소강 상태/취소 시 강제 루프 재시작을 하지 않고 대기 상태로 자연스럽게 정지
                 if (e.error === 'no-speech' || e.error === 'aborted') {
-                    console.log(`STT Flow: Soft error [${e.error}] -> passing to onend`);
+                    console.log(`STT Flow: Soft error [${e.error}] -> stopping listen loop`);
+                    shouldListen = false;
                     return;
                 }
 
