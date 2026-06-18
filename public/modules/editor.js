@@ -861,9 +861,9 @@ export function setupVoiceRecognition() {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRec();
             
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            recognition.continuous = !isIOS; // iOS는 continuous=false 유지
-            recognition.interimResults = true;
+            // 호환성 및 마이크 드라이버 무음 락 예방을 위해 care.js와 동일하게 false 설정
+            recognition.continuous = false; 
+            recognition.interimResults = false;
             recognition.lang = 'ko-KR';
 
             recognition.onstart = () => {
