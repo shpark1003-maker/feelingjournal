@@ -851,13 +851,22 @@ export function setupVoiceRecognition() {
     let restarting = false;
     let initError = null;
 
+    // 초기 지원 여부만 검사하고 인스턴스는 동적으로 생성/파괴 관리
     try {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+            initError = new Error('SpeechRecognition not supported in this browser.');
+        }
+    } catch (err) {
+        initError = err;
+    }
+
+    function createRecognition() {
+        if (recognition) return;
+
+        try {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRec();
-            
-            // 호환성 및 마이크 드라이버 무음 락 예방을 위해 care.js와 동일하게 false 설정
-            recognition.continuous = false; 
+            recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'ko-KR';
 
@@ -865,15 +874,17 @@ export function setupVoiceRecognition() {
                 isActive = true;
                 console.log('STT Flow: start -> onstart');
                 
-                voiceBtn.style.background = '#ff4757';
-                voiceBtn.style.color = 'white';
-                const txt = voiceBtn.querySelector('.btn-text');
-                if (txt) txt.innerText = '듣는 중...';
+                // 마이크 활성화 시 빨간색 앰버 테마로 강조
+                voiceBtn.classList.remove('bg-amber-50', 'text-amber-600', 'border-amber-200/60');
+                voiceBtn.classList.add('bg-red-500', 'text-white', 'border-red-600');
             };
 
             recognition.onend = () => {
                 isActive = false;
                 console.log('STT Flow: onend');
+                
+                // 마이크 리소스 즉시 해제
+                destroyRecognition();
 
                 if (shouldListen) {
                     console.log('STT Flow: attempting auto-restart. (Delay: 500ms)');
@@ -887,17 +898,17 @@ export function setupVoiceRecognition() {
             recognition.onerror = (e) => {
                 console.error('Speech Recognition Error:', e.error || e);
 
-                // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 onend 재시작 흐름에 맡김
+                // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 passing
                 if (e.error === 'no-speech' || e.error === 'aborted') {
-                    console.log(`STT Flow: Soft error [${e.error}] -> no-speech -> passing to onend`);
+                    console.log(`STT Flow: Soft error [${e.error}] -> passing to onend`);
                     return;
                 }
 
-                // 권한 거부(not-allowed), 기기 미지원(service-not-allowed), 네트워크(network) 등의 오류 시 조용히 상태 리셋
-                // 브라우저 자체 권한 창(prompt)과의 충돌 및 팝업 락을 차단하기 위해 경고 alert 제거
+                // 권한 거부(not-allowed) 등 치명적인 에러 시 전체 중단
                 console.error(`STT Flow: Critical error [${e.error}] -> resetting state`);
                 shouldListen = false;
                 isActive = false;
+                destroyRecognition();
                 resetVoiceBtnState();
             };
 
@@ -928,11 +939,25 @@ export function setupVoiceRecognition() {
                     store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
                 }
             };
+        } catch (err) {
+            console.error('Failed to create SpeechRecognition instance:', err);
+            shouldListen = false;
+            isActive = false;
+            resetVoiceBtnState();
         }
-    } catch (err) {
-        console.error('Failed to initialize SpeechRecognition constructor:', err);
-        initError = err;
-        recognition = null;
+    }
+
+    function destroyRecognition() {
+        if (recognition) {
+            try {
+                recognition.onstart = null;
+                recognition.onend = null;
+                recognition.onerror = null;
+                recognition.onresult = null;
+                recognition.stop();
+            } catch (err) {}
+            recognition = null;
+        }
     }
 
     function restartRecognitionSafely(delay) {
@@ -945,31 +970,29 @@ export function setupVoiceRecognition() {
 
             try {
                 console.log('STT Flow: restart -> calling recognition.start()');
+                createRecognition();
                 recognition.start();
             } catch (err) {
                 console.warn('Speech recognition restart failed:', err);
                 shouldListen = false;
                 isActive = false;
+                destroyRecognition();
                 resetVoiceBtnState();
             }
         }, delay);
     }
 
     function resetVoiceBtnState() {
-        voiceBtn.style.background = '';
-        voiceBtn.style.color = '';
-        const txt = voiceBtn.querySelector('.btn-text');
-        if (txt) txt.innerText = '음성';
+        voiceBtn.classList.remove('bg-red-500', 'text-white', 'border-red-600');
+        voiceBtn.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-200/60');
     }
 
     voiceBtn.addEventListener('click', () => {
-        if (!recognition) {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec || initError) {
             let errorMsg = '이 브라우저는 음성 인식을 지원하지 않거나 활성화되지 않았습니다. 크롬 또는 사파리를 권장합니다.';
             if (!window.isSecureContext) {
                 errorMsg += '\n(현재 HTTPS 보안 연결이 아니어서 브라우저가 마이크 권한을 차단했을 수 있습니다.)';
-            }
-            if (initError) {
-                errorMsg += `\n[상세 오류: ${initError.message || initError}]`;
             }
             return alert(errorMsg);
         }
@@ -977,20 +1000,18 @@ export function setupVoiceRecognition() {
         if (shouldListen) {
             shouldListen = false;
             console.log('STT Flow: stop 클릭 -> setting shouldListen = false');
-            try {
-                if (isActive) recognition.stop();
-            } catch (err) {
-                console.warn('recognition.stop failed:', err);
-            }
+            destroyRecognition();
             resetVoiceBtnState();
         } else {
             shouldListen = true;
             console.log('STT Flow: start 클릭 -> setting shouldListen = true, calling recognition.start()');
             try {
+                createRecognition();
                 recognition.start();
             } catch (err) {
                 shouldListen = false;
                 isActive = false;
+                destroyRecognition();
                 console.error('Start recognition failed:', err);
                 alert('음성 인식을 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.');
                 resetVoiceBtnState();
@@ -998,7 +1019,8 @@ export function setupVoiceRecognition() {
         }
     });
 
-    if (!recognition) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec || initError) {
         voiceBtn.style.opacity = '0.4';
         voiceBtn.style.cursor = 'not-allowed';
         voiceBtn.title = '이 브라우저/기기는 음성 기록을 지원하지 않습니다 (크롬/사파리 권장)';
