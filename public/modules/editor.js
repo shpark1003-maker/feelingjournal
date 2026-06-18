@@ -866,8 +866,8 @@ export function setupVoiceRecognition() {
         try {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRec();
-            recognition.continuous = false;
-            recognition.interimResults = false;
+            recognition.continuous = true;
+            recognition.interimResults = true;
             recognition.lang = 'ko-KR';
 
             recognition.onstart = () => {
