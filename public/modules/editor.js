@@ -902,6 +902,8 @@ export function setupVoiceRecognition() {
                 if (e.error === 'no-speech' || e.error === 'aborted') {
                     console.log(`STT Flow: Soft error [${e.error}] -> stopping listen loop`);
                     shouldListen = false;
+                    destroyRecognition();
+                    resetVoiceBtnState();
                     return;
                 }
 
