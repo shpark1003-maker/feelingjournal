@@ -923,12 +923,19 @@ export function setupVoiceRecognition() {
             };
 
             recognition.onresult = (event) => {
+                console.log('STT Flow: onresult event triggered');
                 let finalTranscript = '';
+                let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
                     }
                 }
+
+                console.log(`STT Flow: result content [final: "${finalTranscript}", interim: "${interimTranscript}"]`);
 
                 if (finalTranscript && store.quillEditor) {
                     store.quillEditor.update();
@@ -937,6 +944,7 @@ export function setupVoiceRecognition() {
                         const length = store.quillEditor.getLength();
                         range = { index: length > 0 ? length - 1 : 0 };
                     }
+                    console.log(`STT Flow: inserting text "${finalTranscript}" to Quill editor index ${range.index}`);
                     store.quillEditor.insertText(range.index, ' ' + finalTranscript);
                     store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
                 }
