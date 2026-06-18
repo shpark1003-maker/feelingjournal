@@ -908,31 +908,15 @@ export function setupVoiceRecognition() {
             recognition.onerror = (e) => {
                 console.error('Speech Recognition Error:', e.error || e);
 
-                // 치명적인 오류들 발생 시 즉각 중단 처리
-                if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'network') {
-                    console.error(`STT Flow: Critical error [${e.error}] -> shouldListen=false -> alert -> reset`);
-                    shouldListen = false;
-                    isActive = false;
-                    
-                    if (e.error === 'not-allowed') {
-                        alert('마이크 사용 권한이 거부되었거나 설정되어 있지 않습니다. 브라우저 설정에서 마이크 권한을 허용해 주세요.');
-                    } else if (e.error === 'service-not-allowed') {
-                        alert('이 기기/브라우저에서는 현재 음성 서비스를 허용하지 않습니다. (보안 컨텍스트/HTTPS 연결 등을 확인해 주세요.)');
-                    } else if (e.error === 'network') {
-                        alert('네트워크 연결이 원활하지 않아 음성 인식을 종료합니다. 연결 상태를 확인해 주세요.');
-                    }
-                    
-                    resetVoiceBtnState();
-                    return;
-                }
-
                 // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 onend 재시작 흐름에 맡김
                 if (e.error === 'no-speech' || e.error === 'aborted') {
                     console.log(`STT Flow: Soft error [${e.error}] -> no-speech -> passing to onend`);
                     return;
                 }
 
-                // 기타 예상치 못한 에러 발생 시 안전하게 끔
+                // 권한 거부(not-allowed), 기기 미지원(service-not-allowed), 네트워크(network) 등의 오류 시 조용히 상태 리셋
+                // 브라우저 자체 권한 창(prompt)과의 충돌 및 팝업 락을 차단하기 위해 경고 alert 제거
+                console.error(`STT Flow: Critical error [${e.error}] -> resetting state`);
                 shouldListen = false;
                 isActive = false;
                 resetVoiceBtnState();
