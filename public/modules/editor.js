@@ -843,15 +843,19 @@ function appendHelperMsg(type, text) {
 
 export function setupVoiceRecognition() {
     const voiceBtn = document.getElementById('voice-btn');
-    if (!voiceBtn) return;
+    if (!voiceBtn) {
+        console.warn('[voice] button not found in DOM.');
+        return;
+    }
+
+    console.log('[VOICE PATCH ACTIVE] 2026-06-19 v5.5.9');
+    console.log('[voice] button found:', !!voiceBtn);
+    console.log('[voice] SpeechRecognition:', !!(window.SpeechRecognition || window.webkitSpeechRecognition));
 
     let recognition = null;
-    let shouldListen = false;      // 사용자 의도 상태
     let isActive = false;          // 실제 인식 활성화 상태
-    let restarting = false;
     let initError = null;
 
-    // 초기 지원 여부만 검사하고 인스턴스는 동적으로 생성/파괴 관리
     try {
         if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             initError = new Error('SpeechRecognition not supported in this browser.');
@@ -872,76 +876,42 @@ export function setupVoiceRecognition() {
 
             recognition.onstart = () => {
                 isActive = true;
-                console.log('STT Flow: start -> onstart');
-                
-                // 마이크 활성화 시 빨간색 앰버 테마로 강조
+                console.log('[voice] started');
                 voiceBtn.classList.remove('bg-amber-50', 'text-amber-600', 'border-amber-200/60');
                 voiceBtn.classList.add('bg-red-500', 'text-white', 'border-red-600');
             };
 
             recognition.onend = () => {
                 isActive = false;
-                console.log('STT Flow: onend');
-                
-                // 마이크 리소스 즉시 해제
+                console.log('[voice] ended');
                 destroyRecognition();
-
-                if (shouldListen) {
-                    console.log('STT Flow: attempting auto-restart. (Delay: 500ms)');
-                    restartRecognitionSafely(500);
-                } else {
-                    console.log('STT Flow: stop 클릭 -> shouldListen=false -> onend -> reset');
-                    resetVoiceBtnState();
-                }
+                resetVoiceBtnState();
             };
 
             recognition.onerror = (e) => {
-                console.error('Speech Recognition Error:', e.error || e);
-
-                // no-speech나 aborted 등의 일반적인 흐름 상의 소강 상태는 alert 없이 passing
-                if (e.error === 'no-speech' || e.error === 'aborted') {
-                    console.log(`STT Flow: Soft error [${e.error}] -> passing to onend`);
-                    return;
-                }
-
-                // 권한 거부(not-allowed) 등 치명적인 에러 시 전체 중단
-                console.error(`STT Flow: Critical error [${e.error}] -> resetting state`);
-                shouldListen = false;
+                console.error('[voice] error:', e.error || e);
                 isActive = false;
                 destroyRecognition();
                 resetVoiceBtnState();
             };
 
             recognition.onresult = (event) => {
-                console.log('STT Flow: onresult event triggered');
-                let finalTranscript = '';
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
+                const transcript = event.results[0][0].transcript;
+                console.log('[voice] result:', transcript);
 
-                console.log(`STT Flow: result content [final: "${finalTranscript}", interim: "${interimTranscript}"]`);
-
-                if (finalTranscript && store.quillEditor) {
+                if (transcript && store.quillEditor) {
                     store.quillEditor.update();
                     let range = store.quillEditor.getSelection(true);
                     if (!range) {
                         const length = store.quillEditor.getLength();
                         range = { index: length > 0 ? length - 1 : 0 };
                     }
-                    console.log(`STT Flow: inserting text "${finalTranscript}" to Quill editor index ${range.index}`);
-                    store.quillEditor.insertText(range.index, ' ' + finalTranscript);
-                    store.quillEditor.setSelection(range.index + finalTranscript.length + 1);
+                    store.quillEditor.insertText(range.index, ' ' + transcript);
+                    store.quillEditor.setSelection(range.index + transcript.length + 1);
                 }
             };
         } catch (err) {
             console.error('Failed to create SpeechRecognition instance:', err);
-            shouldListen = false;
             isActive = false;
             resetVoiceBtnState();
         }
@@ -960,34 +930,13 @@ export function setupVoiceRecognition() {
         }
     }
 
-    function restartRecognitionSafely(delay) {
-        if (restarting) return;
-        restarting = true;
-
-        setTimeout(() => {
-            restarting = false;
-            if (!shouldListen || isActive) return;
-
-            try {
-                console.log('STT Flow: restart -> calling recognition.start()');
-                createRecognition();
-                recognition.start();
-            } catch (err) {
-                console.warn('Speech recognition restart failed:', err);
-                shouldListen = false;
-                isActive = false;
-                destroyRecognition();
-                resetVoiceBtnState();
-            }
-        }, delay);
-    }
-
     function resetVoiceBtnState() {
         voiceBtn.classList.remove('bg-red-500', 'text-white', 'border-red-600');
         voiceBtn.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-200/60');
     }
 
     voiceBtn.addEventListener('click', () => {
+        console.log('[voice] clicked. Current state isActive =', isActive);
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRec || initError) {
             let errorMsg = '이 브라우저는 음성 인식을 지원하지 않거나 활성화되지 않았습니다. 크롬 또는 사파리를 권장합니다.';
@@ -997,19 +946,17 @@ export function setupVoiceRecognition() {
             return alert(errorMsg);
         }
 
-        if (shouldListen) {
-            shouldListen = false;
-            console.log('STT Flow: stop 클릭 -> setting shouldListen = false');
+        if (isActive) {
+            console.log('[voice] stopping manually');
             destroyRecognition();
             resetVoiceBtnState();
+            isActive = false;
         } else {
-            shouldListen = true;
-            console.log('STT Flow: start 클릭 -> setting shouldListen = true, calling recognition.start()');
+            console.log('[voice] starting manually');
             try {
                 createRecognition();
                 recognition.start();
             } catch (err) {
-                shouldListen = false;
                 isActive = false;
                 destroyRecognition();
                 console.error('Start recognition failed:', err);
