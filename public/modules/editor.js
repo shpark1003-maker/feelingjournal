@@ -985,8 +985,6 @@ export function setupVoiceRecognition() {
             resetVoiceBtnState();
         } else {
             shouldListen = true;
-            iosRestartCount = 0; // 리셋
-            iosBackoffDelay = 500;
             console.log('STT Flow: start 클릭 -> setting shouldListen = true, calling recognition.start()');
             try {
                 recognition.start();
