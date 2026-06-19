@@ -428,6 +428,163 @@ function initCalendarUI() {
             closeTaskEditor();
         });
     }
+
+    // === [AI 일정 천사] 이벤트 바인딩 (1단계) ===
+    const angelSendBtn = document.getElementById('ai-angel-send-btn');
+    const angelInput = document.getElementById('ai-angel-input');
+    const angelChatBox = document.getElementById('ai-angel-chat-box');
+
+    if (angelSendBtn && angelInput && angelChatBox && !angelSendBtn.dataset.bound) {
+        angelSendBtn.dataset.bound = "true";
+
+        const appendChat = (sender, message, isCard = false) => {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            if (sender === 'user') {
+                div.className = 'flex gap-2 justify-end';
+                div.innerHTML = `
+                    <div class="bg-primary/10 text-on-surface-variant p-2.5 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed">${message}</div>
+                    <span class="text-[18px]">👤</span>
+                `;
+            } else {
+                if (isCard) {
+                    div.innerHTML = `
+                        <span class="text-[18px]">👼</span>
+                        <div class="bg-white dark:bg-zinc-900 border border-amber-200/50 dark:border-amber-900/30 p-4 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm space-y-3">
+                            ${message}
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <span class="text-[18px]">👼</span>
+                        <div class="bg-amber-100/60 dark:bg-amber-900/20 text-on-surface-variant p-2.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed">${message}</div>
+                    `;
+                }
+            }
+            angelChatBox.appendChild(div);
+            angelChatBox.scrollTop = angelChatBox.scrollHeight;
+        };
+
+        const handleSend = async () => {
+            const text = angelInput.value.trim();
+            if (!text) return;
+
+            angelInput.value = '';
+            appendChat('user', text);
+
+            // 로딩 상태 표시
+            const loadingId = 'angel-loading-' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = loadingId;
+            loadingDiv.className = 'flex gap-2';
+            loadingDiv.innerHTML = `
+                <span class="text-[18px]">👼</span>
+                <div class="bg-amber-100/40 text-on-surface-variant p-2.5 rounded-2xl rounded-tl-none max-w-[85%] flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                    <span>천사가 일정을 설계하는 중...</span>
+                </div>
+            `;
+            angelChatBox.appendChild(loadingDiv);
+            angelChatBox.scrollTop = angelChatBox.scrollHeight;
+
+            try {
+                const token = await store.getSessionToken();
+                const res = await fetch(`${API_URL}/ai-tasks/suggest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await res.json();
+                
+                // 로딩 제거
+                document.getElementById(loadingId)?.remove();
+
+                if (data.success && data.suggestedTasks) {
+                    appendChat('angel', data.advice);
+
+                    // 세부 과제 카드 생성
+                    const taskListHtml = data.suggestedTasks.map(t => `
+                        <div class="flex items-center justify-between text-[11px] p-2 bg-amber-50/40 dark:bg-amber-950/10 rounded-lg border border-amber-100/20">
+                            <span class="font-medium text-amber-800 dark:text-amber-400">Step ${t.sequence}</span>
+                            <span class="flex-1 px-2 text-on-surface-variant truncate">${t.title}</span>
+                            <span class="shrink-0 bg-white/80 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] text-amber-700 dark:text-amber-500 font-semibold">${t.duration}일</span>
+                        </div>
+                    `).join('');
+
+                    const cardHtml = `
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-[12px] text-primary flex items-center gap-1">
+                                <span>📅 추천 세부 과제 구성</span>
+                            </h4>
+                            <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                ${taskListHtml}
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/20 flex gap-2">
+                                <button class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold text-[11px] transition-colors shadow-sm" id="angel-btn-confirm-${loadingId}">
+                                    일정 등록 및 확정 👼
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    appendChat('angel', cardHtml, true);
+
+                    // 확정 버튼 이벤트 바인딩
+                    document.getElementById(`angel-btn-confirm-${loadingId}`)?.addEventListener('click', async () => {
+                        const confirmBtn = document.getElementById(`angel-btn-confirm-${loadingId}`);
+                        if (confirmBtn) {
+                            confirmBtn.disabled = true;
+                            confirmBtn.innerText = '저장하는 중...';
+                        }
+
+                        try {
+                            const todayStr = new Date().toISOString().split('T')[0];
+                            const saveRes = await fetch(`${API_URL}/ai-tasks/confirm`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    parentTitle: text,
+                                    startDate: todayStr,
+                                    steps: data.suggestedTasks,
+                                    status: 'in-progress'
+                                })
+                            });
+
+                            const saveData = await saveRes.json();
+                            if (saveData.success) {
+                                appendChat('angel', '세부 일정이 데이터베이스에 일괄 저장되었습니다. 캘린더를 새로고침합니다! 👼');
+                                loadCalendar(true);
+                            } else {
+                                appendChat('angel', '저장 실패: ' + (saveData.message || '오류 발생'));
+                            }
+                        } catch (confirmErr) {
+                            console.error(confirmErr);
+                            appendChat('angel', '저장 도중 서버 통신 실패가 발생했습니다.');
+                        }
+                    });
+
+                } else {
+                    appendChat('angel', data.message || '일정 추천을 가져오지 못했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById(loadingId)?.remove();
+                appendChat('angel', '일정 추천 조회 도중 오류가 발생했습니다.');
+            }
+        };
+
+        angelSendBtn.addEventListener('click', handleSend);
+        angelInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+    }
 }
 
 export async function loadCalendar(forceRefresh = false) {

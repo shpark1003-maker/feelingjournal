@@ -18,8 +18,10 @@ const push = require('./push');
 const scrap = require('./scrap');
 const tts = require('./tts');
 const news = require('./news');
+const aiTasks = require('./ai-tasks');
 
 const routes = [
+    { path: '/api/ai-tasks', handler: aiTasks, auth: true },
     { path: '/api/api-settings', handler: apiSettings, auth: true },
     { path: '/api/news', handler: news, auth: true },
     { path: '/api/analyze', handler: analyze, auth: true },

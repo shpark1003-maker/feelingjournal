@@ -1,0 +1,284 @@
+'use strict';
+
+const { callGemini, supabase, redis } = require('./shared');
+
+// KST 시간 포맷 도우미
+function getKstDateTimeString() {
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const now = new Date();
+    const kstDate = new Date(now.getTime() + kstOffset);
+    return kstDate.toISOString().replace('T', ' ').substring(0, 19) + ' (KST)';
+}
+
+module.exports = async (req, res) => {
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
+    const url = req.url || '';
+    let subPath = url.split('?')[0];
+
+    // 라우터 마운트 경로 정규화
+    if (subPath.startsWith('/api/ai-tasks')) {
+        subPath = subPath.substring('/api/ai-tasks'.length);
+    }
+
+    const user = req.user;
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized: Missing user session.' });
+    }
+
+    // 1. AI 일정 세분화 제안 라우트
+    if (req.method === 'POST' && (subPath === '/suggest' || subPath === '/suggest/')) {
+        const { message } = req.body || {};
+        if (!message || typeof message !== 'string' || message.trim().length === 0) {
+            return res.status(400).json({ error: '요구사항(message)을 텍스트로 입력해 주세요.' });
+        }
+
+        const currentTimeStr = getKstDateTimeString();
+
+        // Gemini Structured JSON Response Schema
+        const schema = {
+            type: "OBJECT",
+            properties: {
+                advice: { type: "STRING" },
+                suggestedTasks: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            sequence: { type: "INTEGER" },
+                            title: { type: "STRING" },
+                            duration: { type: "INTEGER" }
+                        },
+                        required: ["sequence", "title", "duration"]
+                    }
+                }
+            },
+            required: ["advice", "suggestedTasks"]
+        };
+
+        const prompt = `너는 사용자의 일정을 지키고 동기부여를 담당하는 품격 있는 AI 일정 가이드 천사(Schedule Angel)다. 👼
+사용자가 어떤 큰 목표나 일상적 고민을 털어놓으면, 이를 구체적이고 체계적인 "단계별 실행 계획(Sub-tasks)"으로 세분화하여 계획 카드를 디자인해주어야 한다.
+
+현재 시각(KST): ${currentTimeStr}
+사용자의 고민: "${message}"
+
+[수행 규칙 및 제약사항]
+1. 사용자가 털어놓은 목표에 공감하고 용기를 북돋는 멘트를 'advice'에 2~3문장 이내로 다정하고 정중하게 적어주십시오.
+2. 제안하는 세부 과제 리스트('suggestedTasks')는 다음 제한 사항을 철저히 준수하십시오:
+   - **suggestedTasks 개수**: 최대 10개 이하로만 생성하십시오.
+   - **duration (소요 일수)**: 각 단계마다 반드시 1일 이상 30일 이하의 정수로만 배정하십시오.
+   - **title (단계명)**: 단계별 명확한 실천 목표를 담아 최대 120자 이내로 명확하게 작성하십시오. (예: "핵심 참고 논문 3편 상세 분석 및 연구 문제 확정")
+   - **sequence (순서)**: 1부터 시작하여 중복 없이 연속적으로 증가하는 정수로 채우십시오 (1, 2, 3, ...).
+3. 응답은 반드시 지정된 JSON 규격 스키마를 완벽히 준수하는 순수 JSON 문자열이어야 합니다.`;
+
+        try {
+            const generationConfig = {
+                response_mime_type: "application/json",
+                response_schema: schema
+            };
+
+            const data = await callGemini(prompt, generationConfig, 1, null, true, 20000);
+            const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+            
+            let result;
+            try {
+                result = JSON.parse(rawJson);
+            } catch (err) {
+                console.error('[AI Angel] JSON parsing failed from Gemini output:', rawJson);
+                throw new Error('JSON_PARSE_FAILED');
+            }
+
+            // --- 엄격한 스키마 구조 검증 (Schema Validation) ---
+            if (!result.advice || !Array.isArray(result.suggestedTasks)) {
+                throw new Error('INVALID_STRUCTURE');
+            }
+
+            const tasks = result.suggestedTasks;
+
+            // 1) 개수 검증 (최대 10개)
+            if (tasks.length > 10) {
+                console.warn('[AI Angel] Task count exceeded:', tasks.length);
+                result.suggestedTasks = tasks.slice(0, 10);
+            }
+
+            // 2) 개별 요소 유효성 및 3) sequence 검증
+            const seenSequences = new Set();
+            let isSequenceValid = true;
+
+            const validatedTasks = result.suggestedTasks.map((t, idx) => {
+                const title = (t.title || '').trim().substring(0, 120);
+                const duration = Math.min(Math.max(parseInt(t.duration, 10) || 1, 1), 30); // 1~30일 제한
+                const sequence = parseInt(t.sequence, 10) || (idx + 1);
+
+                if (seenSequences.has(sequence)) {
+                    isSequenceValid = false;
+                }
+                seenSequences.add(sequence);
+
+                return {
+                    sequence,
+                    title,
+                    duration
+                };
+            });
+
+            // sequence가 올바르지 않으면(중복이 있거나 정렬 순서에 안 맞으면) 1부터 재정렬
+            if (!isSequenceValid || seenSequences.size !== validatedTasks.length) {
+                validatedTasks.sort((a, b) => a.sequence - b.sequence);
+                validatedTasks.forEach((t, idx) => {
+                    t.sequence = idx + 1;
+                });
+            }
+
+            result.suggestedTasks = validatedTasks;
+
+            return res.json({
+                success: true,
+                advice: result.advice,
+                suggestedTasks: result.suggestedTasks
+            });
+
+        } catch (err) {
+            console.error('[AI Angel] suggest API runtime error:', err);
+            // 피드백 반영: 명확한 에러 코드 리턴
+            return res.status(500).json({
+                success: false,
+                errorCode: "AI_SUGGESTION_UNAVAILABLE",
+                message: "AI 천사가 잠시 일정을 분할하는 데 어려움을 겪고 있습니다. 잠시 후 다시 시도해 주세요."
+            });
+        }
+    }
+
+    // 2. 최종 일정 승인 및 일괄 저장 라우트 (Supabase RPC 트랜잭션 보장)
+    if (req.method === 'POST' && (subPath === '/confirm' || subPath === '/confirm/')) {
+        const { parentTitle, startDate, steps, status = 'in-progress' } = req.body || {};
+
+        // 1) 필수값 검증 및 길이 유효성
+        if (!parentTitle || typeof parentTitle !== 'string' || parentTitle.trim().length === 0) {
+            return res.status(400).json({ error: '대과제 제목(parentTitle)은 필수 항목입니다.' });
+        }
+        if (parentTitle.length > 120) {
+            return res.status(400).json({ error: '대과제 제목은 최대 120자 이하이어야 합니다.' });
+        }
+
+        if (!Array.isArray(steps) || steps.length === 0) {
+            return res.status(400).json({ error: '세부 단계(steps) 목록이 없거나 유효하지 않습니다.' });
+        }
+        if (steps.length > 10) {
+            return res.status(400).json({ error: '세부 단계는 최대 10개까지만 허용됩니다.' });
+        }
+
+        // status 값 검증 (enum처럼 허용값 검증)
+        if (status !== 'in-progress' && status !== 'completed') {
+            return res.status(400).json({ error: '유효하지 않은 status 값입니다. (in-progress, completed만 허용)' });
+        }
+
+        // 2) KST 기준 날짜 파싱 및 검증
+        let currentKstDate;
+        if (startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+            currentKstDate = new Date(startDate + 'T00:00:00+09:00');
+        } else {
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const now = new Date();
+            currentKstDate = new Date(now.getTime() + kstOffset);
+            currentKstDate.setUTCHours(0, 0, 0, 0); // KST 자정 기준
+        }
+
+        const formatDateKst = (date) => {
+            // date는 KST 시간대로 생성된 것이어야 함
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        // 3) sequence_order 정렬 및 start_date / due_date 순차 누적 계산
+        const sortedSteps = [...steps]
+            .map(s => ({
+                sequence_order: parseInt(s.sequence || s.sequence_order, 10),
+                title: (s.title || '').trim().substring(0, 120),
+                // duration_days 컬럼명과 API 응답의 duration 이름을 명확히 매핑
+                duration_days: Math.min(Math.max(parseInt(s.duration || s.duration_days, 10) || 1, 1), 30)
+            }))
+            .sort((a, b) => a.sequence_order - b.sequence_order);
+
+        // 시퀀스 유효성 최종 확인
+        const seenSeqs = new Set();
+        for (let i = 0; i < sortedSteps.length; i++) {
+            const s = sortedSteps[i];
+            if (isNaN(s.sequence_order) || s.sequence_order <= 0 || seenSeqs.has(s.sequence_order)) {
+                return res.status(400).json({ error: '세부 단계의 순서(sequence) 번호는 1부터 중복 없이 연속되어야 합니다.' });
+            }
+            seenSeqs.add(s.sequence_order);
+            if (!s.title) {
+                return res.status(400).json({ error: '각 세부 단계의 제목(title)을 입력해 주세요.' });
+            }
+        }
+
+        const mappedSubTasks = [];
+        let runningDate = new Date(currentKstDate.getTime());
+
+        for (let i = 0; i < sortedSteps.length; i++) {
+            const s = sortedSteps[i];
+            const stepStart = new Date(runningDate.getTime());
+            
+            // due_date 계산: start_date + duration - 1일
+            const stepDue = new Date(stepStart.getTime());
+            stepDue.setDate(stepDue.getDate() + s.duration_days - 1);
+
+            mappedSubTasks.push({
+                sequence_order: s.sequence_order,
+                title: s.title,
+                start_date: formatDateKst(stepStart),
+                due_date: formatDateKst(stepDue),
+                is_completed: false
+            });
+
+            // 다음 단계를 위해 runningDate 갱신: 현재 due_date + 1일
+            runningDate = new Date(stepDue.getTime());
+            runningDate.setDate(runningDate.getDate() + 1);
+        }
+
+        const taskStartDateStr = formatDateKst(currentKstDate);
+        const taskDueDateStr = mappedSubTasks.length > 0 ? mappedSubTasks[mappedSubTasks.length - 1].due_date : taskStartDateStr;
+
+        try {
+            // 4) Supabase Admin (service role) 클라이언트를 사용해 RPC 호출
+            // API 레벨에서 user.id(검증된 JWT 소유자)를 명시적으로 task_user_id로 주입하여 변조 원천 차단
+            const { supabaseAdmin } = require('./shared');
+            if (!supabaseAdmin) {
+                throw new Error('Supabase admin client not initialized.');
+            }
+
+            const { data, error } = await supabaseAdmin.rpc('create_task_with_subtasks', {
+                task_user_id: user.id,
+                task_title: parentTitle.substring(0, 120),
+                task_start_date: taskStartDateStr,
+                task_due_date: taskDueDateStr,
+                task_source: 'ai_angel',
+                task_status: status,
+                sub_tasks_list: JSON.stringify(mappedSubTasks)
+            });
+
+            if (error) {
+                console.error('[AI Angel] Database Stored Procedure Execution Failed:', error);
+                throw error;
+            }
+
+            return res.json({
+                success: true,
+                taskId: data
+            });
+
+        } catch (dbErr) {
+            console.error('[AI Angel] confirm API transaction failed, stack:', dbErr.stack || dbErr);
+            return res.status(500).json({
+                success: false,
+                errorCode: "TRANSACTION_FAILED",
+                message: "세부 일정을 데이터베이스에 일괄 저장하는 데 실패하여 트랜잭션이 안전하게 롤백되었습니다."
+            });
+        }
+    }
+
+    return res.status(404).json({ error: `Not Found: ${subPath}` });
+};
