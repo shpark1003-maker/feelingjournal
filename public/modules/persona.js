@@ -397,8 +397,8 @@ export async function loadBriefing() {
         content.innerHTML = `
             <div class="animate-pulse space-y-3 py-2">
                 <div class="flex items-center gap-3 text-primary">
-                    <span class="material-symbols-outlined animate-spin text-xl">sync</span>
-                    <span class="font-medium text-sm">${aiName}가 오늘의 일정을 분석하여 브리핑을 준비하고 있습니다...</span>
+                    <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                    <span class="font-medium text-[13px]">${aiName}가 오늘의 일정을 분석하여 브리핑을 준비하고 있습니다...</span>
                 </div>
                 <div class="h-3 bg-primary/10 rounded-full w-3/4"></div>
                 <div class="h-3 bg-primary/10 rounded-full w-5/6"></div>
@@ -495,8 +495,8 @@ export async function loadBriefing() {
                     const catLabel = YONHAP_KOREAN_MAP[item.category] || item.category;
                     return `
                         <div class="flex items-start gap-1.5 py-1.5 border-b border-outline-variant/5 last:border-b-0">
-                            <span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold shrink-0">${catLabel}</span>
-                            <span class="text-[11px] leading-relaxed text-on-surface-variant/90">${item.title}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold shrink-0">${catLabel}</span>
+                            <span class="text-[12.5px] leading-relaxed text-on-surface-variant/90">${item.title}</span>
                         </div>
                     `;
                 }).join('');
