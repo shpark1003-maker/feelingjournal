@@ -1,6 +1,6 @@
 import { store, API_URL, initState, assertIds, updateSettings } from './modules/state.js?v=5.6.7';
 
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.6.9';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.7.0';
 import { setupEditor } from './modules/editor.js?v=5.6.7';
 import { loadCalendar } from './modules/calendar.js?v=5.6.7';
 import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.6.7';

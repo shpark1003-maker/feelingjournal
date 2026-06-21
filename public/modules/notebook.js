@@ -550,13 +550,15 @@ export function setupNotebooksAndPages() {
     setupGallerySharing();
 
     // 7. 메인 '나의 노트 보관함' details 토글 오버라이드 제어
-    const mainDetails = document.querySelector('#note-list-container details.group\\/main');
+    const mainDetails = document.querySelector('#note-list-container details');
     const mainSummary = mainDetails?.querySelector('summary');
     if (mainSummary && !mainSummary.dataset.bound) {
         mainSummary.dataset.bound = "true";
+        console.log('--- [NOTEBOOK] Bound click toggle to main Note Library details element.');
         mainSummary.addEventListener('click', (e) => {
             e.preventDefault();
             const isOpen = mainDetails.hasAttribute('open');
+            console.log('--- [NOTEBOOK] Main Note Library toggle clicked. Current isOpen:', isOpen);
             if (isOpen) {
                 mainDetails.removeAttribute('open');
             } else {
