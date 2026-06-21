@@ -6,8 +6,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<link rel="stylesheet" href="./style.css?v=5.6.7">
-<link rel="stylesheet" href="/css/floating_chat.css?v=5.6.7">
+<link rel="stylesheet" href="./style.css?v=5.6.8">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.6.8">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
@@ -1217,27 +1217,24 @@
 <button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-90 hover:scale-105 z-40" id="fab-write-btn">
 <span class="material-symbols-outlined text-[30px]" data-icon="edit">edit</span>
 </button>
-<!-- Bottom Navigation Bar (4-column: Home, Fragments, Write, Calendar) -->
+<!-- Bottom Navigation Bar (4-column: Notes, Calendar, Chat, Settings) -->
 <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-6 pt-3 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_15px_rgba(74,101,78,0.05)] rounded-t-2xl" id="bottom-nav">
 <a class="tab-btn active flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl py-1.5 transition-all w-1/4" href="#" id="nav-note-tab" data-tab="journal">
 <span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
-<span class="font-label-sm">홈</span>
-</a>
-<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-fragments-tab">
-<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
-<span class="font-label-sm">조각들</span>
-</a>
-<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-write-tab">
-<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
-<span class="font-label-sm">작성</span>
+<span class="font-label-sm">노트</span>
 </a>
 <a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-calendar-tab" data-tab="calendar">
 <span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
 <span class="font-label-sm">일정</span>
 </a>
-<!-- Hidden legacy tabs to support state routes and prevent module crashes -->
-<a class="tab-btn hidden" href="#" id="nav-chat-tab" data-tab="chat" style="display: none !important;"></a>
-<a class="tab-btn hidden" href="#" id="nav-settings-tab" data-tab="persona" style="display: none !important;"></a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-chat-tab" data-tab="chat">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+<span class="font-label-sm">채팅</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-settings-tab" data-tab="persona">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm">설정</span>
+</a>
 </nav>
 <script>
         document.querySelectorAll('button, a').forEach(el => {
@@ -2064,7 +2061,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.6.7"></script>
+    <script type="module" src="/app.js?v=5.6.8"></script>
 
     <script>
 

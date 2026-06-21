@@ -1,6 +1,6 @@
 import { store, API_URL, initState, assertIds, updateSettings } from './modules/state.js?v=5.6.7';
 
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.6.7';
+import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.6.8';
 import { setupEditor } from './modules/editor.js?v=5.6.7';
 import { loadCalendar } from './modules/calendar.js?v=5.6.7';
 import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.6.7';
@@ -480,16 +480,6 @@ function setupTabs() {
         });
     });
 
-    // Custom bottom nav tab behavior to map to gallery modal and editor
-    document.getElementById('nav-fragments-tab')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('v2-gallery-more-btn')?.click();
-    });
-
-    document.getElementById('nav-write-tab')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('new-page-btn')?.click();
-    });
 }
 
 /* ==========================================================================
