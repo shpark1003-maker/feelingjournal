@@ -592,6 +592,7 @@ export async function loadBriefing() {
                         ${tagsHtml}
                     </div>
                 `;
+            }
         } else {
             // [5. Error State (Server failed)]
             console.error("--- [BRIEFING] Server failed to generate briefing:", data.error);
