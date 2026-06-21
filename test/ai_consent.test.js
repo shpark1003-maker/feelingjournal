@@ -131,8 +131,9 @@ async function runTests() {
     console.log('=> Gemini normal path test PASSED!');
 
     // Restore original functions
-    shared.callGemini = originalCallGemini;
-    shared.supabase.auth.getUser = originalGetUser;
+    try {
+        shared.supabase.auth.getUser = originalGetUser;
+    } catch (e) {}
 
     console.log('\n--- ALL UNIT TESTS COMPLETED SUCCESSFULLY! ---');
 }

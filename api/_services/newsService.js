@@ -14,7 +14,7 @@ const YONHAP_RSS_MAP = {
     sports: 'https://www.yna.co.kr/rss/sports.xml'
 };
 
-const BLACKLIST_REGEX = /\[부고\]|\[인사\]|\[동정\]|\[게시판\]|부고|인사|동정|모집|헤드라인|이 시각/;
+const BLACKLIST_REGEX = /\[부고\]|\[인사\]|\[동정\]|\[게시판\]|부고|인사|동정|모집|헤드라인|이 시각|인터뷰|대담|동행취재/;
 
 async function getNewsHeadlines(categories = ['business']) {
     const activeCategories = Array.isArray(categories) && categories.length > 0 ? categories : ['business'];
@@ -84,7 +84,7 @@ async function getNewsHeadlines(categories = ['business']) {
         for (const art of articles) {
             // Secondary absolute check for matching key-words
             const strippedTitle = art.title.replace(/[^a-zA-Z0-9가-힣]/g, '');
-            const hasObjectionableWord = ['부고', '인사', '동정', '모집', '헤드라인', '이시각'].some(word => strippedTitle.includes(word));
+            const hasObjectionableWord = ['부고', '인사', '동정', '모집', '헤드라인', '이시각', '인터뷰', '대담', '동행취재'].some(word => strippedTitle.includes(word));
 
             // Static blacklist regex check or word containment check
             if (hasObjectionableWord || BLACKLIST_REGEX.test(art.title)) {
@@ -123,9 +123,11 @@ async function getNewsHeadlines(categories = ['business']) {
 이 기사 목록을 평가하여 반드시 구조화된 JSON 데이터 규격에 맞게 기사별 유지 여부(keep)를 판정하라.
 
 [판정 조건]
-1. categoryMatch: 해당 기사가 "${cat}" 카테고리(정치, 경제, 사회, 문화, 과학/IT, 세계, 연예, 스포츠 등)의 대표적인 과학/기술, 시사 이슈와 높은 적합도를 지니는가? (예: 단순 노동조합 집회, 정치적 난타전, 단순 홍보성 게시판 글은 과학 또는 다른 정보 카테고리에서 배제해야 함)
+1. categoryMatch: 해당 기사가 "${cat}" 카테고리(정치, 경제, 사회, 문화, 과학/IT, 세계, 연예, 스포츠 등)의 대표적인 과학/기술, 시사 이슈와 높은 적합도를 지니는가?
+   - **중요**: "${cat}"이 "science"인 경우, 단순 IT 가전 출시 홍보나 가벼운 잡담성 기사는 제외하고, 연구 성과, 신기술 발표, 우주/생명과학 등 **학술적이고 전문적인 내용**을 적극 우선하십시오.
 2. careSafe: 자살, 테러, 자극적인 살인/폭행 사건사고, 혐오 발언, 부고 등 심리학 서비스 사용자에게 불필요한 부정적 자극이나 트리거를 주지 않는 정서적으로 안전한 기사인가?
-3. keep: categoryMatch와 careSafe가 모두 true인 경우에만 true로 지정하십시오.
+3. exclusionRules: 인물의 동정(동향, 근황, 프로필성 소식)이나 기자의 인터뷰(대담, 독점 인터뷰 등) 형식의 기사는 정서 환기 및 고품질 정보 제공 목적에 어긋나므로 **절대로 노출하지 말고 keep을 false로 처리하십시오**.
+4. keep: categoryMatch와 careSafe가 모두 true이고, exclusionRules에 걸리지 않는 경우에만 true로 지정하십시오.
 
 [평가할 기사 제목 목록]
 ${ruleFilteredArticles.map((a, idx) => `${idx + 1}. ${a.title}`).join('\n')}

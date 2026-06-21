@@ -114,6 +114,14 @@ async function runNewsFilterTests() {
                         <title>차세대 양자 컴퓨터 상용화 단계 진입</title>
                         <link>https://news.example.com/6</link>
                     </item>
+                    <item>
+                        <title>[동정] 김철수 대표, IT 서밋 참가</title>
+                        <link>https://news.example.com/7</link>
+                    </item>
+                    <item>
+                        <title>[인터뷰] 이영희 교수에게 듣는 AI의 미래</title>
+                        <link>https://news.example.com/8</link>
+                    </item>
                 </channel>
             </rss>
             `;
@@ -132,6 +140,8 @@ async function runNewsFilterTests() {
         assert.strictEqual(result.aiFiltered, true, 'Should mark aiFiltered as true');
         assert.ok(!result.headlines.some(h => h.includes('부고')), 'Obituary must be filtered');
         assert.ok(!result.headlines.some(h => h.includes('인사')), 'Personnel change must be filtered');
+        assert.ok(!result.headlines.some(h => h.includes('동정')), 'People dynamic must be filtered');
+        assert.ok(!result.headlines.some(h => h.includes('인터뷰')), 'Interview must be filtered');
         assert.ok(!result.headlines.some(h => h.includes('화학노조')), 'AI should filter out chemical labor union strike from science');
         
         console.log('=> Normal Curation Path PASSED!');

@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.8';
+import { store, API_URL, assertIds } from './state.js?v=5.5.9';
 
 function getEventLocalDateString(eventDateStr) {
     if (!eventDateStr) return '';
@@ -523,6 +523,10 @@ function initCalendarUI() {
                             <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                                 ${taskListHtml}
                             </div>
+                            <div class="mt-2 flex items-center gap-1.5 text-[10px] text-secondary">
+                                <input type="checkbox" id="angel-consent-cal-${loadingId}" class="rounded border-outline text-primary focus:ring-primary w-3.5 h-3.5 cursor-pointer" checked>
+                                <label for="angel-consent-cal-${loadingId}" class="cursor-pointer select-none">AI 천사 과제 전용 Google 캘린더 생성 및 연동에 동의합니다.</label>
+                            </div>
                             <div class="pt-2 border-t border-outline-variant/20 flex gap-2">
                                 <button class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold text-[11px] transition-colors shadow-sm" id="angel-btn-confirm-${loadingId}">
                                     일정 등록 및 확정 👼
@@ -536,6 +540,9 @@ function initCalendarUI() {
                     // 확정 버튼 이벤트 바인딩
                     document.getElementById(`angel-btn-confirm-${loadingId}`)?.addEventListener('click', async () => {
                         const confirmBtn = document.getElementById(`angel-btn-confirm-${loadingId}`);
+                        const consentCheckbox = document.getElementById(`angel-consent-cal-${loadingId}`);
+                        const syncGoogle = consentCheckbox ? consentCheckbox.checked : false;
+
                         if (confirmBtn) {
                             confirmBtn.disabled = true;
                             confirmBtn.innerText = '저장하는 중...';
@@ -550,10 +557,11 @@ function initCalendarUI() {
                                     'Authorization': `Bearer ${token}`
                                 },
                                 body: JSON.stringify({
-                                    parentTitle: text,
+                                    parentTitle: data.mainTaskTitle || text,
                                     startDate: todayStr,
                                     steps: data.suggestedTasks,
-                                    status: 'in-progress'
+                                    status: 'in-progress',
+                                    syncGoogle: syncGoogle
                                 })
                             });
 
@@ -1216,12 +1224,15 @@ export function renderV2TaskList() {
         const type = ev.extendedProps?.type || ev.type || 'personal';
         if (type !== 'task' && !desc.includes('[Task]')) return false;
 
-        // 마감일/종료일이 오늘보다 과거인지 확인하여 필터링
+        const meta = parseTaskMetadata(desc);
+        const progressPercent = meta.rating > 0 ? (meta.rating * 20) : (meta.progress || 0);
+
+        // 마감일/종료일이 오늘보다 과거이면서 진행률이 100% 미만이면 노출 유지 (완료된 과거 태스크만 숨김)
         const dateStr = ev.end || ev.start;
         if (dateStr) {
             const taskDate = parseDateSafe(dateStr);
-            taskDate.setHours(23, 59, 59, 999); // 오늘인 과제는 보이도록 오늘 자정 직전으로 설정
-            if (taskDate < today) {
+            taskDate.setHours(23, 59, 59, 999);
+            if (taskDate < today && progressPercent >= 100) {
                 return false;
             }
         }
@@ -1233,85 +1244,154 @@ export function renderV2TaskList() {
         return;
     }
 
-    listContainer.innerHTML = tasks.map(t => {
+    // Group tasks by parentTitle
+    const groups = {};
+    tasks.forEach(t => {
         const desc = t.extendedProps?.description || t.description || '';
-        const meta = parseTaskMetadata(desc);
         
-        const dday = getDDay(t.end || t.start);
-        const remainingTimeStr = getRemainingTimeStr(t.end || t.start);
-        const iconInfo = getTaskIconInfo(t.title);
-
-        const progressPercent = meta.rating > 0 ? (meta.rating * 20) : 0;
-
-        let reviewSection = '';
-        if (meta.rating > 0 || meta.reflection || meta.reviewDate) {
-            let starsHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                const isFilled = i <= meta.rating;
-                starsHTML += `<span class="material-symbols-outlined ${isFilled ? 'text-primary' : 'text-outline-variant'} text-[18px]" style="font-variation-settings: 'FILL' ${isFilled ? 1 : 0};">star</span>`;
+        let parentTitle = t.extendedProps?.parentTitle || t.parentTitle || '';
+        if (!parentTitle) {
+            const match = desc.match(/대과제:\s*([^\n\r\)]+)/);
+            if (match) {
+                parentTitle = match[1].trim();
             }
-
-            reviewSection = `
-            <div class="bg-primary/5 rounded-lg p-3 space-y-2 mt-4">
-                <div class="flex justify-between items-center">
-                    <h5 class="text-label-sm font-bold text-primary">중간 점검</h5>
-                    <span class="text-[10px] text-on-surface-variant/60">${meta.reviewDate || ''}</span>
-                </div>
-                <div class="flex gap-1">
-                    ${starsHTML}
-                </div>
-                <div class="space-y-1">
-                    <p class="text-[11px] text-on-surface-variant font-bold">자기 성찰</p>
-                    <p class="text-label-sm text-on-surface-variant italic leading-relaxed">${meta.reflection || '아직 등록된 성찰 코멘트가 없습니다.'}</p>
-                </div>
-            </div>`;
+        }
+        
+        if (!parentTitle) {
+            parentTitle = '일반 과제';
         }
 
-        return `
-        <div class="task-expandable bg-surface-container-low rounded-xl p-4 border border-outline-variant/20 shadow-sm transition-all duration-300 cursor-pointer" data-id="${t.id}" aria-expanded="false" onclick="window.v2ToggleTaskAccordion(this, event)">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full ${iconInfo.bgClass} flex items-center justify-center">
-                        <span class="material-symbols-outlined ${iconInfo.colorClass} text-[20px]">${iconInfo.icon}</span>
+        if (!groups[parentTitle]) {
+            groups[parentTitle] = [];
+        }
+        groups[parentTitle].push(t);
+    });
+
+    listContainer.innerHTML = Object.keys(groups).map(parentTitle => {
+        const groupTasks = groups[parentTitle];
+        
+        // Sort subtasks by date
+        groupTasks.sort((a, b) => {
+            const aStart = a.start || '';
+            const bStart = b.start || '';
+            return aStart.localeCompare(bStart);
+        });
+
+        // Compute average progress
+        let totalProgress = 0;
+        groupTasks.forEach(t => {
+            const desc = t.extendedProps?.description || t.description || '';
+            const meta = parseTaskMetadata(desc);
+            totalProgress += (meta.rating > 0 ? (meta.rating * 20) : (meta.progress || 0));
+        });
+        const avgProgress = Math.round(totalProgress / groupTasks.length);
+
+        const isGeneral = parentTitle === '일반 과제';
+        const iconName = isGeneral ? 'assignment' : 'menu_book';
+        const colorClass = isGeneral ? 'text-secondary' : 'text-primary';
+        const bgClass = isGeneral ? 'bg-secondary/10' : 'bg-primary/10';
+        
+        // Render subtasks HTML
+        const subtasksHtml = groupTasks.map(t => {
+            const desc = t.extendedProps?.description || t.description || '';
+            const meta = parseTaskMetadata(desc);
+            const dday = getDDay(t.end || t.start);
+            const remainingTimeStr = getRemainingTimeStr(t.end || t.start);
+            const progressPercent = meta.rating > 0 ? (meta.rating * 20) : (meta.progress || 0);
+
+            let reviewSection = '';
+            if (meta.rating > 0 || meta.reflection || meta.reviewDate) {
+                let starsHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const isFilled = i <= meta.rating;
+                    starsHTML += `<span class="material-symbols-outlined ${isFilled ? 'text-primary' : 'text-outline-variant'} text-[16px]" style="font-variation-settings: 'FILL' ${isFilled ? 1 : 0};">star</span>`;
+                }
+
+                reviewSection = `
+                <div class="bg-primary/5 rounded-lg p-2.5 space-y-1.5 mt-2">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <h5 class="font-bold text-primary">세부 평가</h5>
+                        <span class="text-on-surface-variant/60">${meta.reviewDate || ''}</span>
                     </div>
-                    <span class="font-label-md text-on-surface">${t.title || '제목 없음'}</span>
-                </div>
-                <span class="material-symbols-outlined text-on-surface-variant expand-icon transition-transform duration-300">expand_more</span>
-            </div>
-            <div class="task-details">
-                <div class="flex items-center justify-between text-label-sm text-primary font-bold mb-1">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[14px]">calendar_today</span> 
-                        목표일 ${dday || 'D-Day'}
+                    <div class="flex gap-0.5">${starsHTML}</div>
+                    ${meta.reflection ? `<p class="text-[11px] text-on-surface-variant italic leading-relaxed">"${meta.reflection}"</p>` : ''}
+                </div>`;
+            }
+
+            const cleanTitle = (t.title || '제목 없음').replace(/^👼\s*/, '').replace(/\s*마감$/, '');
+
+            return `
+            <div class="p-3 bg-surface-container-high/40 rounded-lg border border-outline-variant/10 space-y-2 text-left transition-all hover:bg-surface-container-high/60">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-0.5">
+                        <p class="font-semibold text-on-surface text-[12px]">${cleanTitle}</p>
+                        <p class="text-[10px] text-primary flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[12px]">calendar_today</span>
+                            기한: ${t.start || t.end || ''} (${dday || 'D-Day'})
+                        </p>
                     </div>
                     ${remainingTimeStr ? `
-                    <div class="flex items-center gap-1 text-secondary font-semibold">
-                        <span class="material-symbols-outlined text-[14px]">alarm</span>
-                        <span>${remainingTimeStr}</span>
-                    </div>
-                    ` : ''}
+                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-secondary/10 text-secondary text-[9px] font-bold rounded">
+                        <span class="material-symbols-outlined text-[10px]">alarm</span>
+                        ${remainingTimeStr}
+                    </span>` : ''}
                 </div>
-                <p class="text-label-sm text-on-surface-variant leading-relaxed journal-texture p-3 rounded-lg bg-surface-container-high/50 border border-outline-variant/10">
-                    ${meta.cleanDescription || '상세 정보가 없습니다.'}
-                </p>
                 
-                <div class="mt-4 space-y-3 border-t border-outline-variant/20 pt-3">
-                    <div class="space-y-1">
-                        <div class="flex justify-between items-center text-label-sm">
-                            <span class="text-on-surface-variant">진행률</span>
-                            <span class="text-primary font-bold">${progressPercent}%</span>
-                        </div>
-                        <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-                            <div class="h-full bg-primary rounded-full" style="width: ${progressPercent}%"></div>
-                        </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-on-surface-variant">진행률</span>
+                        <span class="text-primary font-semibold">${progressPercent}%</span>
                     </div>
-                    
-                    ${reviewSection}
-                    
-                    <div class="flex gap-2 justify-end pt-2">
-                        <button type="button" class="px-3 py-1 bg-error/10 text-error hover:bg-error hover:text-on-error rounded-lg text-[11px] font-bold transition-all delete-task-btn" onclick="event.stopPropagation(); window.v2TaskDeleteTrigger('${t.id}');">삭제</button>
-                        <button type="button" class="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-lg text-[11px] font-bold transition-all edit-task-btn" onclick="event.stopPropagation(); window.v2TaskEditTrigger('${t.id}');">수정</button>
+                    <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full" style="width: ${progressPercent}%"></div>
                     </div>
+                </div>
+
+                ${reviewSection}
+
+                <div class="flex gap-2 justify-end pt-1">
+                    <button type="button" class="px-2 py-0.5 bg-error/10 text-error hover:bg-error hover:text-on-error rounded text-[10px] font-semibold transition-all" onclick="event.stopPropagation(); window.v2TaskDeleteTrigger('${t.id}');">삭제</button>
+                    <button type="button" class="px-2 py-0.5 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded text-[10px] font-semibold transition-all" onclick="event.stopPropagation(); window.v2TaskEditTrigger('${t.id}');">평가/수정</button>
+                </div>
+            </div>`;
+        }).join('<div class="h-2"></div>');
+
+        // Style the parent card with a clear left border when it contains subtasks (is not general)
+        const parentBorderClass = isGeneral ? 'border-outline-variant/20' : 'border-l-4 border-l-primary border-y-outline-variant/20 border-r-outline-variant/20';
+
+        return `
+        <div class="task-expandable bg-surface-container-low rounded-xl p-4 border ${parentBorderClass} shadow-sm transition-all duration-300 cursor-pointer" data-id="group-${parentTitle.replace(/\s+/g, '')}" aria-expanded="false" onclick="window.v2ToggleTaskAccordion(this, event)">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full ${bgClass} flex items-center justify-center">
+                        <span class="material-symbols-outlined ${colorClass} text-[20px]">${iconName}</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="font-bold text-on-surface text-sm block">${parentTitle}</span>
+                        <span class="text-[10px] text-on-surface-variant">${groupTasks.length}개의 세부 과제</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-primary font-bold">${avgProgress}%</span>
+                    <span class="material-symbols-outlined text-on-surface-variant expand-icon transition-transform duration-300">expand_more</span>
+                </div>
+            </div>
+            
+            <div class="task-details mt-3 pt-3 border-t border-outline-variant/10 text-left">
+                <!-- Group progress bar -->
+                <div class="space-y-1 mb-4">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-on-surface-variant">전체 진행도</span>
+                        <span class="text-primary font-bold">${avgProgress}%</span>
+                    </div>
+                    <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full" style="width: ${avgProgress}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Subtasks grouped styling -->
+                <div class="space-y-2 mt-2 pl-4 border-l border-dashed border-outline-variant/60">
+                    ${subtasksHtml}
                 </div>
             </div>
         </div>`;

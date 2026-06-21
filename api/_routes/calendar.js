@@ -125,10 +125,16 @@ module.exports = async (req, res) => {
                     startTime,
                     endTime,
                     description
-                });
+                }, 'primary', user.id);
 
                 // Clear cache
                 await redis.del(`user:${user.id}:calendar-advice-cache`);
+                try {
+                    const { clearGoogleCalendarCache } = require('./shared');
+                    await clearGoogleCalendarCache(user.id);
+                } catch (e) {
+                    console.warn('[Calendar Route] Failed to clear calendar cache:', e.message);
+                }
                 return res.json({ success: true, event: insertData });
             }
         }
@@ -137,12 +143,63 @@ module.exports = async (req, res) => {
         if (req.method === 'DELETE') {
             if (!id) return res.status(400).json({ error: 'Missing event id' });
 
+            if (id.startsWith('extracted-task-')) {
+                // Try to find the title & start date from the advice cache to build a stable composite key
+                try {
+                    const cacheKey = `user:${user.id}:calendar-advice-cache`;
+                    const cached = await redis.get(cacheKey);
+                    if (cached) {
+                        const { analyzedEvents } = JSON.parse(cached);
+                        const taskObj = (analyzedEvents || []).find(e => e.id === id);
+                        if (taskObj && taskObj.title) {
+                            const cleanTitle = (taskObj.title || '').trim().replace(/\s+/g, ' ');
+                            const cleanStart = (taskObj.start || '').trim();
+                            const stableKey = `${cleanTitle}_${cleanStart}`;
+                            await redis.sadd(`user:${user.id}:dismissed-extracted-tasks`, stableKey);
+                            await redis.expire(`user:${user.id}:dismissed-extracted-tasks`, 3600 * 24 * 30); // 30일 만료
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[Calendar DELETE] Failed to store dismissed AI task composite key in Redis:', err.message);
+                }
+
+                // Clear advice cache to force recalculation without the dismissed task
+                try {
+                    await redis.del(`user:${user.id}:calendar-advice-cache`);
+                } catch (err) {
+                    console.warn('[Calendar DELETE] Failed to delete advice cache:', err.message);
+                }
+                return res.json({ success: true, message: 'AI 임시 추천 과제가 화면에서 제외되었습니다.' });
+            }
+
             if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
                 return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
             }
 
-            await calendarService.deleteGoogleCalendarEvent(providerToken, id);
-            await redis.del(`user:${user.id}:calendar-advice-cache`);
+            await calendarService.deleteGoogleCalendarEvent(providerToken, id, user.id);
+
+            // Clear database mapping
+            try {
+                const { supabaseAdmin } = require('./shared');
+                if (supabaseAdmin) {
+                    await supabaseAdmin
+                        .from('sub_tasks')
+                        .update({
+                            google_calendar_id: null,
+                            google_event_id: null,
+                            google_sync_status: 'not_requested'
+                        })
+                        .eq('google_event_id', id);
+                }
+            } catch (dbErr) {
+                console.warn('[Calendar DELETE] Failed to clear DB subtask mapping:', dbErr.message);
+            }
+
+            try {
+                await redis.del(`user:${user.id}:calendar-advice-cache`);
+            } catch (err) {
+                console.warn('[Calendar DELETE] Failed to delete advice cache:', err.message);
+            }
             return res.json({ success: true });
         }
 
@@ -161,12 +218,65 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
             }
 
+            let cleanDescription = description || '';
+            const progressMatch = cleanDescription.match(/\[Progress:\s*(\d+)\]/);
+            const ratingMatch = cleanDescription.match(/\[Rating:\s*(\d+)\]/);
+            const dateMatch = cleanDescription.match(/\[ReviewDate:\s*([^\]]*)\]/);
+            const reflectionMatch = cleanDescription.match(/\[Reflection:\s*([^\]]*)\]/);
+
+            const hasMeta = progressMatch || ratingMatch || dateMatch || reflectionMatch;
+            if (hasMeta) {
+                const progress = progressMatch ? parseInt(progressMatch[1], 10) : 0;
+                const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0;
+                const reviewDate = dateMatch ? dateMatch[1].trim() : '';
+                const reflection = reflectionMatch ? reflectionMatch[1].trim() : '';
+
+                // Update sub_tasks in database
+                const { supabaseAdmin } = require('./shared');
+                if (supabaseAdmin) {
+                    await supabaseAdmin
+                        .from('sub_tasks')
+                        .update({
+                            progress,
+                            rating,
+                            review_date: reviewDate,
+                            review_text: reflection
+                        })
+                        .eq('google_event_id', id);
+                }
+
+                // Cache in Redis: user:${userId}:subtask-eval:${calendarId}:${eventId}
+                let calendarId = 'primary';
+                try {
+                    const mapped = await redis.get(`user:${user.id}:event-calendar-map:${id}`);
+                    if (mapped) calendarId = mapped;
+                } catch (err) {}
+                
+                try {
+                    await redis.set(
+                        `user:${user.id}:subtask-eval:${calendarId}:${id}`,
+                        JSON.stringify({ progress, rating, reviewDate, reflection }),
+                        'EX',
+                        3600 * 24 * 30
+                    );
+                } catch (err) {}
+
+                // Strip the tags from description
+                cleanDescription = cleanDescription
+                    .replace(/\[Task\]/g, '')
+                    .replace(/\[Progress:\s*\d+\]/g, '')
+                    .replace(/\[Rating:\s*\d+\]/g, '')
+                    .replace(/\[ReviewDate:\s*[^\]]*\]/g, '')
+                    .replace(/\[Reflection:\s*[^\]]*\]/g, '')
+                    .trim();
+            }
+
             const updateData = await calendarService.patchGoogleCalendarEvent(providerToken, id, {
                 summary,
                 start: finalStart,
                 end: finalEnd,
-                description
-            });
+                description: cleanDescription
+            }, user.id);
 
             await redis.del(`user:${user.id}:calendar-advice-cache`);
             return res.json({ success: true, event: updateData });

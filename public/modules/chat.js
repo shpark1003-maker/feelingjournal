@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.8';
+import { store, API_URL, assertIds } from './state.js?v=5.5.9';
 
 
 let localStream = null;
@@ -520,7 +520,7 @@ export function setupChatUI() {
             e.stopPropagation();
             const roomId = target.dataset.roomId;
             const title = target.dataset.title;
-            const { openChatWindow } = await import('./floatingChat.js?v=5.5.8');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.5.9');
             await openChatWindow(roomId, title);
         }
     });
@@ -565,7 +565,7 @@ export async function openChatWithAi() {
 
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js?v=5.5.8');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.5.9');
             await openChatWindow(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
         } else {
             console.error('Failed to get/create chat room:', data.error);
@@ -1246,7 +1246,7 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js?v=5.5.8');
+            const { openChatWindow } = await import('./floatingChat.js?v=5.5.9');
             await openChatWindow(data.room.id, `💬 ${friendNickname}님과의 대화`);
         } else {
             console.error('Room registration failed:', data.error);
@@ -1838,9 +1838,12 @@ export function toggleInviteOverlay(force) {
 
     const shouldOpen = (typeof force === 'boolean')
         ? force
-        : modal.classList.contains('pointer-events-none');
+        : modal.classList.contains('hidden');
 
     if (shouldOpen) {
+        modal.classList.remove('hidden');
+        // Trigger reflow to let CSS transition happen
+        modal.offsetHeight;
         modal.classList.remove('pointer-events-none');
         if (backdrop) {
             backdrop.classList.remove('opacity-0', 'pointer-events-none');
@@ -1855,6 +1858,7 @@ export function toggleInviteOverlay(force) {
         if (panel) panel.classList.add('translate-y-full');
         setTimeout(() => {
             modal.classList.add('pointer-events-none');
+            modal.classList.add('hidden');
         }, 300);
     }
 }

@@ -4,7 +4,8 @@ const {
     callGemini, 
     safeParseJsonArray, 
     scanRedisKeys,
-    fetchGoogleCalendarEvents
+    fetchGoogleCalendarEvents,
+    clearGoogleCalendarCache
 } = require('../_routes/shared');
 
 // [COMBINED] Helper function to extract tasks from diaries and generate advice for all events in a single Gemini call
@@ -115,12 +116,16 @@ ${googleSummary || '등록된 구글 일정 없음'}
     }
 }
 
-async function addGoogleCalendarEvent(providerToken, { summary, startTime, endTime, description }) {
+async function addGoogleCalendarEvent(providerToken, { summary, startTime, endTime, description }, calendarId = 'primary', userId = null) {
     if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
         throw new Error('Google Calendar 연동이 활성화되어 있지 않습니다.');
     }
 
-    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events`;
+    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+    const isAllDay = typeof startTime === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(startTime);
+    const startPayload = isAllDay ? { date: startTime } : { dateTime: new Date(startTime).toISOString() };
+    const endPayload = isAllDay ? { date: endTime } : { dateTime: new Date(endTime).toISOString() };
+
     const insertRes = await fetchWithTimeout(calendarUrl, {
         method: 'POST',
         headers: {
@@ -130,8 +135,8 @@ async function addGoogleCalendarEvent(providerToken, { summary, startTime, endTi
         body: JSON.stringify({
             summary,
             description: description || '',
-            start: { dateTime: new Date(startTime).toISOString() },
-            end: { dateTime: new Date(endTime).toISOString() }
+            start: startPayload,
+            end: endPayload
         }),
         failFast: true
     });
@@ -140,15 +145,28 @@ async function addGoogleCalendarEvent(providerToken, { summary, startTime, endTi
     if (insertData.error) {
         throw new Error(insertData.error.message || 'Failed to insert event');
     }
+    if (userId) {
+        await clearGoogleCalendarCache(userId);
+    }
     return insertData;
 }
 
-async function deleteGoogleCalendarEvent(providerToken, id) {
+async function deleteGoogleCalendarEvent(providerToken, id, userId) {
     if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
         throw new Error('Google Calendar 연동이 활성화되어 있지 않습니다.');
     }
 
-    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(id)}`;
+    let calendarId = 'primary';
+    if (userId) {
+        try {
+            const mapped = await redis.get(`user:${userId}:event-calendar-map:${id}`);
+            if (mapped) calendarId = mapped;
+        } catch (err) {
+            console.warn('[Calendar Service] Failed to lookup event calendar map:', err.message);
+        }
+    }
+
+    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`;
     const deleteRes = await fetchWithTimeout(calendarUrl, {
         method: 'DELETE',
         headers: {
@@ -158,18 +176,40 @@ async function deleteGoogleCalendarEvent(providerToken, id) {
     });
 
     if (deleteRes.status !== 204 && deleteRes.status !== 200) {
+        if (deleteRes.status === 404 || deleteRes.status === 410) {
+            console.warn(`[Calendar Service] Google Event ${id} was already deleted or not found (Status ${deleteRes.status}).`);
+            return true;
+        }
         const deleteData = await deleteRes.json().catch(() => ({}));
         throw new Error(deleteData.error?.message || 'Failed to delete event');
+    }
+    if (userId) {
+        await clearGoogleCalendarCache(userId);
     }
     return true;
 }
 
-async function patchGoogleCalendarEvent(providerToken, id, { summary, start, end, description }) {
+async function patchGoogleCalendarEvent(providerToken, id, { summary, start, end, description }, userId) {
     if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
         throw new Error('Google Calendar 연동이 활성화되어 있지 않습니다.');
     }
 
-    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(id)}`;
+    let calendarId = 'primary';
+    if (userId) {
+        try {
+            const mapped = await redis.get(`user:${userId}:event-calendar-map:${id}`);
+            if (mapped) calendarId = mapped;
+        } catch (err) {
+            console.warn('[Calendar Service] Failed to lookup event calendar map:', err.message);
+        }
+    }
+
+    const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`;
+    
+    const isAllDay = typeof start === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(start);
+    const startPayload = isAllDay ? { date: start } : { dateTime: new Date(start).toISOString() };
+    const endPayload = isAllDay ? { date: end } : { dateTime: new Date(end).toISOString() };
+
     const updateRes = await fetchWithTimeout(calendarUrl, {
         method: 'PATCH',
         headers: {
@@ -179,8 +219,8 @@ async function patchGoogleCalendarEvent(providerToken, id, { summary, start, end
         body: JSON.stringify({
             summary,
             description: description || '',
-            start: { dateTime: new Date(start).toISOString() },
-            end: { dateTime: new Date(end).toISOString() }
+            start: startPayload,
+            end: endPayload
         }),
         failFast: true
     });
@@ -189,8 +229,12 @@ async function patchGoogleCalendarEvent(providerToken, id, { summary, start, end
     if (updateData.error) {
         throw new Error(updateData.error.message || 'Failed to update event');
     }
+    if (userId) {
+        await clearGoogleCalendarCache(userId);
+    }
     return updateData;
 }
+
 
 async function getCalendarEvents({ userId, userEmail, providerToken, consent, clientDiaries, forceRefresh }) {
     let googleEvents = [];
@@ -198,6 +242,22 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
     let partialFailure = false;
     let failedCalendars = [];
     let calResult = {};
+
+    let dbSubTasks = [];
+    try {
+        const { supabaseAdmin } = require('../_routes/shared');
+        if (supabaseAdmin) {
+            const { data } = await supabaseAdmin
+                .from('sub_tasks')
+                .select('*, tasks!inner(title, user_id)')
+                .eq('tasks.user_id', userId);
+            if (data) {
+                dbSubTasks = data;
+            }
+        }
+    } catch (dbErr) {
+        console.warn('[Calendar Service] Failed to fetch subtasks from DB:', dbErr.message);
+    }
 
     try {
         const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -209,7 +269,30 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
         if (calResult.events && calResult.events.length > 0) {
             googleEvents = calResult.events.map(item => {
                 const isShared = (item.organizer && item.organizer.email && item.organizer.email !== userEmail) || (item.attendees && item.attendees.length > 1);
-                const isTask = item.description?.includes('[Task]');
+                
+                const dbSubTask = dbSubTasks.find(st => st.google_event_id === item.id);
+                const isTask = item.description?.includes('[Task]') || !!dbSubTask || item.summary?.startsWith('👼');
+                
+                let desc = item.description || '';
+                let parentTitle = '';
+                if (dbSubTask) {
+                    parentTitle = dbSubTask.tasks?.title || '';
+                    const progress = dbSubTask.progress || 0;
+                    const rating = dbSubTask.rating || 0;
+                    const reviewDate = dbSubTask.review_date || '';
+                    const reflection = dbSubTask.review_text || '';
+                    
+                    const cleanDesc = (item.description || '')
+                        .replace(/\[Task\]/g, '')
+                        .replace(/\[Progress:\s*\d+\]/g, '')
+                        .replace(/\[Rating:\s*\d+\]/g, '')
+                        .replace(/\[ReviewDate:\s*[^\]]*\]/g, '')
+                        .replace(/\[Reflection:\s*[^\]]*\]/g, '')
+                        .trim();
+                        
+                    desc = `[Task][Progress: ${progress}][Rating: ${rating}][ReviewDate: ${reviewDate}][Reflection: ${reflection}] ${cleanDesc}`;
+                }
+
                 return {
                     id: item.id,
                     title: item.summary || '제목 없음',
@@ -218,7 +301,8 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
                     allDay: !item.start?.dateTime,
                     type: isShared ? 'shared' : (isTask ? 'task' : 'event'),
                     advice: isShared ? '공유된 일정입니다.' : (isTask ? '과제(할 일) 일정입니다.' : '구글 캘린더 일정입니다.'),
-                    description: item.description || '',
+                    description: desc,
+                    parentTitle: parentTitle,
                     backgroundColor: isShared 
                         ? 'rgba(251, 113, 133, 0.12)' 
                         : (isTask ? 'rgba(129, 140, 248, 0.12)' : 'rgba(56, 189, 248, 0.12)'),
@@ -245,7 +329,24 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
         if (cached) {
             const { fingerprint, analyzedEvents } = JSON.parse(cached);
             if (fingerprint === currentFingerprint) {
-                return { events: analyzedEvents, calendars: calResult.calendars || [], cached: true, unlinked: isUnlinked, partialFailure, failedCalendars };
+                let filteredEvents = analyzedEvents;
+                try {
+                    const dismissedTasks = await redis.smembers(`user:${userId}:dismissed-extracted-tasks`) || [];
+                    if (dismissedTasks.length > 0) {
+                        filteredEvents = analyzedEvents.filter(e => {
+                            if (e.id && e.id.startsWith('extracted-task-')) {
+                                const cleanTitle = (e.title || '').trim().replace(/\s+/g, ' ');
+                                const cleanStart = (e.start || '').trim();
+                                const stableKey = `${cleanTitle}_${cleanStart}`;
+                                return !dismissedTasks.includes(stableKey);
+                            }
+                            return true;
+                        });
+                    }
+                } catch (redisErr) {
+                    console.warn('--- [CALENDAR] Failed to fetch dismissed tasks from Redis (cache path):', redisErr.message);
+                }
+                return { events: filteredEvents, calendars: calResult.calendars || [], cached: true, unlinked: isUnlinked, partialFailure, failedCalendars };
             }
         }
     }
@@ -279,8 +380,26 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
     const cacheTTL = isFallback ? 15 : 3600;
     await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', cacheTTL);
 
+    let filteredEvents = analyzedEvents;
+    try {
+        const dismissedTasks = await redis.smembers(`user:${userId}:dismissed-extracted-tasks`) || [];
+        if (dismissedTasks.length > 0) {
+            filteredEvents = analyzedEvents.filter(e => {
+                if (e.id && e.id.startsWith('extracted-task-')) {
+                    const cleanTitle = (e.title || '').trim().replace(/\s+/g, ' ');
+                    const cleanStart = (e.start || '').trim();
+                    const stableKey = `${cleanTitle}_${cleanStart}`;
+                    return !dismissedTasks.includes(stableKey);
+                }
+                return true;
+            });
+        }
+    } catch (redisErr) {
+        console.warn('--- [CALENDAR] Failed to fetch dismissed tasks from Redis:', redisErr.message);
+    }
+
     return {
-        events: analyzedEvents,
+        events: filteredEvents,
         calendars: calResult.calendars || [],
         cached: false,
         unlinked: isUnlinked,

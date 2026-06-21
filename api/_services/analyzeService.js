@@ -136,8 +136,35 @@ ${sanitized || '(이미지 분석 요청)'}
     try {
         await redis.del(`user:${userId}:calendar-advice-cache`);
         await redis.del(`user:${userId}:briefing-cache`);
+        
+        // 백그라운드 데일리 브리핑 선행 빌드 (중복 빌드 방지 락 적용)
+        const briefingBuildLockKey = `user:${userId}:briefing-build-lock`;
+        const hasBuildLock = await redis.get(briefingBuildLockKey);
+        if (!hasBuildLock) {
+            await redis.set(briefingBuildLockKey, '1', 'EX', 120); // 2분 락
+            console.log(`--- [PRE-GEN LOCK] Build lock acquired for user ${userId} ---`);
+
+            const briefingService = require('./briefingService');
+            briefingService.generateBriefing(userId, providerToken, null, [], false, userEmail, true)
+                .then(() => {
+                    console.log(`--- [PRE-GEN SUCCESS] Pre-generated daily briefing for user ${userId} ---`);
+                })
+                .catch((err) => {
+                    console.error(`--- [PRE-GEN ERROR] Failed to pre-generate briefing for user ${userId}:`, err.message);
+                })
+                .finally(async () => {
+                    try {
+                        await redis.del(briefingBuildLockKey);
+                        console.log(`--- [PRE-GEN LOCK] Build lock released for user ${userId} ---`);
+                    } catch (lockErr) {
+                        console.error('Failed to release pre-gen build lock:', lockErr.message);
+                    }
+                });
+        } else {
+            console.log(`--- [PRE-GEN BYPASS] Pre-generation already in progress for user ${userId} ---`);
+        }
     } catch (cacheErr) {
-        console.error('Failed to clear advice/briefing caches:', cacheErr);
+        console.error('Failed to clear advice/briefing caches or start pre-generation:', cacheErr);
     }
 
     // 1촌 감정 상태 공유

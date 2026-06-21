@@ -1,4 +1,4 @@
-const { redis } = require('./redis');
+const { redis, scanRedisKeys } = require('./redis');
 const { fetchWithTimeout } = require('../utils/fetchUtils');
 
 async function refreshGoogleAccessToken(userId) {
@@ -65,6 +65,17 @@ async function getGoogleAccessToken(userId) {
 }
 
 async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '') {
+    const cacheKey = `user:${userId}:calendar-events-cache:${timeMin || 'all'}:${timeMax || 'all'}`;
+    try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            console.log(`--- [CACHE] Returning cached Google Calendar events for user ${userId} ---`);
+            return JSON.parse(cached);
+        }
+    } catch (cacheErr) {
+        console.warn(`--- [CACHE READ ERROR] Failed to load calendar cache for user ${userId}: ${cacheErr.message} ---`);
+    }
+
     try {
         const providerToken = await getGoogleAccessToken(userId);
         if (!providerToken) {
@@ -98,6 +109,16 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
                 return { events: [], unlinked: true, partialFailure: false, failedCalendars: [] };
             }
             console.warn('--- [fetchGoogleCalendarEvents] Failed to fetch Google calendarList, falling back to primary ---');
+        }
+
+        // Ensure AI Angel Calendar is included
+        try {
+            const aiCalId = await redis.get(`user:${userId}:ai-angel-calendar-id`);
+            if (aiCalId && !calendars.some(c => c.id === aiCalId)) {
+                calendars.push({ id: aiCalId, summary: '👼 AI 천사 과제' });
+            }
+        } catch (redisErr) {
+            console.warn('--- [fetchGoogleCalendarEvents] Failed to fetch AI calendar ID from Redis:', redisErr.message);
         }
 
         const failedCalendars = [];
@@ -170,6 +191,13 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
                 if (summary && start) seenEvents.add(`fuzzy_${fuzzyKey}`);
 
                 deduplicatedEvents.push(item);
+
+                // Cache the calendar ID for this event ID to allow PATCH/DELETE
+                try {
+                    redis.set(`user:${userId}:event-calendar-map:${item.id}`, item._calendarId, 'EX', 3600 * 24 * 30);
+                } catch (err) {
+                    console.warn(`Failed to cache calendar ID mapping for event ${item.id}:`, err.message);
+                }
             }
         }
 
@@ -181,7 +209,7 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
 
         const partialFailure = failedCalendars.length > 0;
 
-        return {
+        const result = {
             events: deduplicatedEvents,
             calendars: calendars.map(c => ({ id: c.id, summary: c.summary })),
             unlinked: isTokenEvicted,
@@ -189,14 +217,104 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
             failedCalendars
         };
 
+        try {
+            await redis.set(cacheKey, JSON.stringify(result), 'EX', 600); // 10분 캐시
+            console.log(`--- [CACHE SET] Cached calendar events for user ${userId} (TTL 10m) ---`);
+        } catch (cacheSetErr) {
+            console.warn(`--- [CACHE WRITE ERROR] Failed to cache calendar events for user ${userId}: ${cacheSetErr.message} ---`);
+        }
+
+        return result;
+
     } catch (err) {
         console.error('--- [fetchGoogleCalendarEvents] Error:', err.message);
         return { events: [], unlinked: false, partialFailure: true, failedCalendars: [{ id: 'all', summary: '전체 조회 오류', error: err.message }] };
     }
 }
 
+async function clearGoogleCalendarCache(userId) {
+    try {
+        const pattern = `user:${userId}:calendar-events-cache:*`;
+        const keys = await scanRedisKeys(pattern);
+        if (keys && keys.length > 0) {
+            console.log(`--- [CACHE INVALIDATE] Deleting ${keys.length} calendar event caches for user ${userId} ---`);
+            await redis.del(keys);
+        }
+    } catch (e) {
+        console.error(`--- [CACHE INVALIDATE ERROR] Failed to clear calendar cache:`, e.message);
+    }
+}
+
+async function getOrCreateAiAngelCalendar(userId, providerToken) {
+    if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
+        throw new Error('Google Calendar 연동이 활성화되어 있지 않습니다.');
+    }
+
+    const cacheKey = `user:${userId}:ai-angel-calendar-id`;
+    try {
+        const cachedId = await redis.get(cacheKey);
+        if (cachedId) {
+            return cachedId;
+        }
+    } catch (err) {
+        console.warn('[Google Client] Failed to read cached AI calendar ID from Redis:', err.message);
+    }
+
+    // 1. Get calendar list to check if it already exists
+    const listUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+    const listRes = await fetchWithTimeout(listUrl, {
+        headers: { Authorization: `Bearer ${providerToken}` },
+        failFast: true
+    }, 4000);
+
+    if (listRes.ok) {
+        const listData = await listRes.json();
+        const items = listData.items || [];
+        const existing = items.find(cal => cal.summary === '👼 AI 천사 과제');
+        if (existing) {
+            try {
+                await redis.set(cacheKey, existing.id, 'EX', 3600 * 24 * 30);
+            } catch (err) {
+                console.warn('[Google Client] Failed to cache AI calendar ID:', err.message);
+            }
+            return existing.id;
+        }
+    }
+
+    // 2. Not found, let's create a new secondary calendar
+    console.log(`[Google Client] Dedicated AI calendar not found. Creating for user: ${userId}`);
+    const createUrl = `https://www.googleapis.com/calendar/v3/calendars`;
+    const createRes = await fetchWithTimeout(createUrl, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${providerToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            summary: '👼 AI 천사 과제',
+            description: 'AI 천사(Schedule Angel)가 생성한 세부 과제 및 일정 관리 캘린더'
+        }),
+        failFast: true
+    }, 4000);
+
+    if (!createRes.ok) {
+        const errData = await createRes.json().catch(() => ({}));
+        throw new Error(errData.error?.message || 'Failed to create secondary calendar');
+    }
+
+    const newCal = await createRes.json();
+    try {
+        await redis.set(cacheKey, newCal.id, 'EX', 3600 * 24 * 30);
+    } catch (err) {
+        console.warn('[Google Client] Failed to cache newly created AI calendar ID:', err.message);
+    }
+    return newCal.id;
+}
+
 module.exports = {
     refreshGoogleAccessToken,
     getGoogleAccessToken,
-    fetchGoogleCalendarEvents
+    fetchGoogleCalendarEvents,
+    getOrCreateAiAngelCalendar,
+    clearGoogleCalendarCache
 };

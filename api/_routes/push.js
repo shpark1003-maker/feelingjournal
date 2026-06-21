@@ -290,9 +290,10 @@ async function dispatchPushNotifications() {
                     console.log(`--- [PUSH DISPATCHER] Generating daily briefing for user ${email} at KST ${currentHourMin}... ---`);
                     
                     try {
-                        const briefing = await generateBriefing(userId, providerToken);
+                        let briefingResult = await generateBriefing(userId, providerToken);
+                        const briefingText = (briefingResult && typeof briefingResult === 'object') ? briefingResult.briefing : briefingResult;
                         
-                        const cleanBriefing = briefing
+                        const cleanBriefing = (briefingText || '')
                             .replace(/<br>/g, '\n')
                             .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
                             .replace(/\*\*(.*?)\*\*/g, '$1');

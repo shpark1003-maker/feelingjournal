@@ -17,7 +17,7 @@ const { redis, scanRedisKeys } = require('./clients/redis');
 const { emailConfigured, transporter } = require('./clients/mail');
 const { pushEnabled, webpush } = require('./clients/push');
 const { getGeminiUrl, callGemini } = require('./clients/gemini');
-const { refreshGoogleAccessToken, getGoogleAccessToken, fetchGoogleCalendarEvents } = require('./clients/google');
+const { refreshGoogleAccessToken, getGoogleAccessToken, fetchGoogleCalendarEvents, clearGoogleCalendarCache } = require('./clients/google');
 
 const { sanitizeContent, safeParseJsonArray, extractEventJson } = require('./utils/pureUtils');
 const { isSafeUrl, sendError } = require('./utils/httpUtils');
@@ -80,6 +80,7 @@ module.exports = {
     decrypt,
     refreshGoogleAccessToken,
     getGoogleAccessToken,
-    fetchGoogleCalendarEvents
+    fetchGoogleCalendarEvents,
+    clearGoogleCalendarCache
 };
 

@@ -34,6 +34,33 @@ const mockSupabaseAdmin = {
             return { data: null, error: { message: 'Database Error' } };
         }
         return { data: 'mocked-task-uuid-1234', error: null };
+    },
+    from: (tableName) => {
+        return {
+            select: (cols) => {
+                return {
+                    eq: (col, val) => {
+                        return {
+                            data: [
+                                { id: 'mock-subtask-1', title: '주제 선정 및 조사', sequence_order: 1, due_date: '2026-06-24' },
+                                { id: 'mock-subtask-2', title: '논문 목차 및 구조화', sequence_order: 2, due_date: '2026-06-27' }
+                            ],
+                            error: null
+                        };
+                    }
+                };
+            },
+            update: (payload) => {
+                return {
+                    eq: (col, val) => {
+                        return {
+                            data: [],
+                            error: null
+                        };
+                    }
+                };
+            }
+        };
     }
 };
 shared.supabaseAdmin = mockSupabaseAdmin;
@@ -152,7 +179,7 @@ async function runTests() {
     assert.strictEqual(rpcParams.task_source, "ai_angel");
     assert.strictEqual(rpcParams.task_status, "in-progress");
 
-    const parsedSubTasks = JSON.parse(rpcParams.sub_tasks_list);
+    const parsedSubTasks = rpcParams.sub_tasks_list;
     assert.strictEqual(parsedSubTasks.length, 2);
     assert.strictEqual(parsedSubTasks[0].start_date, "2026-06-20");
     assert.strictEqual(parsedSubTasks[0].due_date, "2026-06-24");
@@ -172,6 +199,51 @@ async function runTests() {
     assert.strictEqual(mockRes.body.success, false);
     assert.strictEqual(mockRes.body.errorCode, 'TRANSACTION_FAILED');
     console.log('=> Transaction failure fallback check PASSED!');
+
+    // [TEST 5] syncGoogle=true
+    console.log('\n[TEST 5] Testing /confirm endpoint with syncGoogle=true...');
+    rpcShouldFail = false;
+    mockRes.statusCode = 200;
+    mockRes.body = null;
+    
+    // Mock getGoogleAccessToken
+    const originalGetGoogleAccessToken = shared.getGoogleAccessToken;
+    shared.getGoogleAccessToken = async () => 'mock-google-token';
+    
+    // Mock calendarService.addGoogleCalendarEvent
+    const calendarService = require('../api/_services/calendarService');
+    const originalAddGoogleCalendarEvent = calendarService.addGoogleCalendarEvent;
+    let addEventCount = 0;
+    calendarService.addGoogleCalendarEvent = async (token, eventData, calendarId) => {
+        addEventCount++;
+        return { id: `mock-google-event-${addEventCount}` };
+    };
+
+    const reqConfirmSync = {
+        method: 'POST',
+        url: '/api/ai-tasks/confirm',
+        user: mockUser,
+        body: {
+            parentTitle: "학사 학위 논문 작성",
+            startDate: "2026-06-20",
+            steps: [
+                { sequence: 1, title: "주제 선정 및 조사", duration: 5 },
+                { sequence: 2, title: "논문 목차 및 구조화", duration: 3 }
+            ],
+            syncGoogle: true
+        }
+    };
+
+    await aiTasksHandler(reqConfirmSync, mockRes);
+    assert.strictEqual(mockRes.statusCode, 200);
+    assert.strictEqual(mockRes.body.success, true);
+    assert.strictEqual(mockRes.body.googleCalendarSynced, true);
+    assert.strictEqual(addEventCount, 2); // 2 events added
+    console.log('=> syncGoogle=true check PASSED!');
+    
+    // Restore google token and calendar helper
+    shared.getGoogleAccessToken = originalGetGoogleAccessToken;
+    calendarService.addGoogleCalendarEvent = originalAddGoogleCalendarEvent;
 
     // Restore original functions
     shared.callGemini = originalCallGemini;

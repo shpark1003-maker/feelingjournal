@@ -1,6 +1,6 @@
 'use strict';
 
-const { callGemini, supabase, redis } = require('./shared');
+const { callGemini, supabase, redis, getGoogleAccessToken } = require('./shared');
 
 // KST 시간 포맷 도우미
 function getKstDateTimeString() {
@@ -39,6 +39,7 @@ module.exports = async (req, res) => {
         const schema = {
             type: "OBJECT",
             properties: {
+                mainTaskTitle: { type: "STRING" },
                 advice: { type: "STRING" },
                 suggestedTasks: {
                     type: "ARRAY",
@@ -53,23 +54,24 @@ module.exports = async (req, res) => {
                     }
                 }
             },
-            required: ["advice", "suggestedTasks"]
+            required: ["mainTaskTitle", "advice", "suggestedTasks"]
         };
 
         const prompt = `너는 사용자의 일정을 지키고 동기부여를 담당하는 품격 있는 AI 일정 가이드 천사(Schedule Angel)다. 👼
-사용자가 어떤 큰 목표나 일상적 고민을 털어놓으면, 이를 구체적이고 체계적인 "단계별 실행 계획(Sub-tasks)"으로 세분화하여 계획 카드를 디자인해주어야 한다.
+사용자가 어떤 큰 목표나 일상적 고민을 털어놓으면, 이를 요약하여 대과제 제목('mainTaskTitle')을 정하고 구체적이고 체계적인 "단계별 실행 계획(Sub-tasks)"으로 세분화하여 계획 카드를 디자인해주어야 한다.
 
 현재 시각(KST): ${currentTimeStr}
 사용자의 고민: "${message}"
 
 [수행 규칙 및 제약사항]
-1. 사용자가 털어놓은 목표에 공감하고 용기를 북돋는 멘트를 'advice'에 2~3문장 이내로 다정하고 정중하게 적어주십시오.
-2. 제안하는 세부 과제 리스트('suggestedTasks')는 다음 제한 사항을 철저히 준수하십시오:
+1. 사용자의 장황한 고민이나 목표를 요약하여 20자 이내의 깔끔하고 명확한 대과제 제목으로 만들어 'mainTaskTitle'에 적어주십시오. (예: "학사 학위 논문 작성", "다이어트 계획")
+2. 사용자가 털어놓은 목표에 공감하고 용기를 북돋는 멘트를 'advice'에 2~3문장 이내로 다정하고 정중하게 적어주십시오.
+3. 제안하는 세부 과제 리스트('suggestedTasks')는 다음 제한 사항을 철저히 준수하십시오:
    - **suggestedTasks 개수**: 최대 10개 이하로만 생성하십시오.
    - **duration (소요 일수)**: 각 단계마다 반드시 1일 이상 30일 이하의 정수로만 배정하십시오.
    - **title (단계명)**: 단계별 명확한 실천 목표를 담아 최대 120자 이내로 명확하게 작성하십시오. (예: "핵심 참고 논문 3편 상세 분석 및 연구 문제 확정")
    - **sequence (순서)**: 1부터 시작하여 중복 없이 연속적으로 증가하는 정수로 채우십시오 (1, 2, 3, ...).
-3. 응답은 반드시 지정된 JSON 규격 스키마를 완벽히 준수하는 순수 JSON 문자열이어야 합니다.`;
+4. 응답은 반드시 지정된 JSON 규격 스키마를 완벽히 준수하는 순수 JSON 문자열이어야 합니다.`;
 
         try {
             const generationConfig = {
@@ -151,7 +153,7 @@ module.exports = async (req, res) => {
 
     // 2. 최종 일정 승인 및 일괄 저장 라우트 (Supabase RPC 트랜잭션 보장)
     if (req.method === 'POST' && (subPath === '/confirm' || subPath === '/confirm/')) {
-        const { parentTitle, startDate, steps, status = 'in-progress' } = req.body || {};
+        const { parentTitle, startDate, steps, status = 'in-progress', syncGoogle = false } = req.body || {};
 
         // 1) 필수값 검증 및 길이 유효성
         if (!parentTitle || typeof parentTitle !== 'string' || parentTitle.trim().length === 0) {
@@ -257,7 +259,7 @@ module.exports = async (req, res) => {
                 task_due_date: taskDueDateStr,
                 task_source: 'ai_angel',
                 task_status: status,
-                sub_tasks_list: JSON.stringify(mappedSubTasks)
+                sub_tasks_list: mappedSubTasks
             });
 
             if (error) {
@@ -265,9 +267,118 @@ module.exports = async (req, res) => {
                 throw error;
             }
 
+            // Query the created sub_tasks to get their IDs and sync them
+            const { data: createdSubTasks } = await supabaseAdmin
+                .from('sub_tasks')
+                .select('id, title, sequence_order, due_date')
+                .eq('task_id', data);
+
+            let googleCalendarSynced = false;
+            const syncResults = [];
+
+            if (syncGoogle) {
+                try {
+                    const token = await getGoogleAccessToken(user.id);
+                    if (token) {
+                        const { getOrCreateAiAngelCalendar } = require('./clients/google');
+                        const calendarId = await getOrCreateAiAngelCalendar(user.id, token);
+                        
+                        if (calendarId) {
+                            googleCalendarSynced = true;
+                            const calendarService = require('../_services/calendarService');
+                            
+                            for (const subTask of (createdSubTasks || [])) {
+                                try {
+                                    // Calculate end date: due_date + 1 day
+                                    const nextDay = new Date(subTask.due_date + 'T00:00:00+09:00');
+                                    nextDay.setDate(nextDay.getDate() + 1);
+                                    const nextDayStr = nextDay.toISOString().split('T')[0];
+
+                                    const eventData = {
+                                        summary: `👼 ${subTask.title} 마감`,
+                                        startTime: subTask.due_date,
+                                        endTime: nextDayStr,
+                                        description: `대과제: ${parentTitle}`
+                                    };
+
+                                    const googleEvent = await calendarService.addGoogleCalendarEvent(token, eventData, calendarId, user.id);
+                                    if (googleEvent && googleEvent.id) {
+                                        // Update subtask in DB with event mapping
+                                        await supabaseAdmin
+                                            .from('sub_tasks')
+                                            .update({
+                                                google_calendar_id: calendarId,
+                                                google_event_id: googleEvent.id,
+                                                google_sync_status: 'synced'
+                                            })
+                                            .eq('id', subTask.id);
+
+                                        // Cache event to calendar ID mapping in Redis
+                                        await redis.set(`user:${user.id}:event-calendar-map:${googleEvent.id}`, calendarId, 'EX', 3600 * 24 * 30);
+
+                                        syncResults.push({
+                                            subTaskId: subTask.id,
+                                            title: subTask.title,
+                                            status: 'synced',
+                                            googleEventId: googleEvent.id
+                                        });
+                                    } else {
+                                        throw new Error('Google Calendar returned empty event data');
+                                    }
+                                } catch (eventErr) {
+                                    console.error(`[AI Angel] Failed to sync subtask ${subTask.id} to Google Calendar:`, eventErr.message);
+                                    await supabaseAdmin
+                                        .from('sub_tasks')
+                                        .update({ google_sync_status: 'failed' })
+                                        .eq('id', subTask.id);
+
+                                    syncResults.push({
+                                        subTaskId: subTask.id,
+                                        title: subTask.title,
+                                        status: 'failed',
+                                        reason: eventErr.message
+                                    });
+                                }
+                            }
+                            
+                            // Invalidate advice cache
+                            await redis.del(`user:${user.id}:calendar-advice-cache`);
+                        }
+                    } else {
+                        // Google not connected
+                        for (const subTask of (createdSubTasks || [])) {
+                            await supabaseAdmin
+                                .from('sub_tasks')
+                                .update({ google_sync_status: 'token_missing' })
+                                .eq('id', subTask.id);
+                                
+                            syncResults.push({
+                                subTaskId: subTask.id,
+                                title: subTask.title,
+                                status: 'failed',
+                                reason: 'GOOGLE_NOT_CONNECTED'
+                            });
+                        }
+                    }
+                } catch (syncErr) {
+                    console.error('[AI Angel] Google Calendar sync pipeline failed:', syncErr.message);
+                }
+            } else {
+                // syncGoogle is false
+                for (const subTask of (createdSubTasks || [])) {
+                    syncResults.push({
+                        subTaskId: subTask.id,
+                        title: subTask.title,
+                        status: 'not_requested'
+                    });
+                }
+            }
+
             return res.json({
                 success: true,
-                taskId: data
+                taskId: data,
+                googleCalendarSynced,
+                syncResults
             });
 
         } catch (dbErr) {

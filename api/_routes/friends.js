@@ -40,8 +40,21 @@ module.exports = async (req, res) => {
             });
 
             const friendIds = activeFriends.map(f => f.user_id === user.id ? f.friend_id : f.user_id);
-            const deletedMocks = await redis.smembers(`user:${user.id}:deleted-mocks`) || [];
             const now = new Date();
+
+            let deletedMocks = [];
+            let isRedisPartial = false;
+            let redisSource = "redis_active";
+
+            try {
+                const mocksResult = await redis.smembers(`user:${user.id}:deleted-mocks`);
+                deletedMocks = mocksResult || [];
+            } catch (err) {
+                console.warn('[Redis Warning] Failed to get deleted-mocks:', err.message);
+                isRedisPartial = true;
+                redisSource = "redis_fallback";
+                deletedMocks = [];
+            }
 
             let allFriends = [];
 
@@ -53,13 +66,30 @@ module.exports = async (req, res) => {
 
                 if (profileError) throw profileError;
 
-                allFriends = await Promise.all((profiles || []).map(async (p) => {
+                let presenceMap = {};
+                const presenceKeys = friendIds.map(id => `user:${id}:presence`);
+                try {
+                    const presenceValues = await redis.mget(presenceKeys);
+                    presenceKeys.forEach((key, index) => {
+                        const friendId = friendIds[index];
+                        presenceMap[friendId] = !!presenceValues[index];
+                    });
+                } catch (err) {
+                    console.warn('[Redis Warning] Failed to mget presence values:', err.message);
+                    isRedisPartial = true;
+                    redisSource = "redis_fallback";
+                    friendIds.forEach(id => {
+                        presenceMap[id] = false; // Default offline fallback
+                    });
+                }
+
+                allFriends = (profiles || []).map((p) => {
                     const rel = activeFriends.find(f => f.user_id === p.id || f.friend_id === p.id);
                     const isFriendSide = rel.friend_id === p.id;
                     
                     // 상대방의 스텔스 설정 체크
                     const isStealth = isFriendSide ? rel.friend_stealth : rel.user_stealth;
-                    const isOnline = isStealth ? false : !!(await redis.get(`user:${p.id}:presence`));
+                    const isOnline = isStealth ? false : !!presenceMap[p.id];
 
                     // 상대방의 감정 공유 설정 체크
                     const canShare = isFriendSide ? rel.friend_share_emotion : rel.user_share_emotion;
@@ -78,7 +108,7 @@ module.exports = async (req, res) => {
                         my_stealth: !!myStealth,
                         my_share: !!myShare
                     };
-                }));
+                });
             }
 
             // 데모 데이터 결합 (3명 미만일 때)
@@ -107,13 +137,31 @@ module.exports = async (req, res) => {
                     }
                 ];
 
-                for (const mock of demoFriends) {
-                    if (deletedMocks.includes(mock.id)) continue;
+                const mockKeys = demoFriends.map(mock => `user:${user.id}:mock-settings:${mock.id}`);
+                let mockSettingsValues = [];
+                try {
+                    mockSettingsValues = await redis.mget(mockKeys);
+                } catch (err) {
+                    console.warn('[Redis Warning] Failed to mget mock settings:', err.message);
+                    isRedisPartial = true;
+                    redisSource = "redis_fallback";
+                    mockSettingsValues = Array(demoFriends.length).fill(null);
+                }
 
-                    const mockSettingsRaw = await redis.get(`user:${user.id}:mock-settings:${mock.id}`);
-                    const mockSettings = mockSettingsRaw ? JSON.parse(mockSettingsRaw) : { stealth_mode: false, share_emotion: true, is_blocked: false };
+                demoFriends.forEach((mock, index) => {
+                    if (deletedMocks.includes(mock.id)) return;
 
-                    if (mockSettings.is_blocked) continue;
+                    const rawVal = mockSettingsValues[index];
+                    let mockSettings = { stealth_mode: false, share_emotion: true, is_blocked: false };
+                    if (rawVal) {
+                        try {
+                            mockSettings = JSON.parse(rawVal);
+                        } catch (parseErr) {
+                            console.warn('[Redis JSON Parse Error] Using default settings for mock friend:', mock.id);
+                        }
+                    }
+
+                    if (mockSettings.is_blocked) return;
 
                     const isOnline = mockSettings.stealth_mode ? false : mock.is_online;
                     const emotion = mockSettings.share_emotion ? mock.current_emotion : '비공개 감정';
@@ -125,7 +173,7 @@ module.exports = async (req, res) => {
                         my_stealth: !!mockSettings.stealth_mode,
                         my_share: !!mockSettings.share_emotion
                     });
-                }
+                });
             }
 
             const sosEmotions = ['우울', '슬픔', '절망', '무기력', '화남', '힘듦', '고통'];
@@ -135,7 +183,18 @@ module.exports = async (req, res) => {
                 return isSos && isRecent;
             });
 
-            return res.json({ success: true, sosList, allFriends });
+            const responsePayload = {
+                success: true,
+                sosList,
+                allFriends
+            };
+
+            if (isRedisPartial) {
+                responsePayload.partial = true;
+                responsePayload.source = redisSource;
+            }
+
+            return res.json(responsePayload);
         }
 
         // 2. POST /api/friends/settings - 1촌 설정 변경
