@@ -14,7 +14,7 @@ const YONHAP_RSS_MAP = {
     sports: 'https://www.yna.co.kr/rss/sports.xml'
 };
 
-const BLACKLIST_REGEX = /\[부고\]|\[인사\]|\[동정\]|\[게시판\]|부고|인사|동정|모집|헤드라인|이 시각|인터뷰|대담|동행취재/;
+const BLACKLIST_REGEX = /\[부고\]|\[인사\]|\[동정\]|\[게시판\]|\[프로필\]|부고|인사|동정|모집|헤드라인|이 시각|인터뷰|대담|동행취재|프로필/;
 
 async function getNewsHeadlines(categories = ['business']) {
     const activeCategories = Array.isArray(categories) && categories.length > 0 ? categories : ['business'];
@@ -84,7 +84,7 @@ async function getNewsHeadlines(categories = ['business']) {
         for (const art of articles) {
             // Secondary absolute check for matching key-words
             const strippedTitle = art.title.replace(/[^a-zA-Z0-9가-힣]/g, '');
-            const hasObjectionableWord = ['부고', '인사', '동정', '모집', '헤드라인', '이시각', '인터뷰', '대담', '동행취재'].some(word => strippedTitle.includes(word));
+            const hasObjectionableWord = ['부고', '인사', '동정', '모집', '헤드라인', '이시각', '인터뷰', '대담', '동행취재', '프로필'].some(word => strippedTitle.includes(word));
 
             // Static blacklist regex check or word containment check
             if (hasObjectionableWord || BLACKLIST_REGEX.test(art.title)) {
