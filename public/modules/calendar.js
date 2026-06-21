@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.5.9';
+import { store, API_URL, assertIds } from './state.js?v=5.6.7';
 
 function getEventLocalDateString(eventDateStr) {
     if (!eventDateStr) return '';
