@@ -479,6 +479,17 @@ function setupTabs() {
             }
         });
     });
+
+    // Custom bottom nav tab behavior to map to gallery modal and editor
+    document.getElementById('nav-fragments-tab')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('v2-gallery-more-btn')?.click();
+    });
+
+    document.getElementById('nav-write-tab')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('new-page-btn')?.click();
+    });
 }
 
 /* ==========================================================================

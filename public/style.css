@@ -6319,3 +6319,55 @@ body {
 .mb-gutter {
     margin-bottom: 40px !important;
 }
+
+/* Ghibli Theme Premium Bottom Navigation & Layout Elements matching the Mockup */
+.ghibli-theme #bottom-nav {
+    background: rgba(235, 230, 218, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(74, 103, 65, 0.15) !important;
+    border-radius: 24px 24px 0 0 !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.08) !important;
+    padding-bottom: 24px !important;
+    padding-top: 12px !important;
+}
+
+.ghibli-theme #bottom-nav .tab-btn {
+    background: transparent !important;
+    color: #5D574D !important;
+    border-radius: 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 4px !important;
+}
+
+.ghibli-theme #bottom-nav .tab-btn.active {
+    background: #4A6741 !important; /* Premium Ghibli Sage Green */
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(74, 103, 65, 0.25) !important;
+}
+
+.ghibli-theme #bottom-nav .tab-btn.active .material-symbols-outlined {
+    color: #FFFFFF !important;
+}
+
+/* Ghibli theme specific notebook item icon colors */
+.ghibli-theme .notebook-item [data-icon="menu_book"] {
+    color: #4A6741 !important; /* Green icon for personal diary */
+}
+.ghibli-theme .notebook-item [data-icon="folder"] {
+    color: #8C6A3E !important; /* Brown icon for work & projects */
+}
+
+/* Premium Floating Action Button in Ghibli Theme */
+.ghibli-theme #fab-write-btn {
+    background: #4A6741 !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.4) !important;
+}

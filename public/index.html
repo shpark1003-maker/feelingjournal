@@ -391,15 +391,17 @@
 <header class="fixed top-0 w-full z-50 px-margin-mobile h-14 bg-surface/80 backdrop-blur-md flex flex-col justify-center border-b border-outline-variant/20">
 <div class="flex justify-between items-center w-full">
 <div class="flex items-center gap-3">
-<h1 class="font-headline-lg text-[1.375rem] text-primary italic tracking-tight">감성노트</h1>
+<h1 class="font-headline-lg text-[1.375rem] text-primary italic tracking-tight flex items-center gap-2">
+    <span class="text-xl leading-none">🥟</span>
+    <span>감성노트</span>
+</h1>
 </div>
 <div class="flex items-center gap-1">
 <button id="care-mode-start-btn" class="items-center gap-1.5 bg-tertiary-container/30 text-tertiary border border-tertiary/20 rounded-full px-3 py-1 font-label-sm text-xs shadow-sm hover:bg-tertiary-container/50 active:scale-95 transition-all cursor-pointer mr-2" style="display: none;">
     <span class="material-symbols-outlined text-sm">health_and_safety</span>
     안심케어 시작
 </button>
-<button class="material-symbols-outlined text-primary p-2 hover:bg-primary-container/20 rounded-full transition-all active:scale-95 duration-150">search</button>
-<button class="material-symbols-outlined text-primary p-2 hover:bg-primary-container/20 rounded-full transition-all active:scale-95 duration-150">notifications</button>
+<button id="header-settings-btn" class="material-symbols-outlined text-primary p-2 hover:bg-primary-container/20 rounded-full transition-all active:scale-95 duration-150" onclick="document.getElementById('nav-settings-tab')?.click();" title="설정">settings</button>
 </div>
 </div>
 </header>
@@ -409,7 +411,13 @@
 <aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-[3.75rem]">
 <section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
 <div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
-<div class="flex items-center justify-between mb-2">
+<!-- Cloud illustration decoration in the bottom right -->
+<div class="absolute bottom-[-10px] right-[-10px] text-primary/10 pointer-events-none select-none opacity-40">
+    <svg width="100" height="70" viewBox="0 0 100 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M70 30C70 13.4315 56.5685 0 40 0C25.4022 0 13.242 10.3705 10.4285 24.1867C4.54929 26.2415 0 31.8485 0 38.5C0 46.5081 6.49187 53 14.5 53H75C88.8071 53 100 41.8071 100 28C100 14.7797 89.8 3.93043 76.7725 3.06456C76.923 4.01522 77 4.9929 77 6C77 19.2548 66.2548 30 53 30H70Z" fill="currentColor"/>
+    </svg>
+</div>
+<div class="flex items-center justify-between mb-2 relative z-10">
 <div class="flex items-center gap-2">
 <span class="material-symbols-outlined text-primary text-[20px]" data-icon="auto_awesome">auto_awesome</span>
 <span class="font-label-sm text-primary uppercase tracking-wider" id="briefing-title-text">Cloud Wisdom</span>
@@ -1209,24 +1217,27 @@
 <button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-90 hover:scale-105 z-40" id="fab-write-btn">
 <span class="material-symbols-outlined text-[30px]" data-icon="edit">edit</span>
 </button>
-<!-- Bottom Navigation Bar (3-column: Notes, Chat, Settings) -->
+<!-- Bottom Navigation Bar (4-column: Home, Fragments, Write, Calendar) -->
 <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-6 pt-3 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_15px_rgba(74,101,78,0.05)] rounded-t-2xl" id="bottom-nav">
 <a class="tab-btn active flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl py-1.5 transition-all w-1/4" href="#" id="nav-note-tab" data-tab="journal">
 <span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
-<span class="font-label-sm">노트</span>
+<span class="font-label-sm">홈</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-fragments-tab">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span class="font-label-sm">조각들</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-write-tab">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-sm">작성</span>
 </a>
 <a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-calendar-tab" data-tab="calendar">
 <span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
 <span class="font-label-sm">일정</span>
 </a>
-<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-chat-tab" data-tab="chat">
-<span class="material-symbols-outlined" data-icon="chat">chat</span>
-<span class="font-label-sm">채팅</span>
-</a>
-<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-settings-tab" data-tab="persona">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
-<span class="font-label-sm">설정</span>
-</a>
+<!-- Hidden legacy tabs to support state routes and prevent module crashes -->
+<a class="tab-btn hidden" href="#" id="nav-chat-tab" data-tab="chat" style="display: none !important;"></a>
+<a class="tab-btn hidden" href="#" id="nav-settings-tab" data-tab="persona" style="display: none !important;"></a>
 </nav>
 <script>
         document.querySelectorAll('button, a').forEach(el => {

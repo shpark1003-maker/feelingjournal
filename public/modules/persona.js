@@ -557,13 +557,41 @@ export async function loadBriefing() {
                         <p class="text-sm font-medium">오늘 예정된 특별한 일정이나 기록이 없어 한결 가뿐한 하루입니다. ☕</p>
                     </div>
                 `;
-            } else {
                 // [4. Loaded State]
                 console.log("--- [BRIEFING] Successfully loaded briefing from server.");
-                content.innerHTML = data.briefing
-                    .replace(/\n/g, '<br>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary)">$1</strong>');
-            }
+                let formattedText = data.briefing;
+                let titleHtml = '';
+                let tagsHtml = '';
+
+                // Extract double-starred sentences or phrases as a prominent title
+                const titleMatch = formattedText.match(/\*\*(.*?)\*\*/);
+                if (titleMatch) {
+                    titleHtml = `<h4 class="font-bold text-[16px] text-on-surface mb-2.5 leading-snug">${titleMatch[1]}</h4>`;
+                    // Remove the title match from the description to avoid duplication
+                    formattedText = formattedText.replace(/\*\*(.*?)\*\*\s*/, '');
+                }
+
+                // Auto-generate tags based on briefing context matching the Ghibli mockup style
+                const tags = [];
+                if (data.briefing.includes('일정') || data.briefing.includes('약속') || data.briefing.includes('준비') || data.briefing.includes('회의')) tags.push('#일정관리');
+                if (data.briefing.includes('여행') || data.briefing.includes('가족') || data.briefing.includes('제주')) tags.push('#가족여행');
+                if (data.briefing.includes('건강') || data.briefing.includes('운동') || data.briefing.includes('산책')) tags.push('#건강케어');
+                if (data.briefing.includes('일기') || data.briefing.includes('감성') || data.briefing.includes('기록') || data.briefing.includes('노트')) tags.push('#감성기록');
+                
+                if (tags.length === 0) tags.push('#데일리');
+
+                tagsHtml = `
+                <div class="flex flex-wrap gap-2 mt-4">
+                    ${tags.map(tag => `<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium hover:bg-primary/20 transition-colors cursor-pointer">${tag}</span>`).join('')}
+                </div>`;
+
+                content.innerHTML = `
+                    <div class="flex flex-col gap-1">
+                        ${titleHtml}
+                        <p class="text-on-surface-variant/90 leading-relaxed text-[13px]">${formattedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary)">$1</strong>')}</p>
+                        ${tagsHtml}
+                    </div>
+                `;
         } else {
             // [5. Error State (Server failed)]
             console.error("--- [BRIEFING] Server failed to generate briefing:", data.error);

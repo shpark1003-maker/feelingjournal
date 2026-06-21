@@ -630,18 +630,38 @@ function renderV2MemoryFragments(allPages) {
         return;
     }
 
-    memoryGrid.innerHTML = recentFragments.map(f => `
-    <div class="swiper-slide" style="width: 300px;">
-        <article class="w-full bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 soft-shadow paper-texture flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" style="height: 380px;" data-id="${f.id}">
-            <div class="h-80 relative overflow-hidden flex-1">
-                <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
-            </div>
-            <div class="p-2.5 bg-surface flex-none">
-                <h4 class="font-label-sm text-on-surface truncate mb-0.5 text-xs font-bold">${f.title}</h4>
-                <p class="font-body-md text-on-surface-variant text-[11px] line-clamp-1 leading-normal">${f.excerpt}...</p>
-            </div>
-        </article>
-    </div>`).join('');
+    memoryGrid.innerHTML = recentFragments.map(f => {
+        const heartCount = Math.floor(Math.random() * 50) + 10;
+        const commentCount = Math.floor(Math.random() * 10) + 2;
+        return `
+        <div class="swiper-slide" style="width: 300px;">
+            <article class="w-full bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant/30 shadow-md flex flex-col cursor-pointer hover:border-primary/50 transition-colors memory-item" style="height: 400px;" data-id="${f.id}">
+                <div class="h-72 relative overflow-hidden flex-1">
+                    <img alt="${f.title}" class="w-full h-full object-cover" src="${f.imgUrl}">
+                    <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        <span class="text-[11px] font-bold text-on-surface">${f.title}</span>
+                    </div>
+                </div>
+                <div class="p-4 bg-white/70 backdrop-blur-sm flex-none flex flex-col gap-3">
+                    <p class="font-body-md text-on-surface-variant text-[12px] line-clamp-2 leading-relaxed h-[36px]">${f.excerpt}...</p>
+                    <div class="border-t border-outline-variant/20 pt-3 flex items-center justify-between text-outline text-[12px]">
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center gap-1 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">favorite</span>
+                                <span>${heartCount}</span>
+                            </span>
+                            <span class="flex items-center gap-1 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+                                <span>${commentCount}</span>
+                            </span>
+                        </div>
+                        <span class="material-symbols-outlined text-[16px] hover:text-primary transition-colors">share</span>
+                    </div>
+                </div>
+            </article>
+        </div>`;
+    }).join('');
 
     // Setup Event Delegation for clicks (works even for duplicated slides in Swiper loop mode)
     const memorySwiperEl = document.getElementById('memory-swiper');
