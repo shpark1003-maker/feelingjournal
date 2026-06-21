@@ -109,7 +109,27 @@ export async function loadNotebooks() {
 
                 // 2. 노트북 서머리 클릭 핸들링
                 if (target.classList.contains('notebook-item')) {
-                    store.currentNotebookId = target.dataset.id;
+                    e.preventDefault();
+                    const details = target.closest('details');
+                    if (details) {
+                        const isOpen = details.hasAttribute('open');
+                        if (isOpen) {
+                            details.removeAttribute('open');
+                            if (store.currentNotebookId === target.dataset.id) {
+                                store.currentNotebookId = null;
+                            }
+                        } else {
+                            // 아코디언 동작을 위해 다른 보관함들은 닫음
+                            const allDetails = v2Accordion.querySelectorAll('details');
+                            allDetails.forEach(d => {
+                                if (d !== details) {
+                                    d.removeAttribute('open');
+                                }
+                            });
+                            details.setAttribute('open', '');
+                            store.currentNotebookId = target.dataset.id;
+                        }
+                    }
                     return;
                 }
 
