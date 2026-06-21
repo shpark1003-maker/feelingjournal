@@ -16,6 +16,21 @@ const ZONE_MAP = {
     '제주': '5011059000'
 };
 
+const ENGLISH_CITY_MAP = {
+    '서울': 'Seoul',
+    '인천': 'Incheon',
+    '수원': 'Suwon',
+    '춘천': 'Chuncheon',
+    '대전': 'Daejeon',
+    '청주': 'Cheongju',
+    '광주': 'Gwangju',
+    '전주': 'Jeonju',
+    '대구': 'Daegu',
+    '부산': 'Busan',
+    '울산': 'Ulsan',
+    '제주': 'Jeju'
+};
+
 async function getLiveWeather(region) {
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     const cacheKey = `system:weather-cache:${region}`;
@@ -30,8 +45,10 @@ async function getLiveWeather(region) {
         console.warn(`--- [WEATHER CACHE READ ERROR] Region: ${region}, Error: ${cacheErr.message} ---`);
     }
     
+    const queryRegion = ENGLISH_CITY_MAP[region] || region;
+    
     if (apiKey && apiKey !== '여기에_OpenWeather_API키_입력') {
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(region)}&appid=${apiKey}&units=metric&lang=kr`;
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(queryRegion)}&appid=${apiKey}&units=metric&lang=kr`;
         try {
             const res = await axios.get(url, { timeout: 1500 });
             const temp = res.data.main.temp;
@@ -54,7 +71,7 @@ async function getLiveWeather(region) {
     }
     
     // Fallback: wttr.in (타임아웃 1.5초 단축)
-    const url = `https://wttr.in/${encodeURIComponent(region)}?format=j1`;
+    const url = `https://wttr.in/${encodeURIComponent(queryRegion)}?format=j1`;
     try {
         const res = await axios.get(url, { timeout: 1500 });
         const current = res.data.current_condition?.[0];
