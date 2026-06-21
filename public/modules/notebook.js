@@ -548,6 +548,22 @@ export function setupNotebooksAndPages() {
 
     // 6. 기억 조각 다중 선택 및 공유 초기화
     setupGallerySharing();
+
+    // 7. 메인 '나의 노트 보관함' details 토글 오버라이드 제어
+    const mainDetails = document.querySelector('#note-list-container details.group\\/main');
+    const mainSummary = mainDetails?.querySelector('summary');
+    if (mainSummary && !mainSummary.dataset.bound) {
+        mainSummary.dataset.bound = "true";
+        mainSummary.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOpen = mainDetails.hasAttribute('open');
+            if (isOpen) {
+                mainDetails.removeAttribute('open');
+            } else {
+                mainDetails.setAttribute('open', '');
+            }
+        });
+    }
 }
 
 function setupResizers() {
