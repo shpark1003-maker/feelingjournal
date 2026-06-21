@@ -6315,3 +6315,7 @@ body {
         border-radius: 2px;
     }
 }
+
+.mb-gutter {
+    margin-bottom: 40px !important;
+}
