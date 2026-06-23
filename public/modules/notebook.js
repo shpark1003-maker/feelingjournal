@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.7.6';
+import { store, API_URL, assertIds } from './state.js?v=5.7.7';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
@@ -549,23 +549,7 @@ export function setupNotebooksAndPages() {
     // 6. 기억 조각 다중 선택 및 공유 초기화
     setupGallerySharing();
 
-    // 7. 메인 '나의 노트 보관함' details 토글 오버라이드 제어
-    const mainDetails = document.querySelector('#note-list-container details');
-    const mainSummary = mainDetails?.querySelector('summary');
-    if (mainSummary && !mainSummary.dataset.bound) {
-        mainSummary.dataset.bound = "true";
-        console.log('--- [NOTEBOOK] Bound click toggle to main Note Library details element.');
-        mainSummary.addEventListener('click', (e) => {
-            e.preventDefault();
-            const isOpen = mainDetails.hasAttribute('open');
-            console.log('--- [NOTEBOOK] Main Note Library toggle clicked. Current isOpen:', isOpen);
-            if (isOpen) {
-                mainDetails.removeAttribute('open');
-            } else {
-                mainDetails.setAttribute('open', '');
-            }
-        });
-    }
+    // 7. 메인 '나의 노트 보관함' details 토글은 브라우저 기본 동작(Native)으로 매끄럽게 처리됩니다.
 }
 
 function setupResizers() {

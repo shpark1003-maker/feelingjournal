@@ -1,5 +1,5 @@
-import { store, API_URL, assertIds } from './state.js?v=5.7.6';
-import { loadPages } from './notebook.js?v=5.7.6';
+import { store, API_URL, assertIds } from './state.js?v=5.7.7';
+import { loadPages } from './notebook.js?v=5.7.7';
 
 let cropperInstance = null;
 let cameraStream = null;
