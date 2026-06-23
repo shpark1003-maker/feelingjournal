@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.7.5';
+import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.7.6';
 
 export async function loadPersona() {
     assertIds('Persona', [
@@ -415,7 +415,11 @@ export async function loadBriefing() {
             if (isGpsMode && navigator.geolocation) {
                 try {
                     const position = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                            enableHighAccuracy: true, 
+                            timeout: 5000, 
+                            maximumAge: 0 
+                        });
                     });
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
