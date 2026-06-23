@@ -92,7 +92,7 @@ export async function initState() {
     }
 }
 
-import { registerDailyBriefingPush } from './pushClient.js?v=5.7.2';
+import { registerDailyBriefingPush } from './pushClient.js?v=5.7.3';
 
 // 6. 설정 업데이트 및 Rollback 트랜잭션 함수
 export async function updateSettings(newSettings) {

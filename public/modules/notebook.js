@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds } from './state.js?v=5.7.2';
+import { store, API_URL, assertIds } from './state.js?v=5.7.3';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();
