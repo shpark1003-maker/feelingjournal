@@ -4231,12 +4231,10 @@ body.ghibli-theme .container {
     color: inherit !important;
 }
 
-/* Cards & Panels */
 .ghibli-theme .ghibli-panel,
 .ghibli-theme .card,
 .ghibli-theme .editor-section-premium,
-.ghibli-theme .settings-container,
-.ghibli-theme #persona-view .card {
+.ghibli-theme .settings-container {
     background: rgba(255, 252, 242, 0.78) !important; /* 뒷배경 지브리 이미지가 은은하게 투과되도록 투명도 조정 */
     backdrop-filter: blur(12px) !important; /* 뒷배경 유리 질감 효과 강화 */
     -webkit-backdrop-filter: blur(12px) !important;
@@ -4245,6 +4243,33 @@ body.ghibli-theme .container {
     box-shadow: var(--shadow-premium) !important;
     padding: 24px !important; /* 패딩을 약간 조율하여 전체적인 답답함 개선 */
     margin-bottom: 24px !important;
+}
+
+@media (min-width: 640px) {
+    .ghibli-theme #persona-view .card {
+        background: rgba(255, 252, 242, 0.78) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 2px solid #5D574D !important;
+        border-radius: 28px !important;
+        box-shadow: var(--shadow-premium) !important;
+        padding: 24px !important;
+        margin-bottom: 24px !important;
+    }
+}
+
+@media (max-width: 639.98px) {
+    .ghibli-theme #persona-view .card {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(93, 87, 77, 0.2) !important;
+        border-radius: 0 !important;
+        padding: 16px 0 !important;
+        margin-bottom: 0 !important;
+        box-shadow: none !important;
+    }
 }
 
 /* 메인 저널 페이지의 최대 폭 제약을 1560px로 강제 확장하여 넓고 시원한 구조 확보 */
@@ -6191,22 +6216,42 @@ body {
 }
 
 /* Settings view card premium aesthetics for default (pink/light) theme */
-#persona-view .card {
-    background: rgba(255, 255, 255, 0.55) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-radius: 24px !important;
-    padding: 24px !important;
-    margin-bottom: 20px !important;
-    box-shadow: 0 8px 30px rgba(220, 180, 190, 0.1) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+@media (min-width: 640px) {
+    #persona-view .card {
+        background: rgba(255, 255, 255, 0.55) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.45) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        margin-bottom: 20px !important;
+        box-shadow: 0 8px 30px rgba(220, 180, 190, 0.1) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    #persona-view .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(220, 180, 190, 0.18) !important;
+        border-color: rgba(255, 255, 255, 0.65) !important;
+    }
 }
 
-#persona-view .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(220, 180, 190, 0.18) !important;
-    border-color: rgba(255, 255, 255, 0.65) !important;
+@media (max-width: 639.98px) {
+    #persona-view .card {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(217, 140, 158, 0.2) !important; /* default theme divider line */
+        border-radius: 0 !important;
+        padding: 16px 0 !important;
+        margin-bottom: 0 !important;
+        box-shadow: none !important;
+        transition: none !important;
+    }
+    #persona-view section:last-of-type .card {
+        border-bottom: none !important;
+    }
 }
 
 /* Desktop Calendar grid styling (mimics Google Calendar) */

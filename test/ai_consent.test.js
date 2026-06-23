@@ -21,6 +21,20 @@ shared.callGemini = async function(prompt, options, retries, inlineData, safeSea
     };
 };
 
+// Mock briefingService.generateBriefing to prevent background calls from incrementing geminiCallCount
+const briefingServicePath = path.resolve(__dirname, '../api/_services/briefingService.js');
+require.cache[briefingServicePath] = {
+    id: briefingServicePath,
+    filename: briefingServicePath,
+    loaded: true,
+    exports: {
+        generateBriefing: async () => {
+            console.log('   [MOCK] briefingService.generateBriefing bypassed for test');
+            return {};
+        }
+    }
+};
+
 const analyzeHandler = require('../api/_routes/analyze');
 
 async function runTests() {
