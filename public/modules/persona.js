@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.7.3';
+import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.7.4';
 
 export async function loadPersona() {
     assertIds('Persona', [
@@ -557,6 +557,7 @@ export async function loadBriefing() {
                         <p class="text-sm font-medium">오늘 예정된 특별한 일정이나 기록이 없어 한결 가뿐한 하루입니다. ☕</p>
                     </div>
                 `;
+            } else {
                 // [4. Loaded State]
                 console.log("--- [BRIEFING] Successfully loaded briefing from server.");
                 let formattedText = data.briefing;

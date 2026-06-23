@@ -1,4 +1,4 @@
-import { store, API_URL, updateSettings, assertIds } from './state.js?v=5.7.3';
+import { store, API_URL, updateSettings, assertIds } from './state.js?v=5.7.4';
 
 let recognition = null;
 let isListening = false;
