@@ -554,7 +554,7 @@ ${existingTaskContext}
             return res.status(500).json({
                 success: false,
                 errorCode: "TRANSACTION_FAILED",
-                message: "세부 일정을 데이터베이스에 저장하는 데 실패하여 트랜잭션이 안전하게 롤백되었습니다."
+                message: "세부 일정을 데이터베이스에 저장하는 데 실패하여 트랜잭션이 안전하게 롤백되었습니다. 에러: " + dbErr.message
             });
         }
     }

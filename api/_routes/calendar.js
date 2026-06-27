@@ -40,12 +40,23 @@ module.exports = async (req, res) => {
             subPath = subPath.substring('/api/calendar'.length);
         }
 
+        let id = null;
+        let isDeleteTask = false;
+        if (subPath.startsWith('/tasks/')) {
+            isDeleteTask = true;
+            id = subPath.substring('/tasks/'.length);
+        }
+
         // ID 추출 고도화 (Express params, Query string, Regex fallback 순으로 파싱)
-        let id = req.params?.id || req.query?.id;
         if (!id) {
-            const match = subPath.match(/^\/events\/([^/]+)/);
-            if (match) {
-                id = decodeURIComponent(match[1]);
+            let idParam = req.params?.id || req.query?.id;
+            if (idParam) {
+                id = idParam;
+            } else {
+                const match = subPath.match(/^\/events\/([^/]+)/);
+                if (match) {
+                    id = decodeURIComponent(match[1]);
+                }
             }
         }
 
@@ -139,9 +150,73 @@ module.exports = async (req, res) => {
             }
         }
 
-        // Handle DELETE (Delete Event)
+        // Handle DELETE (Delete Event or Entire Task)
         if (req.method === 'DELETE') {
-            if (!id) return res.status(400).json({ error: 'Missing event id' });
+            if (!id) return res.status(400).json({ error: 'Missing event id or task id' });
+
+            if (isDeleteTask) {
+                const { supabaseAdmin } = require('./shared');
+                if (!supabaseAdmin) {
+                    return res.status(500).json({ error: 'Supabase admin client not initialized.' });
+                }
+
+                try {
+                    // 1) Verify ownership of the parent task
+                    const { data: taskData } = await supabaseAdmin
+                        .from('tasks')
+                        .select('*')
+                        .eq('id', id)
+                        .eq('user_id', user.id)
+                        .single();
+
+                    if (!taskData) {
+                        return res.status(403).json({ error: 'Forbidden: You do not own this task.' });
+                    }
+
+                    // 2) Get subtasks to delete from Google Calendar
+                    const { data: subTasks } = await supabaseAdmin
+                        .from('sub_tasks')
+                        .select('*')
+                        .eq('task_id', id);
+
+                    if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
+                        for (const st of (subTasks || [])) {
+                            if (st.google_event_id) {
+                                try {
+                                    await calendarService.deleteGoogleCalendarEvent(providerToken, st.google_event_id, user.id);
+                                } catch (googleErr) {
+                                    console.warn(`[Calendar Task DELETE] Failed to delete event ${st.google_event_id} (non-blocking):`, googleErr.message);
+                                }
+                            }
+                        }
+                    }
+
+                    // 3) Delete subtasks from DB
+                    const { error: subtasksDelErr } = await supabaseAdmin
+                        .from('sub_tasks')
+                        .delete()
+                        .eq('task_id', id);
+                    if (subtasksDelErr) throw subtasksDelErr;
+
+                    // 4) Delete parent task from DB
+                    const { error: taskDelErr } = await supabaseAdmin
+                        .from('tasks')
+                        .delete()
+                        .eq('id', id);
+                    if (taskDelErr) throw taskDelErr;
+
+                    await redis.del(`user:${user.id}:calendar-advice-cache`);
+                    try {
+                        const { clearGoogleCalendarCache } = require('./shared');
+                        await clearGoogleCalendarCache(user.id);
+                    } catch (e) {}
+
+                    return res.json({ success: true });
+                } catch (err) {
+                    console.error('[Calendar Task DELETE] Error:', err);
+                    return res.status(500).json({ error: err.message });
+                }
+            }
 
             if (id.startsWith('extracted-task-')) {
                 // Try to find the title & start date from the advice cache to build a stable composite key

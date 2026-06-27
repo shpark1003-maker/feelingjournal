@@ -55,6 +55,29 @@ window.v2RescheduleTaskWithAi = function(parentTitle, taskId) {
     }
 };
 
+window.v2DeleteEntireTask = async function(taskId, parentTitle) {
+    if (!confirm(`'${parentTitle}' 과제와 이에 포함된 모든 세부 일정을 정말로 삭제하시겠습니까?`)) return;
+    try {
+        const token = await store.getSessionToken();
+        const response = await fetch(`${API_URL}/calendar/tasks/${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('과제가 성공적으로 삭제되었습니다.');
+            loadCalendar(true); // 데이터 새로고침 및 목록 갱신
+        } else {
+            alert('과제 삭제에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
+        }
+    } catch (err) {
+        console.error('Task Delete Error:', err);
+        alert('과제 삭제 중 오류가 발생했습니다.');
+    }
+};
+
 window.v2TaskDeleteTrigger = async function(id) {
     if (!confirm('정말로 이 과제를 삭제하시겠습니까?')) return;
     try {
@@ -393,7 +416,6 @@ function initCalendarUI() {
                 if (isEdit) {
                     url = `${API_URL}/calendar/events/${id}`;
                     method = 'PATCH';
-                }
 
                 let finalDesc = desc;
                 if (type === 'task') {
@@ -422,6 +444,21 @@ function initCalendarUI() {
                     alert(isEdit ? '일정/과제가 수정되었습니다.' : '일정/과제가 추가되었습니다.');
                     closeTaskEditor();
                     loadCalendar(true);
+
+                    if (type === 'task') {
+                        const progress = parseInt(document.getElementById('v2-task-progress-input').value, 10) || 0;
+                        if (progress <= 50) {
+                            const parentTitle = container.dataset.parentTitle || '';
+                            const parentTaskId = container.dataset.parentTaskId || '';
+                            if (parentTaskId) {
+                                setTimeout(() => {
+                                    if (confirm(`달성률이 ${progress}%로 50% 이하입니다.\n이 대과제('${parentTitle}')의 남은 일정을 AI 일정 천사와 함께 재조정하시겠습니까?`)) {
+                                        window.v2RescheduleTaskWithAi(parentTitle, parentTaskId);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }
                 } else {
                     alert('저장 실패: ' + data.error);
                 }
@@ -1378,9 +1415,14 @@ export function renderV2TaskList() {
                             }
                         });
                         return (!isGeneral && taskId) ? `
-                        <button type="button" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[10px] font-semibold transition-all mr-2 shadow-sm" onclick="event.stopPropagation(); window.v2RescheduleTaskWithAi('${parentTitle.replace(/'/g, "\\'")}', '${taskId}')">
-                            일정 재조정 (AI)
-                        </button>
+                        <div class="flex items-center gap-1 mr-2" onclick="event.stopPropagation();">
+                            <button type="button" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[10px] font-semibold transition-all shadow-sm" onclick="window.v2RescheduleTaskWithAi('${parentTitle.replace(/'/g, "\\'")}', '${taskId}')">
+                                수정
+                            </button>
+                            <button type="button" class="p-1 hover:bg-error/10 text-error rounded transition-all flex items-center justify-center" onclick="window.v2DeleteEntireTask('${taskId}', '${parentTitle.replace(/'/g, "\\'")}')" title="전체 과제 삭제">
+                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                        </div>
                         ` : '';
                     })()}
                     <span class="text-xs text-primary font-bold">${avgProgress}%</span>
@@ -1510,6 +1552,8 @@ export function openTaskEditor(mode, taskData = {}, defaultType = null) {
     } else {
         container.dataset.mode = 'edit';
         container.dataset.id = taskData.id || '';
+        container.dataset.parentTitle = taskData.parentTitle || taskData.extendedProps?.parentTitle || '';
+        container.dataset.parentTaskId = taskData.taskId || taskData.extendedProps?.taskId || '';
         titleInput.value = taskData.title || '';
         startInput.value = formatLocalISO(new Date(taskData.start));
         endInput.value = formatLocalISO(new Date(taskData.end || taskData.start));
