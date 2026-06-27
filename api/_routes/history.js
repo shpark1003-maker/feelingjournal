@@ -102,28 +102,87 @@ module.exports = async (req, res) => {
 
             // Handle sharing updates
             if (shared !== undefined || sharedWith !== undefined) {
+                const dbClient = supabaseAdmin || supabase;
                 const prevSharedWith = item.sharedWith || [];
-                const newSharedWith = sharedWith !== undefined ? sharedWith : (shared ? prevSharedWith : []);
+
+                // 1촌 검증 및 입력값 정제 (서버 보안 검증)
+                let sanitizedSharedWith = undefined;
+                if (sharedWith !== undefined) {
+                    const friendIds = Array.isArray(sharedWith) ? sharedWith.map(f => (f && typeof f === 'object') ? f.id : f).filter(Boolean) : [];
+                    const { validateFriends } = require('../_services/friendService');
+                    const validation = await validateFriends(user.id, friendIds);
+                    if (!validation.isValid) {
+                        return res.status(400).json({ error: validation.error });
+                    }
+
+                    // DB에서 실제 닉네임을 조회하여 위변조 방지
+                    const mockProfiles = [
+                        { id: 'mock-1', nickname: '다정한 영희 (데모)' },
+                        { id: 'mock-2', nickname: '든든한 철수 (데모)' },
+                        { id: 'mock-3', nickname: '행복한 민수 (데모)' }
+                    ];
+
+                    const mockSelected = mockProfiles.filter(m => validation.validIds.includes(m.id));
+                    const realIds = validation.validIds.filter(id => !id.startsWith('mock-'));
+                    let realSelected = [];
+                    if (realIds.length > 0) {
+                        const { data: profiles } = await dbClient
+                            .from('profiles')
+                            .select('id, nickname')
+                            .in('id', realIds);
+                        if (profiles) {
+                            realSelected = profiles.map(p => ({ id: p.id, nickname: p.nickname }));
+                        }
+                    }
+                    sanitizedSharedWith = [...realSelected, ...mockSelected];
+                } else if (shared === true) {
+                    // shared만 활성화 시 기존 목록에 대해 재검증
+                    const friendIds = prevSharedWith.map(f => f.id);
+                    const { validateFriends } = require('../_services/friendService');
+                    const validation = await validateFriends(user.id, friendIds);
+                    if (!validation.isValid) {
+                        return res.status(400).json({ error: validation.error });
+                    }
+                    sanitizedSharedWith = prevSharedWith;
+                } else {
+                    // 공유 비활성화 시 빈 배열
+                    sanitizedSharedWith = [];
+                }
+
+                const newSharedWith = sanitizedSharedWith;
                 const isShared = shared !== undefined ? !!shared : newSharedWith.length > 0;
 
                 item.shared = isShared;
                 item.sharedWith = newSharedWith;
 
-                const prevIds = prevSharedWith.map(r => r.id);
+                // SSOT 복구 로직: diaries.shared_with 대신 shared_diaries 테이블을 원천으로 prevIds 계산
+                let actualPrevIds = prevSharedWith.map(r => r.id);
+                try {
+                    const { data: dbMappings } = await dbClient
+                        .from('shared_diaries')
+                        .select('recipient_id')
+                        .eq('diary_key', key);
+                    if (dbMappings) {
+                        actualPrevIds = dbMappings.map(m => m.recipient_id);
+                    }
+                } catch (mapErr) {
+                    console.warn('--- [PATCH SSOT ERROR] Querying shared_diaries failed, fallback to in-memory prevIds:', mapErr.message);
+                }
+
                 const newIds = newSharedWith.map(r => r.id);
-
-                const addedIds = newIds.filter(id => !prevIds.includes(id));
-                const removedIds = prevIds.filter(id => !newIds.includes(id));
-
-                const dbClient = supabaseAdmin || supabase;
+                const addedIds = newIds.filter(id => !actualPrevIds.includes(id));
+                const removedIds = actualPrevIds.filter(id => !newIds.includes(id));
 
                 // Process sharing removals
                 if (removedIds.length > 0) {
-                    await dbClient
-                        .from('shared_diaries')
-                        .delete()
-                        .eq('diary_key', key)
-                        .in('recipient_id', removedIds);
+                    const realRemovedIds = removedIds.filter(id => !id.startsWith('mock-'));
+                    if (realRemovedIds.length > 0) {
+                        await dbClient
+                            .from('shared_diaries')
+                            .delete()
+                            .eq('diary_key', key)
+                            .in('recipient_id', realRemovedIds);
+                    }
 
                     for (const rid of removedIds) {
                         await redis.srem(`user:${rid}:shared-diaries`, key);
@@ -132,36 +191,40 @@ module.exports = async (req, res) => {
 
                 // Process sharing additions
                 if (addedIds.length > 0) {
-                    const { data: validProfiles, error: profileErr } = await dbClient
-                        .from('profiles')
-                        .select('id')
-                        .in('id', addedIds);
+                    const realAddedIds = addedIds.filter(id => !id.startsWith('mock-'));
+                    if (realAddedIds.length > 0) {
+                        const { data: validProfiles, error: profileErr } = await dbClient
+                            .from('profiles')
+                            .select('id')
+                            .in('id', realAddedIds);
 
-                    if (profileErr) {
-                        console.error('--- [PATCH DB ERROR] select profiles failed:', profileErr);
-                        return res.status(500).json({ error: profileErr.message });
-                    }
-                    if (validProfiles) {
-                        const validIds = validProfiles.map(p => p.id);
-                        const recordsToInsert = newSharedWith
-                            .filter(r => validIds.includes(r.id))
-                            .map(r => ({
-                                diary_key: key,
-                                owner_id: user.id,
-                                recipient_id: r.id
-                            }));
+                        if (profileErr) {
+                            console.error('--- [PATCH DB ERROR] select profiles failed:', profileErr);
+                            return res.status(500).json({ error: profileErr.message });
+                        }
+                        if (validProfiles) {
+                            const validIds = validProfiles.map(p => p.id);
+                            const recordsToInsert = newSharedWith
+                                .filter(r => validIds.includes(r.id))
+                                .map(r => ({
+                                    diary_key: key,
+                                    owner_id: user.id,
+                                    recipient_id: r.id
+                                }));
 
-                        if (recordsToInsert.length > 0) {
-                            const { error: insErr } = await dbClient.from('shared_diaries').insert(recordsToInsert);
-                            if (insErr) {
-                                console.error('--- [PATCH DB ERROR] insert shared_diaries failed:', insErr);
-                                return res.status(500).json({ error: insErr.message });
-                            }
-
-                            for (const rec of recordsToInsert) {
-                                await redis.sadd(`user:${rec.recipient_id}:shared-diaries`, key);
+                            if (recordsToInsert.length > 0) {
+                                const { error: insErr } = await dbClient.from('shared_diaries').insert(recordsToInsert);
+                                if (insErr) {
+                                    console.error('--- [PATCH DB ERROR] insert shared_diaries failed:', insErr);
+                                    return res.status(500).json({ error: insErr.message });
+                                }
                             }
                         }
+                    }
+
+                    // Redis set addition (supports both mock and real)
+                    for (const aid of addedIds) {
+                        await redis.sadd(`user:${aid}:shared-diaries`, key);
                     }
                 }
             }

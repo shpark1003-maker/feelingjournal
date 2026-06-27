@@ -293,6 +293,46 @@ export function selectPage(pageId, history) {
         }
     }
 
+    // Update note sharing settings UI state
+    const shareToggle = document.getElementById('share-toggle-input');
+    const shareOptions = document.getElementById('share-options');
+    if (shareToggle) {
+        shareToggle.checked = !!page.shared;
+    }
+    document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    if (page.sharedWith && Array.isArray(page.sharedWith)) {
+        page.sharedWith.forEach(sf => {
+            const cb = document.querySelector(`.note-share-friend-checkbox[data-id="${sf.id}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
+    if (window.checkE2eSharePolicy) {
+        window.checkE2eSharePolicy();
+    } else {
+        const isE2eActive = isE2e || !!localStorage.getItem('e2e_password');
+        const e2eWarning = document.getElementById('v2-note-share-e2e-warning');
+        if (isE2eActive) {
+            if (shareToggle) {
+                shareToggle.checked = false;
+                shareToggle.disabled = true;
+            }
+            if (shareOptions) shareOptions.classList.add('opacity-50', 'pointer-events-none');
+            if (e2eWarning) e2eWarning.classList.remove('hidden');
+        } else {
+            if (shareToggle) shareToggle.disabled = false;
+            if (e2eWarning) e2eWarning.classList.add('hidden');
+            if (shareToggle && shareOptions) {
+                if (shareToggle.checked) {
+                    shareOptions.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    shareOptions.classList.add('opacity-50', 'pointer-events-none');
+                }
+            }
+        }
+    }
+
     document.getElementById('note-title').value = page.title || '';
     if (store.quillEditor) {
         const rawContent = page.richContent || `<p>${page.originalContent || ''}</p>`;
@@ -456,6 +496,14 @@ export async function addNewPage() {
     store.currentPageId = null;
     store.currentPageCreatedAt = null;
     document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
+
+    // Clear sharing settings UI for the new page
+    const shareToggle = document.getElementById('share-toggle-input');
+    if (shareToggle) shareToggle.checked = false;
+    document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    if (window.checkE2eSharePolicy) window.checkE2eSharePolicy();
 
     const v2Editor = document.getElementById('v2-editor-container');
     if (v2Editor) {

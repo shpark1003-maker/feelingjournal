@@ -44,6 +44,17 @@ window.v2TaskEditTrigger = function(id) {
     }
 };
 
+window.v2RescheduleTaskWithAi = function(parentTitle, taskId) {
+    const feedback = prompt(`'${parentTitle}' 과제의 일정을 AI와 함께 변경합니다.\n변경 사유나 원하는 새 일정을 입력해주세요.\n(예: 위원회 교육일정이 21일로 당겨져서, 일정을 앞당기고 싶어요.)`);
+    if (!feedback) return;
+
+    const chatInput = document.getElementById('ai-angel-input');
+    if (chatInput) {
+        chatInput.value = `[일정 재조정] 대과제: "${parentTitle}" (ID: ${taskId})\n사용자 변경 요청: ${feedback}`;
+        document.getElementById('ai-schedule-angel-section')?.scrollIntoView({ behavior: 'smooth' });
+    }
+};
+
 window.v2TaskDeleteTrigger = async function(id) {
     if (!confirm('정말로 이 과제를 삭제하시겠습니까?')) return;
     try {
@@ -528,7 +539,7 @@ function initCalendarUI() {
                                 <label for="angel-consent-cal-${loadingId}" class="cursor-pointer select-none">AI 천사 과제 전용 Google 캘린더 생성 및 연동에 동의합니다.</label>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/20 flex gap-2">
-                                <button class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold text-[11px] transition-colors shadow-sm" id="angel-btn-confirm-${loadingId}">
+                                <button class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold text-[11px] transition-colors shadow-sm" id="angel-btn-confirm-${loadingId}" data-reschedule-id="${data.rescheduleTaskId || ''}">
                                     일정 등록 및 확정 👼
                                 </button>
                             </div>
@@ -542,6 +553,7 @@ function initCalendarUI() {
                         const confirmBtn = document.getElementById(`angel-btn-confirm-${loadingId}`);
                         const consentCheckbox = document.getElementById(`angel-consent-cal-${loadingId}`);
                         const syncGoogle = consentCheckbox ? consentCheckbox.checked : false;
+                        const rescheduleId = confirmBtn ? confirmBtn.dataset.rescheduleId : '';
 
                         if (confirmBtn) {
                             confirmBtn.disabled = true;
@@ -557,6 +569,7 @@ function initCalendarUI() {
                                     'Authorization': `Bearer ${token}`
                                 },
                                 body: JSON.stringify({
+                                    taskId: rescheduleId || undefined,
                                     parentTitle: data.mainTaskTitle || text,
                                     startDate: todayStr,
                                     steps: data.suggestedTasks,
@@ -761,24 +774,8 @@ function renderCustomGrid() {
         let desktopEventsHTML = '';
         
         if (dayEvents.length > 0) {
-            // Mobile dots
-            dotsHTML = `<div class="mobile-dots absolute bottom-1 flex gap-0.5 md:hidden">`;
-            dayEvents.slice(0, 3).forEach((ev, idx) => {
-                const desc = ev.extendedProps?.description || ev.description || '';
-                const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
-                let dotColor = 'bg-primary';
-                if (type === 'task') dotColor = 'bg-secondary';
-                if (type === 'shared') dotColor = 'bg-tertiary';
-                
-                if (isToday) {
-                    dotColor = idx === 0 ? 'bg-on-primary' : 'bg-tertiary-fixed';
-                }
-                dotsHTML += `<div class="w-1 h-1 rounded-full ${dotColor}"></div>`;
-            });
-            dotsHTML += `</div>`;
-
-            // Desktop event items
-            desktopEventsHTML = `<div class="desktop-event-list hidden md:flex flex-col gap-1 w-full px-1.5 mt-1 overflow-y-auto" style="max-height: 80px;">`;
+            // Event list visible always on all devices
+            desktopEventsHTML = `<div class="desktop-event-list flex flex-col gap-1 w-full px-1 mt-1 overflow-y-auto" style="max-height: 50px; md:max-height: 80px;">`;
             dayEvents.forEach(ev => {
                 const desc = ev.extendedProps?.description || ev.description || '';
                 const type = ev.extendedProps?.type || ev.type || (desc.includes('[Task]') ? 'task' : 'personal');
@@ -868,7 +865,7 @@ function renderCustomGrid() {
         if (dateStr === selectedDateStr) {
             selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
         }
-        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
+        cell.className = `calendar-day text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
         cell.innerHTML = getDayHtml(prevDayNum, dateStr, false, true);
         addCellListener(cell, dateStr);
         grid.appendChild(cell);
@@ -890,7 +887,7 @@ function renderCustomGrid() {
         }
 
         if (isToday) {
-            cell.className = `h-10 flex flex-col items-center justify-center text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30${activeBorder}`;
+            cell.className = `calendar-day text-on-primary relative z-0 font-bold text-label-md bg-tertiary-container/30${activeBorder}`;
         } else {
             let colorClass = 'text-on-surface';
             if (cellDate.getDay() === 0) {
@@ -898,7 +895,7 @@ function renderCustomGrid() {
             } else if (cellDate.getDay() === 6) {
                 colorClass = 'text-primary';
             }
-            cell.className = `h-10 flex flex-col items-center justify-center relative cursor-pointer text-label-md ${colorClass}${activeBorder}`;
+            cell.className = `calendar-day relative cursor-pointer text-label-md ${colorClass}${activeBorder}`;
         }
         
         cell.innerHTML = getDayHtml(day, dateStr, isToday, false);
@@ -917,7 +914,7 @@ function renderCustomGrid() {
         if (dateStr === selectedDateStr) {
             selectedClass = ' border-2 border-primary rounded-lg bg-surface-container-low';
         }
-        cell.className = `h-10 flex flex-col items-center justify-center text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
+        cell.className = `calendar-day text-on-surface-variant/30 text-label-md cursor-pointer relative ${selectedClass}`;
         cell.innerHTML = getDayHtml(i, dateStr, false, true);
         addCellListener(cell, dateStr);
         grid.appendChild(cell);
@@ -1372,6 +1369,20 @@ export function renderV2TaskList() {
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    ${(() => {
+                        let taskId = '';
+                        groupTasks.forEach(gt => {
+                            const gtId = gt.extendedProps?.taskId || gt.taskId;
+                            if (gtId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gtId)) {
+                                taskId = gtId;
+                            }
+                        });
+                        return (!isGeneral && taskId) ? `
+                        <button type="button" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[10px] font-semibold transition-all mr-2 shadow-sm" onclick="event.stopPropagation(); window.v2RescheduleTaskWithAi('${parentTitle.replace(/'/g, "\\'")}', '${taskId}')">
+                            일정 재조정 (AI)
+                        </button>
+                        ` : '';
+                    })()}
                     <span class="text-xs text-primary font-bold">${avgProgress}%</span>
                     <span class="material-symbols-outlined text-on-surface-variant expand-icon transition-transform duration-300">expand_more</span>
                 </div>

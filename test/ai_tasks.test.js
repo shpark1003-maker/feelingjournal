@@ -36,31 +36,48 @@ const mockSupabaseAdmin = {
         return { data: 'mocked-task-uuid-1234', error: null };
     },
     from: (tableName) => {
-        return {
-            select: (cols) => {
-                return {
-                    eq: (col, val) => {
-                        return {
-                            data: [
-                                { id: 'mock-subtask-1', title: '주제 선정 및 조사', sequence_order: 1, due_date: '2026-06-24' },
-                                { id: 'mock-subtask-2', title: '논문 목차 및 구조화', sequence_order: 2, due_date: '2026-06-27' }
-                            ],
-                            error: null
-                        };
-                    }
-                };
+        let selectData = [];
+        if (tableName === 'sub_tasks') {
+            selectData = [
+                { id: 'mock-subtask-1', title: '주제 선정 및 조사', sequence_order: 1, start_date: '2026-06-20', due_date: '2026-06-24', is_completed: true, progress: 100, task_id: 'mocked-task-uuid-1234', tasks: { user_id: '91fdf57d-a069-4eab-820b-68180886d487', due_date: '2026-06-27' } },
+                { id: 'mock-subtask-2', title: '논문 목차 및 구조화', sequence_order: 2, start_date: '2026-06-25', due_date: '2026-06-27', is_completed: false, progress: 0, task_id: 'mocked-task-uuid-1234', tasks: { user_id: '91fdf57d-a069-4eab-820b-68180886d487', due_date: '2026-06-27' } }
+            ];
+        } else if (tableName === 'tasks') {
+            selectData = [
+                { id: 'mocked-task-uuid-1234', title: '학사 학위 논문 작성', start_date: '2026-06-20', due_date: '2026-06-27', user_id: '91fdf57d-a069-4eab-820b-68180886d487' }
+            ];
+        }
+
+        const chain = {
+            select: (cols) => chain,
+            eq: (col, val) => {
+                if (col === 'id' && tableName === 'sub_tasks') {
+                    selectData = selectData.filter(s => s.id === val);
+                } else if (col === 'task_id' && tableName === 'sub_tasks') {
+                    selectData = selectData.filter(s => s.task_id === val);
+                }
+                return chain;
             },
-            update: (payload) => {
-                return {
-                    eq: (col, val) => {
-                        return {
-                            data: [],
-                            error: null
-                        };
-                    }
-                };
+            gt: (col, val) => {
+                if (col === 'sequence_order') {
+                    selectData = selectData.filter(s => s.sequence_order > val);
+                }
+                return chain;
+            },
+            in: (col, val) => chain,
+            single: async () => {
+                return { data: selectData[0] || null, error: null };
+            },
+            order: (col, opts) => chain,
+            delete: () => chain,
+            update: (payload) => chain,
+            insert: (payload) => chain,
+            select: (cols) => chain,
+            then: (resolve) => {
+                resolve({ data: selectData, error: null });
             }
         };
+        return chain;
     }
 };
 shared.supabaseAdmin = mockSupabaseAdmin;
@@ -241,6 +258,59 @@ async function runTests() {
     assert.strictEqual(addEventCount, 2); // 2 events added
     console.log('=> syncGoogle=true check PASSED!');
     
+    // [TEST 6] /api/ai-tasks/confirm with taskId (Reschedule Update Scenario)
+    console.log('\n[TEST 6] Testing /confirm with taskId (Rescheduling)...');
+    mockRes.statusCode = 200;
+    mockRes.body = null;
+
+    const reqConfirmReschedule = {
+        method: 'POST',
+        url: '/api/ai-tasks/confirm',
+        user: mockUser,
+        body: {
+            taskId: "mocked-task-uuid-1234",
+            parentTitle: "학사 학위 논문 작성 (수정됨)",
+            startDate: "2026-06-20",
+            steps: [
+                { sequence: 1, title: "주제 선정 및 조사", duration: 5 }, // Completed/preserved in mock
+                { sequence: 2, title: "논문 목차 및 구조화 (새 계획)", duration: 4 } // Non-preserved
+            ],
+            syncGoogle: false
+        }
+    };
+
+    await aiTasksHandler(reqConfirmReschedule, mockRes);
+    assert.strictEqual(mockRes.statusCode, 200);
+    assert.strictEqual(mockRes.body.success, true);
+    assert.strictEqual(mockRes.body.taskId, "mocked-task-uuid-1234");
+    console.log('=> /confirm Reschedule check PASSED!');
+
+    // [TEST 7] /api/calendar PATCH Cascade shift check
+    console.log('\n[TEST 7] Testing calendar PATCH cascade shift...');
+    const calendarHandler = require('../api/_routes/calendar');
+    mockRes.statusCode = 200;
+    mockRes.body = null;
+
+    const reqCalendarPatch = {
+        method: 'PATCH',
+        url: '/api/calendar/events/mock-subtask-2',
+        user: mockUser,
+        headers: {},
+        body: {
+            summary: "논문 목차 및 구조화 (새 계획) 마감",
+            start: "2026-06-25",
+            end: "2026-06-29", // Shifted by +2 days from old due date 2026-06-27
+            description: "[Task][Progress: 0][Rating: 0][ReviewDate: ][Reflection: ]"
+        },
+        params: { id: "mock-subtask-2" }
+    };
+
+    await calendarHandler(reqCalendarPatch, mockRes);
+    console.log('[DEBUG] calendar PATCH response:', mockRes.body);
+    assert.strictEqual(mockRes.statusCode, 200);
+    assert.strictEqual(mockRes.body.success, true);
+    console.log('=> Calendar PATCH Cascade shift check PASSED!');
+
     // Restore google token and calendar helper
     shared.getGoogleAccessToken = originalGetGoogleAccessToken;
     calendarService.addGoogleCalendarEvent = originalAddGoogleCalendarEvent;

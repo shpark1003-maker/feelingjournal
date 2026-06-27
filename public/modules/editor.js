@@ -61,16 +61,105 @@ export function setupEditor() {
                         localStorage.setItem('e2e_password', act.trim());
                         alert('E2E 암호화 비밀번호가 새롭게 설정되었습니다.');
                     }
+                    if (window.checkE2eSharePolicy) window.checkE2eSharePolicy();
                 }
             } else {
                 const pass = prompt('E2E 종단간 암호화 비밀번호를 입력해주세요. (입력 시 브라우저에서 직접 데이터를 암호화하여 저장합니다. 비밀번호는 서버로 전송되지 않습니다.):');
                 if (pass && pass.trim() !== '') {
                     localStorage.setItem('e2e_password', pass.trim());
                     alert('E2E 암호화 비밀번호가 설정되었습니다. 이제 일기가 저장될 때 로컬에서 안전하게 암호화됩니다.');
+                    if (window.checkE2eSharePolicy) window.checkE2eSharePolicy();
                 }
             }
         });
     }
+
+    // E2E check helper
+    window.checkE2eSharePolicy = function() {
+        const isE2e = !!localStorage.getItem('e2e_password');
+        const shareToggle = document.getElementById('share-toggle-input');
+        const shareOptions = document.getElementById('share-options');
+        const e2eWarning = document.getElementById('v2-note-share-e2e-warning');
+
+        if (isE2e) {
+            if (shareToggle) {
+                shareToggle.checked = false;
+                shareToggle.disabled = true;
+            }
+            if (shareOptions) {
+                shareOptions.classList.add('opacity-50', 'pointer-events-none');
+            }
+            if (e2eWarning) {
+                e2eWarning.classList.remove('hidden');
+            }
+        } else {
+            if (shareToggle) {
+                shareToggle.disabled = false;
+            }
+            if (e2eWarning) {
+                e2eWarning.classList.add('hidden');
+            }
+            if (shareToggle && shareOptions) {
+                if (shareToggle.checked) {
+                    shareOptions.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    shareOptions.classList.add('opacity-50', 'pointer-events-none');
+                }
+            }
+        }
+    };
+
+    // Debounced PATCH helper
+    let sharePatchTimeout = null;
+    window.triggerDebouncedSharePatch = function() {
+        if (!store.currentPageId) return; // Only patch existing diaries
+
+        const indicator = document.getElementById('v2-note-friends-saving-indicator');
+        if (indicator) indicator.classList.remove('hidden');
+
+        const shareToggle = document.getElementById('share-toggle-input');
+        const checkboxes = document.querySelectorAll('.note-share-friend-checkbox');
+        if (shareToggle) shareToggle.disabled = true;
+        checkboxes.forEach(cb => cb.disabled = true);
+
+        if (sharePatchTimeout) clearTimeout(sharePatchTimeout);
+        sharePatchTimeout = setTimeout(async () => {
+            try {
+                const token = await store.getSessionToken();
+                const shareToggleChecked = shareToggle ? shareToggle.checked : false;
+                
+                const checkedFriends = [];
+                document.querySelectorAll('.note-share-friend-checkbox:checked').forEach(cb => {
+                    checkedFriends.push({
+                        id: cb.dataset.id,
+                        nickname: cb.dataset.nickname
+                    });
+                });
+
+                const res = await fetch(`${API_URL}/history/${store.currentPageId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        shared: shareToggleChecked,
+                        sharedWith: checkedFriends
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    console.error('Failed to patch note sharing settings:', data.error);
+                }
+            } catch (err) {
+                console.error('PATCH note sharing settings error:', err);
+            } finally {
+                if (indicator) indicator.classList.add('hidden');
+                if (shareToggle) shareToggle.disabled = false;
+                checkboxes.forEach(cb => cb.disabled = false);
+            }
+        }, 400);
+    };
 
     // V2 Toggle logic for share options
     const shareToggle = document.getElementById('share-toggle-input');
@@ -82,8 +171,53 @@ export function setupEditor() {
             } else {
                 shareOptions.classList.add('opacity-50', 'pointer-events-none');
             }
+            window.triggerDebouncedSharePatch();
         });
     }
+
+    // Populate 1촌 friends list
+    window.populateNoteFriendsList = async function() {
+        const listContainer = document.getElementById('v2-note-friends-list');
+        if (!listContainer) return;
+
+        try {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/friends/sos`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const friends = data.allFriends || [];
+
+            if (friends.length > 0) {
+                listContainer.innerHTML = friends.map(f => `
+                    <label class="flex items-center justify-between p-2 hover:bg-surface-container rounded-xl cursor-pointer transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-xs text-primary">
+                                ${f.nickname.slice(0, 2)}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-on-surface">${f.nickname}</span>
+                                <span class="text-[9px] text-on-surface-variant/60">1촌 관계</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="note-share-friend-checkbox w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant" data-id="${f.id}" data-nickname="${f.nickname}">
+                    </label>
+                `).join('');
+                
+                document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
+                    cb.addEventListener('change', window.triggerDebouncedSharePatch);
+                });
+            } else {
+                listContainer.innerHTML = '<p class="text-xs text-on-surface-variant/50 text-center py-4">등록된 1촌 친구가 없습니다.</p>';
+            }
+        } catch (err) {
+            console.error('Failed to load note friends:', err);
+            listContainer.innerHTML = '<p class="text-xs text-error/70 text-center py-4">친구 목록 로드 실패</p>';
+        }
+    };
+
+    window.populateNoteFriendsList();
+    window.checkE2eSharePolicy();
 
     // Call sub UI loaders
     setupEmojiPicker();
@@ -123,7 +257,27 @@ export async function analyzeDiary() {
         console.log('Sending analyze request...');
         const token = await store.getSessionToken();
 
-        let payload = { content, richContent, title, notebookId, image, aiConsent: true, createdAt: store.currentPageCreatedAt };
+        const shareToggle = document.getElementById('share-toggle-input');
+        const shareToggleChecked = shareToggle ? shareToggle.checked : false;
+        const checkedFriends = [];
+        document.querySelectorAll('.note-share-friend-checkbox:checked').forEach(cb => {
+            checkedFriends.push({
+                id: cb.dataset.id,
+                nickname: cb.dataset.nickname
+            });
+        });
+
+        let payload = { 
+            content, 
+            richContent, 
+            title, 
+            notebookId, 
+            image, 
+            aiConsent: true, 
+            createdAt: store.currentPageCreatedAt,
+            shared: shareToggleChecked,
+            sharedWith: checkedFriends
+        };
         const hasConsent = store.settings.aiConsent !== false;
 
         if (!hasConsent) {
@@ -150,7 +304,9 @@ export async function analyzeDiary() {
                 image,
                 aiConsent: false,
                 emotion,
-                createdAt: store.currentPageCreatedAt
+                createdAt: store.currentPageCreatedAt,
+                shared: shareToggleChecked,
+                sharedWith: checkedFriends
             };
         }
 

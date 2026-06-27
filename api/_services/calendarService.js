@@ -275,8 +275,10 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
                 
                 let desc = item.description || '';
                 let parentTitle = '';
+                let dbTaskId = '';
                 if (dbSubTask) {
                     parentTitle = dbSubTask.tasks?.title || '';
+                    dbTaskId = dbSubTask.task_id || '';
                     const progress = dbSubTask.progress || 0;
                     const rating = dbSubTask.rating || 0;
                     const reviewDate = dbSubTask.review_date || '';
@@ -303,6 +305,7 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
                     advice: isShared ? '공유된 일정입니다.' : (isTask ? '과제(할 일) 일정입니다.' : '구글 캘린더 일정입니다.'),
                     description: desc,
                     parentTitle: parentTitle,
+                    taskId: dbTaskId,
                     backgroundColor: isShared 
                         ? 'rgba(251, 113, 133, 0.12)' 
                         : (isTask ? 'rgba(129, 140, 248, 0.12)' : 'rgba(56, 189, 248, 0.12)'),
@@ -317,6 +320,36 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
         }
     } catch (err) {
         console.warn('--- [CALENDAR] Google Calendar API Failed. Error:', err?.message || err);
+    }
+
+    // Append database subtasks that are not synced or if Google is unlinked
+    const mappedEventIds = new Set(googleEvents.map(e => e.id));
+    const unmappedSubTasks = dbSubTasks.filter(st => !st.google_event_id || !mappedEventIds.has(st.google_event_id));
+
+    for (const st of unmappedSubTasks) {
+        const progress = st.progress || 0;
+        const rating = st.rating || 0;
+        const reviewDate = st.review_date || '';
+        const reflection = st.review_text || '';
+        const parentTitle = st.tasks?.title || '';
+
+        const desc = `[Task][Progress: ${progress}][Rating: ${rating}][ReviewDate: ${reviewDate}][Reflection: ${reflection}]`;
+
+        googleEvents.push({
+            id: st.id,
+            title: st.title || '제목 없음',
+            start: st.start_date,
+            end: st.due_date,
+            allDay: true,
+            type: 'task',
+            advice: '과제(할 일) 일정입니다. (로컬 데이터베이스 저장됨)',
+            description: desc,
+            parentTitle: parentTitle,
+            taskId: st.task_id,
+            backgroundColor: 'rgba(129, 140, 248, 0.12)',
+            borderColor: '#818cf8',
+            textColor: '#4f46e5'
+        });
     }
 
     const keys = await scanRedisKeys(`user:${userId}:diary-*`);

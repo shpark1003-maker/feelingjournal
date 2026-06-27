@@ -92,11 +92,19 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
         if (listRes.ok) {
             const listData = await listRes.json();
             if (listData.items && listData.items.length > 0) {
-                calendars = listData.items.filter(cal => 
-                    cal.selected === true && 
-                    cal.hidden !== true && 
-                    ['owner', 'writer', 'reader'].includes(cal.accessRole)
-                );
+                calendars = listData.items.filter(cal => {
+                    const isSelected = cal.selected === true;
+                    const isBirthdayCal = cal.id === 'addressbook#contacts@group.v.calendar.google.com' ||
+                                        cal.id.includes('contacts@group.v.calendar.google.com') ||
+                                        cal.id.includes('#contacts@') ||
+                                        cal.summary === '생일' ||
+                                        cal.summary === 'Birthdays' ||
+                                        (cal.summary && (cal.summary.includes('생일') || cal.summary.includes('Birthday')));
+                    
+                    return (isSelected || isBirthdayCal) && 
+                           cal.hidden !== true && 
+                           ['owner', 'writer', 'reader'].includes(cal.accessRole);
+                });
                 if (calendars.length === 0) {
                     calendars = [{ id: 'primary', summary: '기본 캘린더' }];
                 }

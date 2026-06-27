@@ -6,12 +6,13 @@ const {
     sanitizeContent, 
     extractEventJson,
     fetchWithTimeout,
-    encrypt
+    encrypt,
+    fetchGoogleCalendarEvents
 } = require('../_routes/shared');
 const { saveDiary } = require('../_repositories/diaryRepository');
 const { getUserNickname, updateUserEmotion } = require('../_repositories/userRepository');
 
-async function analyzeDiary({ userId, userEmail, content, richContent, image, title, mediaId, notebookId, aiConsent, providerToken, e2eKey, clientEmotion, clientResponse, createdAt }) {
+async function analyzeDiary({ userId, userEmail, content, richContent, image, title, mediaId, notebookId, aiConsent, providerToken, e2eKey, clientEmotion, clientResponse, createdAt, shared, sharedWith }) {
     const sanitized = sanitizeContent(content);
     const contentHash = Buffer.from(sanitized || image || '').toString('base64').slice(0, 50);
     const cacheKey = `user:${userId}:last-analyze-cache`;
@@ -28,11 +29,25 @@ async function analyzeDiary({ userId, userEmail, content, richContent, image, ti
     let existingEventsStr = '현재 등록된 일정이 없습니다.';
     if (providerToken) {
         try {
-            const calendarUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(new Date().toISOString())}&maxResults=15&singleEvents=true&orderBy=startTime`;
-            const calRes = await fetchWithTimeout(calendarUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true });
-            const calData = await calRes.json();
-            if (calData.items && calData.items.length > 0) {
-                existingEventsStr = calData.items.map(e => {
+            // KST 시간대 기준 오늘 00:00:00 계산
+            const now = new Date();
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const todayLocal = new Date(now.getTime() + kstOffset);
+            todayLocal.setUTCHours(0, 0, 0, 0);
+            const timeMin = new Date(todayLocal.getTime() - kstOffset).toISOString();
+            const timeMax = new Date(todayLocal.getTime() - kstOffset + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+            const calResult = await fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail);
+            const events = calResult.events || [];
+            
+            if (events.length > 0) {
+                events.sort((a, b) => {
+                    const startA = new Date(a.start?.dateTime || a.start?.date || 0);
+                    const startB = new Date(b.start?.dateTime || b.start?.date || 0);
+                    return startA - startB;
+                });
+
+                existingEventsStr = events.map(e => {
                     const start = e.start?.dateTime || e.start?.date;
                     const dateObj = new Date(start);
                     const formattedDate = isNaN(dateObj.getTime()) ? start : dateObj.toLocaleString('ko-KR', {
@@ -41,7 +56,9 @@ async function analyzeDiary({ userId, userEmail, content, richContent, image, ti
                     return `- 제목: ${e.summary || '제목 없음'}, 시간: ${formattedDate}`;
                 }).join('\n');
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error('[Analyze Service] Failed to retrieve Google Calendar events:', e.message);
+        }
     }
 
     // 일기 최초 작성 시각 기준 적용 (상대 날짜 계산용)
@@ -122,12 +139,38 @@ ${sanitized || '(이미지 분석 요청)'}
         createdAt: createdAt || new Date().toISOString(),
         emotion,
         mediaId: mediaId || null,
-        notebookId: notebookId || 'nb-1'
+        notebookId: notebookId || 'nb-1',
+        shared: !!shared,
+        sharedWith: sharedWith || []
     };
 
     // diaryRepository를 활용하여 Redis & Postgres 동기화 저장
     try {
         await saveDiary(diaryKey, userId, diaryData);
+
+        // Postgres shared_diaries 테이블 & Redis shared-diaries 세트 동기화 (SSOT)
+        if (shared && sharedWith && sharedWith.length > 0) {
+            const dbClient = supabaseAdmin || supabase;
+            const recordsToInsert = sharedWith
+                .filter(r => !r.id.startsWith('mock-')) // real friends only for PG DB
+                .map(r => ({
+                    diary_key: diaryKey,
+                    owner_id: userId,
+                    recipient_id: r.id
+                }));
+
+            if (recordsToInsert.length > 0) {
+                const { error: insErr } = await dbClient.from('shared_diaries').insert(recordsToInsert);
+                if (insErr) {
+                    console.error('--- [ANALYZE SERVICE ERROR] insert shared_diaries failed:', insErr);
+                }
+            }
+
+            // Redis sets updated for both mock and real friends to keep caching consistent
+            for (const r of sharedWith) {
+                await redis.sadd(`user:${r.id}:shared-diaries`, diaryKey);
+            }
+        }
     } catch (dbErr) {
         console.error('--- [ANALYZE DB ERROR] Failed to sync new diary via diaryRepository:', dbErr?.message || dbErr);
     }

@@ -6217,6 +6217,107 @@ body {
     border-bottom: none !important;
 }
 
+/* Base/Mobile Calendar grid styling */
+#calendar-days-grid {
+    gap: 4px !important;
+}
+
+#calendar-days-grid > div {
+    height: 72px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: 4px !important;
+    border: 1px solid rgba(120, 120, 120, 0.1) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+#calendar-days-grid > div:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Active selected day style */
+#calendar-days-grid > div.border-primary {
+    border-color: var(--primary-color, #d98c9e) !important;
+    border-width: 2px !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Today cell style override */
+#calendar-days-grid > div.bg-tertiary-container\/30 {
+    background: rgba(217, 140, 158, 0.06) !important;
+    border-color: rgba(217, 140, 158, 0.25) !important;
+}
+
+.ghibli-theme #calendar-days-grid > div.bg-tertiary-container\/30 {
+    background: rgba(74, 101, 78, 0.06) !important;
+    border-color: rgba(74, 101, 78, 0.25) !important;
+}
+
+/* Day Number styles */
+#calendar-days-grid > div .day-number-wrapper {
+    margin-bottom: 2px !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    color: var(--text-color, #2d3748) !important;
+}
+
+/* Prev / Next month days */
+#calendar-days-grid > div.text-on-surface-variant\/30 {
+    background: rgba(120, 120, 120, 0.03) !important;
+    opacity: 0.6 !important;
+}
+
+#calendar-days-grid > div.text-on-surface-variant\/30 .day-number-wrapper {
+    color: rgba(120, 120, 120, 0.4) !important;
+}
+
+/* If today, color the day number wrapper with primary bg */
+#calendar-days-grid > div.bg-tertiary-container\/30 .day-number-wrapper {
+    background: var(--primary-color, #d98c9e) !important;
+    color: #fff !important;
+}
+
+.ghibli-theme #calendar-days-grid > div.bg-tertiary-container\/30 .day-number-wrapper {
+    background: #4A6741 !important;
+    color: #fff !important;
+}
+
+/* Mobile event list & badge styles */
+.desktop-event-list {
+    display: flex !important;
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    overflow-y: auto !important;
+    max-height: 42px !important;
+}
+
+.calendar-event-badge {
+    font-size: 8px !important;
+    padding: 1px 3px !important;
+    line-height: 1.2 !important;
+    border-radius: 4px !important;
+    margin-bottom: 1px !important;
+}
+
+/* Custom scrollbar for mobile event list */
+.desktop-event-list::-webkit-scrollbar {
+    width: 2px;
+}
+.desktop-event-list::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.1);
+}
+
 /* Desktop Calendar grid styling (mimics Google Calendar) */
 @media (min-width: 768px) {
     #calendar-container {
@@ -6307,6 +6408,10 @@ body {
         gap: 3px !important;
         overflow-y: auto !important;
         max-height: 72px !important;
+    }
+
+    .calendar-event-badge {
+        font-size: 10px !important;
     }
 
     /* Hide mobile dots on desktop */

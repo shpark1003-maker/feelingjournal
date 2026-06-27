@@ -16,8 +16,41 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Invalid user' });
         }
 
-        const { image, title, mediaId, notebookId, richContent, aiConsent, createdAt } = req.body;
+        const { image, title, mediaId, notebookId, richContent, aiConsent, createdAt, shared, sharedWith } = req.body;
         const content = sanitizeContent(req.body.content);
+
+        // 1촌 검증 및 입력값 정제 (서버 보안 검증)
+        let cleanSharedWith = [];
+        if (shared) {
+            const friendIds = Array.isArray(sharedWith) ? sharedWith.map(f => (f && typeof f === 'object') ? f.id : f).filter(Boolean) : [];
+            const { validateFriends } = require('../_services/friendService');
+            const validation = await validateFriends(user.id, friendIds);
+            if (!validation.isValid) {
+                return res.status(400).json({ error: validation.error });
+            }
+
+            // DB에서 실제 닉네임을 조회하여 위변조 방지
+            const dbClient = supabaseAdmin || supabase;
+            const mockProfiles = [
+                { id: 'mock-1', nickname: '다정한 영희 (데모)' },
+                { id: 'mock-2', nickname: '든든한 철수 (데모)' },
+                { id: 'mock-3', nickname: '행복한 민수 (데모)' }
+            ];
+
+            const mockSelected = mockProfiles.filter(m => validation.validIds.includes(m.id));
+            const realIds = validation.validIds.filter(id => !id.startsWith('mock-'));
+            let realSelected = [];
+            if (realIds.length > 0) {
+                const { data: profiles } = await dbClient
+                    .from('profiles')
+                    .select('id, nickname')
+                    .in('id', realIds);
+                if (profiles) {
+                    realSelected = profiles.map(p => ({ id: p.id, nickname: p.nickname }));
+                }
+            }
+            cleanSharedWith = [...realSelected, ...mockSelected];
+        }
         
         if (!content && !image && !richContent) {
             return res.status(400).json({ error: '분석할 내용이나 이미지가 없습니다.' });
@@ -40,7 +73,9 @@ module.exports = async (req, res) => {
             e2eKey,
             clientEmotion: req.body.emotion,
             clientResponse: req.body.response,
-            createdAt
+            createdAt,
+            shared: !!shared,
+            sharedWith: cleanSharedWith
         });
 
         return res.json(result);

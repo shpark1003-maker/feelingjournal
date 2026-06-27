@@ -35,6 +35,51 @@ module.exports = async (req, res) => {
 
         const currentTimeStr = getKstDateTimeString();
 
+        // Detect reschedule taskId if present in message, e.g. (ID: <uuid>)
+        const taskIdMatch = message.match(/\(ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)/i);
+        const rescheduleTaskId = taskIdMatch ? taskIdMatch[1] : null;
+
+        let existingTaskContext = "";
+        if (rescheduleTaskId) {
+            try {
+                const { supabaseAdmin } = require('./shared');
+                const { data: taskData } = await supabaseAdmin
+                    .from('tasks')
+                    .select('*')
+                    .eq('id', rescheduleTaskId)
+                    .eq('user_id', user.id) // Verify ownership
+                    .single();
+                
+                if (taskData) {
+                    const { data: subTasksData } = await supabaseAdmin
+                        .from('sub_tasks')
+                        .select('*')
+                        .eq('task_id', rescheduleTaskId)
+                        .order('sequence_order', { ascending: true });
+
+                    if (subTasksData && subTasksData.length > 0) {
+                        existingTaskContext = `
+[기존 대과제 정보]
+대과제 ID: ${taskData.id}
+대과제 제목: ${taskData.title}
+기존 시작일: ${taskData.start_date}
+기존 종료일: ${taskData.due_date}
+
+[기존 세부과제 목록]
+${subTasksData.map(st => {
+    const isCompleted = st.is_completed || (st.progress || 0) >= 100;
+    const isEvaluated = (st.rating || 0) > 0 || st.review_text || st.reviewed_at || st.reflection;
+    const statusStr = isCompleted ? "완료됨" : (isEvaluated ? "평가됨/진행중" : "미완료");
+    return `- 단계 ${st.sequence_order}: ${st.title} (기존 기간: ${st.start_date} ~ ${st.due_date}, 진행도: ${st.progress || 0}%, 평가: ${st.rating || 0}점, 상태: ${statusStr})`;
+}).join('\n')}
+`;
+                    }
+                }
+            } catch (err) {
+                console.warn('[AI Angel] Failed to fetch existing task for reschedule context:', err.message);
+            }
+        }
+
         // Gemini Structured JSON Response Schema
         const schema = {
             type: "OBJECT",
@@ -57,12 +102,25 @@ module.exports = async (req, res) => {
             required: ["mainTaskTitle", "advice", "suggestedTasks"]
         };
 
-        const prompt = `너는 사용자의 일정을 지키고 동기부여를 담당하는 품격 있는 AI 일정 가이드 천사(Schedule Angel)다. 👼
+        let prompt = `너는 사용자의 일정을 지키고 동기부여를 담당하는 품격 있는 AI 일정 가이드 천사(Schedule Angel)다. 👼
 사용자가 어떤 큰 목표나 일상적 고민을 털어놓으면, 이를 요약하여 대과제 제목('mainTaskTitle')을 정하고 구체적이고 체계적인 "단계별 실행 계획(Sub-tasks)"으로 세분화하여 계획 카드를 디자인해주어야 한다.
 
 현재 시각(KST): ${currentTimeStr}
 사용자의 고민: "${message}"
+`;
 
+        if (existingTaskContext) {
+            prompt += `
+사용자가 기존에 등록했던 아래 대과제의 일정을 변경/재조정(Rescheduling)하려 합니다.
+${existingTaskContext}
+
+[일정 재조정 지침]
+- 기존 세부 단계명과 순서를 최대한 유지하되, 변경된 일정 정보(수정된 duration 등)를 반영하여 새로운 세부 과제 리스트를 제안하십시오.
+- 이미 "완료됨" 또는 "평가됨/진행중" 상태인 단계는 절대로 내용이나 기간을 임의로 변경하거나 순서를 뒤섞지 마십시오. (완료/평가된 단계의 순서와 기존 소요 기간을 변경 없이 그대로 포함시키고, 오직 미완료된 미래 단계들의 기간만 재배정/재조정하십시오.)
+`;
+        }
+
+        prompt += `
 [수행 규칙 및 제약사항]
 1. 사용자의 장황한 고민이나 목표를 요약하여 20자 이내의 깔끔하고 명확한 대과제 제목으로 만들어 'mainTaskTitle'에 적어주십시오. (예: "학사 학위 논문 작성", "다이어트 계획")
 2. 사용자가 털어놓은 목표에 공감하고 용기를 북돋는 멘트를 'advice'에 2~3문장 이내로 다정하고 정중하게 적어주십시오.
@@ -137,7 +195,8 @@ module.exports = async (req, res) => {
             return res.json({
                 success: true,
                 advice: result.advice,
-                suggestedTasks: result.suggestedTasks
+                suggestedTasks: result.suggestedTasks,
+                rescheduleTaskId: rescheduleTaskId || undefined
             });
 
         } catch (err) {
@@ -151,9 +210,9 @@ module.exports = async (req, res) => {
         }
     }
 
-    // 2. 최종 일정 승인 및 일괄 저장 라우트 (Supabase RPC 트랜잭션 보장)
+    // 2. 최종 일정 승인 및 일괄 저장 라우트 (Supabase RPC 트랜잭션 보장 및 재조정 지원)
     if (req.method === 'POST' && (subPath === '/confirm' || subPath === '/confirm/')) {
-        const { parentTitle, startDate, steps, status = 'in-progress', syncGoogle = false } = req.body || {};
+        const { taskId, parentTitle, startDate, steps, status = 'in-progress', syncGoogle = false } = req.body || {};
 
         // 1) 필수값 검증 및 길이 유효성
         if (!parentTitle || typeof parentTitle !== 'string' || parentTitle.trim().length === 0) {
@@ -241,42 +300,151 @@ module.exports = async (req, res) => {
             runningDate.setDate(runningDate.getDate() + 1);
         }
 
-        const taskStartDateStr = formatDateKst(currentKstDate);
-        const taskDueDateStr = mappedSubTasks.length > 0 ? mappedSubTasks[mappedSubTasks.length - 1].due_date : taskStartDateStr;
+        const { supabaseAdmin } = require('./shared');
+        if (!supabaseAdmin) {
+            return res.status(500).json({ error: 'Supabase admin client not initialized.' });
+        }
 
         try {
-            // 4) Supabase Admin (service role) 클라이언트를 사용해 RPC 호출
-            // API 레벨에서 user.id(검증된 JWT 소유자)를 명시적으로 task_user_id로 주입하여 변조 원천 차단
-            const { supabaseAdmin } = require('./shared');
-            if (!supabaseAdmin) {
-                throw new Error('Supabase admin client not initialized.');
+            let finalTaskId = taskId;
+            let syncTasksList = [];
+
+            if (taskId) {
+                // --- UPDATE / RESCHEDULE EXISTING TASK ---
+                // 1) Verify user ownership
+                const { data: existingTask, error: taskFetchErr } = await supabaseAdmin
+                    .from('tasks')
+                    .select('*')
+                    .eq('id', taskId)
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (taskFetchErr || !existingTask) {
+                    return res.status(403).json({ error: 'Forbidden: You do not own this task.' });
+                }
+
+                // 2) Get existing subtasks to check completion or evaluation
+                const { data: existingSubTasks } = await supabaseAdmin
+                    .from('sub_tasks')
+                    .select('*')
+                    .eq('task_id', taskId);
+
+                // Preserve if completed (is_completed || progress >= 100) OR evaluated (rating > 0 || review_text || reviewed_at || reflection)
+                const isPreserved = (st) => {
+                    const isCompleted = st.is_completed || (st.progress || 0) >= 100;
+                    const isEvaluated = (st.rating || 0) > 0 || st.review_text || st.reviewed_at || st.reflection;
+                    return isCompleted || isEvaluated;
+                };
+
+                const preservedSubTasks = (existingSubTasks || []).filter(isPreserved);
+                const preservedIds = new Set(preservedSubTasks.map(st => st.id));
+                const subTasksToDelete = (existingSubTasks || []).filter(st => !preservedIds.has(st.id));
+
+                // 3) Delete non-preserved subtasks from DB and calendar
+                if (subTasksToDelete.length > 0) {
+                    if (syncGoogle) {
+                        try {
+                            const token = await getGoogleAccessToken(user.id);
+                            if (token) {
+                                const calendarService = require('../_services/calendarService');
+                                for (const st of subTasksToDelete) {
+                                    if (st.google_event_id) {
+                                        try {
+                                            await calendarService.deleteGoogleCalendarEvent(token, st.google_event_id, user.id);
+                                        } catch (googleErr) {
+                                            console.warn(`[AI Angel Confirm Reschedule] Google Calendar event deletion failed (id: ${st.google_event_id}):`, googleErr.message);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (tokErr) {
+                            console.warn('[AI Angel Confirm Reschedule] Google Calendar token fetch failed:', tokErr.message);
+                        }
+                    }
+
+                    const { error: delErr } = await supabaseAdmin
+                        .from('sub_tasks')
+                        .delete()
+                        .in('id', subTasksToDelete.map(st => st.id));
+                    if (delErr) throw delErr;
+                }
+
+                // 4) Insert only the uncompleted, non-preserved steps
+                const preservedSequences = new Set(preservedSubTasks.map(st => st.sequence_order));
+                const newStepsToInsert = mappedSubTasks
+                    .filter(st => !preservedSequences.has(st.sequence_order))
+                    .map(st => ({
+                        task_id: taskId,
+                        title: st.title,
+                        sequence_order: st.sequence_order,
+                        start_date: st.start_date,
+                        due_date: st.due_date,
+                        is_completed: false
+                    }));
+
+                let insertedSubTasks = [];
+                if (newStepsToInsert.length > 0) {
+                    const { data: insData, error: insErr } = await supabaseAdmin
+                        .from('sub_tasks')
+                        .insert(newStepsToInsert)
+                        .select();
+                    if (insErr) throw insErr;
+                    insertedSubTasks = insData || [];
+                }
+
+                syncTasksList = insertedSubTasks;
+
+                const allSubTasks = [...preservedSubTasks, ...insertedSubTasks].sort((a, b) => a.sequence_order - b.sequence_order);
+                const taskStartDateStr = allSubTasks.length > 0 ? allSubTasks[0].start_date : formatDateKst(currentKstDate);
+                const taskDueDateStr = allSubTasks.length > 0 ? allSubTasks[allSubTasks.length - 1].due_date : taskStartDateStr;
+
+                // 5) Update parent task details
+                const { error: parentUpdateErr } = await supabaseAdmin
+                    .from('tasks')
+                    .update({
+                        title: parentTitle.substring(0, 120),
+                        start_date: taskStartDateStr,
+                        due_date: taskDueDateStr,
+                        status: status
+                    })
+                    .eq('id', taskId);
+
+                if (parentUpdateErr) throw parentUpdateErr;
+
+            } else {
+                // --- CREATE NEW TASK (Legacy Path via Stored Procedure) ---
+                const taskStartDateStr = formatDateKst(currentKstDate);
+                const taskDueDateStr = mappedSubTasks.length > 0 ? mappedSubTasks[mappedSubTasks.length - 1].due_date : taskStartDateStr;
+
+                const { data: createdTaskId, error } = await supabaseAdmin.rpc('create_task_with_subtasks', {
+                    task_user_id: user.id,
+                    task_title: parentTitle.substring(0, 120),
+                    task_start_date: taskStartDateStr,
+                    task_due_date: taskDueDateStr,
+                    task_source: 'ai_angel',
+                    task_status: status,
+                    sub_tasks_list: mappedSubTasks
+                });
+
+                if (error) {
+                    console.error('[AI Angel] Database Stored Procedure Execution Failed:', error);
+                    throw error;
+                }
+
+                finalTaskId = createdTaskId;
+
+                const { data: createdSubTasks } = await supabaseAdmin
+                    .from('sub_tasks')
+                    .select('id, title, sequence_order, due_date')
+                    .eq('task_id', finalTaskId);
+
+                syncTasksList = createdSubTasks || [];
             }
-
-            const { data, error } = await supabaseAdmin.rpc('create_task_with_subtasks', {
-                task_user_id: user.id,
-                task_title: parentTitle.substring(0, 120),
-                task_start_date: taskStartDateStr,
-                task_due_date: taskDueDateStr,
-                task_source: 'ai_angel',
-                task_status: status,
-                sub_tasks_list: mappedSubTasks
-            });
-
-            if (error) {
-                console.error('[AI Angel] Database Stored Procedure Execution Failed:', error);
-                throw error;
-            }
-
-            // Query the created sub_tasks to get their IDs and sync them
-            const { data: createdSubTasks } = await supabaseAdmin
-                .from('sub_tasks')
-                .select('id, title, sequence_order, due_date')
-                .eq('task_id', data);
 
             let googleCalendarSynced = false;
             const syncResults = [];
 
-            if (syncGoogle) {
+            if (syncGoogle && syncTasksList.length > 0) {
                 try {
                     const token = await getGoogleAccessToken(user.id);
                     if (token) {
@@ -287,7 +455,7 @@ module.exports = async (req, res) => {
                             googleCalendarSynced = true;
                             const calendarService = require('../_services/calendarService');
                             
-                            for (const subTask of (createdSubTasks || [])) {
+                            for (const subTask of syncTasksList) {
                                 try {
                                     // Calculate end date: due_date + 1 day
                                     const nextDay = new Date(subTask.due_date + 'T00:00:00+09:00');
@@ -346,7 +514,7 @@ module.exports = async (req, res) => {
                         }
                     } else {
                         // Google not connected
-                        for (const subTask of (createdSubTasks || [])) {
+                        for (const subTask of syncTasksList) {
                             await supabaseAdmin
                                 .from('sub_tasks')
                                 .update({ google_sync_status: 'token_missing' })
@@ -364,8 +532,8 @@ module.exports = async (req, res) => {
                     console.error('[AI Angel] Google Calendar sync pipeline failed:', syncErr.message);
                 }
             } else {
-                // syncGoogle is false
-                for (const subTask of (createdSubTasks || [])) {
+                // syncGoogle is false or no new tasks to sync
+                for (const subTask of syncTasksList) {
                     syncResults.push({
                         subTaskId: subTask.id,
                         title: subTask.title,
@@ -376,7 +544,7 @@ module.exports = async (req, res) => {
 
             return res.json({
                 success: true,
-                taskId: data,
+                taskId: finalTaskId,
                 googleCalendarSynced,
                 syncResults
             });
@@ -386,7 +554,7 @@ module.exports = async (req, res) => {
             return res.status(500).json({
                 success: false,
                 errorCode: "TRANSACTION_FAILED",
-                message: "세부 일정을 데이터베이스에 일괄 저장하는 데 실패하여 트랜잭션이 안전하게 롤백되었습니다."
+                message: "세부 일정을 데이터베이스에 저장하는 데 실패하여 트랜잭션이 안전하게 롤백되었습니다."
             });
         }
     }

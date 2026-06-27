@@ -203,7 +203,7 @@ module.exports = async (req, res) => {
             return res.json({ success: true });
         }
 
-        // Handle PATCH (Update Event)
+        // Handle PATCH (Update Event / Evaluation / Reschedule Shift)
         if (req.method === 'PATCH') {
             const { summary, start, end, startTime, endTime, description } = req.body;
             const finalStart = start || startTime;
@@ -214,8 +214,48 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: 'Missing summary, start, or end time' });
             }
 
-            if (!providerToken || providerToken === 'mock' || providerToken === 'null' || providerToken === 'undefined') {
-                return res.status(400).json({ error: 'Google Calendar 연동이 활성화되어 있지 않습니다.' });
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            const { supabaseAdmin } = require('./shared');
+
+            let dbSubTask = null;
+            if (supabaseAdmin) {
+                try {
+                    let query = supabaseAdmin.from('sub_tasks').select('*, tasks!inner(user_id, due_date)');
+                    if (isUuid) {
+                        query = query.eq('id', id);
+                    } else {
+                        query = query.eq('google_event_id', id);
+                    }
+                    const { data } = await query;
+                    if (data && data.length > 0) {
+                        dbSubTask = data[0];
+                        if (dbSubTask.tasks?.user_id !== user.id) {
+                            return res.status(403).json({ error: 'Forbidden: You do not own this task.' });
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.warn('[Calendar PATCH] Failed to look up subtask:', fetchErr.message);
+                }
+            }
+
+            const formatToKstDate = (dateStr) => {
+                if (!dateStr) return null;
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return null;
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            };
+
+            const newStartDate = formatToKstDate(finalStart);
+            const newDueDate = formatToKstDate(finalEnd);
+
+            let diffDays = 0;
+            if (dbSubTask && newDueDate && dbSubTask.due_date !== newDueDate) {
+                const oldMs = new Date(dbSubTask.due_date + 'T00:00:00+09:00').getTime();
+                const newMs = new Date(newDueDate + 'T00:00:00+09:00').getTime();
+                diffDays = Math.round((newMs - oldMs) / (1000 * 60 * 60 * 24));
             }
 
             let cleanDescription = description || '';
@@ -225,61 +265,154 @@ module.exports = async (req, res) => {
             const reflectionMatch = cleanDescription.match(/\[Reflection:\s*([^\]]*)\]/);
 
             const hasMeta = progressMatch || ratingMatch || dateMatch || reflectionMatch;
-            if (hasMeta) {
-                const progress = progressMatch ? parseInt(progressMatch[1], 10) : 0;
-                const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0;
-                const reviewDate = dateMatch ? dateMatch[1].trim() : '';
-                const reflection = reflectionMatch ? reflectionMatch[1].trim() : '';
+            let dbUpdated = false;
 
-                // Update sub_tasks in database
-                const { supabaseAdmin } = require('./shared');
-                if (supabaseAdmin) {
-                    await supabaseAdmin
+            const isCompletedOrEvaluated = (st) => {
+                return st.is_completed || (st.progress || 0) >= 100 || (st.rating || 0) > 0 || st.review_text || st.reviewed_at || st.reflection;
+            };
+
+            if (dbSubTask) {
+                try {
+                    const updatePayload = {
+                        start_date: newStartDate || dbSubTask.start_date,
+                        due_date: newDueDate || dbSubTask.due_date
+                    };
+
+                    if (hasMeta) {
+                        const progress = progressMatch ? parseInt(progressMatch[1], 10) : 0;
+                        const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0;
+                        const reviewDate = dateMatch ? dateMatch[1].trim() : '';
+                        const reflection = reflectionMatch ? reflectionMatch[1].trim() : '';
+
+                        updatePayload.progress = progress;
+                        updatePayload.rating = rating;
+                        updatePayload.review_date = reviewDate;
+                        updatePayload.review_text = reflection;
+                        updatePayload.is_completed = progress >= 100;
+                        updatePayload.completed_at = progress >= 100 ? new Date().toISOString() : null;
+                    }
+
+                    const { data, error } = await supabaseAdmin
                         .from('sub_tasks')
-                        .update({
-                            progress,
-                            rating,
-                            review_date: reviewDate,
-                            review_text: reflection
-                        })
-                        .eq('google_event_id', id);
+                        .update(updatePayload)
+                        .eq('id', dbSubTask.id)
+                        .select();
+
+                    if (data && data.length > 0) {
+                        dbUpdated = true;
+                        // Refresh dbSubTask
+                        dbSubTask = { ...dbSubTask, ...updatePayload };
+                    }
+                } catch (dbErr) {
+                    console.warn('[Calendar PATCH] Failed to update sub_tasks table:', dbErr.message);
                 }
 
-                // Cache in Redis: user:${userId}:subtask-eval:${calendarId}:${eventId}
-                let calendarId = 'primary';
-                try {
-                    const mapped = await redis.get(`user:${user.id}:event-calendar-map:${id}`);
-                    if (mapped) calendarId = mapped;
-                } catch (err) {}
-                
-                try {
-                    await redis.set(
-                        `user:${user.id}:subtask-eval:${calendarId}:${id}`,
-                        JSON.stringify({ progress, rating, reviewDate, reflection }),
-                        'EX',
-                        3600 * 24 * 30
-                    );
-                } catch (err) {}
+                // Shifting subsequent uncompleted subtasks cascadingly
+                if (diffDays !== 0) {
+                    try {
+                        const { data: subsequentSubTasks } = await supabaseAdmin
+                            .from('sub_tasks')
+                            .select('*')
+                            .eq('task_id', dbSubTask.task_id)
+                            .gt('sequence_order', dbSubTask.sequence_order)
+                            .order('sequence_order', { ascending: true });
 
-                // Strip the tags from description
-                cleanDescription = cleanDescription
-                    .replace(/\[Task\]/g, '')
-                    .replace(/\[Progress:\s*\d+\]/g, '')
-                    .replace(/\[Rating:\s*\d+\]/g, '')
-                    .replace(/\[ReviewDate:\s*[^\]]*\]/g, '')
-                    .replace(/\[Reflection:\s*[^\]]*\]/g, '')
-                    .trim();
+                        const addDays = (dateStr, days) => {
+                            const date = new Date(dateStr + 'T00:00:00+09:00');
+                            date.setDate(date.getDate() + days);
+                            const y = date.getFullYear();
+                            const m = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            return `${y}-${m}-${day}`;
+                        };
+
+                        for (const st of (subsequentSubTasks || [])) {
+                            if (!isCompletedOrEvaluated(st)) {
+                                const shiftedStart = addDays(st.start_date, diffDays);
+                                const shiftedDue = addDays(st.due_date, diffDays);
+
+                                await supabaseAdmin
+                                    .from('sub_tasks')
+                                    .update({
+                                        start_date: shiftedStart,
+                                        due_date: shiftedDue
+                                    })
+                                    .eq('id', st.id);
+
+                                if (st.google_event_id && providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
+                                    try {
+                                        const nextDay = new Date(shiftedDue + 'T00:00:00+09:00');
+                                        nextDay.setDate(nextDay.getDate() + 1);
+                                        const nextDayStr = nextDay.toISOString().split('T')[0];
+
+                                        const cleanDesc = (st.description || '')
+                                            .replace(/\[Task\]/g, '')
+                                            .replace(/\[Progress:\s*\d+\]/g, '')
+                                            .replace(/\[Rating:\s*\d+\]/g, '')
+                                            .replace(/\[ReviewDate:\s*[^\]]*\]/g, '')
+                                            .replace(/\[Reflection:\s*[^\]]*\]/g, '')
+                                            .trim();
+
+                                        await calendarService.patchGoogleCalendarEvent(providerToken, st.google_event_id, {
+                                            summary: `👼 ${st.title} 마감`,
+                                            start: shiftedDue,
+                                            end: nextDayStr,
+                                            description: cleanDesc
+                                        }, user.id);
+                                    } catch (googleErr) {
+                                        console.warn(`[Calendar PATCH Cascading] Failed to update Google Calendar event ${st.google_event_id}:`, googleErr.message);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Recalculate parent task due_date
+                        const { data: allSubTasks } = await supabaseAdmin
+                            .from('sub_tasks')
+                            .select('due_date')
+                            .eq('task_id', dbSubTask.task_id);
+                        if (allSubTasks && allSubTasks.length > 0) {
+                            const maxDueDate = allSubTasks.reduce((max, st) => st.due_date > max ? st.due_date : max, allSubTasks[0].due_date);
+                            await supabaseAdmin
+                                .from('tasks')
+                                .update({ due_date: maxDueDate })
+                                .eq('id', dbSubTask.task_id);
+                        }
+                    } catch (cascadeErr) {
+                        console.error('[Calendar PATCH] Cascade shift failed:', cascadeErr);
+                    }
+                }
+
+                if (dbUpdated && hasMeta) {
+                    cleanDescription = cleanDescription
+                        .replace(/\[Task\]/g, '')
+                        .replace(/\[Progress:\s*\d+\]/g, '')
+                        .replace(/\[Rating:\s*\d+\]/g, '')
+                        .replace(/\[ReviewDate:\s*[^\]]*\]/g, '')
+                        .replace(/\[Reflection:\s*[^\]]*\]/g, '')
+                        .trim();
+                }
             }
 
-            const updateData = await calendarService.patchGoogleCalendarEvent(providerToken, id, {
-                summary,
-                start: finalStart,
-                end: finalEnd,
-                description: cleanDescription
-            }, user.id);
+            let googleEvent = null;
+            const hasGoogleCalendar = providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined';
+            const targetEventId = dbSubTask ? dbSubTask.google_event_id : id;
+
+            if (targetEventId && hasGoogleCalendar) {
+                try {
+                    googleEvent = await calendarService.patchGoogleCalendarEvent(providerToken, targetEventId, {
+                        summary,
+                        start: finalStart,
+                        end: finalEnd,
+                        description: cleanDescription
+                    }, user.id);
+                } catch (apiErr) {
+                    console.warn('[Calendar PATCH] Google Calendar update failed (non-blocking):', apiErr.message);
+                }
+            }
 
             await redis.del(`user:${user.id}:calendar-advice-cache`);
-            return res.json({ success: true, event: updateData });
+            return res.json({ success: true, event: googleEvent || dbSubTask });
         }
 
         // Handle GET (Load Calendar)
