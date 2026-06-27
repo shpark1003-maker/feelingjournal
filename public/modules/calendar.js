@@ -416,6 +416,7 @@ function initCalendarUI() {
                 if (isEdit) {
                     url = `${API_URL}/calendar/events/${id}`;
                     method = 'PATCH';
+                }
 
                 let finalDesc = desc;
                 if (type === 'task') {
