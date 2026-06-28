@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
         console.error('Critical Analyze Error:', error);
         return res.json({
             success: false,
-            answer: '분석 중 문제가 발생했습니다. 조금만 기다려 주시겠어요?'
+            answer: `분석 중 문제가 발생했습니다 (${error.message}). 조금만 기다려 주시겠어요?`
         });
     }
 };
