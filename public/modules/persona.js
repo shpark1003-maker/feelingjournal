@@ -531,7 +531,7 @@ export async function loadBriefing() {
                 </div>
             `;
             setTimeout(() => {
-                loadBriefing(regionOverride);
+                loadBriefing();
             }, 3000);
             return;
         }
