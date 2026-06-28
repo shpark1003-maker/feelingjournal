@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
         let isDeleteTask = false;
         if (subPath.startsWith('/tasks/')) {
             isDeleteTask = true;
-            id = subPath.substring('/tasks/'.length);
+            id = subPath.substring('/tasks/'.length).replace(/\/$/, '');
         }
 
         // ID 추출 고도화 (Express params, Query string, Regex fallback 순으로 파싱)
@@ -161,16 +161,20 @@ module.exports = async (req, res) => {
                 }
 
                 try {
+                    console.log(`[Calendar Task DELETE] id: "${id}", user.id: "${user.id}"`);
                     // 1) Verify ownership of the parent task
-                    const { data: taskData } = await supabaseAdmin
+                    const { data: taskData, error: verifyErr } = await supabaseAdmin
                         .from('tasks')
                         .select('*')
                         .eq('id', id)
                         .eq('user_id', user.id)
                         .single();
 
-                    if (!taskData) {
-                        return res.status(403).json({ error: 'Forbidden: You do not own this task.' });
+                    if (verifyErr || !taskData) {
+                        console.warn(`[Calendar Task DELETE] Verification failed:`, verifyErr || 'No task found');
+                        return res.status(403).json({ 
+                            error: `Forbidden: You do not own this task. (Task ID: ${id}, User ID: ${user.id}, DB Status: ${verifyErr ? verifyErr.message : 'Not Found'})` 
+                        });
                     }
 
                     // 2) Get subtasks to delete from Google Calendar
