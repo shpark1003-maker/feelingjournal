@@ -109,6 +109,49 @@ export function setupEditor() {
         }
     };
 
+    // Global array for selected sharees
+    window.v2SelectedSharees = [];
+
+    // Render the designated sharees list
+    window.v2RenderSelectedSharees = function() {
+        const listContainer = document.getElementById('v2-note-friends-list');
+        if (!listContainer) return;
+
+        if (window.v2SelectedSharees.length > 0) {
+            listContainer.innerHTML = window.v2SelectedSharees.map(sf => `
+                <div class="flex items-center justify-between p-2 bg-surface-container rounded-xl border border-outline-variant/10 shadow-sm transition-all hover:bg-surface-container-high">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-xs text-primary shrink-0">
+                            ${(sf.nickname || '익명').slice(0, 2)}
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-on-surface truncate">${sf.nickname || '익명'}</span>
+                            <span class="text-[9px] text-on-surface-variant/60 truncate">${sf.email || '공유 등록됨'}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="text-error hover:bg-error/10 px-2 py-1 rounded-lg text-[10px] font-bold transition-all shrink-0" onclick="window.v2RemoveSharee('${sf.id}')">제외</button>
+                </div>
+            `).join('');
+        } else {
+            listContainer.innerHTML = '<p class="text-xs text-on-surface-variant/50 text-center py-4">공유할 대상을 추가해 주세요.</p>';
+        }
+    };
+
+    // Add a sharee
+    window.v2AddSharee = function(id, nickname, email = '') {
+        if (window.v2SelectedSharees.some(s => s.id === id)) return;
+        window.v2SelectedSharees.push({ id, nickname, email });
+        window.v2RenderSelectedSharees();
+        window.triggerDebouncedSharePatch();
+    };
+
+    // Remove a sharee
+    window.v2RemoveSharee = function(id) {
+        window.v2SelectedSharees = window.v2SelectedSharees.filter(s => s.id !== id);
+        window.v2RenderSelectedSharees();
+        window.triggerDebouncedSharePatch();
+    };
+
     // Debounced PATCH helper
     let sharePatchTimeout = null;
     window.triggerDebouncedSharePatch = function() {
@@ -118,23 +161,14 @@ export function setupEditor() {
         if (indicator) indicator.classList.remove('hidden');
 
         const shareToggle = document.getElementById('share-toggle-input');
-        const checkboxes = document.querySelectorAll('.note-share-friend-checkbox');
         if (shareToggle) shareToggle.disabled = true;
-        checkboxes.forEach(cb => cb.disabled = true);
 
         if (sharePatchTimeout) clearTimeout(sharePatchTimeout);
         sharePatchTimeout = setTimeout(async () => {
             try {
                 const token = await store.getSessionToken();
                 const shareToggleChecked = shareToggle ? shareToggle.checked : false;
-                
-                const checkedFriends = [];
-                document.querySelectorAll('.note-share-friend-checkbox:checked').forEach(cb => {
-                    checkedFriends.push({
-                        id: cb.dataset.id,
-                        nickname: cb.dataset.nickname
-                    });
-                });
+                const checkedFriends = window.v2SelectedSharees || [];
 
                 const res = await fetch(`${API_URL}/history/${store.currentPageId}`, {
                     method: 'PATCH',
@@ -156,7 +190,6 @@ export function setupEditor() {
             } finally {
                 if (indicator) indicator.classList.add('hidden');
                 if (shareToggle) shareToggle.disabled = false;
-                checkboxes.forEach(cb => cb.disabled = false);
             }
         }, 400);
     };
@@ -175,9 +208,70 @@ export function setupEditor() {
         });
     }
 
-    // Populate 1촌 friends list
+    // Bind User Search Actions
+    const searchInput = document.getElementById('v2-share-search-input');
+    const searchBtn = document.getElementById('v2-share-search-btn');
+    const searchResults = document.getElementById('v2-share-search-results');
+
+    const handleShareSearch = async () => {
+        if (!searchInput || !searchResults) return;
+        const query = searchInput.value.trim();
+        if (query.length === 0) {
+            searchResults.innerHTML = '';
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        searchResults.innerHTML = '<p class="text-[10px] text-on-surface-variant/50 text-center py-2">검색 중...</p>';
+        searchResults.classList.remove('hidden');
+
+        try {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/users/search?nickname=${encodeURIComponent(query)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const users = data.users || [];
+
+            if (users.length > 0) {
+                searchResults.innerHTML = users.map(u => `
+                    <div class="flex items-center justify-between p-1.5 hover:bg-surface-container rounded-lg transition-colors">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center font-bold text-[10px] text-primary shrink-0">
+                                ${(u.nickname || '익명').slice(0, 2)}
+                            </div>
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-[11px] font-bold text-on-surface truncate">${u.nickname}</span>
+                                <span class="text-[8px] text-on-surface-variant/50 truncate">${u.email || ''}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded text-[10px] font-semibold transition-all shrink-0" onclick="window.v2AddSharee('${u.id}', '${u.nickname.replace(/'/g, "\\'")}', '${(u.email || '').replace(/'/g, "\\'")}')">추가</button>
+                    </div>
+                `).join('');
+            } else {
+                searchResults.innerHTML = '<p class="text-[10px] text-on-surface-variant/50 text-center py-2">검색 결과가 없습니다.</p>';
+            }
+        } catch (err) {
+            console.error('Failed to search users for share:', err);
+            searchResults.innerHTML = '<p class="text-[10px] text-error/70 text-center py-2">검색 오류</p>';
+        }
+    };
+
+    if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', handleShareSearch);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleShareSearch();
+            }
+        });
+    }
+
+    // Populate 1촌 friends list (and recommended chips)
     window.populateNoteFriendsList = async function() {
         const listContainer = document.getElementById('v2-note-friends-list');
+        const recWrapper = document.getElementById('v2-share-recommendations-wrapper');
+        const recContainer = document.getElementById('v2-share-recommended-friends');
         if (!listContainer) return;
 
         try {
@@ -188,32 +282,22 @@ export function setupEditor() {
             const data = await res.json();
             const friends = data.allFriends || [];
 
-            if (friends.length > 0) {
-                listContainer.innerHTML = friends.map(f => `
-                    <label class="flex items-center justify-between p-2 hover:bg-surface-container rounded-xl cursor-pointer transition-colors">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-xs text-primary">
-                                ${f.nickname.slice(0, 2)}
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-on-surface">${f.nickname}</span>
-                                <span class="text-[9px] text-on-surface-variant/60">1촌 관계</span>
-                            </div>
-                        </div>
-                        <input type="checkbox" class="note-share-friend-checkbox w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant" data-id="${f.id}" data-nickname="${f.nickname}">
-                    </label>
+            if (friends.length > 0 && recContainer && recWrapper) {
+                recWrapper.classList.remove('hidden');
+                recContainer.innerHTML = friends.map(f => `
+                    <button type="button" class="px-2.5 py-1 bg-surface-container hover:bg-primary/10 hover:text-primary rounded-full text-[10px] font-medium text-on-surface-variant border border-outline-variant/20 transition-all" onclick="window.v2AddSharee('${f.id}', '${f.nickname.replace(/'/g, "\\'")}', '')">
+                        + ${f.nickname}
+                    </button>
                 `).join('');
-                
-                document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
-                    cb.addEventListener('change', window.triggerDebouncedSharePatch);
-                });
-            } else {
-                listContainer.innerHTML = '<p class="text-xs text-on-surface-variant/50 text-center py-4">등록된 1촌 친구가 없습니다.</p>';
+            } else if (recWrapper) {
+                recWrapper.classList.add('hidden');
             }
         } catch (err) {
-            console.error('Failed to load note friends:', err);
-            listContainer.innerHTML = '<p class="text-xs text-error/70 text-center py-4">친구 목록 로드 실패</p>';
+            console.error('Failed to load note friends recommendations:', err);
         }
+
+        // Initially render selected list
+        window.v2RenderSelectedSharees();
     };
 
     window.populateNoteFriendsList();
@@ -259,13 +343,7 @@ export async function analyzeDiary() {
 
         const shareToggle = document.getElementById('share-toggle-input');
         const shareToggleChecked = shareToggle ? shareToggle.checked : false;
-        const checkedFriends = [];
-        document.querySelectorAll('.note-share-friend-checkbox:checked').forEach(cb => {
-            checkedFriends.push({
-                id: cb.dataset.id,
-                nickname: cb.dataset.nickname
-            });
-        });
+        const checkedFriends = window.v2SelectedSharees || [];
 
         let payload = { 
             content, 

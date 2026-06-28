@@ -1546,23 +1546,46 @@
 <div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
 </label>
 </div>
-<div class="space-y-3 opacity-50 pointer-events-none transition-all duration-300" id="share-options">
-    <!-- E2E Warning Alert -->
-    <div id="v2-note-share-e2e-warning" class="hidden p-3 bg-error-container/30 border border-error/20 text-error rounded-xl text-[10px] leading-relaxed flex items-start gap-2">
-        <span class="material-symbols-outlined text-[14px] shrink-0 mt-0.5">security</span>
-        <span>E2E 종단간 암호화가 활성화된 일기는 암호화 키를 소유한 사용자만 읽을 수 있어 공유할 수 없습니다.</span>
+    <div class="space-y-4 opacity-50 pointer-events-none transition-all duration-300" id="share-options">
+        <!-- E2E Warning Alert -->
+        <div id="v2-note-share-e2e-warning" class="hidden p-3 bg-error-container/30 border border-error/20 text-error rounded-xl text-[10px] leading-relaxed flex items-start gap-2">
+            <span class="material-symbols-outlined text-[14px] shrink-0 mt-0.5">security</span>
+            <span>E2E 종단간 암호화가 활성화된 일기는 암호화 키를 소유한 사용자만 읽을 수 있어 공유할 수 없습니다.</span>
+        </div>
+
+        <!-- Search / Add Sharee -->
+        <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider px-1">닉네임으로 사용자 검색</label>
+            <div class="flex gap-2">
+                <input type="text" id="v2-share-search-input" placeholder="검색할 닉네임 입력..." class="flex-1 bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary/50 text-on-surface">
+                <button type="button" id="v2-share-search-btn" class="bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-90 active:scale-95 transition-all">검색</button>
+            </div>
+            <!-- Search Results -->
+            <div id="v2-share-search-results" class="hidden max-h-[120px] overflow-y-auto custom-scrollbar border border-surface-container-highest rounded-2xl p-2 bg-surface-container-lowest space-y-1 mt-1">
+            </div>
+        </div>
+
+        <!-- Recommended 1-Chon Chips -->
+        <div class="space-y-1 hidden" id="v2-share-recommendations-wrapper">
+            <label class="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-wider px-1">추천 1촌 친구 (클릭 시 추가)</label>
+            <div class="flex flex-wrap gap-1.5 px-1" id="v2-share-recommended-friends">
+            </div>
+        </div>
+
+        <!-- Selected Sharees List -->
+        <div class="space-y-1.5">
+            <div class="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider flex justify-between items-center px-1">
+                <span>지정된 공유 대상</span>
+                <span id="v2-note-friends-saving-indicator" class="hidden text-[10px] text-primary font-normal animate-pulse flex items-center gap-1">
+                    <span class="spinner w-2 h-2 inline-block"></span>
+                    저장 중...
+                </span>
+            </div>
+            <div class="max-h-[180px] overflow-y-auto custom-scrollbar border border-surface-container-highest rounded-2xl p-3 bg-surface-container-lowest space-y-2" id="v2-note-friends-list">
+                <p class="text-xs text-on-surface-variant/50 text-center py-4">공유할 대상을 추가해 주세요.</p>
+            </div>
+        </div>
     </div>
-    <div class="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider flex justify-between items-center px-1">
-        <span>공유할 1촌 친구</span>
-        <span id="v2-note-friends-saving-indicator" class="hidden text-[10px] text-primary font-normal animate-pulse flex items-center gap-1">
-            <span class="spinner w-2 h-2 inline-block"></span>
-            저장 중...
-        </span>
-    </div>
-    <div class="max-h-[160px] overflow-y-auto custom-scrollbar border border-surface-container-highest rounded-2xl p-3 bg-surface-container-lowest space-y-2" id="v2-note-friends-list">
-        <p class="text-xs text-on-surface-variant/50 text-center py-4">1촌 친구 목록을 불러오고 있습니다...</p>
-    </div>
-</div>
 </div>
 <!-- E2E and Gemini API Privacy Guidance Card -->
 <div class="mt-6 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 flex gap-3 items-start shadow-sm">

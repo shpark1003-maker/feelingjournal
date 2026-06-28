@@ -299,14 +299,11 @@ export function selectPage(pageId, history) {
     if (shareToggle) {
         shareToggle.checked = !!page.shared;
     }
-    document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
-        cb.checked = false;
-    });
-    if (page.sharedWith && Array.isArray(page.sharedWith)) {
-        page.sharedWith.forEach(sf => {
-            const cb = document.querySelector(`.note-share-friend-checkbox[data-id="${sf.id}"]`);
-            if (cb) cb.checked = true;
-        });
+    
+    // 글로벌 지정 공유자 상태 초기화 및 렌더링
+    window.v2SelectedSharees = page.sharedWith && Array.isArray(page.sharedWith) ? [...page.sharedWith] : [];
+    if (window.v2RenderSelectedSharees) {
+        window.v2RenderSelectedSharees();
     }
     if (window.checkE2eSharePolicy) {
         window.checkE2eSharePolicy();
@@ -500,9 +497,8 @@ export async function addNewPage() {
     // Clear sharing settings UI for the new page
     const shareToggle = document.getElementById('share-toggle-input');
     if (shareToggle) shareToggle.checked = false;
-    document.querySelectorAll('.note-share-friend-checkbox').forEach(cb => {
-        cb.checked = false;
-    });
+    window.v2SelectedSharees = [];
+    if (window.v2RenderSelectedSharees) window.v2RenderSelectedSharees();
     if (window.checkE2eSharePolicy) window.checkE2eSharePolicy();
 
     const v2Editor = document.getElementById('v2-editor-container');
