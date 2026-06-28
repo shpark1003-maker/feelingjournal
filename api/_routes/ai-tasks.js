@@ -194,6 +194,7 @@ ${existingTaskContext}
 
             return res.json({
                 success: true,
+                mainTaskTitle: result.mainTaskTitle || undefined,
                 advice: result.advice,
                 suggestedTasks: result.suggestedTasks,
                 rescheduleTaskId: rescheduleTaskId || undefined

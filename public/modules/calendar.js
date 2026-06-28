@@ -608,7 +608,7 @@ function initCalendarUI() {
                                 },
                                 body: JSON.stringify({
                                     taskId: rescheduleId || undefined,
-                                    parentTitle: data.mainTaskTitle || text,
+                                    parentTitle: (data.mainTaskTitle || text).substring(0, 120),
                                     startDate: todayStr,
                                     steps: data.suggestedTasks,
                                     status: 'in-progress',
