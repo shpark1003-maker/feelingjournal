@@ -120,9 +120,9 @@ export function appendMessage(msg) {
     if (isMe) {
         // Alternating background colors for user messages matching the prototype design
         const isAlternate = msg.content && msg.content.length % 2 === 0;
-        messageContentStyle = `padding: ${isImage ? '8px' : '14px 18px'}; border-radius: 12px 2px 12px 12px; font-size: 14px; max-width: 90%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.6; word-break: break-all;`;
+        messageContentStyle = `padding: ${isImage ? '8px' : '12px 16px'}; border-radius: 12px 2px 12px 12px; font-size: 15.5px; max-width: 95%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.35; word-break: break-all;`;
     } else {
-        messageContentStyle = `padding: ${isImage ? '8px' : '14px 18px'}; border-radius: 2px 12px 12px 12px; font-size: 14px; max-width: 90%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.6; word-break: break-all;`;
+        messageContentStyle = `padding: ${isImage ? '8px' : '12px 16px'}; border-radius: 2px 12px 12px 12px; font-size: 15.5px; max-width: 95%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.35; word-break: break-all;`;
     }
 
     div.innerHTML = `
