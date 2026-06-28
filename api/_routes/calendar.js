@@ -210,6 +210,7 @@ module.exports = async (req, res) => {
                     if (taskDelErr) throw taskDelErr;
 
                     await redis.del(`user:${user.id}:calendar-advice-cache`);
+                    await redis.del(`user:${user.id}:briefing-cache`);
                     try {
                         const { clearGoogleCalendarCache } = require('./shared');
                         await clearGoogleCalendarCache(user.id);
@@ -491,6 +492,7 @@ module.exports = async (req, res) => {
             }
 
             await redis.del(`user:${user.id}:calendar-advice-cache`);
+            await redis.del(`user:${user.id}:briefing-cache`);
             return res.json({ success: true, event: googleEvent || dbSubTask });
         }
 

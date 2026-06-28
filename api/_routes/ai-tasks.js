@@ -543,6 +543,8 @@ ${existingTaskContext}
                 }
             }
 
+            await redis.del(`user:${user.id}:briefing-cache`);
+            
             return res.json({
                 success: true,
                 taskId: finalTaskId,

@@ -244,6 +244,7 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
     }
 
     let dbTasksStr = '';
+    let lowProgressWarningStr = '';
     try {
         const { supabaseAdmin } = require('../_routes/shared');
         if (supabaseAdmin) {
@@ -263,6 +264,19 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
                     const parentTitle = st.tasks?.title || '과제';
                     return `- ${st.title} (대과제: ${parentTitle}, 기한: ${st.due_date})`;
                 }).join('\n');
+            }
+
+            // 40% 미만 저조 과제 경고 로직 (2개 이상 시)
+            const { data: allUncompleted } = await supabaseAdmin
+                .from('sub_tasks')
+                .select('title, progress, due_date, tasks!inner(title, user_id)')
+                .eq('tasks.user_id', userId)
+                .eq('is_completed', false);
+
+            const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40);
+            if (lowProgressTasks.length >= 2) {
+                lowProgressWarningStr = `🚨 경고: 현재 진행 중인 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 저조한 과제들을 확인하고 분발하도록 촉구하십시오:\n` +
+                    lowProgressTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 현재 진행률: ${st.progress || 0}%, 기한: ${st.due_date})`).join('\n');
             }
         }
     } catch (err) {
@@ -286,6 +300,7 @@ ${recentDiaries}
 ${reminiscenceMemory}
 6. 진행 중인 과제 및 세부 과제:
 ${dbTasksStr || '진행 중인 과제 없음'}
+${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningStr}\n` : ''}
 
 [수행 지시]
 1. **당일 및 내일 일정 완벽 브리핑**: 구글 일정 중 '오늘(당일)' 예정된 일정을 시작으로 '내일'의 주요 일정까지 순차적으로 꼼꼼하게 모두 챙겨서 언급하라. 오늘 일정이 끝났더라도 남은 내일 일정을 알려주며, 성공적인 하루를 위한 준비 사항을 비서의 어조로 따뜻하게 조언하라.
@@ -294,7 +309,7 @@ ${dbTasksStr || '진행 중인 과제 없음'}
 2. **실시간 날씨 에스코트**: 실시간 기상 예보가 '날씨 안내 비활성화됨'인 경우에는 일절 날씨나 온도, 옷차림에 관련된 코멘트를 브리핑 전체에서 절대 언급하지 말고 완전히 생략하십시오. 그렇지 않고 기상 예보가 주어졌다면 오늘 외출 시 필요한 옷차림 조언이나 소지품 챙기기(예: 강수 확률에 따른 우산 소지, 환절기 겉옷 챙기기 등) 등의 섬세한 에스코트 조언을 어조에 녹여내십시오.
 3. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
 4. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
-5. **과제(Task) 리마인드**: 진행 중인 과제 목록을 확인하고, 마감 임박 과제가 있으면 우선적으로 짧게 리마인드하라.
+5. **과제(Task) 리마인드**: 진행 중인 과제 목록을 확인하고, 마감 임박 과제가 있으면 우선적으로 짧게 리마인드하라. 만약 '[달성률 저조 경고]' 정보가 입력되어 있다면, 2개 이상의 세부 과제 진행도가 40% 미만으로 지체되고 있음을 따뜻하지만 단호하게 주의를 주고, 특히 어떤 과제들이 밀리고 있는지 꼭 언급하며 분발할 수 있도록 강한 동기부여를 하십시오.
 6. **분량**: 전체 브리핑은 4~5문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하고, 불필요한 장문을 배제하여 생성 속도를 단축하라.
 7. **강조**: 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
 `;
