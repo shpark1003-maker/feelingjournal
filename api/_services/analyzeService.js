@@ -156,7 +156,8 @@ ${sanitized || '(이미지 분석 요청)'}
                 .map(r => ({
                     diary_key: diaryKey,
                     owner_id: userId,
-                    recipient_id: r.id
+                    recipient_id: r.id,
+                    access_mode: r.accessMode || 'read'
                 }));
 
             if (recordsToInsert.length > 0) {

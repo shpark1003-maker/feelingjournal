@@ -58,8 +58,29 @@ module.exports = async (req, res) => {
             }
             const key = decodeURIComponent(id || '');
 
-            if (!key || !key.startsWith(`user:${user.id}:diary-`)) {
-                return res.status(403).json({ error: '수정 권한이 없습니다. (소유자 불일치)' });
+            let hasWritePermission = false;
+            const dbClient = supabaseAdmin || supabase;
+            if (key && key.startsWith(`user:${user.id}:diary-`)) {
+                hasWritePermission = true;
+            } else if (key) {
+                try {
+                    const { data: shareRow } = await dbClient
+                        .from('shared_diaries')
+                        .select('access_mode')
+                        .eq('diary_key', key)
+                        .eq('recipient_id', user.id)
+                        .maybeSingle();
+
+                    if (shareRow && shareRow.access_mode === 'write') {
+                        hasWritePermission = true;
+                    }
+                } catch (dbErr) {
+                    console.error('--- [PATCH CHECK ERROR] Failed to verify write permissions in DB:', dbErr.message);
+                }
+            }
+
+            if (!hasWritePermission) {
+                return res.status(403).json({ error: '수정 권한이 없습니다. (공유 편집 권한이 필요합니다)' });
             }
 
             const { title, content, richContent, shared, sharedWith } = req.body;
@@ -122,7 +143,16 @@ module.exports = async (req, res) => {
                         { id: 'mock-3', nickname: '행복한 민수 (데모)' }
                     ];
 
-                    const mockSelected = mockProfiles.filter(m => validation.validIds.includes(m.id));
+                    const mockSelected = mockProfiles
+                        .filter(m => validation.validIds.includes(m.id))
+                        .map(m => {
+                            const inputItem = sharedWith.find(sf => sf && sf.id === m.id);
+                            return {
+                                id: m.id,
+                                nickname: m.nickname,
+                                accessMode: (inputItem && inputItem.accessMode === 'write') ? 'write' : 'read'
+                            };
+                        });
                     const realIds = validation.validIds.filter(id => !id.startsWith('mock-'));
                     let realSelected = [];
                     if (realIds.length > 0) {
@@ -131,7 +161,14 @@ module.exports = async (req, res) => {
                             .select('id, nickname')
                             .in('id', realIds);
                         if (profiles) {
-                            realSelected = profiles.map(p => ({ id: p.id, nickname: p.nickname }));
+                            realSelected = profiles.map(p => {
+                                const inputItem = sharedWith.find(sf => sf && sf.id === p.id);
+                                return {
+                                    id: p.id,
+                                    nickname: p.nickname,
+                                    accessMode: (inputItem && inputItem.accessMode === 'write') ? 'write' : 'read'
+                                };
+                            });
                         }
                     }
                     sanitizedSharedWith = [...realSelected, ...mockSelected];
@@ -173,43 +210,35 @@ module.exports = async (req, res) => {
                 const addedIds = newIds.filter(id => !actualPrevIds.includes(id));
                 const removedIds = actualPrevIds.filter(id => !newIds.includes(id));
 
-                // Process sharing removals
-                if (removedIds.length > 0) {
-                    const realRemovedIds = removedIds.filter(id => !id.startsWith('mock-'));
-                    if (realRemovedIds.length > 0) {
-                        await dbClient
-                            .from('shared_diaries')
-                            .delete()
-                            .eq('diary_key', key)
-                            .in('recipient_id', realRemovedIds);
-                    }
+                // 데이터베이스 shared_diaries 테이블 동기화 (전체 삭제 후 재생성하여 권한/추가/삭제를 한 번에 처리)
+                try {
+                    await dbClient
+                        .from('shared_diaries')
+                        .delete()
+                        .eq('diary_key', key);
 
-                    for (const rid of removedIds) {
-                        await redis.srem(`user:${rid}:shared-diaries`, key);
-                    }
-                }
-
-                // Process sharing additions
-                if (addedIds.length > 0) {
-                    const realAddedIds = addedIds.filter(id => !id.startsWith('mock-'));
-                    if (realAddedIds.length > 0) {
+                    const realNewSharees = newSharedWith.filter(r => !r.id.startsWith('mock-'));
+                    if (realNewSharees.length > 0) {
+                        const realIds = realNewSharees.map(r => r.id);
                         const { data: validProfiles, error: profileErr } = await dbClient
                             .from('profiles')
                             .select('id')
-                            .in('id', realAddedIds);
+                            .in('id', realIds);
 
                         if (profileErr) {
                             console.error('--- [PATCH DB ERROR] select profiles failed:', profileErr);
                             return res.status(500).json({ error: profileErr.message });
                         }
+
                         if (validProfiles) {
                             const validIds = validProfiles.map(p => p.id);
-                            const recordsToInsert = newSharedWith
+                            const recordsToInsert = realNewSharees
                                 .filter(r => validIds.includes(r.id))
                                 .map(r => ({
                                     diary_key: key,
                                     owner_id: user.id,
-                                    recipient_id: r.id
+                                    recipient_id: r.id,
+                                    access_mode: r.accessMode || 'read'
                                 }));
 
                             if (recordsToInsert.length > 0) {
@@ -221,11 +250,17 @@ module.exports = async (req, res) => {
                             }
                         }
                     }
+                } catch (dbSyncErr) {
+                    console.error('--- [PATCH DB SYNC ERROR] shared_diaries sync failed:', dbSyncErr.message);
+                    return res.status(500).json({ error: dbSyncErr.message });
+                }
 
-                    // Redis set addition (supports both mock and real)
-                    for (const aid of addedIds) {
-                        await redis.sadd(`user:${aid}:shared-diaries`, key);
-                    }
+                // Redis 공유 세트 동기화 (기존 제거 및 새 대상 추가)
+                for (const rid of removedIds) {
+                    await redis.srem(`user:${rid}:shared-diaries`, key);
+                }
+                for (const aid of addedIds) {
+                    await redis.sadd(`user:${aid}:shared-diaries`, key);
                 }
             }
 
