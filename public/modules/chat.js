@@ -1000,7 +1000,7 @@ export async function checkFriendSos() {
             <img class="w-12 h-12 rounded-full object-cover" src="${aiAvatarUrl}" alt="AI"/>
             <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-baseline">
-                    <h3 class="font-bold truncate text-primary">✨ ${aiName}와 대화</h3>
+                    <h3 class="font-bold text-[14px] truncate text-primary">✨ ${aiName}와 대화</h3>
                     <span class="text-[10px] text-on-surface-variant">실시간</span>
                 </div>
                 <p class="text-[12px] text-on-surface-variant truncate">무엇이든 이야기해 주세요. 든든한 동반자가 되어 드릴게요.</p>
@@ -1023,7 +1023,7 @@ export async function checkFriendSos() {
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline">
-                        <h3 class="font-bold truncate text-on-surface" style="display:flex; align-items:center; gap:4px;">
+                        <h3 class="font-bold text-[14px] truncate text-on-surface" style="display:flex; align-items:center; gap:4px;">
                             <span>${f.nickname || '익명'}</span>
                             ${onlineDot}
                         </h3>
