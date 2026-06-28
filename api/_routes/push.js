@@ -259,7 +259,8 @@ async function dispatchPushNotifications() {
         const minute = parts.find(p => p.type === 'minute').value;
         const currentHourMin = `${hour}:${minute}`; // 예: "08:00"
 
-        const todayStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }).substring(0, 12).replace(/\s/g, '');
+        const kstTimeForDate = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        const todayStr = `${kstTimeForDate.getUTCFullYear()}-${kstTimeForDate.getUTCMonth() + 1}-${kstTimeForDate.getUTCDate()}`;
 
         for (const { userId, config } of usersList) {
             if (!config.settings) continue;
