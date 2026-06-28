@@ -295,7 +295,8 @@ export function setupChatUI() {
             input.value = '';
 
             const title = document.getElementById('chat-room-title-text').innerText;
-            if (title.includes('님과의 대화')) {
+            const friend = (store.allFriends || []).find(f => f.nickname === title);
+            if (friend) {
                 // 데모/가상 친구방(영희, 철수, 민수, 데모)인 경우에만 자동 답변 처리
                 const isMock = title.includes('영희') || title.includes('철수') || title.includes('민수') || title.includes('데모');
                 if (isMock) {
@@ -591,14 +592,11 @@ export async function switchChatRoom(roomId, title) {
 
     // [NEW] 1촌 감성 온도계 & 예보 배너 다이내믹 렌더링
     try {
-        const isFriendRoom = title.includes('님과의 대화');
+        const friend = (store.allFriends || []).find(f => f.nickname === title);
+        const isFriendRoom = !!friend;
         const settingsBtn = document.getElementById('chat-friend-settings-btn');
         if (isFriendRoom) {
-            const friendNickname = title.replace('💬 ', '').replace('님과의 대화', '').trim();
-            const friend = (store.allFriends || []).find(f => 
-                f.nickname === friendNickname || 
-                f.nickname.includes(friendNickname)
-            );
+            const friendNickname = friend.nickname;
             const emotion = friend ? friend.current_emotion : '평온';
             updateEmotionThermometer(friendNickname, emotion);
             if (settingsBtn && friend) {
@@ -1246,8 +1244,8 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js?v=5.7.7');
-            await openChatWindow(data.room.id, `💬 ${friendNickname}님과의 대화`);
+            const { openChatWindow } = await import('./floatingChat.js?v=5.8.1');
+            await openChatWindow(data.room.id, friendNickname);
         } else {
             console.error('Room registration failed:', data.error);
             alert('채팅방 연결에 실패했습니다.');

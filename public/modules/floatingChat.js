@@ -33,15 +33,7 @@ export function handleChatModeChange() {
             });
             // 모바일 탭으로 전환
             const chatTab = document.getElementById('nav-chat-tab');
-            if (chatTab) chatTab.click();
-        }
-    }
-}
-
-// 초기 로드 시 리사이즈 이벤트 바인딩
-window.addEventListener('resize', handleChatModeChange);
-
-// 플로팅 채팅방 열기
+            if (chatTab// 플로팅 채팅방 열기
 export async function openChatWindow(roomId, title) {
     if (!roomId) return;
 
@@ -55,98 +47,21 @@ export async function openChatWindow(roomId, title) {
         }
     }
 
-    // 1. 모바일 처리
-    if (isMobileChatMode()) {
-        // 모바일인 경우 플로팅이 아닌 전체화면으로 대화방 전환
-        console.log('--- [CHAT] Mobile Mode: Redirecting to fullscreen chat room ---');
-        const chatTab = document.getElementById('nav-chat-tab');
-        if (chatTab) chatTab.click();
-        
-        // 전역 window 헬퍼가 있을 경우 이를 통해 단일 뷰 스위치
-        if (window.openChatWithFriend) {
-            const titleEl = document.getElementById('chat-room-title-text');
-            if (titleEl) titleEl.innerText = title;
-
-            // Switch room to load messages and bind realtime events
-            import('./chat.js?v=5.7.7').then(async (chatMod) => {
-                await chatMod.switchChatRoom(roomId, title);
-            }).catch(err => {
-                console.error('Failed to import chat.js for mobile switchChatRoom:', err);
-            });
-
-            // index.html의 overlay 노출
-            const chatOverlay = document.getElementById('chat-detail-overlay');
-            if (chatOverlay) chatOverlay.classList.remove('hidden');
-        }
-        return;
-    }
-
-    // 2. PC 데스크톱 처리: 카카오톡 PC 프로그램 스타일로 브라우저 탭 밖의 실제 팝업 창을 생성
-    console.log('--- [CHAT] Desktop Mode: Opening chat in a new standalone popup window ---');
-    const width = 380;
-    const height = 540;
-    const left = (window.screen.width - width) / 2;
-    const top = (window.screen.height - height) / 2;
+    // 항상 플로팅 팝업이 아닌 인앱 전체화면으로 대화방 전환 (팝업 차단 방지 및 통합 가독성 보강)
+    console.log('--- [CHAT] Opening chat room in fullscreen overlay ---');
+    const chatTab = document.getElementById('nav-chat-tab');
+    if (chatTab) chatTab.click();
     
-    const popUrl = `/chat-pop.html?roomId=${encodeURIComponent(roomId)}&title=${encodeURIComponent(title)}`;
-    const winName = `chat_pop_${roomId.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    
-    const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,status=no,toolbar=no,resizable=yes`;
-    const popWin = window.open(popUrl, winName, features);
-    if (popWin) {
-        popWin.focus();
-    } else {
-        alert('팝업 차단이 활성화되어 있을 수 있습니다. 브라우저 주소창 우측에서 이 사이트의 팝업 허용을 해주세요.');
-    }
-    return;
+    const titleEl = document.getElementById('chat-room-title-text');
+    if (titleEl) titleEl.innerText = title;
 
-    // 2. 중복 열기 방지
-    if (store.activeChatWindows[roomId]) {
-        focusChatWindow(roomId);
-        return;
-    }
+    // Switch room to load messages and bind realtime events
+    const chatMod = await import('./chat.js?v=5.8.1');
+    await chatMod.switchChatRoom(roomId, title);
 
-    // 3. 최대 창 개수 제한 (데스크톱 4개)
-    const activeCount = Object.keys(store.activeChatWindows).length;
-    if (activeCount >= MAX_FLOATING_CHAT_WINDOWS) {
-        // 가장 오래된 최소화 창을 자동으로 찾아 닫음으로써 편의성 제공
-        const minimizedRoomId = Object.keys(store.activeChatWindows).find(id => store.activeChatWindows[id].isMinimized);
-        if (minimizedRoomId) {
-            console.log(`--- [CHAT] Auto-closing minimized window ${minimizedRoomId} to free slot ---`);
-            closeChatWindow(minimizedRoomId);
-        } else {
-            alert(`최대 ${MAX_FLOATING_CHAT_WINDOWS}개의 채팅창만 동시에 열 수 있습니다. 기존 창을 닫아주세요.`);
-            return;
-        }
-    }
-
-    // 4. 자동 배치 (Cascading) 계산 및 Clamp
-    const offset = Object.keys(store.activeChatWindows).length * 28;
-    let x = window.innerWidth - WINDOW_WIDTH - 20 - offset;
-    let y = window.innerHeight - WINDOW_HEIGHT - 60 - offset;
-
-    // Viewport clamp
-    x = Math.max(10, Math.min(x, window.innerWidth - WINDOW_WIDTH - 10));
-    y = Math.max(60, Math.min(y, window.innerHeight - WINDOW_HEIGHT - 10));
-
-    const zIndex = getNextZIndex();
-
-    // 5. 상태 기록
-    store.activeChatWindows[roomId] = {
-        title,
-        isMinimized: false,
-        x,
-        y,
-        zIndex
-    };
-
-    // 6. DOM 생성
-    createWindowDOM(roomId, title, x, y, zIndex);
-
-    // 7. 메시지 초기 로딩 및 Realtime 바인딩
-    renderedMessageIds[roomId] = new Set();
-    await loadWindowMessages(roomId);
-    subscribeRoomRealtime(roomId);
+    // index.html의 overlay 노출
+    const chatOverlay = document.getElementById('chat-detail-overlay');
+    if (chatOverlay) chatOverlay.classList.remove('hidden');
 }
 
 // 윈도우 DOM 동적 빌드
