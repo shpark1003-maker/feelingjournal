@@ -58,12 +58,18 @@ module.exports = async (req, res) => {
         let briefingResult = null;
         let isSWRApplied = false;
 
+        const cacheKey = `user:${user.id}:briefing-cache`;
+
         // SWR (Stale-While-Revalidate) Check
         if (clientDiaries.length === 0) {
-            const cacheKey = `user:${user.id}:briefing-cache`;
             try {
                 const cached = await redis.get(cacheKey);
                 if (cached) {
+                    if (cached === 'GENERATING') {
+                        console.log(`--- [BRIEFING] Still generating in background for user ${user.id} ---`);
+                        return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                    }
+
                     let parsed = null;
                     try {
                         parsed = JSON.parse(cached);
@@ -71,7 +77,11 @@ module.exports = async (req, res) => {
                         parsed = { briefing: cached, weather: null, updatedAt: Date.now() };
                     }
 
-                    if (parsed && typeof parsed === 'object' && parsed.briefing) {
+                    if (parsed && typeof parsed === 'object') {
+                        if (parsed.briefing === 'GENERATING') {
+                            return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                        }
+
                         briefingResult = parsed;
                         isSWRApplied = true;
 
@@ -110,6 +120,22 @@ module.exports = async (req, res) => {
                         }
                         return;
                     }
+                } else {
+                    // No cache found: set state to 'GENERATING' and trigger asynchronous fetch in background!
+                    console.log(`--- [BRIEFING ASYNC TRIGGER] Initiating background briefing generation for user ${user.id} ---`);
+                    await redis.set(cacheKey, JSON.stringify({ briefing: 'GENERATING', updatedAt: Date.now() }), 'EX', 60); // 1분 동안 임시 저장
+
+                    briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true)
+                        .then(() => {
+                            console.log(`--- [ASYNC BRIEFING SUCCESS] Background generation finished for user ${user.id} ---`);
+                        })
+                        .catch((err) => {
+                            console.error(`--- [ASYNC BRIEFING ERROR] Background generation failed for user ${user.id}:`, err.message);
+                            // Clear generating status on failure to allow retry
+                            redis.del(cacheKey).catch(() => {});
+                        });
+
+                    return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                 }
             } catch (cacheErr) {
                 console.warn('--- [BRIEFING SWR ERROR] Redis read failed, falling back to synchronous fetch:', cacheErr.message);

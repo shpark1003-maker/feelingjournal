@@ -522,6 +522,20 @@ export async function loadBriefing() {
         const data = await briefingPromise;
         
         // [2. Loaded State / Empty State / Error State split]
+        if (data.success && data.isGenerating) {
+            console.log("--- [BRIEFING] Briefing is generating. Displaying loading and setting up retry poll...");
+            content.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-xs font-semibold">AI 비서가 오늘의 데일리 브리핑을 준비하고 있습니다...</p>
+                </div>
+            `;
+            setTimeout(() => {
+                loadBriefing(regionOverride);
+            }, 3000);
+            return;
+        }
+
         if (data.success && data.briefing) {
             const briefingText = data.briefing.trim();
 
