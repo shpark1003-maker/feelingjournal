@@ -120,9 +120,9 @@ export function appendMessage(msg) {
     if (isMe) {
         // Alternating background colors for user messages matching the prototype design
         const isAlternate = msg.content && msg.content.length % 2 === 0;
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 12px 2px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '8px' : '14px 18px'}; border-radius: 12px 2px 12px 12px; font-size: 14px; max-width: 90%; background: ${isAlternate ? '#e8f0e0' : '#fdf2b5'}; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.6; word-break: break-all;`;
     } else {
-        messageContentStyle = `padding: ${isImage ? '6px' : '10px 14px'}; border-radius: 2px 12px 12px 12px; font-size: clamp(12px, 3vw + 8px, 15px); max-width: 80%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15);`;
+        messageContentStyle = `padding: ${isImage ? '8px' : '14px 18px'}; border-radius: 2px 12px 12px 12px; font-size: 14px; max-width: 90%; background: #fffef0; border: 2px solid #5d574d; color: #433e37; box-shadow: 2px 2px 0px rgba(93,87,77,0.15); line-height: 1.6; word-break: break-all;`;
     }
 
     div.innerHTML = `
@@ -1000,10 +1000,10 @@ export async function checkFriendSos() {
             <img class="w-12 h-12 rounded-full object-cover" src="${aiAvatarUrl}" alt="AI"/>
             <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-baseline">
-                    <h3 class="font-bold text-[14px] truncate text-primary">✨ ${aiName}와 대화</h3>
+                    <div class="font-bold text-[13px] truncate text-primary">✨ ${aiName}와 대화</div>
                     <span class="text-[10px] text-on-surface-variant">실시간</span>
                 </div>
-                <p class="text-[12px] text-on-surface-variant truncate">무엇이든 이야기해 주세요. 든든한 동반자가 되어 드릴게요.</p>
+                <p class="text-[11px] text-on-surface-variant/80 mt-0.5" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4;">무엇이든 이야기해 주세요. 든든한 동반자가 되어 드릴게요.</p>
             </div>
         </div>
         `;
@@ -1023,16 +1023,16 @@ export async function checkFriendSos() {
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline">
-                        <h3 class="font-bold text-[14px] truncate text-on-surface" style="display:flex; align-items:center; gap:4px;">
+                        <div class="font-bold text-[13px] truncate text-on-surface" style="display:flex; align-items:center; gap:4px;">
                             <span>${f.nickname || '익명'}</span>
                             ${onlineDot}
-                        </h3>
+                        </div>
                         <span class="text-[10px] text-on-surface-variant">${f.my_stealth ? '🤫 스텔스' : '1촌'}</span>
                     </div>
-                    <p class="text-[12px] text-on-surface-variant truncate" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>상태: ${f.current_emotion || '평온'}</span>
-                        ${isSos ? '<span style="background:#ff4757; color:white; font-size:8px; padding:1px 4px; border-radius:3px; font-weight:bold;">위로 필요</span>' : ''}
-                    </p>
+                    <div class="text-[11px] text-on-surface-variant/80 mt-0.5" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4; flex-1; min-w-0;">상태: ${f.current_emotion || '평온'}</span>
+                        ${isSos ? '<span style="background:#ff4757; color:white; font-size:8px; padding:1px 4px; border-radius:3px; font-weight:bold; shrink-0; margin-left:8px;">위로 필요</span>' : ''}
+                    </div>
                 </div>
             </div>
             `;

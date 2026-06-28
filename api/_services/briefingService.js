@@ -251,9 +251,10 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
                 }
 
                 const allUncompleted = allUncompletedRes.data;
-                const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40);
+                const todayKSTStr = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40 && st.due_date && st.due_date <= todayKSTStr);
                 if (lowProgressTasks.length >= 2) {
-                    lowProgressWarningStr = `🚨 경고: 현재 진행 중인 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 저조한 과제들을 확인하고 분발하도록 촉구하십시오:\n` +
+                    lowProgressWarningStr = `🚨 경고: 현재 마감 기한이 도래했거나 지난 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 지체되고 있는 과제들을 확인하고 마감 기한 준수를 촉구하십시오:\n` +
                         lowProgressTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 현재 진행률: ${st.progress || 0}%, 기한: ${st.due_date})`).join('\n');
                 }
             }
