@@ -1,3 +1,4 @@
+// Rebuild trigger: 2026-06-28T22:52:00
 const routes = require('./_routes/registry');
 const { verifyUser } = require('./_routes/middleware/auth');
 
