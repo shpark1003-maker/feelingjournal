@@ -130,44 +130,38 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
         }
 
         const failedCalendars = [];
-        const allFetchedEvents = [];
-
-        // 2. Fetch events from all calendars in chunks of 3
-        const concurrencyLimit = 3;
-        for (let i = 0; i < calendars.length; i += concurrencyLimit) {
-            const chunk = calendars.slice(i, i + concurrencyLimit);
-            const chunkPromises = chunk.map(async (cal) => {
-                try {
-                    let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?singleEvents=true&maxResults=250`;
-                    if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
-                    if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
-                    
-                    const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000);
-                    if (res.ok) {
-                        const data = await res.json();
-                        const items = data.items || [];
-                        return items.map(item => ({ ...item, _calendarId: cal.id }));
-                    } else {
-                        if (res.status === 401 || res.status === 403) {
-                            isTokenEvicted = true;
-                            await redis.del(`user:${userId}:google_provider_token`);
-                            await redis.del(`user:${userId}:google_provider_refresh_token`);
-                            console.warn(`--- [fetchGoogleCalendarEvents] Invalid token detected on event fetch (Status ${res.status}). Evicted Google tokens for user ${userId} ---`);
-                        }
-                        throw new Error(`Google API returned status ${res.status}`);
+        const fetchPromises = calendars.map(async (cal) => {
+            try {
+                let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?singleEvents=true&maxResults=250`;
+                if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
+                if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
+                
+                const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000);
+                if (res.ok) {
+                    const data = await res.json();
+                    const items = data.items || [];
+                    return items.map(item => ({ ...item, _calendarId: cal.id }));
+                } else {
+                    if (res.status === 401 || res.status === 403) {
+                        isTokenEvicted = true;
+                        await redis.del(`user:${userId}:google_provider_token`);
+                        await redis.del(`user:${userId}:google_provider_refresh_token`);
+                        console.warn(`--- [fetchGoogleCalendarEvents] Invalid token detected on event fetch (Status ${res.status}). Evicted Google tokens for user ${userId} ---`);
                     }
-                } catch (err) {
-                    console.warn(`--- [fetchGoogleCalendarEvents] Failed for calendar ${cal.id} (${cal.summary}):`, err.message);
-                    failedCalendars.push({ id: cal.id, summary: cal.summary || cal.id, error: err.message });
-                    return [];
+                    throw new Error(`Google API returned status ${res.status}`);
                 }
-            });
+            } catch (err) {
+                console.warn(`--- [fetchGoogleCalendarEvents] Failed for calendar ${cal.id} (${cal.summary}):`, err.message);
+                failedCalendars.push({ id: cal.id, summary: cal.summary || cal.id, error: err.message });
+                return [];
+            }
+        });
 
-            const results = await Promise.allSettled(chunkPromises);
-            for (const result of results) {
-                if (result.status === 'fulfilled' && result.value) {
-                    allFetchedEvents.push(...result.value);
-                }
+        const results = await Promise.allSettled(fetchPromises);
+        const allFetchedEvents = [];
+        for (const result of results) {
+            if (result.status === 'fulfilled' && result.value) {
+                allFetchedEvents.push(...result.value);
             }
         }
 

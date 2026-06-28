@@ -217,16 +217,64 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
         return { recentDiaries, reminiscenceMemory };
     })();
 
+    const dbTasksPromise = (async () => {
+        let dbTasksStr = '';
+        let lowProgressWarningStr = '';
+        try {
+            const { supabaseAdmin } = require('../_routes/shared');
+            if (supabaseAdmin) {
+                const yesterdayDateStr = yesterday.toISOString().split('T')[0];
+                const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
+                
+                // Supabase 쿼리들을 병렬 실행하여 데이터베이스 조회 대기 시간 최적화
+                const [dbSubTasksRes, allUncompletedRes] = await Promise.all([
+                    supabaseAdmin
+                        .from('sub_tasks')
+                        .select('title, due_date, start_date, is_completed, tasks!inner(title, user_id)')
+                        .eq('tasks.user_id', userId)
+                        .eq('is_completed', false)
+                        .gte('due_date', yesterdayDateStr)
+                        .lte('start_date', tomorrowDateStr),
+                    supabaseAdmin
+                        .from('sub_tasks')
+                        .select('title, progress, due_date, tasks!inner(title, user_id)')
+                        .eq('tasks.user_id', userId)
+                        .eq('is_completed', false)
+                ]);
+
+                const dbSubTasks = dbSubTasksRes.data;
+                if (dbSubTasks && dbSubTasks.length > 0) {
+                    dbTasksStr = dbSubTasks.map(st => {
+                        const parentTitle = st.tasks?.title || '과제';
+                        return `- ${st.title} (대과제: ${parentTitle}, 기한: ${st.due_date})`;
+                    }).join('\n');
+                }
+
+                const allUncompleted = allUncompletedRes.data;
+                const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40);
+                if (lowProgressTasks.length >= 2) {
+                    lowProgressWarningStr = `🚨 경고: 현재 진행 중인 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 저조한 과제들을 확인하고 분발하도록 촉구하십시오:\n` +
+                        lowProgressTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 현재 진행률: ${st.progress || 0}%, 기한: ${st.due_date})`).join('\n');
+                }
+            }
+        } catch (err) {
+            console.error('[Briefing Service] Failed to fetch active DB tasks:', err.message);
+        }
+        return { dbTasksStr, lowProgressWarningStr };
+    })();
+
     const [
         contextEvents,
         { weatherStr, weatherObj },
         { recentDiaries: rawRecentDiaries, reminiscenceMemory },
-        storedNickname
+        storedNickname,
+        { dbTasksStr, lowProgressWarningStr }
     ] = await Promise.all([
         contextEventsPromise,
         weatherNewsPromise,
         diariesPromise,
-        redis.get(nicknameKey)
+        redis.get(nicknameKey),
+        dbTasksPromise
     ]);
 
     let recentDiaries = rawRecentDiaries;
@@ -241,46 +289,6 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
             recentDiaries === '일기 기록 없음' ? '' : recentDiaries,
             clientContent
         ].filter(Boolean).join('\n---\n') || '일기 기록 없음';
-    }
-
-    let dbTasksStr = '';
-    let lowProgressWarningStr = '';
-    try {
-        const { supabaseAdmin } = require('../_routes/shared');
-        if (supabaseAdmin) {
-            const yesterdayDateStr = yesterday.toISOString().split('T')[0];
-            const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
-            
-            const { data: dbSubTasks } = await supabaseAdmin
-                .from('sub_tasks')
-                .select('title, due_date, start_date, is_completed, tasks!inner(title, user_id)')
-                .eq('tasks.user_id', userId)
-                .eq('is_completed', false)
-                .gte('due_date', yesterdayDateStr)
-                .lte('start_date', tomorrowDateStr);
-
-            if (dbSubTasks && dbSubTasks.length > 0) {
-                dbTasksStr = dbSubTasks.map(st => {
-                    const parentTitle = st.tasks?.title || '과제';
-                    return `- ${st.title} (대과제: ${parentTitle}, 기한: ${st.due_date})`;
-                }).join('\n');
-            }
-
-            // 40% 미만 저조 과제 경고 로직 (2개 이상 시)
-            const { data: allUncompleted } = await supabaseAdmin
-                .from('sub_tasks')
-                .select('title, progress, due_date, tasks!inner(title, user_id)')
-                .eq('tasks.user_id', userId)
-                .eq('is_completed', false);
-
-            const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40);
-            if (lowProgressTasks.length >= 2) {
-                lowProgressWarningStr = `🚨 경고: 현재 진행 중인 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 저조한 과제들을 확인하고 분발하도록 촉구하십시오:\n` +
-                    lowProgressTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 현재 진행률: ${st.progress || 0}%, 기한: ${st.due_date})`).join('\n');
-            }
-        }
-    } catch (err) {
-        console.error('[Briefing Service] Failed to fetch active DB tasks:', err.message);
     }
 
     const rawNickname = storedNickname || '사용자';
