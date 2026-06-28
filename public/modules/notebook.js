@@ -302,6 +302,12 @@ export function selectPage(pageId, history) {
     
     // 글로벌 지정 공유자 상태 초기화 및 렌더링
     window.v2SelectedSharees = page.sharedWith && Array.isArray(page.sharedWith) ? [...page.sharedWith] : [];
+    
+    const globalModeSelect = document.getElementById('v2-share-global-mode');
+    if (globalModeSelect) {
+        globalModeSelect.value = (window.v2SelectedSharees.length > 0 ? (window.v2SelectedSharees[0].accessMode || 'read') : 'read') || 'read';
+    }
+
     if (window.v2RenderSelectedSharees) {
         window.v2RenderSelectedSharees();
     }

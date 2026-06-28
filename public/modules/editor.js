@@ -119,7 +119,6 @@ export function setupEditor() {
 
         if (window.v2SelectedSharees.length > 0) {
             listContainer.innerHTML = window.v2SelectedSharees.map(sf => {
-                const currentMode = sf.accessMode || 'read';
                 return `
                 <div class="flex items-center justify-between p-2 bg-surface-container rounded-xl border border-outline-variant/10 shadow-sm transition-all hover:bg-surface-container-high gap-2">
                     <div class="flex items-center gap-2.5 min-w-0 flex-1">
@@ -131,15 +130,9 @@ export function setupEditor() {
                             <span class="text-[9px] text-on-surface-variant/60 truncate">${sf.email || '공유 등록됨'}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <select class="v2-share-mode-select bg-surface-container-high text-[10px] font-bold text-on-surface border border-outline-variant/30 rounded px-1.5 py-0.5 focus:outline-none cursor-pointer" onchange="window.v2ChangeShareMode('${sf.id}', this.value)">
-                            <option value="read" ${currentMode === 'read' ? 'selected' : ''}>읽기 전용</option>
-                            <option value="write" ${currentMode === 'write' ? 'selected' : ''}>편집 가능</option>
-                        </select>
-                        <button type="button" class="text-error hover:bg-error/10 p-1 rounded-lg transition-all" onclick="window.v2RemoveSharee('${sf.id}')" title="제외">
-                            <span class="material-symbols-outlined text-[16px] block">close</span>
-                        </button>
-                    </div>
+                    <button type="button" class="text-error hover:bg-error/10 p-1.5 rounded-lg transition-all shrink-0" onclick="window.v2RemoveSharee('${sf.id}')" title="제외">
+                        <span class="material-symbols-outlined text-[16px] block">close</span>
+                    </button>
                 </div>
                 `;
             }).join('');
@@ -151,7 +144,9 @@ export function setupEditor() {
     // Add a sharee
     window.v2AddSharee = function(id, nickname, email = '') {
         if (window.v2SelectedSharees.some(s => s.id === id)) return;
-        window.v2SelectedSharees.push({ id, nickname, email, accessMode: 'read' });
+        const globalModeSelect = document.getElementById('v2-share-global-mode');
+        const defaultMode = globalModeSelect ? globalModeSelect.value : 'read';
+        window.v2SelectedSharees.push({ id, nickname, email, accessMode: defaultMode });
         window.v2RenderSelectedSharees();
         window.triggerDebouncedSharePatch();
     };
@@ -163,14 +158,17 @@ export function setupEditor() {
         window.triggerDebouncedSharePatch();
     };
 
-    // Change a sharee's permission mode
-    window.v2ChangeShareMode = function(id, value) {
-        const sharee = window.v2SelectedSharees.find(s => s.id === id);
-        if (sharee) {
-            sharee.accessMode = value;
+    // Bind Global Share Mode Dropdown
+    const globalShareModeSelect = document.getElementById('v2-share-global-mode');
+    if (globalShareModeSelect) {
+        globalShareModeSelect.addEventListener('change', function() {
+            const mode = this.value;
+            window.v2SelectedSharees.forEach(s => {
+                s.accessMode = mode;
+            });
             window.triggerDebouncedSharePatch();
-        }
-    };
+        });
+    }
 
     // Debounced PATCH helper
     let sharePatchTimeout = null;
