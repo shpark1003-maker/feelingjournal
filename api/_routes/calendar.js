@@ -366,7 +366,7 @@ module.exports = async (req, res) => {
 
                         updatePayload.progress = progress;
                         updatePayload.rating = rating;
-                        updatePayload.review_date = reviewDate;
+                        updatePayload.review_date = reviewDate || null;
                         updatePayload.review_text = reflection;
                         updatePayload.is_completed = progress >= 100;
                         updatePayload.completed_at = progress >= 100 ? new Date().toISOString() : null;
@@ -378,13 +378,16 @@ module.exports = async (req, res) => {
                         .eq('id', dbSubTask.id)
                         .select();
 
+                    if (error) throw error;
+
                     if (data && data.length > 0) {
                         dbUpdated = true;
                         // Refresh dbSubTask
                         dbSubTask = { ...dbSubTask, ...updatePayload };
                     }
                 } catch (dbErr) {
-                    console.warn('[Calendar PATCH] Failed to update sub_tasks table:', dbErr.message);
+                    console.error('[Calendar PATCH] Failed to update sub_tasks table:', dbErr);
+                    return res.status(500).json({ error: `데이터베이스 저장 실패: ${dbErr.message || dbErr}` });
                 }
 
                 // Shifting subsequent uncompleted subtasks cascadingly
