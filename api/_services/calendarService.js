@@ -259,6 +259,14 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
         console.warn('[Calendar Service] Failed to fetch subtasks from DB:', dbErr.message);
     }
 
+    if (forceRefresh) {
+        try {
+            await clearGoogleCalendarCache(userId);
+        } catch (err) {
+            console.warn('[Calendar Service] Failed to clear Google Calendar cache:', err.message);
+        }
+    }
+
     try {
         const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const timeMax = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
