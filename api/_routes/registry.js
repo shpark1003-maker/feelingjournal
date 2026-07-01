@@ -19,6 +19,7 @@ const scrap = require('./scrap');
 const tts = require('./tts');
 const news = require('./news');
 const aiTasks = require('./ai-tasks');
+const stitch = require('./stitch');
 
 const routes = [
     { path: '/api/ai-tasks', handler: aiTasks, auth: true },
@@ -41,6 +42,7 @@ const routes = [
     { path: '/api/users/search', handler: userSearch, auth: true },
     { path: '/api/scrap', handler: scrap, auth: false },
     { path: '/api/tts', handler: tts, auth: true },
+    { path: '/api/stitch', handler: stitch, auth: false },
     
     // Express sub-routers matching
     { path: '/api/push', handler: push.router, auth: false, customRouter: true, stripPrefix: '/api/push' },
