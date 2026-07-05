@@ -44,6 +44,7 @@ export async function initializeChat() {
 }
 
 export async function loadMessages() {
+    chatState.clearMessages();
     try {
         const token = await store.getSessionToken();
         if (!token) return;
@@ -67,6 +68,10 @@ export async function loadMessages() {
 const renderedMessageIds = new Set();
 
 export function appendMessage(msg) {
+    if (msg && msg.content) {
+        const role = (msg.sender_id === store.user.id) ? 'user' : 'assistant';
+        chatState.addMessage(role, msg.content);
+    }
     if (!msg || !msg.id) return;
     if (renderedMessageIds.has(msg.id)) return;
     renderedMessageIds.add(msg.id);

@@ -40,7 +40,43 @@ async function getOrCreateRoom(name, type) {
 /**
  * Generates an AI response, respecting deduplication locks, persona settings, and custom instructions.
  */
-async function generateAiResponse({ user, message, context, room_id, room_title, aiContextConsent, userDiaryContext }) {
+async function generateAiResponse({ user, message, history, context, room_id, room_title, aiContextConsent, userDiaryContext }) {
+    // [Phase 3.5] 히스토리 무결성 검증 및 제한
+    let validHistory = [];
+    if (Array.isArray(history)) {
+        let totalLength = 0;
+        // 최신 메시지부터 검사하기 위해 역순 순회
+        for (let i = history.length - 1; i >= 0; i--) {
+            if (validHistory.length >= 15) break; // 최대 15개 제한
+            const item = history[i];
+            if (!item || typeof item !== 'object') continue;
+            
+            // role 검증 (user/assistant 외 제외)
+            const role = item.role === 'user' ? 'user' : (item.role === 'assistant' ? 'assistant' : null);
+            if (!role) continue;
+            
+            // content 검증 및 XSS 처리
+            if (typeof item.content !== 'string') continue;
+            let content = item.content.trim()
+                .replace(/<[^>]*>?/gm, '') // HTML 태그 제거
+                .replace(/javascript:/gi, ''); // 스크립트 시도 제거
+                
+            // 개별 메시지 500자 제한
+            if (content.length > 500) content = content.substring(0, 500) + '...';
+            if (!content) continue;
+            
+            // 총합 제한 (약 5000자)
+            if (totalLength + content.length > 5000) break;
+            
+            totalLength += content.length;
+            // 역순으로 탐색했으므로 앞에 삽입
+            validHistory.unshift({ role, content });
+        }
+    }
+    
+    const formattedHistoryStr = validHistory.length > 0 
+        ? validHistory.map(h => `${h.role === 'user' ? '사용자' : '비서'}: ${h.content}`).join('\n')
+        : '최근 대화 내역 없음';
     const targetRoomId = (room_id === 'lobby' || !room_id) ? '6edf28f2-c7f6-45e9-9648-07b118f0cf9e' : room_id;
 
     // [중복 방지 락]
@@ -311,7 +347,9 @@ ${latestDiaryStr}
 
 [현재 상황]
 - 대화 상대: ${userNickname}님
-- 대화 맥락: ${context || '최근 대화 없음'}
+- 특별 컨텍스트: ${context || '없음'}
+- 이전 대화 맥락 (History):
+${formattedHistoryStr}
 - 마지막 메시지: "${message}"
 
 [수행 지시]

@@ -48,12 +48,13 @@ module.exports = async (req, res) => {
 
         // 4. POST /api/chat/ai-response
         if (req.method === 'POST' && path.includes('/ai-response')) {
-            const { message, context, room_id, room_title, aiContextConsent, userDiaryContext } = req.body;
+            const { message, history, context, room_id, room_title, aiContextConsent, userDiaryContext } = req.body;
             
             try {
                 const result = await chatService.generateAiResponse({
                     user: req.user,
                     message,
+                    history,
                     context,
                     room_id,
                     room_title,
