@@ -374,6 +374,10 @@ export function setupLearningCenter() {
     });
 }
 
+let briefingPollCount = 0;
+let briefingPollTimer = null;
+const MAX_BRIEFING_POLLS = 10;
+
 export async function loadBriefing() {
     const card = document.getElementById('briefing-card');
     const content = document.getElementById('briefing-content');
@@ -454,6 +458,9 @@ export async function loadBriefing() {
                     console.log(`--- [GPS DYNAMIC BRIEFING] Resolved active region: ${closestCity} ---`);
                 } catch (err) {
                     console.warn('Real-time GPS capture skipped or denied, fallback to saved region.', err);
+                    const locationInput = document.getElementById('weather-location-input');
+                    const fixedRegion = locationInput?.value?.trim() || store.settings?.weatherRegion || '서울';
+                    url += `?region=${encodeURIComponent(fixedRegion)}`;
                 }
             } else {
                 const locationInput = document.getElementById('weather-location-input');
@@ -522,22 +529,62 @@ export async function loadBriefing() {
         const data = await briefingPromise;
         
         // [2. Loaded State / Empty State / Error State split]
-        if (data.success && data.isGenerating) {
-            console.log("--- [BRIEFING] Briefing is generating. Displaying loading and setting up retry poll...");
+        if (data.status === 'generating' || data.isGenerating) {
+            console.log(`--- [BRIEFING] Briefing is generating. Poll attempt ${briefingPollCount + 1}/${MAX_BRIEFING_POLLS} ---`);
+
+            if (briefingPollCount >= MAX_BRIEFING_POLLS) {
+                briefingPollCount = 0;
+                content.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+                        <span class="material-symbols-outlined text-3xl text-on-surface-variant/50">schedule</span>
+                        <p class="text-xs font-semibold mb-2">브리핑 준비가 예상보다 조금 더 걸리고 있어요.</p>
+                        <button id="briefing-retry-btn" class="px-4 py-2 bg-primary text-on-primary rounded-full text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">refresh</span>다시 시도
+                        </button>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const retryBtn = document.getElementById('briefing-retry-btn');
+                    if (retryBtn) {
+                        retryBtn.onclick = () => {
+                            retryBtn.disabled = true;
+                            retryBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>다시 시도';
+                            briefingPollCount = 0; // 초기화 보장
+                            if (briefingPollTimer) clearTimeout(briefingPollTimer);
+                            loadBriefing();
+                        };
+                    }
+                }, 0);
+                return;
+            }
+
             content.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
                     <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                     <p class="text-xs font-semibold">AI 비서가 오늘의 데일리 브리핑을 준비하고 있습니다...</p>
                 </div>
             `;
-            setTimeout(() => {
-                loadBriefing();
-            }, 3000);
-            return;
-        }
 
-        if (data.success && data.briefing) {
-            const briefingText = data.briefing.trim();
+            briefingPollCount += 1;
+            if (briefingPollTimer) clearTimeout(briefingPollTimer);
+            briefingPollTimer = setTimeout(() => {
+                loadBriefing();
+            }, data.retryAfterMs || 3000);
+            return;
+        } else if (data.success && data.briefing) {
+            briefingPollCount = 0;
+            if (briefingPollTimer) clearTimeout(briefingPollTimer);
+
+            // Extract safe string format for briefing
+            let briefingText = typeof data.briefing === 'string'
+                ? data.briefing
+                : data.briefing?.briefing || '';
+
+            if (!briefingText.trim()) {
+                briefingText = '오늘의 브리핑을 불러오지 못했습니다.';
+            }
+
+            const briefingTextTrimmed = briefingText.trim();
 
             // 실시간 날씨 위젯 처리 (눈비맑음 아이콘 + 온도 표시)
             const weatherWidget = document.getElementById('briefing-weather-widget');
@@ -567,7 +614,8 @@ export async function loadBriefing() {
                 weatherWidget.classList.add('hidden');
                 weatherWidget.style.display = 'none';
             }
-            if (briefingText.length === 0) {
+
+            if (briefingTextTrimmed.length === 0 || briefingTextTrimmed === '오늘의 브리핑을 불러오지 못했습니다.') {
                 // [3. Empty State]
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-2 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
@@ -576,49 +624,76 @@ export async function loadBriefing() {
                     </div>
                 `;
             } else {
-                // [4. Loaded State]
-                console.log("--- [BRIEFING] Successfully loaded briefing from server.");
-                let formattedText = data.briefing;
+                // [4. Loaded State with Safe rendering and Text Injection]
+                console.log("--- [BRIEFING] Successfully loaded briefing from server. Rendering...");
+                let formattedText = briefingText;
                 let titleHtml = '';
                 let tagsHtml = '';
 
                 // Extract double-starred sentences or phrases as a prominent title
-                const titleMatch = formattedText.match(/\*\*(.*?)\*\*/);
+                const titleMatch = formattedText.match(/^\*\*(.*?)\*\*/);
                 if (titleMatch) {
-                    titleHtml = `<h4 class="font-bold text-[16px] text-on-surface mb-2.5 leading-snug">${titleMatch[1]}</h4>`;
-                    // Remove the title match from the description to avoid duplication
-                    formattedText = formattedText.replace(/\*\*(.*?)\*\*\s*/, '');
+                    const escapedTitle = titleMatch[1]
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
+                    titleHtml = `<h4 class="font-bold text-[16px] text-on-surface mb-2.5 leading-snug">${escapedTitle}</h4>`;
+                    formattedText = formattedText.replace(/^\*\*(.*?)\*\*\s*/, '');
+                }
+                if (!formattedText.trim()) {
+                    formattedText = briefingText; // Fallback if entire text was consumed
+                    titleHtml = '';
                 }
 
-                // Auto-generate tags based on briefing context matching the Ghibli mockup style
+                // Auto-generate tags using briefingText
                 const tags = [];
-                if (data.briefing.includes('일정') || data.briefing.includes('약속') || data.briefing.includes('준비') || data.briefing.includes('회의')) tags.push('#일정관리');
-                if (data.briefing.includes('여행') || data.briefing.includes('가족') || data.briefing.includes('제주')) tags.push('#가족여행');
-                if (data.briefing.includes('건강') || data.briefing.includes('운동') || data.briefing.includes('산책')) tags.push('#건강케어');
-                if (data.briefing.includes('일기') || data.briefing.includes('감성') || data.briefing.includes('기록') || data.briefing.includes('노트')) tags.push('#감성기록');
-                
+                if (briefingText.includes('일정') || briefingText.includes('약속') || briefingText.includes('준비') || briefingText.includes('회의')) tags.push('#일정관리');
+                if (briefingText.includes('여행') || briefingText.includes('가족') || briefingText.includes('제주')) tags.push('#가족여행');
+                if (briefingText.includes('건강') || briefingText.includes('운동') || briefingText.includes('산책')) tags.push('#건강케어');
+                if (briefingText.includes('일기') || briefingText.includes('감성') || briefingText.includes('기록') || briefingText.includes('노트')) tags.push('#감성기록');
                 if (tags.length === 0) tags.push('#데일리');
 
                 tagsHtml = `
-                <div class="flex flex-wrap gap-2 mt-4">
+                <div class="flex flex-wrap gap-2 mt-4" id="briefing-tags-container">
                     ${tags.map(tag => `<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium hover:bg-primary/20 transition-colors cursor-pointer">${tag}</span>`).join('')}
                 </div>`;
 
+                // Prepare wrapper
                 content.innerHTML = `
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1 text-on-surface-variant">
                         ${titleHtml}
-                        <p class="text-on-surface-variant/90 leading-relaxed text-[13px]">${formattedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary)">$1</strong>')}</p>
+                        <p class="text-on-surface-variant leading-relaxed text-[13px] inline" id="briefing-typing-body"></p>
                         ${tagsHtml}
                     </div>
                 `;
+
+                // Safe and direct content rendering to guarantee text visibility
+                const bodyEl = document.getElementById('briefing-typing-body');
+                if (bodyEl) {
+                    // Safe parse double-stars to HTML strong tags
+                    const htmlSafeContent = formattedText
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;")
+                        .replace(/\n/g, '<br>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary); font-weight: 700;">$1</strong>');
+                    
+                    bodyEl.innerHTML = htmlSafeContent;
+                }
             }
         } else {
             // [5. Error State (Server failed)]
-            console.error("--- [BRIEFING] Server failed to generate briefing:", data.error);
+            briefingPollCount = 0;
+            if (briefingPollTimer) clearTimeout(briefingPollTimer);
+            console.error("--- [BRIEFING] Server failed to generate briefing:", data.errorCode || data.error);
             content.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-6 text-center text-error gap-2 bg-error-container/10 border border-error/20 rounded-2xl p-4">
                     <span class="material-symbols-outlined text-3xl text-error">warning</span>
-                    <p class="text-sm font-medium">⚠️ ${data.error || '브리핑을 생성할 수 없습니다. 나중에 다시 시도해 주세요.'}</p>
+                    <p class="text-sm font-medium">⚠️ ${data.message || data.error || '브리핑을 생성할 수 없습니다. 나중에 다시 시도해 주세요.'}</p>
                 </div>
             `;
         }
