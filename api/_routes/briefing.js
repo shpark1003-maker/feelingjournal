@@ -18,26 +18,17 @@ module.exports = async (req, res) => {
         const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1]);
         if (!user) return res.status(401).json({ error: 'Invalid user' });
 
-        // Google Provider Token을 helper를 통해 조회하고 헤더에서 폴백
-        let providerToken = null;
-        try {
-            providerToken = await getGoogleAccessToken(user.id);
-        } catch (redisErr) {
-            console.warn('--- [BRIEFING] Redis connection offline/error, falling back to header:', redisErr.message);
-        }
-
-        if (!providerToken) {
-            providerToken = req.headers['x-provider-token'];
-        }
-
+        let providerToken = req.headers['x-provider-token'] || null;
         const regionOverride = req.query.region || null;
         
         let clientDiaries = [];
         let consent = false;
+        let forceRefreshCalendar = req.query.forceRefreshCalendar === 'true';
 
         if (req.method === 'POST') {
             consent = req.body?.aiContextConsent === true;
             clientDiaries = req.body?.decryptedDiaries || [];
+            if (req.body?.forceRefreshCalendar === true) forceRefreshCalendar = true;
             const isAnalyzeRequest = consent || clientDiaries.length > 0;
 
             if (isAnalyzeRequest) {
@@ -61,13 +52,22 @@ module.exports = async (req, res) => {
         const cacheKey = `user:${user.id}:briefing-cache`;
 
         // SWR (Stale-While-Revalidate) Check
-        if (clientDiaries.length === 0) {
+        if (Array.isArray(clientDiaries) && clientDiaries.length === 0) {
             try {
-                const cached = await redis.get(cacheKey);
+                let cached = null;
+                
+                if (redis) {
+                    try {
+                        cached = await redis.get(cacheKey);
+                    } catch (redisErr) {
+                        console.warn('--- [BRIEFING] Redis get error:', redisErr.message);
+                    }
+                }
+                
                 if (cached) {
                     if (cached === 'GENERATING') {
                         console.log(`--- [BRIEFING] Still generating in background for user ${user.id} ---`);
-                        return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                        return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                     }
 
                     let parsed = null;
@@ -79,43 +79,51 @@ module.exports = async (req, res) => {
 
                     if (parsed && typeof parsed === 'object') {
                         if (parsed.briefing === 'GENERATING') {
-                            return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                            return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                         }
 
                         briefingResult = parsed;
                         isSWRApplied = true;
 
                         // Return the response immediately
-                        res.json({ success: true, briefing: parsed.briefing, weather: parsed.weather, fromCache: true });
+                        res.json({ success: true, status: 'ready', briefing: parsed.briefing, weather: parsed.weather, fromCache: true });
 
                         // Check if the cache is older than 5 minutes (300000 ms)
                         const cacheAge = Date.now() - (parsed.updatedAt || 0);
                         if (cacheAge > 5 * 60 * 1000) {
-                            const swrLockKey = `user:${user.id}:briefing-swr-lock`;
-                            const hasLock = await redis.get(swrLockKey);
-                            
-                            if (!hasLock) {
-                                await redis.set(swrLockKey, '1', 'EX', 120); // 2분 락
-                                console.log(`--- [SWR LOCK] SWR lock acquired for user ${user.id} ---`);
+                            if (redis) {
+                                const swrLockKey = `user:${user.id}:briefing-swr-lock`;
+                                try {
+                                    const hasLock = await redis.get(swrLockKey);
+                                    
+                                    if (!hasLock) {
+                                        await redis.set(swrLockKey, '1', 'EX', 120); // 2분 락
+                                        console.log(`--- [SWR LOCK] SWR lock acquired for user ${user.id} ---`);
 
-                                // Trigger refresh in background
-                                briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true)
-                                    .then(() => {
-                                        console.log(`--- [SWR REFRESH SUCCESS] Cache refreshed in background for user ${user.id} ---`);
-                                    })
-                                    .catch((err) => {
-                                        console.error(`--- [SWR REFRESH ERROR] Failed to refresh cache in background:`, err.message);
-                                    })
-                                    .finally(async () => {
-                                        try {
-                                            await redis.del(swrLockKey);
-                                            console.log(`--- [SWR LOCK] SWR lock released for user ${user.id} ---`);
-                                        } catch (lockErr) {
-                                            console.error('Failed to release SWR lock:', lockErr.message);
-                                        }
-                                    });
-                            } else {
-                                console.log(`--- [SWR BYPASS] Refresh already in progress for user ${user.id} ---`);
+                                        // Trigger refresh in background
+                                        briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true, false, forceRefreshCalendar)
+                                            .then(() => {
+                                                console.log(`--- [SWR REFRESH SUCCESS] Cache refreshed in background for user ${user.id} ---`);
+                                            })
+                                            .catch((err) => {
+                                                console.error(`--- [SWR REFRESH ERROR] Failed to refresh cache in background:`, err.message);
+                                            })
+                                            .finally(async () => {
+                                                try {
+                                                    if (redis) {
+                                                        await redis.del(swrLockKey);
+                                                        console.log(`--- [SWR LOCK] SWR lock released for user ${user.id} ---`);
+                                                    }
+                                                } catch (lockErr) {
+                                                    console.error('Failed to release SWR lock:', lockErr.message);
+                                                }
+                                            });
+                                    } else {
+                                        console.log(`--- [SWR BYPASS] Refresh already in progress for user ${user.id} ---`);
+                                    }
+                                } catch (redisErr) {
+                                    console.warn('--- [SWR] Redis lock error:', redisErr.message);
+                                }
                             }
                         }
                         return;
@@ -123,19 +131,28 @@ module.exports = async (req, res) => {
                 } else {
                     // No cache found: set state to 'GENERATING' and trigger asynchronous fetch in background!
                     console.log(`--- [BRIEFING ASYNC TRIGGER] Initiating background briefing generation for user ${user.id} ---`);
-                    await redis.set(cacheKey, JSON.stringify({ briefing: 'GENERATING', updatedAt: Date.now() }), 'EX', 60); // 1분 동안 임시 저장
+                    
+                    if (redis) {
+                        try {
+                            await redis.set(cacheKey, JSON.stringify({ briefing: 'GENERATING', updatedAt: Date.now() }), 'EX', 20); // 20초 동안 임시 저장
+                        } catch (redisErr) {
+                            console.warn('--- [BRIEFING] Redis set error:', redisErr.message);
+                        }
+                    }
 
-                    briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true)
+                    briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true, false, forceRefreshCalendar)
                         .then(() => {
                             console.log(`--- [ASYNC BRIEFING SUCCESS] Background generation finished for user ${user.id} ---`);
                         })
                         .catch((err) => {
                             console.error(`--- [ASYNC BRIEFING ERROR] Background generation failed for user ${user.id}:`, err.message);
                             // Clear generating status on failure to allow retry
-                            redis.del(cacheKey).catch(() => {});
+                            if (redis) {
+                                redis.del(cacheKey).catch(() => {});
+                            }
                         });
 
-                    return res.json({ success: true, isGenerating: true, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                    return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                 }
             } catch (cacheErr) {
                 console.warn('--- [BRIEFING SWR ERROR] Redis read failed, falling back to synchronous fetch:', cacheErr.message);
@@ -143,7 +160,7 @@ module.exports = async (req, res) => {
         }
 
         if (!isSWRApplied) {
-            briefingResult = await briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email);
+            briefingResult = await briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, false, false, forceRefreshCalendar);
         }
 
         let briefing = '';
@@ -174,12 +191,14 @@ module.exports = async (req, res) => {
             }
         }
 
-        return res.json({ success: true, briefing, weather });
+        return res.json({ success: true, status: 'ready', briefing, weather });
     } catch (error) {
         console.error('Briefing Error:', error?.message || error);
-        return res.json({
-            success: true,
-            briefing: `비서가 지금 조금 바쁘네요. (원인: ${error?.message || error}) 잠시 후 다시 브리핑을 준비해 드릴게요! 🎩`
+        return res.status(500).json({
+            success: false,
+            status: 'error',
+            errorCode: 'BRIEFING_GENERATION_FAILED',
+            message: '브리핑을 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.'
         });
     }
 };

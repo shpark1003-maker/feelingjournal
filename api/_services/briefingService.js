@@ -4,35 +4,70 @@ const {
     callGemini, 
     scanRedisKeys,
     getLiveWeather,
-    getNewsHeadlines,
     supabaseAdmin,
     fetchGoogleCalendarEvents
 } = require('../_routes/shared');
 
-async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '', forceRefresh = false) {
-    const cacheKey = `user:${userId}:briefing-cache`;
-    
-    if (clientDiaries.length === 0 && !forceRefresh) {
-        try {
-            const cached = await redis.get(cacheKey);
-            if (cached) {
-                console.log('--- [CACHE] Returning cached briefing from core.');
-                try {
-                    const parsed = JSON.parse(cached);
-                    if (parsed && typeof parsed === 'object' && parsed.briefing) {
-                        return parsed;
-                    }
-                } catch (jsonErr) {
-                    // Not JSON, fall back to string format
-                }
-                return { briefing: cached, weather: null, updatedAt: Date.now() };
-            }
-        } catch (error) {
-            console.error('Briefing Cache Error:', error.message);
+const crypto = require('crypto');
+
+function stableStringify(obj) {
+    if (Array.isArray(obj)) return `[${obj.map(stableStringify).sort().join(',')}]`;
+    if (obj !== null && typeof obj === 'object') {
+        return `{${Object.keys(obj).sort().map(k => `"${k}":${stableStringify(obj[k])}`).join(',')}}`;
+    }
+    return JSON.stringify(obj);
+}
+
+async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '', forceRefresh = false, skipIfUnchanged = false, forceRefreshCalendar = false) {
+    const lockKey = `user:${userId}:briefing-prebuild-lock`;
+    if (skipIfUnchanged) {
+        const isLocked = await redis.set(lockKey, 'LOCKED', 'NX', 'EX', 120);
+        if (!isLocked) {
+            console.log(`--- [PRE-GEN] Locked for ${userId}, skipping ---`);
+            return;
         }
     }
 
+    try {
+        const cacheKey = `user:${userId}:briefing-cache`;
+        let cachedData = null;
+        
+        if (clientDiaries.length === 0) {
+            try {
+                const cached = await redis.get(cacheKey);
+                if (cached) {
+                    if (cached === 'GENERATING') {
+                        console.log('--- [CACHE] GENERATING (plain string) detected in service layer, skipping cache.');
+                    } else {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            if (parsed && typeof parsed === 'object' && parsed.briefing) {
+                                if (parsed.briefing === 'GENERATING') {
+                                    console.log('--- [CACHE] GENERATING (JSON) detected in service layer, skipping cache.');
+                                } else {
+                                    cachedData = parsed;
+                                    if (!forceRefresh) {
+                                        console.log('--- [CACHE] Returning cached briefing from core.');
+                                        return parsed;
+                                    }
+                                }
+                            }
+                        } catch (jsonErr) {
+                            cachedData = { briefing: cached, weather: null, updatedAt: Date.now() };
+                            if (!forceRefresh) {
+                                console.log('--- [CACHE] Returning cached briefing from core (string fallback).');
+                                return cachedData;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Briefing Cache Error:', error.message);
+            }
+        }
+
     const nowKST = new Date();
+    const todayKSTStr = new Date(nowKST.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
     
     const yesterdayKST = new Date(nowKST.getTime() + 9 * 60 * 60 * 1000);
     yesterdayKST.setDate(yesterdayKST.getDate() - 1);
@@ -49,37 +84,75 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
 
     const contextEventsPromise = (async () => {
         try {
-            const calResult = await fetchGoogleCalendarEvents(userId, yesterday.toISOString(), tomorrow.toISOString(), userEmail);
-            if (calResult && calResult.events && calResult.events.length > 0) {
-                return calResult.events
-                    .map((event) => {
-                        const rawStart = event.start?.dateTime || event.start?.date;
-                        let startStr = rawStart;
-                        if (rawStart) {
-                            const d = new Date(rawStart);
-                            if (!isNaN(d.getTime())) {
-                                const isAllDay = !event.start?.dateTime;
-                                startStr = d.toLocaleString('ko-KR', {
-                                    timeZone: 'Asia/Seoul',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    weekday: 'short',
-                                    hour: isAllDay ? undefined : 'numeric',
-                                    minute: isAllDay ? undefined : 'numeric',
-                                    hour12: !isAllDay
-                                });
-                                if (isAllDay) startStr += ' (종일)';
-                            }
+            if (forceRefreshCalendar) {
+                try {
+                    const calendarSyncService = require('./calendarSyncService');
+                    await calendarSyncService.syncGoogleCalendarToLocal(userId, { primaryOnly: false });
+                } catch (syncErr) {
+                    console.warn('[Briefing] Force sync failed:', syncErr.message);
+                }
+            }
+
+            // Google API 직접 호출 제거 -> SSOT 내부 DB만 조회 (Phase 3)
+            const rangeStart = yesterday.toISOString();
+            const rangeEnd = tomorrow.toISOString();
+            
+            const { data: calEvents, error: calErr } = await supabaseAdmin
+                .from('calendar_events')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('is_deleted', false)
+                .lt('start_time', rangeEnd)
+                // start_time/end_time overlap 조건
+                .or(`end_time.gt.${rangeStart},end_time.is.null`)
+                .order('start_time', { ascending: true });
+
+            if (calErr) {
+                console.error('Briefing Calendar Fetch Error (DB):', calErr.message);
+                return { full: '일정 정보 없음', future: '일정 정보 없음' };
+            }
+
+            if (calEvents && calEvents.length > 0) {
+                const todayTime = new Date(todayKSTStr).getTime() - 9 * 60 * 60 * 1000;
+                
+                const formatEvent = (event) => {
+                    const rawStart = event.start_time;
+                    let startStr = rawStart;
+                    if (rawStart) {
+                        const d = new Date(rawStart);
+                        if (!isNaN(d.getTime())) {
+                            const isAllDay = event.is_all_day;
+                            startStr = d.toLocaleString('ko-KR', {
+                                timeZone: 'Asia/Seoul',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'short',
+                                hour: isAllDay ? undefined : 'numeric',
+                                minute: isAllDay ? undefined : 'numeric',
+                                hour12: !isAllDay
+                            });
+                            if (isAllDay) startStr += ' (종일)';
                         }
-                        return `- ${event.summary || '제목 없음'} (${startStr})`;
-                    })
-                    .join('\n');
+                    }
+                    return `- ${event.title || '제목 없음'} (${startStr})`;
+                };
+
+                const fullEvents = calEvents.map(formatEvent).join('\n');
+                
+                const futureEvents = calEvents.filter(event => {
+                    const rawStart = event.start_time;
+                    if (!rawStart) return true;
+                    const d = new Date(rawStart);
+                    return isNaN(d.getTime()) || d.getTime() >= todayTime;
+                }).map(formatEvent).join('\n');
+                
+                return { full: fullEvents, future: futureEvents };
             }
         } catch (e) {
             console.error('Briefing Calendar Fetch Error:', e.message);
         }
-        return '일정 정보 없음';
+        return { full: '일정 정보 없음', future: '일정 정보 없음' };
     })();
 
     const weatherNewsPromise = (async () => {
@@ -121,16 +194,17 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
         return { weatherStr, weatherObj };
     })();
 
+    // diariesPromise: 최근 일기만 조회 (contextEventsPromise 의존성 제거하여 완전 병렬화)
     const diariesPromise = (async () => {
         const pattern = `user:${userId}:diary-*`;
         const keys = await scanRedisKeys(pattern);
         let recentDiaries = '일기 기록 없음';
-        let reminiscenceMemory = '특별한 과거 회상 없음';
+        let diarySortedKeys = [];
 
         if (keys.length > 0) {
-            const sortedKeys = keys.sort().reverse();
+            diarySortedKeys = keys.sort().reverse();
             
-            const latestKeys = sortedKeys.slice(0, 3);
+            const latestKeys = diarySortedKeys.slice(0, 3);
             const values = await redis.mget(latestKeys);
             recentDiaries = values
                 .filter(Boolean)
@@ -148,13 +222,103 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
                 })
                 .filter(Boolean)
                 .join('\n---\n') || '일기 기록 없음';
+        }
 
-            const historyKeys = sortedKeys.slice(0, 15);
+        return { recentDiaries, diarySortedKeys };
+    })();
+
+    const dbTasksPromise = (async () => {
+        let dbTasksStr = '';
+        let lowProgressWarningStr = '';
+        try {
+            const { supabaseAdmin } = require('../_routes/shared');
+            if (supabaseAdmin) {
+                const yesterdayDateStr = yesterday.toISOString().split('T')[0];
+                const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
+                
+                // Supabase 쿼리들을 병렬 실행하여 데이터베이스 조회 대기 시간 최적화
+                const [dbSubTasksRes, allUncompletedRes] = await Promise.all([
+                    supabaseAdmin
+                        .from('sub_tasks')
+                        .select('title, due_date, start_date, is_completed, tasks!inner(title, user_id)')
+                        .eq('tasks.user_id', userId)
+                        .eq('is_completed', false)
+                        .gte('due_date', yesterdayDateStr)
+                        .lte('start_date', tomorrowDateStr),
+                    supabaseAdmin
+                        .from('sub_tasks')
+                        .select('title, progress, due_date, tasks!inner(title, user_id)')
+                        .eq('tasks.user_id', userId)
+                        .eq('is_completed', false)
+                ]);
+
+                const dbSubTasks = dbSubTasksRes.data;
+                if (dbSubTasks && dbSubTasks.length > 0) {
+                    dbTasksStr = dbSubTasks.map(st => {
+                        const parentTitle = st.tasks?.title || '과제';
+                        return `- ${st.title} (대과제: ${parentTitle}, 기한: ${st.due_date})`;
+                    }).join('\n');
+                }
+
+                const allUncompleted = allUncompletedRes.data;
+                
+                const overdueTasks = (allUncompleted || []).filter(st => st.due_date && st.due_date <= todayKSTStr);
+                if (overdueTasks.length > 0) {
+                    const todayTime = new Date(todayKSTStr).getTime();
+                    
+                    overdueTasks.sort((a, b) => {
+                        const aDueTime = new Date(a.due_date).getTime();
+                        const bDueTime = new Date(b.due_date).getTime();
+                        const aDays = (aDueTime - todayTime) / (1000 * 60 * 60 * 24);
+                        const bDays = (bDueTime - todayTime) / (1000 * 60 * 60 * 24);
+                        const aScore = aDays * 10 - (a.progress || 0);
+                        const bScore = bDays * 10 - (b.progress || 0);
+                        return aScore - bScore; // Lower score is higher priority
+                    });
+
+                    const topTask = overdueTasks[0];
+                    const highestPriorityTaskStr = `[오늘 가장 시급한 과제 후보]: "${topTask.title}" (마감: ${topTask.due_date}, 달성률: ${topTask.progress || 0}%) - 이를 브리핑 최우선 과제로 고려하십시오.`;
+
+                    const displayTasks = overdueTasks.slice(0, 5);
+                    const hiddenCount = overdueTasks.length - 5;
+                    
+                    let taskListStr = displayTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 달성률: ${st.progress || 0}%, 마감일: ${st.due_date})`).join('\n');
+                    if (hiddenCount > 0) {
+                        taskListStr += `\n외 ${hiddenCount}개의 밀린 과제가 있습니다.`;
+                    }
+
+                    lowProgressWarningStr = `🚨 [필독 - 밀린 과제 경고]: 현재 마감 기한이 도래했거나 지났음에도 완료되지 않은 과제가 총 ${overdueTasks.length}개 있습니다. 브리핑의 최우선 목적은 과제 관리이므로, 이 과제들의 수행을 강력히 독려하십시오:\n${taskListStr}\n\n${highestPriorityTaskStr}`;
+                }
+            }
+        } catch (err) {
+            console.error('[Briefing Service] Failed to fetch active DB tasks:', err.message);
+        }
+        return { dbTasksStr, lowProgressWarningStr };
+    })();
+
+    const [
+        contextEvents,
+        { weatherStr, weatherObj },
+        { recentDiaries: rawRecentDiaries, diarySortedKeys },
+        storedNickname,
+        { dbTasksStr, lowProgressWarningStr }
+    ] = await Promise.all([
+        contextEventsPromise,
+        weatherNewsPromise,
+        diariesPromise,
+        redis.get(nicknameKey),
+        dbTasksPromise
+    ]);
+
+    // 회상 매칭 — Promise.all 완료 후 수행 (contextEvents가 확정된 상태)
+    let reminiscenceMemory = '특별한 과거 회상 없음';
+    if (diarySortedKeys.length > 3) {
+        try {
+            const historyKeys = diarySortedKeys.slice(0, 15);
             const historyValues = await redis.mget(historyKeys);
             let foundMemory = null;
-            
-            const contextEvents = await contextEventsPromise;
-            const upcomingEventLower = contextEvents.toLowerCase();
+
+            const upcomingEventLower = contextEvents.full.toLowerCase();
 
             for (let i = 3; i < historyValues.length; i++) {
                 if (!historyValues[i]) continue;
@@ -212,71 +376,10 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
                     reminiscenceMemory = `[${foundMemory.date}의 눈부셨던 과거의 기록 (당시 감정: ${foundMemory.emotion})]\n내용: ${foundMemory.content}`;
                 }
             }
+        } catch (reminErr) {
+            console.warn('--- [BRIEFING] Reminiscence matching failed (non-blocking):', reminErr.message);
         }
-
-        return { recentDiaries, reminiscenceMemory };
-    })();
-
-    const dbTasksPromise = (async () => {
-        let dbTasksStr = '';
-        let lowProgressWarningStr = '';
-        try {
-            const { supabaseAdmin } = require('../_routes/shared');
-            if (supabaseAdmin) {
-                const yesterdayDateStr = yesterday.toISOString().split('T')[0];
-                const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
-                
-                // Supabase 쿼리들을 병렬 실행하여 데이터베이스 조회 대기 시간 최적화
-                const [dbSubTasksRes, allUncompletedRes] = await Promise.all([
-                    supabaseAdmin
-                        .from('sub_tasks')
-                        .select('title, due_date, start_date, is_completed, tasks!inner(title, user_id)')
-                        .eq('tasks.user_id', userId)
-                        .eq('is_completed', false)
-                        .gte('due_date', yesterdayDateStr)
-                        .lte('start_date', tomorrowDateStr),
-                    supabaseAdmin
-                        .from('sub_tasks')
-                        .select('title, progress, due_date, tasks!inner(title, user_id)')
-                        .eq('tasks.user_id', userId)
-                        .eq('is_completed', false)
-                ]);
-
-                const dbSubTasks = dbSubTasksRes.data;
-                if (dbSubTasks && dbSubTasks.length > 0) {
-                    dbTasksStr = dbSubTasks.map(st => {
-                        const parentTitle = st.tasks?.title || '과제';
-                        return `- ${st.title} (대과제: ${parentTitle}, 기한: ${st.due_date})`;
-                    }).join('\n');
-                }
-
-                const allUncompleted = allUncompletedRes.data;
-                const todayKSTStr = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
-                const lowProgressTasks = (allUncompleted || []).filter(st => (st.progress || 0) < 40 && st.due_date && st.due_date <= todayKSTStr);
-                if (lowProgressTasks.length >= 2) {
-                    lowProgressWarningStr = `🚨 경고: 현재 마감 기한이 도래했거나 지난 세부 과제 중 2개 이상(${lowProgressTasks.length}개)의 달성률이 40% 미만입니다. 다음 지체되고 있는 과제들을 확인하고 마감 기한 준수를 촉구하십시오:\n` +
-                        lowProgressTasks.map(st => `- ${st.title} (대과제: ${st.tasks?.title || '과제'}, 현재 진행률: ${st.progress || 0}%, 기한: ${st.due_date})`).join('\n');
-                }
-            }
-        } catch (err) {
-            console.error('[Briefing Service] Failed to fetch active DB tasks:', err.message);
-        }
-        return { dbTasksStr, lowProgressWarningStr };
-    })();
-
-    const [
-        contextEvents,
-        { weatherStr, weatherObj },
-        { recentDiaries: rawRecentDiaries, reminiscenceMemory },
-        storedNickname,
-        { dbTasksStr, lowProgressWarningStr }
-    ] = await Promise.all([
-        contextEventsPromise,
-        weatherNewsPromise,
-        diariesPromise,
-        redis.get(nicknameKey),
-        dbTasksPromise
-    ]);
+    }
 
     let recentDiaries = rawRecentDiaries;
 
@@ -301,7 +404,7 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
 
 [실시간 수집 데이터]
 1. 현재 시간: ${currentTimeStr}
-2. 구글 일정 (어제~내일): ${contextEvents}
+2. 구글 일정 (어제~내일): ${contextEvents.future}
 3. 최근 생각(Diary) (작성일 포함): 
 ${recentDiaries}
 4. 실시간 기상 예보: ${weatherStr}
@@ -312,27 +415,59 @@ ${dbTasksStr || '진행 중인 과제 없음'}
 ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningStr}\n` : ''}
 
 [수행 지시]
-1. **당일 및 내일 일정 완벽 브리핑**: 구글 일정 중 '오늘(당일)' 예정된 일정을 시작으로 '내일'의 주요 일정까지 순차적으로 꼼꼼하게 모두 챙겨서 언급하라. 오늘 일정이 끝났더라도 남은 내일 일정을 알려주며, 성공적인 하루를 위한 준비 사항을 비서의 어조로 따뜻하게 조언하라.
-   - **지인 기념일 강조**: 만약 구글 일정에 지인의 생일, 기념일(예: '생일', 'Birthday', '결혼기념일' 등)이 포함되어 있다면, 이를 절대 빠뜨리지 말고 오늘의 최우선 및 핵심 일정으로 반드시 비중 있게 언급하며 따뜻한 축하 멘트를 함께 담아 서술하십시오.
-   - **시간 표현 지침**: 브리핑 본문에서 구체적인 분/시 단위의 정확한 작성 시간이나 시각을 일일이 구구절절 언급할 필요는 없습니다. 날짜(오늘, 내일 등)와 함께 시간대를 **새벽, 아침, 오전, 오후, 저녁, 밤**의 6등분 범위로 유연하게 표현하여 한층 더 자연스럽게 설명해 주십시오 (예: '오늘 오후', '내일 아침' 등).
-2. **실시간 날씨 에스코트**: 실시간 기상 예보가 '날씨 안내 비활성화됨'인 경우에는 일절 날씨나 온도, 옷차림에 관련된 코멘트를 브리핑 전체에서 절대 언급하지 말고 완전히 생략하십시오. 그렇지 않고 기상 예보가 주어졌다면 오늘 외출 시 필요한 옷차림 조언이나 소지품 챙기기(예: 강수 확률에 따른 우산 소지, 환절기 겉옷 챙기기 등) 등의 섬세한 에스코트 조언을 어조에 녹여내십시오.
-3. **미래의 할 일 리마인드**: 최근 생각(Diary)에 명시된 약속, 계획, 일정 등 미래의 할 일은 반드시 각 일기의 [일기 작성일]을 기준으로 날짜를 계산해야 합니다. 현재 조회 시간인 ${currentTimeStr} 기준의 내일로 대입하여 날짜를 잘못 밀어내지 않도록 각별히 유의하여 리마인드하십시오.
-4. **감성적 과거 회상 매칭**: '연계된 과거의 기억'이 '특별한 과거 회상 없음'이 아닌 유효한 데이터로 제공되었다면, 다가올 미래의 일정 또는 오늘 하루를 시작하는 사용자에게 과거와 현재를 따뜻하게 엮어주는 아련하고 감성적인 회상 한마디를 브리핑 후반부에 반드시 어우러지게 서술하십시오.
-5. **과제(Task) 리마인드**: 진행 중인 과제 목록을 확인하고, 마감 임박 과제가 있으면 우선적으로 짧게 리마인드하라. 만약 '[달성률 저조 경고]' 정보가 입력되어 있다면, 2개 이상의 세부 과제 진행도가 40% 미만으로 지체되고 있음을 따뜻하지만 단호하게 주의를 주고, 특히 어떤 과제들이 밀리고 있는지 꼭 언급하며 분발할 수 있도록 강한 동기부여를 하십시오.
-6. **분량**: 전체 브리핑은 4~5문장 내외로 간결하면서도 최고의 품격을 지닌 대화체로 작성하고, 불필요한 장문을 배제하여 생성 속도를 단축하라.
-7. **강조**: 가장 중요한 키워드나 할 일은 **텍스트**로 강조하라.
+1. **브리핑 구조 및 우선순위 엄수**: 브리핑은 산만하지 않게 다음의 5가지 흐름으로 자연스럽게 서술하십시오.
+   ① 오늘의 핵심 (가장 시급한 과제나 주요 일정 짚어주기)
+   ② 오늘의 일정 (구글 일정 기반)
+   ③ 밀린 과제 점검 (존재할 경우 단호한 동기부여)
+   ④ 실시간 날씨 및 외출 조언
+   ⑤ 오늘의 한마디 (과거 회상과 엮어 따뜻한 격려)
+2. **과제 수행 최우선 관리**: [필독 - 밀린 과제 경고]와 [오늘 가장 시급한 과제 후보]가 있다면 반드시 반영하여 당장 실행에 옮기도록 유도하십시오.
+3. **현재 시간 기반 일정 안내**: 오늘 일정을 안내할 때, 현재 시각(${currentTimeStr})을 기준으로 '이미 지난 일정'보다는 '앞으로 남은 일정'을 우선적으로 소개하여 자연스럽게 브리핑하십시오. 지인의 생일, 기념일은 시간과 무관하게 최우선으로 언급하며 축하 멘트를 남기십시오.
+4. **미래 할 일 리마인드**: 일기에 언급된 할 일은 반드시 작성일 기준으로 날짜를 계산하여 밀리지 않도록 유의하십시오. 날씨는 예보가 '날씨 안내 비활성화됨'일 경우 완전히 생략하십시오.
+5. **어조 및 분량**: 비서로서의 품격을 유지하며, 전체 브리핑은 8~12문장 정도로 상세하게 작성하십시오. 중요한 일정이나 키워드는 **텍스트** 로 강조하십시오.
+6. **오늘 가장 먼저 해야 할 일 (마무리 포맷)**: 브리핑의 맨 마지막에는 어떠한 인사말도 덧붙이지 말고, 의미적으로 다음 형태를 유지하여 브리핑을 끝마치십시오. (기호나 서식은 유연하게 하되, 제목과 1가지 핵심 행동이 명확히 보이도록 할 것)
+
+제목: 오늘 가장 먼저 해야 할 일
+내용: [가장 중요한 과제나 일정 1가지]
 `;
 
-    const data = await callGemini(briefingPrompt, {}, 3, null, false);
-    const briefing = data?.candidates?.[0]?.content?.parts?.[0]?.text || '비서가 브리핑을 준비하지 못했습니다. (API 할당량 초과일 수 있습니다)';
+    const currentDataHash = crypto.createHash('sha256').update(
+        stableStringify({
+            contextEvents: contextEvents.full,
+            weatherStr,
+            recentDiaries: rawRecentDiaries,
+            dbTasksStr,
+            reminiscenceMemory
+        })
+    ).digest('hex');
+
+    if (skipIfUnchanged && cachedData) {
+        if (cachedData.dataHash === currentDataHash && cachedData.briefing !== 'GENERATING') {
+            console.log('--- [BRIEFING] Data hash matched! Skipping Gemini generation ---');
+            return cachedData;
+        }
+    }
+
+    // failFast를 true로 설정하여 429 딜레이 발생 시 기다리지 않고 즉시 다음 모델(Fallback)로 넘어가도록 처리
+    let data;
+    try {
+        data = await callGemini(briefingPrompt, { maxOutputTokens: 2048 }, 2, null, true);
+    } catch (apiErr) {
+        console.error('--- [BRIEFING GEMINI ERROR] ---', apiErr.message);
+    }
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const briefing = parts.map(p => p.text).join('') || '사용자님, 현재 AI 비서의 집중력이 잠시 흩어졌습니다. (API 할당량 초과 또는 네트워크 지연)\n조금 뒤에 다시 새로고침을 해주시면, 꼼꼼하게 다시 브리핑을 준비해 드릴게요!';
 
     const resultObj = {
         briefing,
         weather: weatherObj || null,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        dataHash: currentDataHash,
+        calendarIncluded: !contextEvents.full.includes('일정 정보 없음'),
+        source: skipIfUnchanged ? 'pre_generated' : 'on_demand'
     };
 
-    if (clientDiaries.length === 0 && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    if (clientDiaries.length === 0 && briefing) {
         const isFallback = briefing.includes('API 할당량 초과') || briefing.includes('바쁘네요') || briefing.includes('준비하지 못했습니다');
         const cacheTTL = isFallback ? 15 : 3600;
         try {
@@ -343,6 +478,13 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
     }
 
     return resultObj;
+    
+    } finally {
+        if (skipIfUnchanged) {
+            // Keep the lock for 10 seconds to prevent rapid overlapping retries
+            redis.expire(`user:${userId}:briefing-prebuild-lock`, 10).catch(() => {});
+        }
+    }
 }
 
 module.exports = {
