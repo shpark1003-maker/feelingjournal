@@ -2,12 +2,35 @@
 
 const { callGemini, supabase, redis, getGoogleAccessToken } = require('./shared');
 
+const GOOGLE_SYNC_CONCURRENCY = 3;
+const STATUS_UPDATE_CONCURRENCY = 5;
+
 // KST 시간 포맷 도우미
 function getKstDateTimeString() {
     const kstOffset = 9 * 60 * 60 * 1000;
     const now = new Date();
     const kstDate = new Date(now.getTime() + kstOffset);
     return kstDate.toISOString().replace('T', ' ').substring(0, 19) + ' (KST)';
+}
+
+async function mapWithConcurrency(items, limit, mapper) {
+    if (!Array.isArray(items) || items.length === 0) return [];
+
+    const results = new Array(items.length);
+    const workerCount = Math.max(1, Math.min(limit || 1, items.length));
+    let nextIndex = 0;
+
+    const worker = async () => {
+        while (true) {
+            const currentIndex = nextIndex;
+            nextIndex += 1;
+            if (currentIndex >= items.length) break;
+            results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+        }
+    };
+
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    return results;
 }
 
 module.exports = async (req, res) => {
@@ -28,15 +51,33 @@ module.exports = async (req, res) => {
 
     // 1. AI 일정 세분화 제안 라우트
     if (req.method === 'POST' && (subPath === '/suggest' || subPath === '/suggest/')) {
-        const { message } = req.body || {};
-        if (!message || typeof message !== 'string' || message.trim().length === 0) {
-            return res.status(400).json({ error: '요구사항(message)을 텍스트로 입력해 주세요.' });
+        const { message, history } = req.body || {};
+        
+        let validHistory = [];
+        if (Array.isArray(history)) {
+            validHistory = history.map(item => {
+                if (!item || typeof item !== 'object') return null;
+                const role = item.role === 'user' ? 'user' : 'assistant';
+                let content = typeof item.content === 'string' ? item.content.trim() : '';
+                if (content.length > 500) content = content.substring(0, 500) + '...';
+                if (!content) return null;
+                return { role, content };
+            }).filter(Boolean).slice(-20); // 최근 20개만 사용
+        } else if (message && typeof message === 'string' && message.trim().length > 0) {
+            let content = message.trim();
+            if (content.length > 500) content = content.substring(0, 500) + '...';
+            validHistory.push({ role: 'user', content });
+        }
+
+        if (validHistory.length === 0) {
+            return res.status(400).json({ error: '요구사항을 텍스트로 입력해 주세요.' });
         }
 
         const currentTimeStr = getKstDateTimeString();
-
-        // Detect reschedule taskId if present in message, e.g. (ID: <uuid>)
-        const taskIdMatch = message.match(/\(ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)/i);
+        
+        // 마지막 메시지에서 reschedule taskId 추출
+        const lastUserMessage = validHistory.slice().reverse().find(m => m.role === 'user')?.content || '';
+        const taskIdMatch = lastUserMessage.match(/\(ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)/i);
         const rescheduleTaskId = taskIdMatch ? taskIdMatch[1] : null;
 
         let existingTaskContext = "";
@@ -84,10 +125,12 @@ ${subTasksData.map(st => {
         const schema = {
             type: "OBJECT",
             properties: {
-                mainTaskTitle: { type: "STRING" },
-                advice: { type: "STRING" },
+                isFinalized: { type: "BOOLEAN", description: "일정 세분화가 완료되어 사용자에게 확정을 요청할 때 true" },
+                advice: { type: "STRING", description: "사용자에게 하는 말 (대답, 질문, 제안 설명)" },
+                mainTaskTitle: { type: "STRING", description: "대과제 제목 (isFinalized가 true일 때만 필수)" },
                 suggestedTasks: {
                     type: "ARRAY",
+                    description: "세부 일정 제안 목록 (isFinalized가 true일 때 포함, 아닐 때는 빈 배열)",
                     items: {
                         type: "OBJECT",
                         properties: {
@@ -99,14 +142,23 @@ ${subTasksData.map(st => {
                     }
                 }
             },
-            required: ["mainTaskTitle", "advice", "suggestedTasks"]
+            required: ["isFinalized", "advice"]
         };
 
+        const conversationStr = validHistory.map(msg => `${msg.role === 'user' ? '사용자' : 'AI'}: ${msg.content}`).join('\n\n');
+
         let prompt = `너는 사용자의 일정을 지키고 동기부여를 담당하는 품격 있는 AI 일정 가이드 천사(Schedule Angel)다. 👼
-사용자가 어떤 큰 목표나 일상적 고민을 털어놓으면, 이를 요약하여 대과제 제목('mainTaskTitle')을 정하고 구체적이고 체계적인 "단계별 실행 계획(Sub-tasks)"으로 세분화하여 계획 카드를 디자인해주어야 한다.
+사용자와 대화(History)를 나누며 일정을 설계하십시오.
+
+[중요 규칙: isFinalized 설정 조건]
+1. 사용자의 요구사항이 모호하거나 일정 생성에 필요한 정보가 부족하다면 'isFinalized'를 false로 유지하고, 'advice'를 통해 구체적인 기간, 세부 단계, 조율하고 싶은 부분을 질문하십시오.
+2. 사용자가 명확하게 일정을 등록하겠다고 승인하거나 ("좋아", "저장해줘", "그대로 해줘" 등), 처음부터 완전하고 구체적인 지시("내일 3시에 병원 예약 일정 등록해줘")를 내린 경우에만 'isFinalized'를 true로 설정하고 'suggestedTasks'를 채워 반환하십시오.
+3. 'isFinalized'가 false일 경우 'suggestedTasks'는 빈 배열로 반환하십시오.
 
 현재 시각(KST): ${currentTimeStr}
-사용자의 고민: "${message}"
+
+[대화 내역]
+${conversationStr}
 `;
 
         if (existingTaskContext) {
@@ -149,51 +201,39 @@ ${existingTaskContext}
             }
 
             // --- 엄격한 스키마 구조 검증 (Schema Validation) ---
-            if (!result.advice || !Array.isArray(result.suggestedTasks)) {
+            if (typeof result.isFinalized !== 'boolean' || !result.advice) {
                 throw new Error('INVALID_STRUCTURE');
             }
 
-            const tasks = result.suggestedTasks;
+            if (!Array.isArray(result.suggestedTasks)) {
+                result.suggestedTasks = [];
+            }
+
+            if (!result.isFinalized) {
+                result.mainTaskTitle = undefined;
+                result.suggestedTasks = [];
+            }
+
+            const tasks = result.suggestedTasks || [];
 
             // 1) 개수 검증 (최대 10개)
-            if (tasks.length > 10) {
-                console.warn('[AI Angel] Task count exceeded:', tasks.length);
-                result.suggestedTasks = tasks.slice(0, 10);
+            let validatedTasks = tasks;
+            if (validatedTasks.length > 10) {
+                console.warn('[AI Angel] Task count exceeded:', validatedTasks.length);
+                validatedTasks = validatedTasks.slice(0, 10);
             }
 
-            // 2) 개별 요소 유효성 및 3) sequence 검증
-            const seenSequences = new Set();
-            let isSequenceValid = true;
-
-            const validatedTasks = result.suggestedTasks.map((t, idx) => {
-                const title = (t.title || '').trim().substring(0, 120);
-                const duration = Math.min(Math.max(parseInt(t.duration, 10) || 1, 1), 30); // 1~30일 제한
-                const sequence = parseInt(t.sequence, 10) || (idx + 1);
-
-                if (seenSequences.has(sequence)) {
-                    isSequenceValid = false;
-                }
-                seenSequences.add(sequence);
-
-                return {
-                    sequence,
-                    title,
-                    duration
-                };
+            // sequence 무조건 1부터 재정렬하여 연속성 보장
+            validatedTasks.sort((a, b) => a.sequence - b.sequence);
+            validatedTasks.forEach((t, idx) => {
+                t.sequence = idx + 1;
             });
-
-            // sequence가 올바르지 않으면(중복이 있거나 정렬 순서에 안 맞으면) 1부터 재정렬
-            if (!isSequenceValid || seenSequences.size !== validatedTasks.length) {
-                validatedTasks.sort((a, b) => a.sequence - b.sequence);
-                validatedTasks.forEach((t, idx) => {
-                    t.sequence = idx + 1;
-                });
-            }
 
             result.suggestedTasks = validatedTasks;
 
             return res.json({
                 success: true,
+                isFinalized: result.isFinalized,
                 mainTaskTitle: result.mainTaskTitle || undefined,
                 advice: result.advice,
                 suggestedTasks: result.suggestedTasks,
@@ -348,15 +388,14 @@ ${existingTaskContext}
                             const token = await getGoogleAccessToken(user.id);
                             if (token) {
                                 const calendarService = require('../_services/calendarService');
-                                for (const st of subTasksToDelete) {
-                                    if (st.google_event_id) {
-                                        try {
-                                            await calendarService.deleteGoogleCalendarEvent(token, st.google_event_id, user.id);
-                                        } catch (googleErr) {
-                                            console.warn(`[AI Angel Confirm Reschedule] Google Calendar event deletion failed (id: ${st.google_event_id}):`, googleErr.message);
-                                        }
+                                const deletableGoogleEvents = subTasksToDelete.filter(st => st.google_event_id);
+                                await mapWithConcurrency(deletableGoogleEvents, GOOGLE_SYNC_CONCURRENCY, async (st) => {
+                                    try {
+                                        await calendarService.deleteGoogleCalendarEvent(token, st.google_event_id, user.id);
+                                    } catch (googleErr) {
+                                        console.warn(`[AI Angel Confirm Reschedule] Google Calendar event deletion failed (id: ${st.google_event_id}):`, googleErr.message);
                                     }
-                                }
+                                });
                             }
                         } catch (tokErr) {
                             console.warn('[AI Angel Confirm Reschedule] Google Calendar token fetch failed:', tokErr.message);
@@ -372,16 +411,49 @@ ${existingTaskContext}
 
                 // 4) Insert only the uncompleted, non-preserved steps
                 const preservedSequences = new Set(preservedSubTasks.map(st => st.sequence_order));
-                const newStepsToInsert = mappedSubTasks
-                    .filter(st => !preservedSequences.has(st.sequence_order))
-                    .map(st => ({
+                
+                // 새로운 미완료 단계를 위한 날짜 베이스라인 계산
+                let baseDate = new Date(currentKstDate.getTime());
+                if (preservedSubTasks.length > 0) {
+                    const lastPreserved = preservedSubTasks.sort((a, b) => a.sequence_order - b.sequence_order)[preservedSubTasks.length - 1];
+                    if (lastPreserved && lastPreserved.due_date) {
+                        baseDate = new Date(lastPreserved.due_date + 'T00:00:00+09:00');
+                        baseDate.setDate(baseDate.getDate() + 1); // 보존된 마지막 단계 종료 다음날부터 시작
+                    }
+                }
+
+                const newStepsToInsert = [];
+                let currentInsertDate = new Date(baseDate.getTime());
+
+                // mappedSubTasks는 클라이언트가 올려준 전체 스텝들
+                const stepsToProcess = mappedSubTasks.filter(st => !preservedSequences.has(st.sequence_order));
+                
+                for (let i = 0; i < stepsToProcess.length; i++) {
+                    const st = stepsToProcess[i];
+                    
+                    const stepStart = new Date(currentInsertDate.getTime());
+                    
+                    // st.duration_days 정보를 역산해야 하나, mappedSubTasks에 duration_days 정보가 이미 날짜로 흩어졌으므로 재산출
+                    const origStart = new Date(st.start_date + 'T00:00:00+09:00');
+                    const origDue = new Date(st.due_date + 'T00:00:00+09:00');
+                    const diffTime = Math.abs(origDue - origStart);
+                    const durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                    const stepDue = new Date(stepStart.getTime());
+                    stepDue.setDate(stepDue.getDate() + durationDays - 1);
+
+                    newStepsToInsert.push({
                         task_id: taskId,
                         title: st.title,
                         sequence_order: st.sequence_order,
-                        start_date: st.start_date,
-                        due_date: st.due_date,
+                        start_date: formatDateKst(stepStart),
+                        due_date: formatDateKst(stepDue),
                         is_completed: false
-                    }));
+                    });
+
+                    currentInsertDate = new Date(stepDue.getTime());
+                    currentInsertDate.setDate(currentInsertDate.getDate() + 1);
+                }
 
                 let insertedSubTasks = [];
                 if (newStepsToInsert.length > 0) {
@@ -408,36 +480,57 @@ ${existingTaskContext}
                         due_date: taskDueDateStr,
                         status: status
                     })
-                    .eq('id', taskId);
+                    .eq('id', taskId)
+                    .eq('user_id', user.id);
 
                 if (parentUpdateErr) throw parentUpdateErr;
 
             } else {
-                // --- CREATE NEW TASK (Legacy Path via Stored Procedure) ---
+                // --- CREATE NEW TASK (Transaction with Fallback) ---
                 const taskStartDateStr = formatDateKst(currentKstDate);
                 const taskDueDateStr = mappedSubTasks.length > 0 ? mappedSubTasks[mappedSubTasks.length - 1].due_date : taskStartDateStr;
 
-                const { data: createdTaskId, error } = await supabaseAdmin.rpc('create_task_with_subtasks', {
-                    task_user_id: user.id,
-                    task_title: parentTitle.substring(0, 120),
-                    task_start_date: taskStartDateStr,
-                    task_due_date: taskDueDateStr,
-                    task_source: 'ai_angel',
-                    task_status: status,
-                    sub_tasks_list: mappedSubTasks
-                });
+                // 1) Insert Parent Task
+                const { data: createdTask, error: taskErr } = await supabaseAdmin
+                    .from('tasks')
+                    .insert({
+                        user_id: user.id,
+                        title: parentTitle.substring(0, 120),
+                        start_date: taskStartDateStr,
+                        due_date: taskDueDateStr,
+                        source: 'ai_angel',
+                        status: status
+                    })
+                    .select('id').single();
 
-                if (error) {
-                    console.error('[AI Angel] Database Stored Procedure Execution Failed:', error);
-                    throw error;
+                if (taskErr) {
+                    console.error('[AI Angel] Failed to insert parent task:', taskErr);
+                    throw taskErr;
                 }
 
-                finalTaskId = createdTaskId;
+                finalTaskId = createdTask.id;
 
-                const { data: createdSubTasks } = await supabaseAdmin
+                // 2) Insert Subtasks
+                const subTasksToInsert = mappedSubTasks.map(st => ({
+                    task_id: finalTaskId,
+                    title: st.title,
+                    sequence_order: st.sequence_order,
+                    start_date: st.start_date,
+                    due_date: st.due_date,
+                    is_completed: false
+                }));
+
+                const { data: createdSubTasks, error: subTaskErr } = await supabaseAdmin
                     .from('sub_tasks')
-                    .select('id, title, sequence_order, due_date')
-                    .eq('task_id', finalTaskId);
+                    .insert(subTasksToInsert)
+                    .select('id, title, sequence_order, due_date');
+
+                if (subTaskErr) {
+                    console.error('[AI Angel] Failed to insert subtasks, rolling back task creation:', subTaskErr);
+                    // Rollback: delete the created parent task
+                    await supabaseAdmin.from('tasks').delete().eq('id', finalTaskId);
+                    return res.status(500).json({ error: "세부 일정을 저장하는 데 실패하여 생성된 상위 작업을 정리했습니다." });
+                }
 
                 syncTasksList = createdSubTasks || [];
             }
@@ -455,8 +548,7 @@ ${existingTaskContext}
                         if (calendarId) {
                             googleCalendarSynced = true;
                             const calendarService = require('../_services/calendarService');
-                            
-                            for (const subTask of syncTasksList) {
+                            const syncTaskResults = await mapWithConcurrency(syncTasksList, GOOGLE_SYNC_CONCURRENCY, async (subTask) => {
                                 try {
                                     // Calculate end date: due_date + 1 day
                                     const nextDay = new Date(subTask.due_date + 'T00:00:00+09:00');
@@ -471,63 +563,97 @@ ${existingTaskContext}
                                     };
 
                                     const googleEvent = await calendarService.addGoogleCalendarEvent(token, eventData, calendarId, user.id);
-                                    if (googleEvent && googleEvent.id) {
-                                        // Update subtask in DB with event mapping
-                                        await supabaseAdmin
-                                            .from('sub_tasks')
-                                            .update({
-                                                google_calendar_id: calendarId,
-                                                google_event_id: googleEvent.id,
-                                                google_sync_status: 'synced'
-                                            })
-                                            .eq('id', subTask.id);
-
-                                        // Cache event to calendar ID mapping in Redis
-                                        await redis.set(`user:${user.id}:event-calendar-map:${googleEvent.id}`, calendarId, 'EX', 3600 * 24 * 30);
-
-                                        syncResults.push({
-                                            subTaskId: subTask.id,
-                                            title: subTask.title,
-                                            status: 'synced',
-                                            googleEventId: googleEvent.id
-                                        });
-                                    } else {
+                                    if (!googleEvent || !googleEvent.id) {
                                         throw new Error('Google Calendar returned empty event data');
                                     }
+
+                                    const { error: updateErr } = await supabaseAdmin
+                                        .from('sub_tasks')
+                                        .update({
+                                            google_calendar_id: calendarId,
+                                            google_event_id: googleEvent.id,
+                                            google_sync_status: 'synced'
+                                        })
+                                        .eq('id', subTask.id);
+                                    if (updateErr) throw updateErr;
+
+                                    // Cache event to calendar ID mapping in Redis (if available)
+                                    if (redis) {
+                                        try {
+                                            await redis.set(`user:${user.id}:event-calendar-map:${googleEvent.id}`, calendarId, 'EX', 3600 * 24 * 30);
+                                        } catch (redisErr) {
+                                            console.warn(`[AI Angel] Redis cache error for event ${googleEvent.id}:`, redisErr.message);
+                                        }
+                                    }
+
+                                    return {
+                                        subTaskId: subTask.id,
+                                        title: subTask.title,
+                                        status: 'synced',
+                                        googleEventId: googleEvent.id
+                                    };
                                 } catch (eventErr) {
                                     console.error(`[AI Angel] Failed to sync subtask ${subTask.id} to Google Calendar:`, eventErr.message);
-                                    await supabaseAdmin
+                                    const { error: failedStatusErr } = await supabaseAdmin
                                         .from('sub_tasks')
                                         .update({ google_sync_status: 'failed' })
                                         .eq('id', subTask.id);
 
-                                    syncResults.push({
+                                    if (failedStatusErr) {
+                                        console.warn(`[AI Angel] Failed to mark google_sync_status=failed for subtask ${subTask.id}:`, failedStatusErr.message);
+                                        return {
+                                            subTaskId: subTask.id,
+                                            title: subTask.title,
+                                            status: 'failed',
+                                            reason: 'DB_SYNC_STATUS_UPDATE_FAILED'
+                                        };
+                                    }
+
+                                    return {
                                         subTaskId: subTask.id,
                                         title: subTask.title,
                                         status: 'failed',
                                         reason: eventErr.message
-                                    });
+                                    };
+                                }
+                            });
+                            syncResults.push(...syncTaskResults);
+                            
+                            // Invalidate advice cache (if Redis available)
+                            if (redis) {
+                                try {
+                                    await redis.del(`user:${user.id}:calendar-advice-cache`);
+                                } catch (redisErr) {
+                                    console.warn(`[AI Angel] Redis cache invalidation error:`, redisErr.message);
                                 }
                             }
-                            
-                            // Invalidate advice cache
-                            await redis.del(`user:${user.id}:calendar-advice-cache`);
                         }
                     } else {
                         // Google not connected
-                        for (const subTask of syncTasksList) {
-                            await supabaseAdmin
+                        const tokenMissingResults = await mapWithConcurrency(syncTasksList, STATUS_UPDATE_CONCURRENCY, async (subTask) => {
+                            const { error: tokenMissingErr } = await supabaseAdmin
                                 .from('sub_tasks')
                                 .update({ google_sync_status: 'token_missing' })
                                 .eq('id', subTask.id);
-                                
-                            syncResults.push({
+
+                            if (tokenMissingErr) {
+                                console.warn(`[AI Angel] Failed to mark google_sync_status=token_missing for subtask ${subTask.id}:`, tokenMissingErr.message);
+                                return {
+                                    subTaskId: subTask.id,
+                                    title: subTask.title,
+                                    status: 'failed',
+                                    reason: 'DB_SYNC_STATUS_UPDATE_FAILED'
+                                };
+                            }
+
+                            return {
                                 subTaskId: subTask.id,
                                 title: subTask.title,
                                 status: 'failed',
                                 reason: 'GOOGLE_NOT_CONNECTED'
-                            });
-                        }
+                            };
+                        });
+                        syncResults.push(...tokenMissingResults);
                     }
                 } catch (syncErr) {
                     console.error('[AI Angel] Google Calendar sync pipeline failed:', syncErr.message);
@@ -543,7 +669,13 @@ ${existingTaskContext}
                 }
             }
 
-            await redis.del(`user:${user.id}:briefing-cache`);
+            if (redis) {
+                try {
+                    await redis.del(`user:${user.id}:briefing-cache`);
+                } catch (redisErr) {
+                    console.warn(`[AI Angel] Redis cache deletion error:`, redisErr.message);
+                }
+            }
             
             return res.json({
                 success: true,

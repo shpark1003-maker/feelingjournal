@@ -64,8 +64,17 @@ async function getGoogleAccessToken(userId) {
     }
 }
 
-async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '') {
-    const cacheKey = `user:${userId}:calendar-events-cache:${timeMin || 'all'}:${timeMax || 'all'}`;
+async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '', fetchOptions = {}) {
+    // 캐시 키를 KST 날짜 단위로 정규화하여 초 단위 변동에 의한 캐시 미스 방지
+    const normalizeToKstDate = (iso) => {
+        if (!iso) return 'all';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso.split('T')[0] || 'all';
+        return d.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/[^0-9]/g, '-').replace(/-$/, '');
+    };
+    const cacheKey = `user:${userId}:calendar-events-cache:${normalizeToKstDate(timeMin)}:${normalizeToKstDate(timeMax)}`;
+    const calTimeout = fetchOptions.timeout || 4000;
+    const calRetries = fetchOptions.retries !== undefined ? fetchOptions.retries : 3;
     try {
         const cached = await redis.get(cacheKey);
         if (cached) {
@@ -84,15 +93,18 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
 
         // 1. Get calendar list
         const listUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-        const listRes = await fetchWithTimeout(listUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000);
+        const listRes = await fetchWithTimeout(listUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, calTimeout, calRetries);
         
         let calendars = [{ id: 'primary', summary: '기본 캘린더' }];
         let isTokenEvicted = false;
         
-        if (listRes.ok) {
+        if (listRes.ok && !fetchOptions.primaryOnly) {
             const listData = await listRes.json();
             if (listData.items && listData.items.length > 0) {
                 calendars = listData.items.filter(cal => {
+                    if (fetchOptions.selectedCalendars && fetchOptions.selectedCalendars.length > 0) {
+                        return fetchOptions.selectedCalendars.includes(cal.id);
+                    }
                     const isSelected = cal.selected === true;
                     const isBirthdayCal = cal.id === 'addressbook#contacts@group.v.calendar.google.com' ||
                                         cal.id.includes('contacts@group.v.calendar.google.com') ||
@@ -136,7 +148,7 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
                 if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
                 if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
                 
-                const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000);
+                const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, calTimeout, calRetries);
                 if (res.ok) {
                     const data = await res.json();
                     const items = data.items || [];
@@ -196,7 +208,7 @@ async function fetchGoogleCalendarEvents(userId, timeMin, timeMax, userEmail = '
 
                 // Cache the calendar ID for this event ID to allow PATCH/DELETE
                 try {
-                    redis.set(`user:${userId}:event-calendar-map:${item.id}`, item._calendarId, 'EX', 3600 * 24 * 30);
+                    await redis.set(`user:${userId}:event-calendar-map:${item.id}`, item._calendarId, 'EX', 3600 * 24 * 30);
                 } catch (err) {
                     console.warn(`Failed to cache calendar ID mapping for event ${item.id}:`, err.message);
                 }
@@ -240,7 +252,11 @@ async function clearGoogleCalendarCache(userId) {
         const keys = await scanRedisKeys(pattern);
         if (keys && keys.length > 0) {
             console.log(`--- [CACHE INVALIDATE] Deleting ${keys.length} calendar event caches for user ${userId} ---`);
-            await redis.del(keys);
+            const batchSize = 100;
+            for (let i = 0; i < keys.length; i += batchSize) {
+                const keyBatch = keys.slice(i, i + batchSize);
+                await redis.del(...keyBatch);
+            }
         }
     } catch (e) {
         console.error(`--- [CACHE INVALIDATE ERROR] Failed to clear calendar cache:`, e.message);
