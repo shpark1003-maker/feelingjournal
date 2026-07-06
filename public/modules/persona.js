@@ -722,6 +722,11 @@ export function setupApiIntegrationUI() {
     const toggleGeminiPro = document.getElementById('api-geminipro-toggle');
     const containerGeminiPro = document.getElementById('geminipro-credentials-container');
 
+    const toggleGoogleCal = document.getElementById('api-google-calendar-toggle');
+    const containerGoogleCal = document.getElementById('google-calendar-list-container');
+    const googleCalList = document.getElementById('google-calendar-list');
+    const googleCalSyncBtn = document.getElementById('google-calendar-sync-now-btn');
+
     const saveBtn = document.getElementById('save-api-settings-btn');
 
     // Tab switching
@@ -767,11 +772,92 @@ export function setupApiIntegrationUI() {
         }
     });
 
+    window.renderGoogleCalendarList = async function() {
+        if (!googleCalList) return;
+        googleCalList.innerHTML = '<div class="text-center p-2"><span class="material-symbols-outlined animate-spin text-primary text-[14px]">sync</span></div>';
+        try {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/api/calendar/list`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const selected = window._googleCalendarSelected || [];
+                let html = '';
+                data.calendars.forEach(cal => {
+                    // if selected is empty, default primary to checked
+                    let isChecked = selected.includes(cal.id);
+                    if (selected.length === 0 && cal.id === 'primary') isChecked = true;
+                    
+                    const role = cal.accessRole;
+                    const canWrite = role === 'owner' || role === 'writer';
+                    html += `
+                        <label class="flex items-center gap-2 p-1.5 hover:bg-black/5 rounded cursor-pointer">
+                            <input type="checkbox" class="google-calendar-checkbox rounded text-primary" value="${cal.id}" ${isChecked ? 'checked' : ''}>
+                            <div class="flex flex-col flex-1 min-w-0">
+                                <span class="font-bold text-[11px] truncate block" style="color: ${cal.backgroundColor || '#333'}">${cal.summary}</span>
+                                <span class="text-[9px] text-on-surface-variant">${canWrite ? '양방향 (Write-back)' : '읽기 전용 (Import Only)'}</span>
+                            </div>
+                        </label>
+                    `;
+                });
+                googleCalList.innerHTML = html;
+            } else {
+                googleCalList.innerHTML = '<div class="text-red-500 text-[10px] p-2">불러오기 실패. (연동 해제 상태일 수 있습니다)</div>';
+            }
+        } catch (e) {
+            googleCalList.innerHTML = '<div class="text-red-500 text-[10px] p-2">오류 발생</div>';
+        }
+    };
+
+    toggleGoogleCal?.addEventListener('change', async () => {
+        if (toggleGoogleCal.checked) {
+            containerGoogleCal?.classList.remove('hidden');
+            await window.renderGoogleCalendarList();
+        } else {
+            containerGoogleCal?.classList.add('hidden');
+        }
+    });
+
+    googleCalSyncBtn?.addEventListener('click', async () => {
+        googleCalSyncBtn.textContent = '동기화 중...';
+        googleCalSyncBtn.disabled = true;
+        try {
+            const token = await store.getSessionToken();
+            const res = await fetch(`${API_URL}/calendar/sync`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`동기화 성공: ${data.upsertCount}개 추가/갱신, ${data.deleteCount}개 삭제`);
+            } else {
+                alert('동기화 실패: ' + (data.error || '알 수 없는 오류'));
+            }
+        } catch (e) {
+            alert('동기화 중 오류가 발생했습니다.');
+        } finally {
+            googleCalSyncBtn.textContent = '지금 동기화';
+            googleCalSyncBtn.disabled = false;
+        }
+    });
+
     // Save action
     saveBtn?.addEventListener('click', async () => {
         try {
             const token = await store.getSessionToken();
             if (!token) return;
+
+            // 수집: 선택된 구글 캘린더 아이디
+            let selectedGoogleCalendars = [];
+            const checkboxes = document.querySelectorAll('.google-calendar-checkbox');
+            if (checkboxes.length > 0) {
+                checkboxes.forEach(cb => {
+                    if (cb.checked) selectedGoogleCalendars.push(cb.value);
+                });
+            } else {
+                selectedGoogleCalendars = window._googleCalendarSelected || [];
+            }
 
             const payload = {
                 settings: {
@@ -782,7 +868,9 @@ export function setupApiIntegrationUI() {
                     elevenEnabled: !!toggleEleven?.checked,
                     elevenKey: document.getElementById('api-eleven-key')?.value || '',
                     geminiProEnabled: !!toggleGeminiPro?.checked,
-                    geminiProKey: document.getElementById('api-geminipro-key')?.value || ''
+                    geminiProKey: document.getElementById('api-geminipro-key')?.value || '',
+                    googleCalendarEnabled: !!toggleGoogleCal?.checked,
+                    selectedGoogleCalendars: selectedGoogleCalendars
                 }
             };
 
@@ -827,6 +915,19 @@ export async function loadApiSettings() {
 
             const newsToggle = document.getElementById('api-news-toggle');
             if (newsToggle) newsToggle.checked = s.newsEnabled !== false;
+
+            const googleCalToggle = document.getElementById('api-google-calendar-toggle');
+            if (googleCalToggle) {
+                googleCalToggle.checked = !!s.googleCalendarEnabled;
+                window._googleCalendarSelected = s.selectedGoogleCalendars || [];
+                const container = document.getElementById('google-calendar-list-container');
+                if (s.googleCalendarEnabled) {
+                    container?.classList.remove('hidden');
+                    if (window.renderGoogleCalendarList) window.renderGoogleCalendarList();
+                } else {
+                    container?.classList.add('hidden');
+                }
+            }
 
             const nsightToggle = document.getElementById('api-nsight-toggle');
             if (nsightToggle) {
