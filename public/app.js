@@ -448,8 +448,32 @@ function setupAuth() {
 
     signupBtn?.addEventListener('click', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const email = (emailInput?.value || '').trim();
+        const password = passwordInput?.value || '';
+
+        if (!email || !password) {
+            alert('이메일과 비밀번호를 모두 입력해 주세요.');
+            return;
+        }
+
+        if (!email.includes('@')) {
+            alert('올바른 이메일 형식을 입력해 주세요.');
+            return;
+        }
+
+        if (password.length < 6) {
+            alert('비밀번호는 6자 이상이어야 합니다.');
+            return;
+        }
+
+        console.log('[AUTH] signUp attempt', {
+            hasEmail: !!email,
+            emailLength: email.length,
+            passwordLength: password.length
+        });
+
         const { data, error } = await store.supabaseClient.auth.signUp({ email, password });
         if (error) alert('회원가입 실패: ' + error.message);
         else {
