@@ -448,6 +448,9 @@ function setupAuth() {
 
     signupBtn?.addEventListener('click', async (e) => {
         e.preventDefault();
+        
+        if (signupBtn.disabled) return;
+        
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const email = (emailInput?.value || '').trim();
@@ -473,15 +476,31 @@ function setupAuth() {
             emailLength: email.length,
             passwordLength: password.length
         });
+        
+        // Prevent double click
+        const originalText = signupBtn.innerText;
+        signupBtn.disabled = true;
+        signupBtn.innerText = '처리 중...';
 
-        const { data, error } = await store.supabaseClient.auth.signUp({ email, password });
-        if (error) alert('회원가입 실패: ' + error.message);
-        else {
-            // Never keep an unverified email session signed in.
-            if (data?.session && isUnverifiedEmailUser(data.user)) {
-                await store.supabaseClient.auth.signOut();
+        try {
+            const { data, error } = await store.supabaseClient.auth.signUp({ email, password });
+            
+            if (error) {
+                console.error('[AUTH] signUp error:', error);
+                alert('회원가입 실패: ' + error.message);
+            } else {
+                // Never keep an unverified email session signed in.
+                if (data?.session && isUnverifiedEmailUser(data.user)) {
+                    await store.supabaseClient.auth.signOut();
+                }
+                alert('인증 이메일을 확인해 주세요!');
             }
-            alert('인증 이메일을 확인해 주세요!');
+        } catch (err) {
+            console.error('[AUTH] signUp exception:', err);
+            alert('회원가입 중 오류가 발생했습니다.');
+        } finally {
+            signupBtn.disabled = false;
+            signupBtn.innerText = originalText;
         }
     });
 
