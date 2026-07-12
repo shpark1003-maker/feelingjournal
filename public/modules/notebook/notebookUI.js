@@ -1,8 +1,8 @@
-import { API_URL } from '../../state.js';
-import * as store from '../../state.js';
+import { API_URL } from '../state.js';
+import * as store from '../state.js';
 import { notebookState } from './notebookState.js';
 
-import { store, API_URL, assertIds } from './state.js';
+import { store, API_URL, assertIds } from '../state.js';
 
 let selectModeActive = false;
 let selectedPageIds = new Set();

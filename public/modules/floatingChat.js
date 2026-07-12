@@ -1,4 +1,4 @@
-import { store, API_URL } from './state.js?v=5.7.7';
+import { store, API_URL } from './state.js';
 
 const MAX_FLOATING_CHAT_WINDOWS = 4;
 const WINDOW_WIDTH = 360;
@@ -33,7 +33,12 @@ export function handleChatModeChange() {
             });
             // 모바일 탭으로 전환
             const chatTab = document.getElementById('nav-chat-tab');
-            if (chatTab// 플로팅 채팅방 열기
+            if (chatTab) chatTab.click();
+        }
+    }
+}
+
+// 플로팅 채팅방 열기
 export async function openChatWindow(roomId, title) {
     if (!roomId) return;
 
@@ -56,7 +61,7 @@ export async function openChatWindow(roomId, title) {
     if (titleEl) titleEl.innerText = title;
 
     // Switch room to load messages and bind realtime events
-    const chatMod = await import('./chat.js?v=5.8.1');
+    const chatMod = await import('./chat.js?v=8');
     await chatMod.switchChatRoom(roomId, title);
 
     // index.html의 overlay 노출

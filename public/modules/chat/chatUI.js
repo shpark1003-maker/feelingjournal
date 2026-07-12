@@ -1,4 +1,5 @@
-import { store, API_URL, assertIds } from './state.js';
+import { store, API_URL, assertIds } from '../state.js';
+import { chatState } from './chatState.js';
 
 
 let localStream = null;
@@ -69,7 +70,8 @@ const renderedMessageIds = new Set();
 
 export function appendMessage(msg) {
     if (msg && msg.content) {
-        const role = (msg.sender_id === store.user.id) ? 'user' : 'assistant';
+        const myUserId = store.currentUser?.id || store.user?.id;
+        const role = (myUserId && msg.sender_id === myUserId) ? 'user' : 'assistant';
         chatState.addMessage(role, msg.content);
     }
     if (!msg || !msg.id) return;
@@ -592,7 +594,7 @@ export function setupChatUI() {
             e.stopPropagation();
             const roomId = target.dataset.roomId;
             const title = target.dataset.title;
-            const { openChatWindow } = await import('./floatingChat.js');
+            const { openChatWindow } = await import('../floatingChat.js');
             await openChatWindow(roomId, title);
         }
     });
@@ -637,7 +639,7 @@ export async function openChatWithAi() {
 
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js');
+            const { openChatWindow } = await import('../floatingChat.js');
             await openChatWindow(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
         } else {
             console.error('Failed to get/create chat room:', data.error);
@@ -949,12 +951,20 @@ export async function loadContacts() {
 
 export async function checkFriendSos() {
     try {
+        if (!store.currentUser) return;
+
         const token = await store.getSessionToken();
         if (!token) return;
 
         const res = await fetch(`${API_URL}/friends/sos`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (res.status === 401 || res.status === 403) {
+            await store.supabaseClient.auth.signOut();
+            return;
+        }
+
         const data = await res.json();
 
         // [NEW] Save friends list globally for instant lookups in room switches
@@ -1315,7 +1325,7 @@ window.openChatWithFriend = async function(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js');
+            const { openChatWindow } = await import('../floatingChat.js');
             await openChatWindow(data.room.id, friendNickname);
         } else {
             console.error('Room registration failed:', data.error);

@@ -1,26 +1,12 @@
-import { initializeChat, loadMessages, callChatAI, setupChatAssistant, setupChatUI, setupCallSystem, switchSocialTab, toggleInviteOverlay, loadContacts, checkFriendSos } from './chatUI.js';
+import { initializeChat, loadMessages, appendMessage, callChatAI, setupChatAssistant, setupChatUI, setupCallSystem, switchSocialTab, toggleInviteOverlay, loadContacts, checkFriendSos, speakCallResponse, updateEmotionThermometer } from './chatUI.js';
 import { chatApi } from './chatApi.js';
 import { chatState } from './chatState.js';
 
+export { initializeChat, setupChatAssistant, setupChatUI, checkFriendSos } from './chatUI.js';
+
 window.chatApi = chatApi;
 
-export {
-    openChatWithAi,
-    switchChatRoom,
-    startCall,
-    startCallSpeechRecognition,
-    endCall,
-    startVideoAnalysisLoop,
-    toggleFriendSettings,
-    openFriendSettingsModal,
-    openInviteModal,
-    toggleFriendStealth,
-    toggleFriendShare,
-    deleteFriend,
-    blockFriend,
-    openChatWithFriend,
-    openSmsQrInviteModal,
-};
+
 
 export async function openChatWithAi() {
     try {
@@ -41,7 +27,7 @@ export async function openChatWithAi() {
 
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js');
+            const { openChatWindow } = await import('../floatingChat.js');
             await openChatWindow(data.room.id, `✨ ${document.getElementById('ai-name')?.value || '비서'}와 대화`);
         } else {
             console.error('Failed to get/create chat room:', data.error);
@@ -469,7 +455,7 @@ export async  function openChatWithFriend(friendId, friendNickname) {
         });
         const data = await res.json();
         if (data.success && data.room) {
-            const { openChatWindow } = await import('./floatingChat.js');
+            const { openChatWindow } = await import('../floatingChat.js');
             await openChatWindow(data.room.id, friendNickname);
         } else {
             console.error('Room registration failed:', data.error);

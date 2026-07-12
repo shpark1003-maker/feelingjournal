@@ -1,4 +1,4 @@
-import { API_URL, store } from '../../state.js';
+import { API_URL, store } from '../state.js';
 
 export const notebookApi = {
     async fetchNotebooks() {

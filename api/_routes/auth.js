@@ -78,6 +78,53 @@ module.exports = async (req, res) => {
                 );
                 await client.end();
                 console.log(`--- [OAuth Google Link] Successfully deleted Google identity for user ${user.id} ---`);
+                
+                // Clear Redis tokens (if Redis available)
+                if (redis) {
+                    try {
+                        await redis.del(`user:${user.id}:google_provider_token`);
+                        await redis.del(`user:${user.id}:google_provider_refresh_token`);
+                        await redis.del(`user:${user.id}:calendar_list_cache`);
+                    } catch (redisErr) {
+                        console.warn('--- [OAuth Google Link] Redis deletion error:', redisErr.message);
+                    }
+                }
+                try {
+                    const { clearGoogleCalendarCache } = require('./shared');
+                    await clearGoogleCalendarCache(user.id);
+                } catch (e) {
+                    console.warn('--- [OAuth Google Link] Failed to clear calendar cache:', e.message);
+                }
+
+                // Soft-delete Google events in internal DB (calendar_events)
+                try {
+                    const { supabaseAdmin } = require('./shared');
+                    if (supabaseAdmin) {
+                        await supabaseAdmin
+                            .from('calendar_events')
+                            .update({ is_deleted: true, sync_status: 'unlinked' })
+                            .eq('user_id', user.id)
+                            .eq('external_provider', 'google')
+                            .eq('is_deleted', false);
+                    }
+                } catch (dbErr) {
+                    console.warn('--- [OAuth Google Link] Failed to soft-delete internal Google events:', dbErr.message);
+                }
+                
+                // Disable push config sync flag
+                try {
+                    const { data: currentPush } = await supabase.from('push_subscriptions').select('config').eq('user_id', user.id).limit(1);
+                    if (currentPush && currentPush.length > 0 && currentPush[0].config) {
+                        const newConfig = { ...currentPush[0].config };
+                        if (newConfig.settings) {
+                            newConfig.settings.googleCalendarEnabled = false;
+                        }
+                        await supabase.from('push_subscriptions').update({ config: newConfig }).eq('user_id', user.id);
+                    }
+                } catch (pushErr) {
+                    console.error('--- [OAuth Google Link] Failed to update push config on unlink:', pushErr.message);
+                }
+
                 return res.json({ success: true });
             } catch (dbErr) {
                 console.error('--- [OAuth Google Link] Database error deleting identity:', dbErr.message);
@@ -196,14 +243,20 @@ module.exports = async (req, res) => {
                         const providerToken = tokenData.access_token;
                         const providerRefreshToken = tokenData.refresh_token;
 
-                        if (providerToken) {
-                            await redis.set(`user:${state}:google_provider_token`, providerToken, 'EX', 3600);
-                            await redis.del(`user:${state}:calendar-advice-cache`);
-                            console.log(`--- [Direct Google Link] Cached provider token for user ${state} ---`);
-                        }
-                        if (providerRefreshToken) {
-                            await redis.set(`user:${state}:google_provider_refresh_token`, providerRefreshToken);
-                            console.log(`--- [Direct Google Link] Cached refresh token for user ${state} ---`);
+                        if (redis) {
+                            try {
+                                if (providerToken) {
+                                    await redis.set(`user:${state}:google_provider_token`, providerToken, 'EX', 3600);
+                                    await redis.del(`user:${state}:calendar-advice-cache`);
+                                    console.log(`--- [Direct Google Link] Cached provider token for user ${state} ---`);
+                                }
+                                if (providerRefreshToken) {
+                                    await redis.set(`user:${state}:google_provider_refresh_token`, providerRefreshToken);
+                                    console.log(`--- [Direct Google Link] Cached refresh token for user ${state} ---`);
+                                }
+                            } catch (redisErr) {
+                                console.warn('--- [Direct Google Link] Redis cache error:', redisErr.message);
+                            }
                         }
                         
                         res.redirect('/#linked=google');
@@ -230,14 +283,20 @@ module.exports = async (req, res) => {
                     const providerToken = data.session.provider_token;
                     const providerRefreshToken = data.session.provider_refresh_token;
 
-                    if (providerToken) {
-                        await redis.set(`user:${targetUserId}:google_provider_token`, providerToken, 'EX', 3600);
-                        await redis.del(`user:${targetUserId}:calendar-advice-cache`);
-                        console.log(`--- [OAuth Callback] Cached google_provider_token for target user ${targetUserId} and cleared calendar cache ---`);
-                    }
-                    if (providerRefreshToken) {
-                        await redis.set(`user:${targetUserId}:google_provider_refresh_token`, providerRefreshToken);
-                        console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for target user ${targetUserId} ---`);
+                    if (redis) {
+                        try {
+                            if (providerToken) {
+                                await redis.set(`user:${targetUserId}:google_provider_token`, providerToken, 'EX', 3600);
+                                await redis.del(`user:${targetUserId}:calendar-advice-cache`);
+                                console.log(`--- [OAuth Callback] Cached google_provider_token for target user ${targetUserId} and cleared calendar cache ---`);
+                            }
+                            if (providerRefreshToken) {
+                                await redis.set(`user:${targetUserId}:google_provider_refresh_token`, providerRefreshToken);
+                                console.log(`--- [OAuth Callback] Cached google_provider_refresh_token for target user ${targetUserId} ---`);
+                            }
+                        } catch (redisErr) {
+                            console.warn('--- [OAuth Callback] Redis cache error:', redisErr.message);
+                        }
                     }
 
                     // 브라우저 측 Supabase SDK가 로그인을 온전히 인식할 수 있도록 hash fragment로 세션 정보 전달

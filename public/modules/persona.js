@@ -1,4 +1,4 @@
-import { store, API_URL, assertIds, updateSettings } from './state.js?v=5.7.7';
+import { store, API_URL, assertIds, updateSettings } from './state.js';
 
 export async function loadPersona() {
     assertIds('Persona', [
@@ -377,6 +377,88 @@ export function setupLearningCenter() {
 let briefingPollCount = 0;
 let briefingPollTimer = null;
 const MAX_BRIEFING_POLLS = 10;
+const BRIEFING_CLIENT_CACHE_KEY = 'fj_briefing_last_success_v1';
+
+function escapeBriefingHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function readCachedBriefing() {
+    try {
+        const raw = localStorage.getItem(BRIEFING_CLIENT_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed.briefing !== 'string' || !parsed.briefing.trim()) return null;
+        return parsed;
+    } catch (_) {
+        return null;
+    }
+}
+
+function writeCachedBriefing(briefing, weather) {
+    try {
+        localStorage.setItem(BRIEFING_CLIENT_CACHE_KEY, JSON.stringify({
+            briefing,
+            weather: weather || null,
+            updatedAt: Date.now()
+        }));
+    } catch (_) {
+        // Ignore localStorage quota/access failures.
+    }
+}
+
+function applyBriefingWeatherWidget(weather) {
+    const weatherWidget = document.getElementById('briefing-weather-widget');
+    const weatherIcon = document.getElementById('briefing-weather-icon');
+    const weatherTemp = document.getElementById('briefing-weather-temp');
+
+    if (weather && weatherWidget && weatherIcon && weatherTemp) {
+        const w = weather;
+        let weatherImgName = 'weather_sunny.png';
+
+        const skyLower = (w.sky || '').toLowerCase();
+        const rainTypeLower = (w.rainType || '').toLowerCase();
+
+        if ((rainTypeLower.includes('강수') && !rainTypeLower.includes('없음')) || skyLower.includes('rain') || skyLower.includes('drizzle') || skyLower.includes('비')) {
+            weatherImgName = 'weather_rainy.png';
+        } else if (skyLower.includes('snow') || skyLower.includes('눈') || skyLower.includes('freeze')) {
+            weatherImgName = 'weather_snowy.png';
+        } else if (skyLower.includes('cloud') || skyLower.includes('흐림') || skyLower.includes('구름') || skyLower.includes('overcast') || skyLower.includes('mist') || skyLower.includes('haze')) {
+            weatherImgName = 'weather_cloudy.png';
+        }
+
+        weatherIcon.src = `./optimized/${weatherImgName.replace('.png', '-96.webp')}`;
+        weatherTemp.innerText = `${Math.round(w.temp)}°C`;
+        weatherWidget.classList.remove('hidden');
+        weatherWidget.style.display = 'flex';
+    } else if (weatherWidget) {
+        weatherWidget.classList.add('hidden');
+        weatherWidget.style.display = 'none';
+    }
+}
+
+function renderCachedBriefing(content, cached, hintText = '') {
+    const updatedAtText = cached?.updatedAt
+        ? new Date(cached.updatedAt).toLocaleString('ko-KR')
+        : '최근';
+
+    const safeHtml = escapeBriefingHtml(cached?.briefing || '')
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--primary); font-weight: 700;">$1</strong>');
+
+    content.innerHTML = `
+        <div class="flex flex-col gap-2 text-on-surface-variant">
+            <div class="text-[11px] text-on-surface-variant/70">최근 브리핑 (${updatedAtText})</div>
+            <p class="text-on-surface-variant leading-relaxed text-[13px]">${safeHtml}</p>
+            ${hintText ? `<div class="text-[11px] text-primary/80">${hintText}</div>` : ''}
+        </div>
+    `;
+}
 
 export async function loadBriefing() {
     const card = document.getElementById('briefing-card');
@@ -409,6 +491,12 @@ export async function loadBriefing() {
                 <div class="h-3 bg-primary/10 rounded-full w-2/3"></div>
             </div>
         `;
+
+        const cachedBriefing = readCachedBriefing();
+        if (cachedBriefing?.briefing) {
+            renderCachedBriefing(content, cachedBriefing, '최신 브리핑을 불러오는 중입니다...');
+            applyBriefingWeatherWidget(cachedBriefing.weather || null);
+        }
 
         const weatherOff = document.getElementById('weather-off')?.checked;
         let url = `${API_URL}/briefing`;
@@ -534,6 +622,10 @@ export async function loadBriefing() {
 
             if (briefingPollCount >= MAX_BRIEFING_POLLS) {
                 briefingPollCount = 0;
+                if (cachedBriefing?.briefing) {
+                    renderCachedBriefing(content, cachedBriefing, '최신 브리핑 생성이 지연되어 최근 브리핑을 유지합니다.');
+                    return;
+                }
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
                         <span class="material-symbols-outlined text-3xl text-on-surface-variant/50">schedule</span>
@@ -558,12 +650,17 @@ export async function loadBriefing() {
                 return;
             }
 
-            content.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
-                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-xs font-semibold">AI 비서가 오늘의 데일리 브리핑을 준비하고 있습니다...</p>
-                </div>
-            `;
+            if (cachedBriefing?.briefing) {
+                renderCachedBriefing(content, cachedBriefing, 'AI 비서가 최신 브리핑을 준비 중입니다...');
+            } else {
+
+                content.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant/70 gap-3 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+                        <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-xs font-semibold">AI 비서가 오늘의 데일리 브리핑을 준비하고 있습니다...</p>
+                    </div>
+                `;
+            }
 
             briefingPollCount += 1;
             if (briefingPollTimer) clearTimeout(briefingPollTimer);
@@ -585,35 +682,9 @@ export async function loadBriefing() {
             }
 
             const briefingTextTrimmed = briefingText.trim();
+            writeCachedBriefing(briefingText, data.weather || null);
 
-            // 실시간 날씨 위젯 처리 (눈비맑음 아이콘 + 온도 표시)
-            const weatherWidget = document.getElementById('briefing-weather-widget');
-            const weatherIcon = document.getElementById('briefing-weather-icon');
-            const weatherTemp = document.getElementById('briefing-weather-temp');
-
-            if (data.weather && weatherWidget && weatherIcon && weatherTemp) {
-                const w = data.weather;
-                let weatherImgName = 'weather_sunny.png';
-
-                const skyLower = (w.sky || '').toLowerCase();
-                const rainTypeLower = (w.rainType || '').toLowerCase();
-
-                if ((rainTypeLower.includes('강수') && !rainTypeLower.includes('없음')) || skyLower.includes('rain') || skyLower.includes('drizzle') || skyLower.includes('비')) {
-                    weatherImgName = 'weather_rainy.png';
-                } else if (skyLower.includes('snow') || skyLower.includes('눈') || skyLower.includes('freeze')) {
-                    weatherImgName = 'weather_snowy.png';
-                } else if (skyLower.includes('cloud') || skyLower.includes('흐림') || skyLower.includes('구름') || skyLower.includes('overcast') || skyLower.includes('mist') || skyLower.includes('haze')) {
-                    weatherImgName = 'weather_cloudy.png';
-                }
-
-                weatherIcon.src = `./${weatherImgName}`;
-                weatherTemp.innerText = `${Math.round(w.temp)}°C`;
-                weatherWidget.classList.remove('hidden');
-                weatherWidget.style.display = 'flex';
-            } else if (weatherWidget) {
-                weatherWidget.classList.add('hidden');
-                weatherWidget.style.display = 'none';
-            }
+            applyBriefingWeatherWidget(data.weather || null);
 
             if (briefingTextTrimmed.length === 0 || briefingTextTrimmed === '오늘의 브리핑을 불러오지 못했습니다.') {
                 // [3. Empty State]
@@ -690,6 +761,11 @@ export async function loadBriefing() {
             briefingPollCount = 0;
             if (briefingPollTimer) clearTimeout(briefingPollTimer);
             console.error("--- [BRIEFING] Server failed to generate briefing:", data.errorCode || data.error);
+            if (cachedBriefing?.briefing) {
+                renderCachedBriefing(content, cachedBriefing, '일시 오류로 최근 브리핑을 표시합니다.');
+                applyBriefingWeatherWidget(cachedBriefing.weather || null);
+                return;
+            }
             content.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-6 text-center text-error gap-2 bg-error-container/10 border border-error/20 rounded-2xl p-4">
                     <span class="material-symbols-outlined text-3xl text-error">warning</span>
@@ -700,6 +776,12 @@ export async function loadBriefing() {
     } catch (e) {
         // [6. Error State (Runtime/Network error)]
         console.error('Briefing Error:', e);
+        const cachedBriefing = readCachedBriefing();
+        if (cachedBriefing?.briefing) {
+            renderCachedBriefing(content, cachedBriefing, '네트워크 지연으로 최근 브리핑을 표시합니다.');
+            applyBriefingWeatherWidget(cachedBriefing.weather || null);
+            return;
+        }
         content.innerHTML = `
             <div class="flex flex-col items-center justify-center py-6 text-center text-error gap-2 bg-error-container/10 border border-error/20 rounded-2xl p-4">
                 <span class="material-symbols-outlined text-3xl text-error">warning</span>

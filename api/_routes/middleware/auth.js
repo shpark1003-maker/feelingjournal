@@ -17,6 +17,22 @@ const verifyUser = async (req, res, next) => {
         if (error || !user) {
             throw error || new Error('Invalid user');
         }
+
+        const provider = user.app_metadata?.provider;
+        const identities = Array.isArray(user.identities) ? user.identities : [];
+        const hasEmailIdentity = provider === 'email'
+            || identities.some(identity => identity?.provider === 'email')
+            || !!user.email;
+        const emailVerified = !!(user.email_confirmed_at || user.confirmed_at)
+            || identities.some(identity => {
+                const verified = identity?.identity_data?.email_verified;
+                return verified === true || verified === 'true';
+            });
+
+        if (hasEmailIdentity && !emailVerified) {
+            return sendError(res, 403, '이메일 인증이 필요합니다. 메일함의 인증 링크를 먼저 확인해 주세요.');
+        }
+
         req.user = user;
         next();
     } catch (error) {

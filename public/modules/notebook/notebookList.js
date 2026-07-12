@@ -1,6 +1,15 @@
-import { API_URL, store, assertIds } from '../../state.js';
+import { API_URL, store, assertIds } from '../state.js';
 import { notebookState } from './notebookState.js';
 import { notebookApi } from './notebookApi.js';
+import {
+    addNewPage,
+    openV2Editor,
+    closeV2Editor,
+    openV2Gallery,
+    closeV2Gallery,
+    setupDirectFragmentUpload,
+    setupGallerySharing
+} from './noteEditor.js';
 
 export async function loadNotebooks() {
     assertIds('Notebook', ['v2-notebook-accordion-list']);

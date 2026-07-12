@@ -1,0 +1,2842 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Aetheric Sanctuary - Welcome Home</title>
+<!-- Stitch Live Theme Integration -->
+<script src="/modules/stitch-theme.js"></script>
+<script>
+    // Force clean up old service workers and cache storage to prevent persistent cache issues
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            for (let name of names) {
+                caches.delete(name);
+            }
+        });
+    }
+</script>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="./style.css?v=5.7.7">
+<link rel="stylesheet" href="/css/floating_chat.css?v=5.7.7">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;family=Cinzel+Decorative:wght@700&amp;family=Pinyon+Script&amp;family=Uncial+Antiqua&amp;family=MedievalSharp&amp;family=Grenze+Gotisch:wght@700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#4a654e",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#8ba88e",
+                        "on-primary-container": "#233d29",
+                        "secondary": "#645e49",
+                        "on-secondary": "#ffffff",
+                        "surface": "#fff8f3",
+                        "on-surface": "#1f1b15",
+                        "surface-variant": "#eae1d7",
+                        "on-surface-variant": "#424842",
+                        "outline": "#737972",
+                        "outline-variant": "#c2c8c0",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#fbf2e8",
+                        "surface-container": "#f6ece3",
+                        "surface-container-high": "#f0e7dd",
+                        "surface-container-highest": "#eae1d7",
+                        "surface-tint": "#4a654e",
+                        "on-primary-fixed-variant": "#334d38",
+                        "inverse-surface": "#343029",
+                        "tertiary-fixed-dim": "#efb8c4",
+                        "surface-dim": "#e1d9cf",
+                        "on-tertiary-fixed": "#31111a",
+                        "on-tertiary-container": "#512c36",
+                        "secondary-fixed-dim": "#cec6ad",
+                        "on-background": "#1f1b15",
+                        "on-error-container": "#93000a",
+                        "background": "#fff8f3",
+                        "secondary-fixed": "#ebe2c8",
+                        "secondary-container": "#e8dfc5",
+                        "on-secondary-fixed": "#1f1c0b",
+                        "inverse-on-surface": "#f8efe5",
+                        "on-secondary-container": "#68634d",
+                        "on-primary-fixed": "#07200f",
+                        "tertiary": "#7d525c",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffd9e0",
+                        "primary-fixed": "#cceace",
+                        "primary-fixed-dim": "#b0ceb2",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#c6939e",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#fff8f3",
+                        "on-secondary-fixed-variant": "#4c4733",
+                        "inverse-primary": "#b0ceb2",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#633b45"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "max-content-width": "1200px",
+                        "sidebar-width": "280px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "base": "8px",
+                        "stack-md": "24px",
+                        "touch-target-min": "48px",
+                        "gutter-md": "16px",
+                        "container-padding": "20px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Gowun Dodum", "Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Gowun Dodum", "Manrope"],
+                        "body-lg": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "headline-md": ["Gowun Dodum", "Manrope"],
+                        "label-md": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "body-md": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "label-sm": ["Gowun Dodum", "Be Vietnam Pro"],
+                        "headline-lg": ["Gowun Dodum", "Manrope"],
+                        "sans": ["Gowun Dodum", "Plus Jakarta Sans", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["3rem", {"lineHeight": "3.5rem", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["1.625rem", {"lineHeight": "2rem", "fontWeight": "700"}],
+                        "body-lg": ["1.125rem", {"lineHeight": "1.75rem", "fontWeight": "400"}],
+                        "headline-md": ["1.5rem", {"lineHeight": "2rem", "fontWeight": "600"}],
+                        "label-md": ["0.875rem", {"lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "body-md": ["1rem", {"lineHeight": "1.5rem", "fontWeight": "400"}],
+                        "label-sm": ["0.75rem", {"lineHeight": "1rem", "fontWeight": "500"}],
+                        "headline-lg": ["2rem", {"lineHeight": "2.5rem", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Gowun Dodum', 'Plus Jakarta Sans', sans-serif;
+            background-color: #fdf9f3;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 168, 142, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(130, 84, 34, 0.08) 0, transparent 50%);
+            overflow-x: hidden;
+        }
+
+        .watercolor-blob {
+            position: absolute;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.3;
+            border-radius: 50%;
+        }
+
+        .premium-shadow {
+            box-shadow: 0 4px 30px rgba(139, 168, 142, 0.1);
+        }
+
+        .ghibli-entrance {
+            animation: fadeInScale 1.2s ease-out forwards;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    
+
+        .journal-bg { background-color: #fdf9f3; background-image: radial-gradient(#e6e2dc 0.5px, transparent 0.5px); background-size: 24px 24px; }
+        .watercolor-bg {
+            background: linear-gradient(135deg, rgba(204, 234, 206, 0.2) 0%, rgba(253, 249, 243, 0.5) 50%, rgba(202, 230, 255, 0.15) 100%);
+        }
+        .paper-texture {
+            position: relative;
+        }
+        .paper-texture::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.04;
+            pointer-events: none;
+            background-image: url("https://www.transparenttextures.com/patterns/p6.png");
+        }
+        .journal-texture {
+            background-image: repeating-linear-gradient(transparent, transparent 23px, rgba(115, 121, 114, 0.1) 23px, rgba(115, 121, 114, 0.1) 24px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(74, 101, 78, 0.08);
+        }
+        .photo-card {
+            background: white;
+            padding: 6px;
+            border: 1px solid #e6e2dc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .photo-card:active {
+            transform: scale(0.98);
+        }
+        .active-tab {
+            background-color: #ebe8e2 !important;
+            color: #1c1c18 !important;
+            font-weight: 600;
+        }
+    
+        /* Task & Calendar specific styles */
+        .notebook-lines { background-image: linear-gradient(#e1d9cf 1px, transparent 1px); background-size: 100% 2rem; }
+        .task-card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
+        .task-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out; opacity: 0; }
+        .task-expandable[aria-expanded="true"] .task-details { max-height: 3000px; opacity: 1; margin-top: 12px; }
+        .task-expandable[aria-expanded="true"] .expand-icon { transform: rotate(180deg); }
+
+        /* In-place overlay transition animation */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .overlay-animate {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #note-list-container details[open] .expand-icon-main {
+            transform: rotate(180deg);
+        }
+
+        /* Quill Editor overrides */
+        .ql-container.ql-snow {
+            border: none !important;
+            font-family: inherit !important;
+            font-size: 16px !important;
+        }
+        .ql-editor {
+            min-height: 250px;
+            padding: 0 0 100px 0 !important; /* 아래쪽에 여유 공간 확보 */
+        }
+        .ql-editor img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
+        }
+        .ql-editor.ql-blank::before {
+            left: 0 !important;
+            font-style: normal !important;
+            color: rgba(66, 72, 66, 0.3) !important;
+        }
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            padding: 0 !important;
+        }
+        .ql-snow .ql-stroke {
+            stroke: #424842 !important;
+        }
+        .ql-snow .ql-fill {
+            fill: #424842 !important;
+        }
+        .ql-snow .ql-picker {
+            color: #424842 !important;
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(74, 101, 78, 0.08);
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4a654e;
+        }
+        .toggle-checkbox:checked + .toggle-label::after {
+            transform: translateX(1.5rem);
+        }
+        .toggle-label::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 9999px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .glass-panel {
+            background: rgba(255, 248, 243, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px)
+        }
+        .chat-bubble-partner {
+            box-shadow: 0 4px 15px rgba(93, 64, 55, 0.04);
+            border: 1px solid rgba(234, 225, 215, 0.5)
+        }
+        .sentiment-gradient {
+            background: linear-gradient(90deg, #b0ceb2 0%, #efb8c4 100%)
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none
+        }
+
+        .floating-angel {
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+</style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative bg-surface">
+<div id="auth-container" class="min-h-screen flex flex-col justify-between relative bg-surface w-full">
+
+<!-- Atmospheric Background Elements -->
+<div class="watercolor-blob bg-primary-container w-64 h-64 -top-20 -left-20"></div>
+<div class="watercolor-blob bg-surface-container-highest w-72 h-72 -bottom-20 -right-20"></div>
+<!-- Main Content Shell -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile pt-12 pb-8 ghibli-entrance">
+<!-- Top Section: Mascot -->
+<div class="w-full max-w-sm flex flex-col items-center text-center mb-10">
+<div class="relative w-56 h-56 mb-8 group">
+<!-- Aura Glow -->
+<div class="absolute inset-0 bg-primary/10 rounded-full blur-3xl group-hover:blur-[48px] transition-all duration-1000"></div>
+<!-- Angel Image (Ghibli Style) -->
+<img alt="Aetheric Sanctuary Angel Mascot" class="relative z-10 w-full h-full object-contain transform group-hover:translate-y-[-8px] transition-transform duration-700 ease-in-out" src="./angel_mascot.png">
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Welcome Home</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[17.5rem]">Step back into your digital sanctuary and find your peace.</p>
+</div>
+<!-- Authentication Container -->
+<div class="w-full max-w-sm flex flex-col gap-5">
+    <!-- Email/Password Form -->
+    <form id="auth-form" class="space-y-4" onsubmit="event.preventDefault();">
+        <div class="space-y-1">
+            <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="email">Email Address</label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">mail</span>
+                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="email" placeholder="hello@forest.com" type="email" required/>
+            </div>
+        </div>
+        <div class="space-y-1">
+            <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="password">Password</label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">lock</span>
+                <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="password" placeholder="••••••••" type="password" required/>
+            </div>
+        </div>
+        <div class="flex gap-2 pt-2">
+            <button class="flex-1 py-3 bg-primary text-white font-semibold rounded-xl active:scale-95 transition-transform text-sm shadow-md" id="login-btn" type="submit">
+                로그인
+            </button>
+            <button class="flex-1 py-3 bg-surface-container-high text-on-surface font-semibold rounded-xl active:scale-95 transition-transform text-sm border border-outline-variant/30" id="signup-btn" type="button">
+                회원가입
+            </button>
+        </div>
+    </form>
+
+    <div class="flex items-center my-2">
+        <div class="flex-grow h-px bg-outline-variant/30"></div>
+        <span class="px-3 font-label-sm text-outline/40 italic text-xs">또는 소셜 로그인</span>
+        <div class="flex-grow h-px bg-outline-variant/30"></div>
+    </div>
+
+    <!-- Social Logins -->
+    <div class="flex flex-col gap-3">
+        <!-- Google Login Button -->
+        <button class="w-full h-12 bg-surface-container-lowest border border-outline-variant/50 text-on-surface rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-white hover:border-primary/30 transition-all duration-300 premium-shadow active:scale-95 group text-sm" id="google-login-btn">
+            <svg class="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+            </svg>
+            <span>Continue with Google</span>
+        </button>
+        <!-- Kakao Login Button -->
+        <button class="w-full h-12 bg-[#FAE100] border border-[#FAE100] text-[#3C1E1E] rounded-xl font-bold flex items-center justify-center gap-3 hover:brightness-95 transition-all duration-300 active:scale-95 text-sm" id="kakao-login-btn">
+            <span class="material-symbols-outlined text-[#3C1E1E] text-[18px] scale-90" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+            <span>Continue with Kakao</span>
+        </button>
+    </div>
+</div>
+</main>
+<!-- Footer Section -->
+<footer class="w-full pb-8 pt-4">
+<div class="max-w-md mx-auto flex flex-col items-center gap-1.5">
+<p class="font-label-sm text-label-sm text-outline/60 text-center tracking-wide">
+                @2026 inspired by Moveon
+            </p>
+<p class="font-label-sm text-[11px] text-outline/50 text-center tracking-wide flex items-center justify-center gap-1">
+    <span class="material-symbols-outlined text-[13px] leading-none" style="font-variation-settings: 'FILL' 1;">lock</span>
+    모든 내용은 로컬에 암호화해 저장되며, AI가 읽은 콘텐츠는 분석 후 자동 폐기됩니다.
+</p>
+</div>
+</footer>
+
+<script>
+        // Subtle interaction enhancements
+        const loginBtn = document.getElementById('google-login-btn');
+        if (loginBtn) {
+            loginBtn.addEventListener('mousedown', () => loginBtn.classList.add('scale-95'));
+            loginBtn.addEventListener('mouseup', () => loginBtn.classList.remove('scale-95'));
+            loginBtn.addEventListener('mouseleave', () => loginBtn.classList.remove('scale-95'));
+        }
+    </script>
+
+</div>
+<div id="journal-app" class="min-h-screen w-full font-body-md text-on-surface selection:bg-primary-container/30 journal-bg" style="display:none">
+
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 px-margin-mobile h-14 bg-surface/80 backdrop-blur-md flex flex-col justify-center border-b border-outline-variant/20">
+<div class="flex justify-between items-center w-full">
+<div class="flex items-center gap-3">
+<h1 class="flex items-center gap-1.5" style="user-select: none; background: none; -webkit-text-fill-color: initial; -webkit-background-clip: initial;">
+    <span class="text-2xl leading-none" style="transform: rotate(-15deg); display: inline-block; filter: drop-shadow(1px 2px 2px rgba(74,101,78,0.15)); margin-right: 1px;">🪶</span>
+    <span style="font-family: 'Uncial Antiqua', cursive; font-size: 1.45rem; font-weight: 700; color: #4A654E; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), 1px 2px 3px rgba(74,101,78,0.15); letter-spacing: 0.02em; display: inline-block;">My AI Planner</span>
+</h1>
+</div>
+<div class="flex items-center gap-1">
+<button id="care-mode-start-btn" class="items-center gap-1.5 bg-tertiary-container/30 text-tertiary border border-tertiary/20 rounded-full px-3 py-1 font-label-sm text-xs shadow-sm hover:bg-tertiary-container/50 active:scale-95 transition-all cursor-pointer mr-2" style="display: none;">
+    <span class="material-symbols-outlined text-sm">health_and_safety</span>
+    안심케어 시작
+</button>
+<button id="header-settings-btn" class="material-symbols-outlined text-primary p-2 hover:bg-primary-container/20 rounded-full transition-all active:scale-95 duration-150" onclick="document.getElementById('nav-settings-tab')?.click();" title="설정">settings</button>
+</div>
+</div>
+</header>
+<main id="journal-view" class="tab-content active pt-2 pb-28 px-margin-mobile md:px-margin-desktop max-w-[75rem] mx-auto min-h-screen watercolor-bg">
+<div class="flex flex-col md:flex-row gap-10 lg:gap-10 items-start w-full">
+<!-- AI Briefing Section (Cloud Wisdom) -->
+<aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-[3.75rem] max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
+<section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
+<div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
+<!-- Cloud illustration decoration in the bottom right -->
+<div class="absolute bottom-[-10px] right-[-10px] text-primary/10 pointer-events-none select-none opacity-40">
+    <svg width="100" height="70" viewBox="0 0 100 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M70 30C70 13.4315 56.5685 0 40 0C25.4022 0 13.242 10.3705 10.4285 24.1867C4.54929 26.2415 0 31.8485 0 38.5C0 46.5081 6.49187 53 14.5 53H75C88.8071 53 100 41.8071 100 28C100 14.7797 89.8 3.93043 76.7725 3.06456C76.923 4.01522 77 4.9929 77 6C77 19.2548 66.2548 30 53 30H70Z" fill="currentColor"/>
+    </svg>
+</div>
+<div class="flex items-center justify-between mb-2 relative z-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-primary uppercase tracking-wider" id="briefing-title-text">Cloud Wisdom</span>
+</div>
+<div id="briefing-weather-widget" class="flex items-center gap-2 text-sm text-on-surface-variant font-label-md bg-white/50 px-3 py-1 rounded-full border border-white/20 hidden">
+<img id="briefing-weather-icon" class="w-12 h-12 object-contain" src="./weather_sunny.png" alt="날씨">
+<span id="briefing-weather-temp" class="font-bold text-[13px]">15°C</span>
+</div>
+</div>
+<div id="briefing-content" class="text-[13px] leading-relaxed text-on-surface-variant z-10 relative">
+    <div style="display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 0.9rem;" class="animate-pulse">
+        <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+        <span>오늘의 일과 브리핑을 가져오고 있습니다...</span>
+    </div>
+</div>
+<!-- Separator & News area inside briefing card -->
+<div id="briefing-divider" class="my-3.5 border-t border-dashed border-outline-variant/30 hidden"></div>
+<div id="briefing-news-area" class="space-y-2 z-10 relative hidden">
+    <div class="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider mb-2">
+        <span class="material-symbols-outlined text-[16px]">newspaper</span>
+        <span>오늘의 추천 뉴스</span>
+    </div>
+    <div id="briefing-news-list" class="space-y-2 text-xs text-on-surface-variant">
+        <div class="flex items-center gap-2 text-on-surface-variant/70 animate-pulse">
+            <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+            <span>뉴스를 실시간으로 불러오는 중...</span>
+        </div>
+    </div>
+</div>
+</section>
+</aside>
+<div class="flex-1 w-full min-w-0 flex flex-col gap-6 lg:gap-8">
+
+<!-- Accordion Style Note Library -->
+<section class="mb-gutter" id="note-list-container">
+<details class="group/main" open>
+<summary class="flex justify-between items-center mb-4 cursor-pointer list-none">
+<div class="flex items-center gap-2">
+    <h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">나의 노트 보관함</h3>
+    <button id="v2-quick-add-nb-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-primary/10 text-primary transition-all" title="새 노트 추가">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+    </button>
+</div>
+<span class="material-symbols-outlined transition-transform duration-300 text-on-surface-variant text-[24px] expand-icon-main">expand_more</span>
+</summary>
+<div class="space-y-3" id="v2-notebook-accordion-list">
+    <div class="flex items-center gap-2 p-4 text-on-surface-variant text-sm animate-pulse bg-surface-container/30 rounded-xl border border-outline-variant/20">
+        <span class="material-symbols-outlined text-[18px] animate-spin text-primary">sync</span>
+        <span>나의 노트를 불러오고 있습니다...</span>
+    </div>
+</div>
+</details>
+</section>
+<!-- Memory Fragments Grid Preview -->
+<section class="mb-gutter">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">기억 조각들</h3>
+<button id="v2-gallery-more-btn" class="text-primary font-label-sm hover:underline flex items-center">더보기 <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+<div class="swiper" id="memory-swiper" style="width: 100%; padding-top: 20px; padding-bottom: 50px;">
+<div class="swiper-wrapper" id="v2-memory-grid">
+<!-- dynamically populated -->
+</div>
+<div class="swiper-pagination"></div>
+</div>
+</section>
+</div>
+</div>
+</main>
+
+
+<div id="calendar-view" class="tab-content w-full max-w-[62.5rem] mx-auto pt-6 px-margin-mobile relative">
+    <!-- Monthly Grid Calendar Section -->
+    <section class="bg-surface-container-low rounded-xl p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-outline-variant/30" id="calendar-container">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="calendar-month-year-text" class="font-headline-md text-[1.125rem] text-on-surface">2024년 5월</h2>
+            <div class="flex gap-1">
+                <button id="calendar-prev-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                <button id="calendar-next-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+                <button id="calendar-refresh-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">sync</span>
+                </button>
+                <div class="w-[0.0625rem] h-4 bg-outline-variant/30 my-auto mx-1"></div>
+
+
+                <button id="v2-calendar-add-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-7 gap-y-3 text-center mb-2">
+            <div class="text-label-sm font-label-sm text-error opacity-70">일</div>
+            <div class="text-label-sm font-label-sm text-on-surface-variant">월</div>
+            <div class="text-label-sm font-label-sm text-on-surface-variant">화</div>
+            <div class="text-label-sm font-label-sm text-on-surface-variant">수</div>
+            <div class="text-label-sm font-label-sm text-on-surface-variant">목</div>
+            <div class="text-label-sm font-label-sm text-on-surface-variant">금</div>
+            <div class="text-label-sm font-label-sm text-primary">토</div>
+        </div>
+        <div class="grid grid-cols-7 gap-y-1" id="calendar-days-grid">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- Tasks Section -->
+    <section class="space-y-3 mt-6" id="task-list-container">
+        <div class="flex items-center justify-between px-2">
+            <h3 class="font-headline-md text-[1rem] text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">eco</span>
+                과제 관리
+            </h3>
+            <div class="flex items-center gap-2">
+                <button id="v2-task-add-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm" title="과제 추가">
+                    <span class="material-symbols-outlined text-[20px]">add</span>
+                </button>
+                <button class="text-[14px] text-primary font-semibold hover:opacity-80 transition-opacity flex items-center gap-1">
+                    더 보기 <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                </button>
+            </div>
+        </div>
+        <div class="space-y-4" id="v2-task-list">
+            <p class="text-on-surface-variant text-center py-4 text-sm">과제가 없습니다.</p>
+        </div>
+    </section>
+
+    <!-- AI 일정 천사 플래너 위젯 (1단계) -->
+    <section class="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/10 dark:to-orange-950/5 rounded-2xl p-5 shadow-sm border border-amber-200/40 dark:border-amber-900/30 mt-6" id="ai-schedule-angel-section">
+        <div class="flex items-center justify-between mb-3.5">
+            <h3 class="font-headline-md text-[1rem] text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500 animate-bounce">local_activity</span>
+                <span>AI 일정 천사 👼</span>
+            </h3>
+            <span class="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/30 px-2.5 py-0.5 rounded-full font-medium">대화형 플래너</span>
+        </div>
+        
+        <!-- 대화형 챗 영역 -->
+        <div class="space-y-4">
+            <div id="ai-angel-chat-box" class="h-64 overflow-y-auto p-3.5 bg-white/60 dark:bg-black/20 rounded-xl border border-white/50 dark:border-white/5 space-y-2.5 text-xs">
+                <div class="flex gap-2">
+                    <span class="text-[18px]">👼</span>
+                    <div class="bg-amber-100/60 dark:bg-amber-900/20 text-on-surface-variant p-2.5 rounded-2xl rounded-tl-none max-w-[85%] leading-relaxed">
+                        안녕하세요! 하고 싶은 일이나 막막한 계획(예: 논문 쓰기, 시험 준비, 여행 계획 등)이 있으시다면 들려주세요. 제가 구체적인 단계별 세부 계획을 세워 드릴게요. 👼
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 입력 폼 -->
+            <div class="flex gap-2">
+                <input type="text" id="ai-angel-input" class="flex-1 bg-white/80 dark:bg-white/5 border border-outline-variant/30 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-amber-500/20 outline-none text-on-surface" placeholder="예: '다음 달 마라톤 준비하기', '학사 학위 논문 초안 작성하기'">
+                <button id="ai-angel-send-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-label-md text-xs active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1">
+                    <span>전송</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Selected Date Detail Timeline -->
+    <section class="space-y-3 pb-32 mt-6">
+        <h3 class="font-headline-md text-[1rem] text-on-surface px-2" id="v2-timeline-title">기록</h3>
+        <div class="relative space-y-6 before:content-[''] before:absolute before:left-[0.6875rem] before:top-2 before:bottom-2 before:w-[0.125rem] before:bg-outline-variant/30" id="v2-timeline-list">
+             <p class="text-on-surface-variant text-center py-4 text-sm ml-6">선택된 날짜의 기록이 없습니다.</p>
+        </div>
+    </section>
+</div>
+
+
+<!-- Chat / Social View -->
+<div id="chat-view" class="tab-content w-full max-w-[50rem] mx-auto pt-16 relative pb-32 min-h-screen bg-background">
+    <!-- Inner Tabs -->
+    <div class="w-full bg-background border-b border-outline-variant/30">
+        <div class="flex max-w-[37.5rem] mx-auto bg-transparent">
+            <button class="flex-1 py-3 text-center border-b-2 transition-all border-transparent text-on-surface-variant" id="tab-people" data-action="switch-social-tab" data-tab="people">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+                </div>
+            </button>
+            <button class="flex-1 py-3 text-center border-b-2 hover:text-primary transition-all border-primary text-primary font-bold" id="tab-chats" data-action="switch-social-tab" data-tab="chats">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- People Tab View -->
+    <section class="p-4 space-y-6 hidden" id="people-view">
+        <div class="space-y-6" id="friend-list">
+            <div class="flex gap-2 px-2 mb-4 overflow-x-auto hide-scrollbar" id="friend-sort-options-v2">
+                <button type="button" class="px-3 py-1.5 rounded-full text-label-sm font-bold whitespace-nowrap transition-all bg-secondary-container text-on-secondary-container shadow-sm active-sort-chip" data-sort="name">가나다순</button>
+                <button type="button" class="px-3 py-1.5 rounded-full text-label-sm font-bold whitespace-nowrap transition-all bg-surface-container-high text-on-surface-variant" data-sort="degree">촌수순</button>
+                <button type="button" class="px-3 py-1.5 rounded-full text-label-sm font-bold whitespace-nowrap transition-all bg-surface-container-high text-on-surface-variant" data-sort="sos">위로 필요순</button>
+            </div>
+            <!-- Dynamic Friend List Container -->
+            <div id="friend-status-list" class="space-y-2"></div>
+        </div>
+        <div class="mt-8 p-5 rounded-xl bg-secondary-container/30 border border-secondary-container border-dashed flex flex-col items-center text-center gap-3">
+                <span class="material-symbols-outlined text-secondary text-3xl">auto_awesome</span>
+                <div>
+                    <p class="font-bold text-on-surface">Invite Your Soulmates</p>
+                    <p class="text-[12px] text-on-surface-variant">함께 마음을 나누고 싶은 친구를 초대해보세요</p>
+                </div>
+                <button id="invite-friend-btn" class="px-6 py-2 bg-secondary text-on-secondary rounded-full font-bold text-[14px]">초대하기</button>
+            </div>
+    </section>
+
+    <!-- Chats Tab View -->
+    <section class="p-4 space-y-2" id="chats-view">
+        <div class="space-y-2" id="chat-room-list">
+            <!-- AI Chat Room Entry -->
+            <div data-action="open-chat-ai" onclick="void(0)" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
+                <img id="v2-chat-list-ai-avatar" class="w-12 h-12 rounded-full object-cover" src="./angel_mascot.png" alt="AI"/>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline">
+                        <h3 class="font-bold truncate text-primary" id="v2-chat-list-ai-name">✨ 비서와 대화</h3>
+                        <span class="text-[10px] text-on-surface-variant">실시간</span>
+                    </div>
+                    <p class="text-[12px] text-on-surface-variant truncate">무엇이든 이야기해 주세요. 든든한 동반자가 되어 드릴게요.</p>
+                </div>
+            </div>
+
+            <!-- 대화방 목록 로딩 플레이스홀더 -->
+            <div id="v2-chat-rooms-placeholder" class="flex items-center gap-2 p-4 text-on-surface-variant text-sm animate-pulse bg-white/40 backdrop-blur-sm rounded-xl border border-outline-variant/10">
+                <span class="material-symbols-outlined animate-spin text-primary">sync</span>
+                <span>대화방 목록을 불러오고 있습니다...</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Settings & Atelier View -->
+<div id="persona-view" class="tab-content w-full max-w-[50rem] mx-auto pt-6 pb-32 px-margin-mobile relative space-y-0">
+    <div class="flex items-center gap-4 mb-2">
+        <h1 class="font-headline-lg-mobile text-[1.625rem] font-bold text-primary tracking-tight">설정 및 아틀리에</h1>
+    </div>
+
+    <!-- User Profile Section -->
+    <section>
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <div class="flex flex-col sm:flex-row items-center gap-4">
+    <div class="relative">
+    <img id="user-profile-avatar" alt="User Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform" src="./angel_mascot.png">
+    <button id="user-profile-avatar-btn" class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow-md hover:scale-110 transition-transform">
+    <span class="material-symbols-outlined text-[10px]">edit</span>
+    </button>
+    <input type="file" id="user-avatar-upload-input" accept="image/*" class="hidden">
+    </div>
+    <div class="flex-1 text-center sm:text-left min-w-0">
+    <h2 id="user-profile-name" class="font-bold text-lg text-on-surface truncate">사용자</h2>
+    <p class="text-xs text-on-surface-variant/85 font-medium truncate" id="user-email">user@example.com</p>
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end">
+        <button id="logout-btn" class="px-4 py-2 bg-surface-container-highest text-error border border-outline-variant/20 rounded-full font-label-md text-xs active:scale-95 transition-transform flex items-center justify-center gap-1.5 shadow-sm">
+            <span class="material-symbols-outlined text-sm">logout</span>
+            로그아웃
+        </button>
+    </div>
+    </div>
+    </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section>
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <h3 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">link</span>
+        연동 서비스 관리
+    </h3>
+    <div class="space-y-3">
+        <!-- Google Calendar Integration Card -->
+        <div class="bg-white/40 p-3.5 rounded-xl border border-white/50 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                </div>
+                <div class="text-left">
+                    <p class="font-label-md text-xs text-on-surface font-semibold">캘린더 연동 관리</p>
+                    <p id="google-cal-status-text" class="font-label-sm text-[10px] text-on-surface-variant">연결 확인 중...</p>
+                </div>
+            </div>
+            <button id="open-calendar-sync-drawer-btn" class="px-3.5 py-1.5 bg-primary text-on-primary rounded-full font-label-md text-[11px] hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                현황 관리
+            </button>
+        </div>
+    </div>
+    </div>
+    </section>
+
+    <!-- Theme Settings -->
+    <section id="theme-settings-section">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <div class="flex items-center gap-2.5 mb-3">
+    <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">palette</span>
+    <h3 class="font-bold text-sm text-primary">테마 설정</h3>
+    </div>
+    <div class="space-y-2">
+    <p class="text-on-surface-variant/80 font-label-sm text-xs ml-1">색상 테마 선택</p>
+    <div class="flex gap-4 px-1" id="theme-select-container">
+        <!-- 기본 핑크 테마 -->
+        <div class="flex flex-col items-center gap-1.5">
+            <button id="theme-btn-pink" type="button" class="w-9 h-9 rounded-full border-2 border-transparent shadow-md transition-transform active:scale-95 flex items-center justify-center" style="background-color: #d98c9e;">
+                <span id="theme-check-pink" class="material-symbols-outlined text-white text-base hidden">check</span>
+            </button>
+            <span id="theme-text-pink" class="text-[10px] font-medium text-on-surface-variant">핑크</span>
+        </div>
+        <!-- 지브리 그린 테마 -->
+        <div class="flex flex-col items-center gap-1.5">
+            <button id="theme-btn-ghibli" type="button" class="w-9 h-9 rounded-full border-2 border-transparent shadow-md transition-transform active:scale-95 flex items-center justify-center" style="background-color: #4A6741;">
+                <span id="theme-check-ghibli" class="material-symbols-outlined text-white text-base hidden">check</span>
+            </button>
+            <span id="theme-text-ghibli" class="text-[10px] font-medium text-on-surface-variant">그린</span>
+        </div>
+    </div>
+    </div>
+    </div>
+    </section>
+    
+    <section id="ai-assistant-settings">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+            <h3 class="font-bold text-sm text-primary">아틀리에 어시스턴트</h3>
+        </div>
+        <button id="save-persona-btn" class="bg-primary/95 hover:bg-primary text-white px-3.5 py-1.5 rounded-full font-label-md text-xs active:scale-95 transition-transform flex items-center gap-1 shadow-sm">
+            <span class="material-symbols-outlined text-sm">save</span> 저장
+        </button>
+    </div>
+    <div class="space-y-4">
+        <div class="flex flex-col items-center mb-2">
+            <div class="relative mb-2">
+                <div id="ai-avatar-preview" class="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md bg-surface-container flex items-center justify-center">
+                    <img alt="Assistant Avatar" class="w-full h-full object-cover" src="./angel_mascot.png">
+                </div>
+                <button id="upload-avatar-btn" type="button" class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow-md hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-[10px]">photo_camera</span>
+                </button>
+            </div>
+            <div class="flex flex-col items-center gap-1 mb-1">
+                <button id="generate-avatar-btn" type="button" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-full font-label-md text-[10px] font-bold active:scale-95 transition-transform flex items-center gap-1">
+                    🎨 AI 얼굴 추천 생성
+                </button>
+                <div id="avatar-options-grid" class="hidden grid grid-cols-4 gap-2 w-full max-w-xs p-2 bg-surface-container-low rounded-2xl border border-outline-variant/20 mt-1"></div>
+            </div>
+            <p class="text-[10px] text-on-surface-variant/80 font-label-sm">어시스턴트 프로필 사진</p>
+        </div>
+        <div>
+            <label class="block text-on-surface-variant font-label-sm ml-1 mb-1 text-xs">비서 이름</label>
+            <input id="ai-name" class="w-full bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 focus:ring-2 focus:ring-primary/20 outline-none text-body-md text-on-surface transition-all shadow-inner" type="text" value="비서" placeholder="비서의 이름을 정해주세요">
+        </div>
+    <div class="grid grid-cols-2 gap-4">
+    <div>
+    <label class="block text-on-surface-variant font-label-sm ml-1 mb-1 text-xs">성별</label>
+    <div class="flex bg-black/5 rounded-xl p-0.5" id="v2-gender-container">
+        <input type="radio" name="gender" id="gender-female" value="여성" class="hidden" checked>
+        <input type="radio" name="gender" id="gender-male" value="남성" class="hidden">
+        <button type="button" class="flex-1 py-1.5 rounded-lg bg-white shadow-sm text-primary font-bold text-xs" id="gender-btn-female">여성</button>
+        <button type="button" class="flex-1 py-1.5 rounded-lg text-on-surface-variant text-xs" id="gender-btn-male">남성</button>
+    </div>
+    </div>
+    <div>
+    <label class="block text-on-surface-variant font-label-sm ml-1 mb-1 text-xs">연령대</label>
+    <div class="relative">
+    <select id="ai-age" class="w-full bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 pr-10 focus:ring-2 focus:ring-primary/20 outline-none text-body-md text-on-surface appearance-none cursor-pointer">
+        <option>10대</option>
+        <option>20대</option>
+        <option selected="">30대</option>
+        <option>40대</option>
+        <option>50대</option>
+        <option>60대</option>
+        <option>70대</option>
+    </select>
+    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-base">keyboard_arrow_down</span>
+    </div>
+    </div>
+    </div>
+    <div>
+    <label class="block text-on-surface-variant font-label-sm ml-1 mb-1 text-xs">관계 및 역할 설정</label>
+    <input id="ai-relationship" class="w-full bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 focus:ring-2 focus:ring-primary/20 outline-none text-body-md text-on-surface transition-all shadow-inner" type="text" placeholder="예: 엄하지만 다정하고 때로는 친구같은 수학교사" value="수석 비서">
+    </div>
+    <div>
+        <label class="block text-on-surface-variant font-label-sm ml-1 mb-1 text-xs">성격 및 지침</label>
+        <textarea id="ai-personality" class="w-full bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 focus:ring-2 focus:ring-primary/20 outline-none text-body-md text-on-surface transition-all shadow-inner" placeholder="예: 다정하고 따뜻한 어조로 말해줘." rows="3"></textarea>
+    </div>
+    <div class="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/10">
+        <div class="flex items-center gap-3 w-full mr-4">
+            <span class="material-symbols-outlined text-primary text-[20px]">record_voice_over</span>
+            <div class="flex-1">
+                <label class="block text-[9px] text-on-surface-variant/80 font-bold uppercase tracking-wider">Voice Tone</label>
+                <select id="ai-voice-select" class="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-semibold text-primary appearance-none cursor-pointer">
+                    <option value="soft">부드러운 아침 목소리</option>
+                    <option value="warm">따뜻한 위로의 목소리</option>
+                    <option value="calm">차분하고 이성적인 목소리</option>
+                    <option value="cheerful">밝고 활기찬 목소리</option>
+                </select>
+            </div>
+        </div>
+        <button id="test-voice-btn" type="button" class="bg-primary/20 text-primary p-1.5 rounded-full active:scale-90 transition-transform shadow-sm">
+            <span class="material-symbols-outlined text-base">play_arrow</span>
+        </button>
+    </div>
+    <!-- AI Consent Toggle -->
+    <div class="bg-primary/5 p-3 rounded-xl border border-primary/10 flex items-center justify-between mt-3">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">security</span>
+            <div class="flex-1 text-left">
+                <strong class="text-xs text-on-surface block font-bold">AI 감정 분석 및 피드백 제공 동의</strong>
+                <span class="text-[9px] text-on-surface-variant/75 leading-normal block mt-0.5">
+                    동의 시 Gemini API를 통해 맞춤 위로와 조언을 제안 받습니다.
+                    비동의 시 외부 AI API 전송이 전면 차단되며 브라우저 내 로컬 분석만 수행됩니다.
+                </span>
+            </div>
+        </div>
+        <div class="relative inline-block w-11 h-5.5 shrink-0 ml-2">
+            <input class="toggle-checkbox hidden" id="settings-ai-consent-toggle" type="checkbox">
+            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="settings-ai-consent-toggle"></label>
+        </div>
+    </div>
+    </div>
+    </section>
+    <!-- AI Personality Learning Center -->
+    <section>
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-sm text-secondary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">psychology</span>
+                    AI 인격 학습 센터
+                </h3>
+                <span class="bg-secondary/20 text-secondary text-[9px] px-2 py-0.5 rounded-full font-bold">BETA</span>
+            </div>
+            <div id="video-dropzone" class="bg-white/30 border-2 border-dashed border-secondary/25 p-6 rounded-xl flex flex-col items-center justify-center gap-3 text-center cursor-pointer hover:bg-white/50 transition-colors">
+                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-1">
+                    <span class="material-symbols-outlined text-2xl text-secondary">video_library</span>
+                </div>
+                <div>
+                    <p class="font-label-md text-xs text-on-surface font-bold">행동 샘플 업로드</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">여기에 학습할 영상을 드래그하거나 클릭하세요</p>
+                </div>
+                <input type="file" id="learning-video-input" accept="video/*" class="hidden">
+                <button id="start-learning-btn" class="mt-2 bg-secondary text-white px-6 py-2 rounded-full font-label-md text-xs flex items-center gap-1.5 hover:bg-secondary/90 transition-colors shadow active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <span class="material-symbols-outlined text-sm">rocket_launch</span>학습 시작하기
+                </button>
+                <div id="learning-status" class="hidden text-center text-[10px] text-secondary flex items-center justify-center gap-1.5 mt-2">
+                    <span class="material-symbols-outlined animate-spin" style="font-size: 14px;">progress_activity</span>
+                    <span id="status-text">분석 중...</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Briefing & Schedule Settings -->
+    <section>
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+            <!-- Hidden compatibility fields for Module 6 -->
+            <input type="time" id="briefing-time-input" class="hidden" value="08:00">
+            <input type="radio" id="weather-on" name="weather-toggle" class="hidden" checked>
+            <input type="radio" id="weather-off" name="weather-toggle" class="hidden">
+            <input type="checkbox" id="alarm-60" class="hidden">
+            <input type="checkbox" id="alarm-30" class="hidden">
+            <input type="checkbox" id="alarm-10" class="hidden">
+
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-tertiary text-[20px]" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+                    <h3 class="font-bold text-sm text-tertiary">브리핑 및 일정</h3>
+                </div>
+                <button id="save-settings-btn" class="bg-primary/95 hover:bg-primary text-white px-3.5 py-1.5 rounded-full font-label-md text-xs active:scale-95 transition-transform flex items-center gap-1 shadow-sm">
+                    <span class="material-symbols-outlined text-sm">save</span> 저장
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex flex-col gap-3 p-3.5 bg-white/40 rounded-xl border border-white/50">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-on-surface-variant text-base">schedule</span>
+                        <span class="font-label-md text-xs font-semibold">데일리 브리핑 시간</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 py-1">
+                        <div class="flex flex-col items-center">
+                            <button id="briefing-hour-up" class="material-symbols-outlined text-on-surface-variant/50 hover:text-primary transition-colors text-base">keyboard_arrow_up</button>
+                            <div class="w-11 h-12 bg-white/80 rounded-lg flex items-center justify-center shadow-inner border border-white/60">
+                                <span id="briefing-hour-text" class="text-lg font-bold text-primary">08</span>
+                            </div>
+                            <button id="briefing-hour-down" class="material-symbols-outlined text-on-surface-variant/50 hover:text-primary transition-colors text-base">keyboard_arrow_down</button>
+                        </div>
+                        <span class="text-lg font-bold text-on-surface-variant/30">:</span>
+                        <div class="flex flex-col items-center">
+                            <button id="briefing-minute-up" class="material-symbols-outlined text-on-surface-variant/50 hover:text-primary transition-colors text-base">keyboard_arrow_up</button>
+                            <div class="w-11 h-12 bg-white/80 rounded-lg flex items-center justify-center shadow-inner border border-white/60">
+                                <span id="briefing-minute-text" class="text-lg font-bold text-primary">00</span>
+                            </div>
+                            <button id="briefing-minute-down" class="material-symbols-outlined text-on-surface-variant/50 hover:text-primary transition-colors text-base">keyboard_arrow_down</button>
+                        </div>
+                        <div class="flex flex-col gap-1 ml-1">
+                            <button id="briefing-am-btn" class="px-2 py-0.5 rounded bg-primary text-white text-[9px] font-bold shadow-sm">AM</button>
+                            <button id="briefing-pm-btn" class="px-2 py-0.5 rounded bg-black/5 text-on-surface-variant text-[9px] font-bold">PM</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white/40 rounded-xl overflow-hidden border border-white/50">
+                    <div class="flex justify-between items-center p-3.5 border-b border-outline-variant/10">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-on-surface-variant text-base">cloud</span>
+                            <span class="font-label-md text-xs font-semibold">날씨 예보 포함</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input checked="" class="toggle-checkbox hidden" id="toggle-weather" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="toggle-weather"></label>
+                        </div>
+                    </div>
+                    <div class="p-3.5 space-y-3 bg-white/10">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-on-surface-variant text-xs">location_on</span>
+                            <span class="font-label-sm text-[10px] text-on-surface-variant">날씨 위치 설정</span>
+                        </div>
+                        <div class="flex bg-black/5 rounded-xl p-0.5" id="weather-mode-selector">
+                            <button id="weather-gps-btn" type="button" class="flex-1 py-1 rounded-lg bg-white shadow-sm text-primary font-bold text-[10px] transition-all duration-200">현재 위치 (GPS)</button>
+                            <button id="weather-fixed-btn" type="button" class="flex-1 py-1 rounded-lg text-on-surface-variant text-[10px] transition-all duration-200">위치 고정</button>
+                        </div>
+                        <div class="relative mt-2" id="weather-fixed-input-container">
+                            <input id="weather-location-input" class="w-full bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-primary/20 outline-none text-on-surface transition-all" placeholder="도시 또는 지역명 입력 (예: 서울, 부산, 대구)" type="text" value="서울">
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-sm">search</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <button class="w-full flex items-center justify-between text-on-surface-variant font-label-sm ml-1 text-xs group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <span>관심 뉴스</span>
+                        <span class="material-symbols-outlined chevron transition-transform duration-300 text-xs">expand_more</span>
+                    </button>
+                    <div class="hidden transition-all duration-300">
+                        <div class="grid grid-cols-4 gap-1.5 p-1" id="news-category-grid">
+                            <span data-category="politics" class="bg-primary text-white py-1 rounded-full text-[10px] font-bold cursor-pointer text-center shadow-sm">정치</span>
+                            <span data-category="business" class="bg-primary text-white py-1 rounded-full text-[10px] font-bold cursor-pointer text-center shadow-sm">경제</span>
+                            <span data-category="society" class="bg-white/60 text-on-surface-variant py-1 rounded-full text-[10px] font-bold cursor-pointer text-center border border-outline-variant/20">사회</span>
+                            <span data-category="culture" class="bg-white/60 text-on-surface-variant py-1 rounded-full text-[10px] font-bold cursor-pointer text-center border border-outline-variant/20">생활</span>
+                            <span data-category="science" class="bg-primary text-white py-1 rounded-full text-[10px] font-bold cursor-pointer text-center shadow-sm">IT/과학</span>
+                            <span data-category="world" class="bg-white/60 text-on-surface-variant py-1 rounded-full text-[10px] font-bold cursor-pointer text-center border border-outline-variant/20">세계</span>
+                            <span data-category="entertainment" class="bg-white/60 text-on-surface-variant py-1 rounded-full text-[10px] font-bold cursor-pointer text-center border border-outline-variant/20">연예</span>
+                            <span data-category="sports" class="bg-white/60 text-on-surface-variant py-1 rounded-full text-[10px] font-bold cursor-pointer text-center border border-outline-variant/20">스포츠</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-outline-variant/20">
+                    <span class="text-on-surface-variant font-label-sm block mb-2 text-xs ml-1">일정 알람</span>
+                    <div class="flex items-center justify-center gap-3 py-1.5 bg-white/40 rounded-xl border border-white/50">
+                        <div class="flex flex-col items-center">
+                            <button id="v2-alarm-hour-up" class="material-symbols-outlined text-on-surface-variant/50 hover:text-tertiary transition-colors text-base">keyboard_arrow_up</button>
+                            <div class="w-11 h-12 bg-white/80 rounded-lg flex items-center justify-center shadow-inner border border-white/60">
+                                <span id="v2-alarm-hour-text" class="text-lg font-bold text-tertiary">00</span>
+                            </div>
+                            <button id="v2-alarm-hour-down" class="material-symbols-outlined text-on-surface-variant/50 hover:text-tertiary transition-colors text-base">keyboard_arrow_down</button>
+                            <span class="text-[9px] text-on-surface-variant/80 mt-0.5">시간</span>
+                        </div>
+                        <span class="text-lg font-bold text-on-surface-variant/30 mb-5">:</span>
+                        <div class="flex flex-col items-center">
+                            <button id="v2-alarm-minute-up" class="material-symbols-outlined text-on-surface-variant/50 hover:text-tertiary transition-colors text-base">keyboard_arrow_up</button>
+                            <div class="w-11 h-12 bg-white/80 rounded-lg flex items-center justify-center shadow-inner border border-white/60">
+                                <span id="v2-alarm-minute-text" class="text-lg font-bold text-tertiary">30</span>
+                            </div>
+                            <button id="v2-alarm-minute-down" class="material-symbols-outlined text-on-surface-variant/50 hover:text-tertiary transition-colors text-base">keyboard_arrow_down</button>
+                            <span class="text-[9px] text-on-surface-variant/80 mt-0.5">분 전</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Safe Care Mode -->
+    <section id="safe-care-settings">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-tertiary text-[20px]">health_and_safety</span>
+                    <h3 class="font-bold text-sm text-tertiary">안심 케어</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative inline-block w-11 h-5.5 shrink-0">
+                        <input checked="" class="toggle-checkbox hidden" id="care-mode-active" type="checkbox">
+                        <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="care-mode-active"></label>
+                    </div>
+                    <button id="save-care-settings-btn" class="bg-tertiary/95 hover:bg-tertiary text-white px-3.5 py-1.5 rounded-full font-label-md text-xs active:scale-95 transition-transform flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-sm">save</span> 저장
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-3 pt-3 border-t border-outline-variant/10">
+                    <button class="w-full flex items-center justify-between mb-1 group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-label-md text-xs font-bold text-on-surface">대상 설정</h4>
+                            <span class="text-[9px] text-on-surface-variant/70">1촌 지인 목록</span>
+                        </div>
+                        <span class="material-symbols-outlined chevron transition-transform duration-300 text-on-surface-variant/50 text-xs ml-1">expand_more</span>
+                    </button>
+                    <div class="space-y-3 hidden transition-all duration-300">
+                        <!-- 보호자 지정 Dropdown -->
+                        <div class="space-y-2 bg-white/40 p-3.5 rounded-xl border border-white/50 shadow-sm">
+                            <label class="block text-on-surface-variant font-label-sm text-xs" for="care-guardian-select">보호자 지정 (1촌)</label>
+                            <div class="relative">
+                                <select id="care-guardian-select" class="w-full bg-white/50 border border-outline-variant/20 rounded-xl py-2 px-3 pr-10 focus:ring-2 focus:ring-primary-container text-body-md appearance-none cursor-pointer">
+                                    <option value="">보호자를 지정하지 않음</option>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-base">keyboard_arrow_down</span>
+                            </div>
+                        </div>
+                        <div id="care-targets-list" class="space-y-2">
+                            <div class="flex items-center gap-2 p-3 text-on-surface-variant text-xs animate-pulse bg-white/40 backdrop-blur-sm rounded-xl border border-outline-variant/10">
+                                <span class="material-symbols-outlined animate-spin text-primary text-sm">sync</span>
+                                <span>보호자/대상자 목록을 불러오고 있습니다...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="space-y-2">
+                        <label class="block text-on-surface-variant font-label-sm text-xs ml-1">케어 항목 추가</label>
+                        <div class="flex gap-2">
+                            <input class="flex-1 bg-white/40 border border-outline-variant/20 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-primary/20 outline-none text-on-surface placeholder:text-on-surface-variant/35" placeholder="예: 매일 오전 9시 약 복용 확인" type="text">
+                            <button class="bg-tertiary text-white px-4 py-2 rounded-xl font-label-md text-xs active:scale-95 transition-transform shadow-sm">추가</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <button class="w-full flex items-center justify-between mb-1 ml-1 group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                            <div class="flex items-center gap-2"><p class="text-[9px] text-on-surface-variant/70">현재 설정된 항목</p></div>
+                            <span class="material-symbols-outlined chevron transition-transform duration-300 text-on-surface-variant/50 text-xs">expand_more</span>
+                        </button>
+                        <div class="space-y-2">
+                            <div class="bg-white/60 p-2.5 rounded-xl border border-white/40 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                                    <span class="text-xs font-medium text-on-surface">혈압 측정</span>
+                                </div>
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant/45 hover:text-error cursor-pointer">close</span>
+                            </div>
+                            <div class="bg-white/60 p-2.5 rounded-xl border border-white/40 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                                    <span class="text-xs font-medium text-on-surface">산책하기</span>
+                                </div>
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant/45 hover:text-error cursor-pointer">close</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[9px] text-on-surface-variant/60 italic leading-relaxed px-1">
+                        입력된 항목은 AI가 분석하여 매일 사용자와 대상자의 일정에 자동으로 반영됩니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Capabilities (API Integration Corner) -->
+    <section id="api-integration-settings">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-primary text-[20px]">extension</span>
+                    <h3 class="font-bold text-sm text-primary">AI 능력 확장</h3>
+                </div>
+                <button id="save-api-settings-btn" class="bg-primary/95 hover:bg-primary text-white px-3.5 py-1.5 rounded-full font-label-md text-xs active:scale-95 transition-transform flex items-center gap-1 shadow-sm">
+                    <span class="material-symbols-outlined text-sm">save</span> 저장
+                </button>
+            </div>
+            
+            <!-- API Section Tabs -->
+            <div class="flex bg-black/5 rounded-xl p-0.5 mb-4" id="api-tab-container">
+                <button type="button" class="flex-1 py-1.5 rounded-lg bg-white shadow-sm text-primary font-bold text-xs" id="api-tab-free">무료 API</button>
+                <button type="button" class="flex-1 py-1.5 rounded-lg text-on-surface-variant text-xs" id="api-tab-paid">유료 API</button>
+            </div>
+
+            <!-- Free APIs Section -->
+            <div id="api-free-section" class="space-y-3">
+                <!-- Google Calendar Sync API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm flex flex-col justify-between" id="google-calendar-card">
+                    <div class="flex items-center justify-between">
+                        <div class="text-left">
+                            <strong class="text-xs text-on-surface block font-bold">Google Calendar 연동 (단방향/양방향 동기화)</strong>
+                            <span class="text-[10px] text-on-surface-variant/85">구글 일정을 불러오고 수정사항을 반영합니다.</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input class="toggle-checkbox hidden api-toggle" id="api-google-calendar-toggle" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-google-calendar-toggle"></label>
+                        </div>
+                    </div>
+                    <!-- Calendar list container (hidden by default) -->
+                    <div id="google-calendar-list-container" class="hidden mt-3 border-t border-white/40 pt-2 text-xs">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-on-surface-variant">동기화할 캘린더 선택 (소유/쓰기 권한 캘린더만 Write-back)</span>
+                            <button id="google-calendar-sync-now-btn" type="button" class="text-[10px] bg-primary/10 hover:bg-primary/20 text-primary px-2 py-1 rounded-full active:scale-95 transition-colors">지금 동기화</button>
+                        </div>
+                        <div id="google-calendar-list" class="max-h-32 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                            <!-- JS will populate checkboxes here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm flex items-center justify-between">
+                    <div class="text-left">
+                        <strong class="text-xs text-on-surface block font-bold">실시간 기상 정보 (Weather API)</strong>
+                        <span class="text-[10px] text-on-surface-variant/85">지역별 날씨 분석 및 옷차림 가이드 제공</span>
+                    </div>
+                    <div class="relative inline-block w-11 h-5.5">
+                        <input class="toggle-checkbox hidden api-toggle" id="api-weather-toggle" type="checkbox" checked>
+                        <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-weather-toggle"></label>
+                    </div>
+                </div>
+                
+                <!-- News RSS API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm flex items-center justify-between">
+                    <div class="text-left">
+                        <strong class="text-xs text-on-surface block font-bold">실시간 시사 뉴스 (News RSS API)</strong>
+                        <span class="text-[10px] text-on-surface-variant/85">매일 아침 최신 뉴스 정보 자동 브리핑 반영</span>
+                    </div>
+                    <div class="relative inline-block w-11 h-5.5">
+                        <input class="toggle-checkbox hidden api-toggle" id="api-news-toggle" type="checkbox" checked>
+                        <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-news-toggle"></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paid APIs Section -->
+            <div id="api-paid-section" class="space-y-3 hidden">
+                <!-- nsight API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="text-left">
+                            <strong class="text-xs text-on-surface block font-bold">nsight 투자 컨설팅 API</strong>
+                            <span class="text-[10px] text-on-surface-variant/85">실시간 경제 분석 및 전문 투자 정보 컨설팅 활성화</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input class="toggle-checkbox hidden api-toggle" id="api-nsight-toggle" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-nsight-toggle"></label>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 hidden" id="nsight-credentials-container">
+                        <label class="block text-[10px] text-on-surface-variant/80 ml-1">nsight API Key</label>
+                        <input id="api-nsight-key" class="w-full bg-white/50 border border-outline-variant/20 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20" type="password" placeholder="nsight API 키 입력" value="demo-api-key-active">
+                    </div>
+                </div>
+
+                <!-- ElevenLabs API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="text-left">
+                            <strong class="text-xs text-on-surface block font-bold">ElevenLabs 고품질 음성 API</strong>
+                            <span class="text-[10px] text-on-surface-variant/85">유명인 보이스 복제 및 자연스러운 음성 대화 연동</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input class="toggle-checkbox hidden api-toggle" id="api-eleven-toggle" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-eleven-toggle"></label>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 hidden" id="eleven-credentials-container">
+                        <label class="block text-[10px] text-on-surface-variant/80 ml-1">ElevenLabs API Key</label>
+                        <input id="api-eleven-key" class="w-full bg-white/50 border border-outline-variant/20 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20" type="password" placeholder="ElevenLabs API 키 입력">
+                    </div>
+                </div>
+
+                <!-- Gemini Pro Advanced Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="text-left">
+                            <strong class="text-xs text-on-surface block font-bold">Gemini 1.5 Pro (고고도 인지 모델)</strong>
+                            <span class="text-[10px] text-on-surface-variant/85">더 똑똑하고 긴 맥락의 사고 및 고차원 분석 수행</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input class="toggle-checkbox hidden api-toggle" id="api-geminipro-toggle" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-geminipro-toggle"></label>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 hidden" id="geminipro-credentials-container">
+                        <label class="block text-[10px] text-on-surface-variant/80 ml-1">Gemini API Key</label>
+                        <input id="api-geminipro-key" class="w-full bg-white/50 border border-outline-variant/20 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20" type="password" placeholder="나의 전용 Gemini API 키 입력">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy & Security FAQ Section -->
+    <section id="privacy-policy-faq-section" class="mt-8">
+        <div class="bg-surface-container-highest rounded-2xl p-5 custom-shadow border-l-[6px] border-tertiary">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">security</span>
+                <h3 class="font-headline-md text-headline-md text-tertiary">개인정보 및 보안 FAQ</h3>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item border-b border-outline-variant/30 pb-3">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                        <span class="text-body-md text-on-surface font-bold">Q. 내 일기가 AI 학습 데이터로 사용되나요?</span>
+                        <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
+                    </button>
+                    <p class="faq-content text-[11px] text-on-surface-variant/70 leading-relaxed mt-2 hidden">
+                        현재 사용 중인 유료 Gemini API 서비스 정책에 따르면, 전송된 프롬프트와 응답은 Google의 제품 개선이나 모델 학습에 사용되지 않는다고 안내되어 있습니다.
+                    </p>
+                </div>
+                
+                <!-- FAQ Item 2 -->
+                <div class="faq-item border-b border-outline-variant/30 pb-3">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                        <span class="text-body-md text-on-surface font-bold">Q. E2E 종단간 암호화란 무엇인가요?</span>
+                        <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
+                    </button>
+                    <p class="faq-content text-[11px] text-on-surface-variant/70 leading-relaxed mt-2 hidden">
+                        사용자가 직접 생성한 패스워드로 사용자 기기 내에서 데이터를 암호화하여 서버로 전송하는 기술입니다. 암호화 키는 서버에 전송되지 않으므로, 개발자나 데이터베이스가 물리적으로 탈취당하더라도 소유자 본인 이외에는 내용을 해독할 수 없습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-90 hover:scale-105 z-40" id="fab-write-btn">
+<span class="material-symbols-outlined text-[30px]" data-icon="edit">edit</span>
+</button>
+<!-- Bottom Navigation Bar (4-column: Notes, Calendar, Chat, Settings) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-6 pt-3 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_15px_rgba(74,101,78,0.05)] rounded-t-2xl" id="bottom-nav">
+<a class="tab-btn active flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl py-1.5 transition-all w-1/4" href="#" id="nav-note-tab" data-tab="journal">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm">노트</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-calendar-tab" data-tab="calendar">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-sm">일정</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-chat-tab" data-tab="chat">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+<span class="font-label-sm">채팅</span>
+</a>
+<a class="tab-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors p-2 w-1/4" href="#" id="nav-settings-tab" data-tab="persona">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm">설정</span>
+</a>
+</nav>
+<script>
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if(el.tagName === 'A' && el.getAttribute('href') === '#') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            const scroll = window.pageYOffset;
+            document.body.style.backgroundPositionY = (scroll * 0.1) + 'px';
+        });
+
+        // ==========================================
+        // [MODULE 6] V2 UI Sync to Hidden Fields
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sync weather toggle
+            const toggleWeather = document.getElementById('toggle-weather');
+            const weatherOn = document.getElementById('weather-on');
+            const weatherOff = document.getElementById('weather-off');
+
+            if (toggleWeather && weatherOn && weatherOff) {
+                // Initialize weather toggle from hidden radio checked state
+                toggleWeather.checked = !weatherOff.checked;
+
+                toggleWeather.addEventListener('change', () => {
+                    if (toggleWeather.checked) {
+                        weatherOn.checked = true;
+                        weatherOff.checked = false;
+                    } else {
+                        weatherOn.checked = false;
+                        weatherOff.checked = true;
+                    }
+                });
+            }
+
+            // Sync briefing time
+            const briefingHourUp = document.getElementById('briefing-hour-up');
+            const briefingHourDown = document.getElementById('briefing-hour-down');
+            const briefingHourText = document.getElementById('briefing-hour-text');
+            const briefingMinuteUp = document.getElementById('briefing-minute-up');
+            const briefingMinuteDown = document.getElementById('briefing-minute-down');
+            const briefingMinuteText = document.getElementById('briefing-minute-text');
+            const briefingAmBtn = document.getElementById('briefing-am-btn');
+            const briefingPmBtn = document.getElementById('briefing-pm-btn');
+            const briefingTimeInput = document.getElementById('briefing-time-input');
+
+            function updateBriefingTimeInputFromUI() {
+                if (!briefingHourText || !briefingMinuteText || !briefingTimeInput) return;
+                let hour = parseInt(briefingHourText.textContent, 10);
+                const minute = briefingMinuteText.textContent;
+                const isPM = briefingPmBtn && briefingPmBtn.classList.contains('bg-primary');
+                
+                if (isPM && hour < 12) {
+                    hour += 12;
+                } else if (!isPM && hour === 12) {
+                    hour = 0;
+                }
+                
+                const formattedHour = String(hour).padStart(2, '0');
+                briefingTimeInput.value = `${formattedHour}:${minute}`;
+            }
+
+            function updateBriefingUIFromInput() {
+                if (!briefingTimeInput || !briefingTimeInput.value) return;
+                const [fullHour, minute] = briefingTimeInput.value.split(':');
+                let hour = parseInt(fullHour, 10);
+                let isPM = false;
+                
+                if (hour >= 12) {
+                    isPM = true;
+                    if (hour > 12) hour -= 12;
+                } else if (hour === 0) {
+                    hour = 12;
+                }
+                
+                if (briefingHourText) briefingHourText.textContent = String(hour).padStart(2, '0');
+                if (briefingMinuteText) briefingMinuteText.textContent = minute;
+                
+                if (isPM) {
+                    if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
+                    if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
+                } else {
+                    if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
+                    if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
+                }
+            }
+
+            // Add briefing click handlers
+            if (briefingHourUp && briefingHourDown && briefingHourText) {
+                briefingHourUp.addEventListener('click', () => {
+                    let h = parseInt(briefingHourText.textContent, 10);
+                    h = h % 12 + 1;
+                    briefingHourText.textContent = String(h).padStart(2, '0');
+                    updateBriefingTimeInputFromUI();
+                });
+                briefingHourDown.addEventListener('click', () => {
+                    let h = parseInt(briefingHourText.textContent, 10);
+                    h = h - 1;
+                    if (h < 1) h = 12;
+                    briefingHourText.textContent = String(h).padStart(2, '0');
+                    updateBriefingTimeInputFromUI();
+                });
+                briefingMinuteUp.addEventListener('click', () => {
+                    let m = parseInt(briefingMinuteText.textContent, 10);
+                    m = (m + 10) % 60;
+                    briefingMinuteText.textContent = String(m).padStart(2, '0');
+                    updateBriefingTimeInputFromUI();
+                });
+                briefingMinuteDown.addEventListener('click', () => {
+                    let m = parseInt(briefingMinuteText.textContent, 10);
+                    m = (m - 10 + 60) % 60;
+                    briefingMinuteText.textContent = String(m).padStart(2, '0');
+                    updateBriefingTimeInputFromUI();
+                });
+                if (briefingAmBtn) {
+                    briefingAmBtn.addEventListener('click', () => {
+                        briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
+                        if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
+                        updateBriefingTimeInputFromUI();
+                    });
+                }
+                if (briefingPmBtn) {
+                    briefingPmBtn.addEventListener('click', () => {
+                        briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
+                        if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
+                        updateBriefingTimeInputFromUI();
+                    });
+                }
+                
+                setInterval(updateBriefingUIFromInput, 200);
+            }
+
+            // Sync alarm checkboxes (alarm-10, alarm-30, alarm-60)
+            const alarmHourText = document.getElementById('v2-alarm-hour-text');
+            const alarmMinuteText = document.getElementById('v2-alarm-minute-text');
+            const alarmHourUp = document.getElementById('v2-alarm-hour-up');
+            const alarmHourDown = document.getElementById('v2-alarm-hour-down');
+            const alarmMinuteUp = document.getElementById('v2-alarm-minute-up');
+            const alarmMinuteDown = document.getElementById('v2-alarm-minute-down');
+            const alarm10 = document.getElementById('alarm-10');
+            const alarm30 = document.getElementById('alarm-30');
+            const alarm60 = document.getElementById('alarm-60');
+
+            function updateAlarmInputsFromUI() {
+                if (!alarmHourText || !alarmMinuteText) return;
+                const hour = parseInt(alarmHourText.textContent, 10);
+                const minute = parseInt(alarmMinuteText.textContent, 10);
+                const totalMinutes = hour * 60 + minute;
+                
+                if (alarm10) alarm10.checked = (totalMinutes === 10);
+                if (alarm30) alarm30.checked = (totalMinutes === 30);
+                if (alarm60) alarm60.checked = (totalMinutes === 60);
+            }
+
+            function updateAlarmUIFromInputs() {
+                if (!alarmHourText || !alarmMinuteText) return;
+                if (alarm60 && alarm60.checked) {
+                    alarmHourText.textContent = '01';
+                    alarmMinuteText.textContent = '00';
+                } else if (alarm30 && alarm30.checked) {
+                    alarmHourText.textContent = '00';
+                    alarmMinuteText.textContent = '30';
+                } else if (alarm10 && alarm10.checked) {
+                    alarmHourText.textContent = '00';
+                    alarmMinuteText.textContent = '10';
+                }
+            }
+
+            if (alarmHourUp && alarmHourDown && alarmHourText) {
+                alarmHourUp.addEventListener('click', () => {
+                    let h = parseInt(alarmHourText.textContent, 10);
+                    h = (h + 1) % 24;
+                    alarmHourText.textContent = String(h).padStart(2, '0');
+                    updateAlarmInputsFromUI();
+                });
+                alarmHourDown.addEventListener('click', () => {
+                    let h = parseInt(alarmHourText.textContent, 10);
+                    h = (h - 1 + 24) % 24;
+                    alarmHourText.textContent = String(h).padStart(2, '0');
+                    updateAlarmInputsFromUI();
+                });
+                alarmMinuteUp.addEventListener('click', () => {
+                    let m = parseInt(alarmMinuteText.textContent, 10);
+                    m = (m + 10) % 60;
+                    alarmMinuteText.textContent = String(m).padStart(2, '0');
+                    updateAlarmInputsFromUI();
+                });
+                alarmMinuteDown.addEventListener('click', () => {
+                    let m = parseInt(alarmMinuteText.textContent, 10);
+                    m = (m - 10 + 60) % 60;
+                    alarmMinuteText.textContent = String(m).padStart(2, '0');
+                    updateAlarmInputsFromUI();
+                });
+                
+                setInterval(updateAlarmUIFromInputs, 200);
+            }
+        });
+    </script>
+
+
+
+</div>
+
+<!-- Editor Overlay: Sliding up from the bottom -->
+<div class="fixed inset-0 z-50 flex flex-col bg-surface shadow-2xl overflow-hidden hidden" id="v2-editor-container">
+<!-- Top Handle/Bar for "In-place Overlay" Feel -->
+<div class="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mt-3 mb-1"></div>
+<!-- Top Bar -->
+<header class="flex justify-between items-center w-full px-6 h-14 bg-surface z-10">
+<button class="flex items-center justify-center w-10 h-10 -ml-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all" id="v2-back-btn">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="text-primary font-label-sm text-label-sm uppercase tracking-widest flex items-center gap-1">Editor<span id="v2-editor-e2e-lock" class="material-symbols-outlined text-[14px] text-primary hidden" title="E2E 종단간 암호화 적용">lock</span></h1>
+<p class="text-[10px] text-on-surface-variant/60 font-label-sm">새로운 기억 쓰기</p>
+</div>
+<button class="bg-primary text-on-primary px-5 py-1.5 rounded-full font-label-sm text-label-sm watercolor-shadow hover:opacity-90 active:scale-95 transition-all" id="analyze-btn">
+            저장
+        </button>
+</header>
+<!-- Editor Content Area -->
+<main class="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-margin-desktop py-4 max-w-[50rem] mx-auto w-full">
+<!-- Metadata Selection -->
+<div class="space-y-4 mb-6">
+<input id="note-title" class="w-full bg-transparent border-none focus:ring-0 text-headline-lg font-headline-lg text-on-surface placeholder:text-on-surface-variant/30 p-0" placeholder="오늘의 제목을 지어주세요" type="text">
+<div class="flex items-center gap-3">
+<select id="v2-notebook-select" class="bg-surface-container-low px-3 py-1.5 rounded-full text-on-surface-variant/80 border border-surface-container font-label-sm text-[12px] focus:ring-0">
+    <option value="nb-1">내 일기장</option>
+</select>
+<div class="h-4 w-[0.0625rem] bg-outline-variant"></div>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-sm text-[11px] opacity-70">AI 비서 대기 중</span>
+</div>
+</div>
+</div>
+<!-- Emphasized Recording Tools -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-2xl border border-surface-container-highest mb-8 watercolor-shadow">
+<span class="text-label-sm font-label-sm text-on-surface-variant/60 mr-2">기록 도구</span>
+<div class="flex items-center gap-3">
+<button id="camera-btn" class="flex items-center justify-center w-12 h-12 bg-teal-50 text-teal-600 hover:bg-teal-100 dark:bg-teal-950/20 dark:text-teal-400 rounded-xl transition-all border border-teal-200/60 dark:border-teal-900/40" title="영상 기록">
+<span class="material-symbols-outlined text-[24px]" data-icon="videocam">videocam</span>
+</button>
+<button id="voice-btn" class="flex items-center justify-center w-12 h-12 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/20 dark:text-amber-400 rounded-xl transition-all border border-amber-200/60 dark:border-amber-900/40" title="음성 기록">
+<span class="material-symbols-outlined text-[24px]" data-icon="mic">mic</span>
+</button>
+<button id="scrap-btn" class="flex items-center justify-center w-12 h-12 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/20 dark:text-rose-400 rounded-xl transition-all border border-rose-200/60 dark:border-rose-900/40" title="스크린샷">
+<span class="material-symbols-outlined text-[24px]" data-icon="screenshot">screenshot</span>
+</button>
+<button id="local-upload-btn" class="flex items-center justify-center w-12 h-12 bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/20 dark:text-sky-400 rounded-xl transition-all border border-sky-200/60 dark:border-sky-900/40" title="사진 업로드">
+<span class="material-symbols-outlined text-[24px]">add_photo_alternate</span>
+</button>
+<input type="file" id="editor-local-file-input" accept="image/*" class="hidden">
+</div>
+</div>
+<!-- Rich Text Toolbar -->
+<div id="quill-toolbar" class="sticky top-0 bg-surface/95 backdrop-blur-md z-10 py-2 mb-4 flex items-center justify-between border-b border-surface-container">
+<div class="flex items-center gap-1">
+<button class="ql-bold p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
+<button class="ql-italic p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
+<button class="ql-list p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors" value="bullet"></button>
+<div class="w-[0.0625rem] h-6 bg-surface-container-highest mx-1"></div>
+<button class="ql-image p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"></button>
+<button id="emoji-picker-btn" class="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors">😀</button>
+</div>
+<div class="relative cursor-pointer" id="writing-helper-btn">
+<img alt="Mascot" class="w-8 h-8 rounded-full border-2 border-white shadow-sm ring-1 ring-primary/20" src="./angel_mascot.png">
+<div class="absolute -top-1 -right-1 bg-primary text-on-primary rounded-full p-0.5">
+<span class="material-symbols-outlined text-[10px] block" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+</div>
+<!-- Text Body -->
+<div class="relative min-h-[250px]">
+<div id="quill-editor" class="w-full min-h-[250px] bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/30 p-0 leading-relaxed resize-none"></div>
+</div>
+
+<!-- AI Feedback Area -->
+<div id="analysis-result-area" class="hidden mt-6 p-5 bg-surface-container-low rounded-2xl border border-primary/20 relative overflow-hidden soft-shadow">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+        <h4 class="font-label-sm text-primary uppercase tracking-wider">클라우드 위즈덤 (상담 분석)</h4>
+    </div>
+    <div id="analysis-content" class="font-body-md text-on-surface-variant leading-relaxed text-[14px]">
+    </div>
+    <div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+        <span class="material-symbols-outlined text-[80px]" data-icon="cloud">cloud</span>
+    </div>
+</div>
+<!-- Share Toggle Section -->
+<div class="mt-12 mb-32 p-6 bg-surface-container-low rounded-3xl border border-surface-container-highest">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">share</span>
+</div>
+<div>
+<h3 class="font-label-sm text-on-surface">공유 설정</h3>
+<p class="text-[11px] text-on-surface-variant">소중한 기억을 누구와 나눌까요?</p>
+</div>
+</div>
+<!-- Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value="" id="share-toggle-input">
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+    <div class="space-y-4 opacity-50 pointer-events-none transition-all duration-300" id="share-options">
+        <!-- E2E Warning Alert -->
+        <div id="v2-note-share-e2e-warning" class="hidden p-3 bg-error-container/30 border border-error/20 text-error rounded-xl text-[10px] leading-relaxed flex items-start gap-2">
+            <span class="material-symbols-outlined text-[14px] shrink-0 mt-0.5">security</span>
+            <span>E2E 종단간 암호화가 활성화된 일기는 암호화 키를 소유한 사용자만 읽을 수 있어 공유할 수 없습니다.</span>
+        </div>
+
+        <!-- Global Share Mode Dropdown -->
+        <div class="flex items-center justify-between bg-surface-container/40 p-3 rounded-2xl border border-outline-variant/10">
+            <div>
+                <p class="text-xs font-bold text-on-surface">공유 방식 선택</p>
+                <p class="text-[9px] text-on-surface-variant/60">모든 공유 대상자에게 동일하게 적용됩니다.</p>
+            </div>
+            <select id="v2-share-global-mode" class="bg-surface-container-high text-xs font-bold text-on-surface border border-outline-variant/30 rounded-xl px-3 py-1.5 focus:outline-none cursor-pointer">
+                <option value="read">읽기 전용 공유</option>
+                <option value="write">공동 편집 공유 (읽기/쓰기)</option>
+            </select>
+        </div>
+
+        <!-- Search / Add Sharee (Single method) -->
+        <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider px-1">닉네임으로 공유 대상 추가</label>
+            <div class="flex gap-2">
+                <input type="text" id="v2-share-search-input" placeholder="검색할 닉네임 입력..." class="flex-1 bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary/50 text-on-surface">
+                <button type="button" id="v2-share-search-btn" class="bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-90 active:scale-95 transition-all">검색</button>
+            </div>
+            <!-- Search Results -->
+            <div id="v2-share-search-results" class="hidden max-h-[120px] overflow-y-auto custom-scrollbar border border-surface-container-highest rounded-2xl p-2 bg-surface-container-lowest space-y-1 mt-1">
+            </div>
+        </div>
+
+        <!-- Selected Sharees List -->
+        <div class="space-y-1.5">
+            <div class="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider flex justify-between items-center px-1">
+                <span>지정된 공유 대상</span>
+                <span id="v2-note-friends-saving-indicator" class="hidden text-[10px] text-primary font-normal animate-pulse flex items-center gap-1">
+                    <span class="spinner w-2 h-2 inline-block"></span>
+                    저장 중...
+                </span>
+            </div>
+            <div class="max-h-[180px] overflow-y-auto custom-scrollbar border border-surface-container-highest rounded-2xl p-3 bg-surface-container-lowest space-y-2" id="v2-note-friends-list">
+                <p class="text-xs text-on-surface-variant/50 text-center py-4">공유할 대상을 추가해 주세요.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- E2E and Gemini API Privacy Guidance Card -->
+<div class="mt-6 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/30 flex gap-3 items-start shadow-sm">
+    <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">security</span>
+    <div class="flex-1">
+        <p class="text-[11px] text-on-surface font-bold">🔒 데이터 보안 및 안심 보호 안내</p>
+        <p class="text-[10px] text-on-surface-variant/70 leading-relaxed mt-1">
+            작성하신 일기는 설정에 따라 <strong>종단간(E2E) 암호화</strong>되어 안전하게 보관됩니다.<br>
+            AI 분석 비동의 시 외부 AI API(Gemini) 전송이 차단되며 브라우저 로컬 감정 분석만 동작합니다. 
+            E2E 암호화가 비활성화된 상태에서 AI 비동의 시 자체 서버로 평문이 전송 및 보존되므로, 
+            최고 수준의 정보 보호를 위해 화면 상단의 자물쇠 아이콘을 눌러 E2E 암호화를 활성화할 것을 적극 권장합니다.
+        </p>
+    </div>
+</div>
+</main>
+<!-- Bottom Actions Bar -->
+<div class="fixed bottom-0 left-0 w-full p-4 bg-surface/80 ghibli-blur flex justify-around items-center border-t border-surface-container pb-8 z-10">
+<button class="flex flex-col items-center text-on-surface-variant/70 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+<span class="text-[10px] font-label-sm mt-1">위치</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant/70 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="label">label</span>
+<span class="text-[10px] font-label-sm mt-1">태그</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant/70 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="palette">palette</span>
+<span class="text-[10px] font-label-sm mt-1">배경</span>
+</button>
+</div>
+</div>
+
+<!-- Gallery Overlay: All Memory Fragments -->
+<div class="fixed inset-0 z-50 flex flex-col bg-surface shadow-2xl overflow-hidden hidden" id="v2-gallery-container" style="transform: translateY(100%); transition: transform 0.3s ease-out;">
+<!-- Top Handle/Bar -->
+<div class="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mt-3 mb-1"></div>
+<!-- Top Bar -->
+<header class="flex justify-between items-center w-full px-6 h-14 bg-surface z-10 border-b border-surface-container">
+<button class="flex items-center justify-center w-10 h-10 -ml-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all" id="v2-gallery-back-btn">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="text-on-surface font-headline-sm text-[16px]">모든 기억 조각</h1>
+<p class="text-[10px] text-on-surface-variant/60 font-label-sm">나의 전체 기억 보관소</p>
+</div>
+<div class="flex items-center gap-1 -mr-2">
+    <button class="flex items-center justify-center w-10 h-10 text-primary hover:bg-surface-container-high rounded-full transition-all" id="v2-camera-btn" title="사진 촬영">
+        <span class="material-symbols-outlined text-[22px]">add_a_photo</span>
+    </button>
+    <button class="flex items-center justify-center w-10 h-10 text-primary hover:bg-surface-container-high rounded-full transition-all" id="v2-upload-btn" title="파일 업로드">
+        <span class="material-symbols-outlined text-[22px]">upload_file</span>
+    </button>
+    <button class="flex items-center justify-center px-3 h-8 text-xs font-semibold bg-surface-container-high text-primary hover:bg-primary/10 rounded-full transition-all border border-outline-variant/50" id="v2-gallery-select-btn" title="선택">
+        선택
+    </button>
+</div>
+</header>
+<!-- Gallery Content Area -->
+<main class="flex-1 overflow-y-auto custom-scrollbar p-4 max-w-[50rem] mx-auto w-full pb-20">
+    <!-- Filter Tabs -->
+    <div class="flex justify-center mb-8 mt-2 bg-surface-container-low p-1.5 rounded-full w-fit mx-auto shadow-inner">
+        <button class="active-tab px-6 py-2 rounded-full font-label-sm transition-all" id="tab-all">전체</button>
+        <button class="px-6 py-2 rounded-full font-label-sm text-on-surface-variant hover:text-on-surface transition-all" id="tab-shared">공유됨</button>
+        <button class="px-6 py-2 rounded-full font-label-sm text-on-surface-variant hover:text-on-surface transition-all" id="tab-mine">내 사진</button>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="v2-full-gallery-grid">
+        <!-- Dynamically populated -->
+    </div>
+
+<script>
+    // Tab Interaction for Gallery
+    document.querySelectorAll('.active-tab, #tab-shared, #tab-mine').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const filterTabs = tab.parentElement.querySelectorAll('button');
+            filterTabs.forEach(t => {
+                t.classList.remove('active-tab');
+                t.classList.add('text-on-surface-variant');
+            });
+            tab.classList.remove('text-on-surface-variant');
+            tab.classList.add('active-tab');
+        });
+    });
+</script>
+</main>
+    <!-- Bottom Selection Action Bar -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-[50rem] mx-auto bg-surface-container-high border-t border-outline-variant/30 py-3 px-6 shadow-2xl flex justify-between items-center z-20 translate-y-full transition-transform duration-300 hidden" id="v2-gallery-select-bar">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">check_circle</span>
+            <span class="text-sm font-semibold text-on-surface" id="v2-gallery-select-count">0개 선택됨</span>
+        </div>
+        <div class="flex gap-2">
+            <button class="px-4 py-2 bg-outline-variant/20 text-on-surface-variant hover:bg-outline-variant/30 rounded-full font-semibold text-xs transition-colors" id="v2-gallery-select-cancel-btn">취소</button>
+            <button class="px-5 py-2 bg-error text-white hover:bg-red-700 active:scale-95 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 shadow-md" id="v2-gallery-delete-btn">
+                <span class="material-symbols-outlined text-[16px]">delete</span> 삭제하기
+            </button>
+            <button class="px-5 py-2 bg-primary text-white hover:bg-primary-hover active:scale-95 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 shadow-md" id="v2-gallery-share-btn">
+                <span class="material-symbols-outlined text-[16px]">share</span> 공유하기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Sharing Confirmation Modal -->
+<div class="fixed inset-0 bg-on-surface/20 backdrop-blur-[4px] transition-opacity duration-300 z-[110] hidden opacity-0" id="v2-share-confirm-scrim"></div>
+<div class="fixed bottom-0 left-0 right-0 max-w-[37.5rem] mx-auto z-[111] transition-transform duration-500 bg-surface rounded-t-[2rem] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain overflow-hidden translate-y-full hidden" id="v2-share-confirm-modal">
+    <!-- Header Handle -->
+    <div class="flex justify-center py-3">
+        <div class="w-10 h-1 bg-outline-variant/50 rounded-full"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="flex items-center justify-between px-6 pb-4 border-b border-outline-variant/10">
+        <button class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center active:scale-90 duration-200" id="v2-share-confirm-close">
+            <span class="material-symbols-outlined text-on-surface-variant">close</span>
+        </button>
+        <h2 class="text-[16px] font-bold text-on-surface">기억 조각 공유하기</h2>
+        <button class="text-primary font-bold px-4 py-1.5 rounded-full hover:bg-primary/5 active:scale-95 transition-all text-sm" id="v2-finalize-share-btn">공유 완료</button>
+    </header>
+
+    <!-- Modal Content -->
+    <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar pb-10">
+        
+        <!-- Selected Items Preview Carousel/Grid -->
+        <div class="space-y-2">
+            <label class="block text-xs font-bold text-on-surface-variant/80 uppercase tracking-wider">선택한 기억 조각</label>
+            <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar" id="v2-share-selected-previews">
+                <!-- Dynamically populated selected thumbnails -->
+            </div>
+        </div>
+
+        <!-- Recipient Section: 1촌 Friends (체크박스) -->
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <label class="block text-xs font-bold text-on-surface-variant/80 uppercase tracking-wider">나의 1촌 친구들</label>
+                <span class="text-[10px] text-primary/70 bg-primary/5 px-2 py-0.5 rounded-full font-semibold" id="v2-friends-count-badge">0명</span>
+            </div>
+            <div class="max-h-[160px] overflow-y-auto custom-scrollbar border border-outline-variant/10 rounded-xl p-3 bg-surface-container-low space-y-2" id="v2-share-friends-list">
+                <!-- Dynamically populated 1촌 checkboxes -->
+                <p class="text-xs text-on-surface-variant/50 text-center py-4">불러온 친구가 없습니다.</p>
+            </div>
+        </div>
+
+        <!-- Recipient Section: Search other system users -->
+        <div class="space-y-3">
+            <label class="block text-xs font-bold text-on-surface-variant/80 uppercase tracking-wider">다른 가입 사용자 검색</label>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input class="w-full bg-surface-container border border-outline-variant/20 focus:ring-1 focus:ring-primary rounded-xl px-4 py-2.5 text-sm placeholder:text-outline/70 transition-all" placeholder="검색할 닉네임을 입력해 주세요..." type="text" id="v2-share-search-input">
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 rounded-full transition-colors hidden" id="v2-share-search-clear">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                </div>
+                <button class="px-4 py-2.5 bg-primary text-white hover:bg-primary-hover active:scale-95 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm" id="v2-share-search-btn">
+                    <span class="material-symbols-outlined text-[16px]">search</span> 검색
+                </button>
+            </div>
+            
+            <!-- Search Results -->
+            <div class="border border-outline-variant/10 rounded-xl p-3 bg-surface-container-low hidden" id="v2-share-search-results-container">
+                <div class="text-[11px] font-bold text-on-surface-variant/50 mb-2">검색 결과</div>
+                <div class="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar" id="v2-share-search-results">
+                    <!-- Results populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Added Recipients List -->
+        <div class="space-y-3 hidden" id="v2-share-custom-recipients-container">
+            <label class="block text-xs font-bold text-on-surface-variant/80 uppercase tracking-wider">추가된 수신자 목록</label>
+            <div class="flex flex-wrap gap-2" id="v2-share-custom-recipients-list">
+                <!-- Badges for manually added custom users -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Direct Photo/Fragment Upload Modal -->
+<div class="fixed inset-0 bg-on-surface/10 backdrop-blur-[4px] transition-opacity duration-300 z-[100] hidden opacity-0" id="v2-fragment-scrim"></div>
+<div class="fixed bottom-0 left-0 right-0 max-w-[37.5rem] mx-auto z-[101] transition-transform duration-500 bg-surface-container-lowest rounded-t-[2rem] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain paper-texture overflow-hidden translate-y-[100%] hidden" id="v2-fragment-upload-container">
+    <div class="flex justify-center py-3">
+        <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+    </div>
+    <header class="flex items-center justify-between px-5 pb-4 border-b border-outline-variant/10">
+        <button class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center active:scale-90 duration-200" id="v2-fragment-upload-close">
+            <span class="material-symbols-outlined text-on-surface-variant">close</span>
+        </button>
+        <h2 class="text-[16px] font-bold text-on-surface">기억 조각 추가</h2>
+        <button class="text-primary font-bold px-3 py-1.5 rounded-full hover:bg-primary/5 active:scale-95 transition-all text-sm" id="v2-fragment-upload-save">저장</button>
+    </header>
+    <div class="flex-1 overflow-y-auto px-5 space-y-6 py-6 pb-24 custom-scrollbar">
+        <!-- Image Selector -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold">사진 선택</label>
+            <div class="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/50 rounded-2xl p-6 bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer relative min-h-[160px]" id="v2-fragment-dropzone">
+                <input type="file" id="v2-fragment-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                <div class="flex flex-col items-center gap-2 text-center" id="v2-fragment-dropzone-placeholder">
+                    <span class="material-symbols-outlined text-[40px] text-primary">add_photo_alternate</span>
+                    <span class="font-label-sm text-on-surface-variant/80">클릭하여 사진을 올리세요</span>
+                    <span class="text-[10px] text-on-surface-variant/50">PNG, JPG (최대 5MB)</span>
+                </div>
+                <img id="v2-fragment-preview" class="hidden w-full max-h-[200px] object-contain rounded-lg shadow-sm">
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold" for="v2-fragment-desc">짧은 설명</label>
+            <textarea id="v2-fragment-desc" class="w-full bg-surface-container/50 rounded-xl border-0 focus:ring-1 focus:ring-primary p-3 placeholder:text-on-surface-variant/40 resize-none font-body-md" placeholder="사진에 담긴 기억이나 짧은 설명을 적어주세요..." rows="3"></textarea>
+        </div>
+
+        <!-- Notebook/Folder selection -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold" for="v2-fragment-notebook-select">저장할 일기장</label>
+            <select id="v2-fragment-notebook-select" class="w-full bg-surface-container/50 p-3 rounded-xl border border-outline-variant/10 focus:ring-1 focus:ring-primary font-body-md text-on-surface">
+                <!-- Dynamically populated -->
+            </select>
+        </div>
+    </div>
+</div>
+
+
+<!-- Photo Detail Container (Newly injected) -->
+<div class="fixed inset-0 z-[60] flex flex-col bg-surface shadow-2xl overflow-hidden hidden" id="v2-photo-detail-container" style="transform: translateY(100%); transition: transform 0.3s ease-out;">
+    <!-- Top Handle/Bar -->
+    <div class="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mt-3 mb-1"></div>
+    <!-- Top Bar -->
+    <header class="flex justify-between items-center w-full px-6 h-14 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 z-10">
+        <button class="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-surface-container-high transition-all squishy" id="v2-photo-detail-back-btn">
+            <span class="material-symbols-outlined text-primary">arrow_back</span>
+        </button>
+        <h1 class="text-lg font-bold text-primary tracking-tight flex items-center gap-1">
+            <span id="v2-photo-detail-e2e-badge" class="material-symbols-outlined text-[16px] text-primary hidden" title="E2E 종단간 암호화 적용" style="font-variation-settings: 'FILL' 1;">lock</span>
+            <span>감성 조각</span>
+        </h1>
+        <div class="flex items-center gap-2 relative">
+            <!-- 공유 상태 선택 버튼 -->
+            <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all squishy relative" id="v2-photo-detail-share-btn" title="공유 설정">
+                <span class="material-symbols-outlined text-primary" id="v2-photo-share-icon">share</span>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-tertiary rounded-full border border-white hidden" id="v2-photo-share-badge"></span>
+            </button>
+            
+            <!-- 공유 선택 드롭다운 메뉴 -->
+            <div id="v2-photo-share-menu" class="hidden absolute right-12 top-10 w-48 bg-white rounded-2xl shadow-xl border border-outline-variant/30 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 text-on-surface font-semibold flex items-center gap-2" id="v2-photo-share-opt-share">
+                    <span class="material-symbols-outlined text-[18px] text-primary">ios_share</span>
+                    1촌에게 공유하기
+                </button>
+                <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-error/5 text-error font-semibold flex items-center gap-2" id="v2-photo-share-opt-unshare">
+                    <span class="material-symbols-outlined text-[18px]">visibility_off</span>
+                    공유 취소하기
+                </button>
+            </div>
+
+            <!-- 삭제 버튼 -->
+            <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-error/10 text-error/80 hover:text-error transition-all squishy" id="v2-photo-detail-delete-btn" title="사진 삭제">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto custom-scrollbar pt-4 pb-24 max-w-[37.5rem] mx-auto w-full relative">
+        <!-- Photo Detail Section -->
+        <section class="p-4 space-y-4">
+            <!-- Polaroid Style Card -->
+            <div class="bg-white p-3 pb-6 rounded-xl watercolor-border overflow-hidden">
+                <div class="aspect-[4/5] w-full rounded-lg overflow-hidden mb-4 relative group bg-surface-container-low" id="detail-photo-display">
+                    <img class="w-full h-full object-cover" id="detail-photo-img" src="">
+                </div>
+                <div class="px-1 flex flex-col gap-2">
+                    <div class="flex flex-col gap-1" id="detail-author-mine">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">내 사진</span>
+                            <span class="text-xs text-outline" id="detail-photo-date"></span>
+                        </div>
+                        <h2 class="text-xl font-bold text-on-surface leading-snug" id="detail-photo-title"></h2>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats & Interaction Bar -->
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-4">
+                    <button class="flex items-center gap-1.5 group squishy" id="detail-like-btn">
+                        <span class="material-symbols-outlined text-outline transition-all" data-icon="favorite">favorite</span>
+                        <span class="text-sm font-semibold text-on-surface-variant">0</span>
+                    </button>
+                    <button class="flex items-center gap-1.5 group squishy">
+                        <span class="material-symbols-outlined text-primary/80">chat_bubble</span>
+                        <span class="text-sm font-semibold text-on-surface-variant">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comment List Section -->
+            <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/20">
+                <h3 class="text-sm font-bold mb-4 flex items-center gap-2 text-primary">
+                    <span class="material-symbols-outlined text-[18px]">forum</span>
+                    따뜻한 이야기들
+                </h3>
+                <div class="max-h-[300px] overflow-y-auto custom-scrollbar space-y-4 pr-1" id="detail-comments-list">
+                    <p class="text-sm text-on-surface-variant text-center py-4">아직 남겨진 이야기가 없습니다.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Comment Input Bar -->
+    <div class="absolute bottom-0 left-0 w-full p-4 pb-safe bg-surface/95 backdrop-blur-xl border-t border-outline-variant/20 z-50">
+        <div class="max-w-[37.5rem] mx-auto flex items-center gap-3">
+            <div class="relative flex-1">
+                <input class="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-primary/20 rounded-full px-5 py-3 text-sm placeholder:text-outline/70 transition-all" placeholder="따뜻한 한마디를 남겨주세요..." type="text" id="detail-comment-input">
+                <button class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full squishy shadow-md">
+                    <span class="material-symbols-outlined text-[20px]">send</span>
+                </button>
+            </div>
+            <button class="w-11 h-11 flex items-center justify-center bg-surface-container-high text-primary rounded-full squishy border border-outline-variant/20">
+                <span class="material-symbols-outlined">mood</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Task Editor Bottom Sheet -->
+<div class="fixed inset-0 bg-on-surface/10 backdrop-blur-[4px] transition-opacity duration-300 z-[100] hidden opacity-0" id="v2-editor-scrim"></div>
+<div class="fixed bottom-0 left-0 right-0 max-w-[37.5rem] mx-auto z-[101] transition-transform duration-500 bg-surface-container-lowest rounded-t-[2rem] shadow-2xl flex flex-col h-auto max-h-[85vh] overscroll-contain paper-texture overflow-hidden translate-y-[100%] hidden" id="v2-task-editor-container">
+    <div class="flex justify-center py-3">
+        <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+    </div>
+    <header class="flex items-center justify-between px-5 pb-4">
+        <button class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center active:scale-90 duration-200" id="v2-task-editor-close">
+            <span class="material-symbols-outlined text-on-surface-variant">close</span>
+        </button>
+        <div class="flex p-1 bg-surface-container rounded-full w-fit">
+            <button type="button" class="px-6 py-2 rounded-full font-label-md transition-all bg-secondary-container text-on-secondary-container shadow-sm" id="type-event">Event</button>
+            <button type="button" class="px-6 py-2 rounded-full font-label-md transition-all text-on-surface-variant" id="type-task">Task</button>
+        </div>
+        <button class="text-primary font-label-sm px-2 py-2 transition-all hover:opacity-70 active:scale-95" id="v2-task-editor-save">Save</button>
+    </header>
+    <div class="flex-1 overflow-y-auto px-5 space-y-6 pb-24 custom-scrollbar">
+        <div class="relative mt-2">
+            <input class="w-full bg-transparent border-0 border-b-2 border-outline-variant/30 focus:ring-0 focus:border-primary text-[24px] font-bold py-3 placeholder:text-on-surface-variant/30 transition-all" placeholder="What's your plan?" type="text" id="v2-task-title-input">
+        </div>
+        <div class="space-y-4 pt-2">
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">schedule</span>
+                <div class="flex flex-1 items-center gap-2">
+                    <input type="datetime-local" class="flex-1 p-3 bg-surface-container rounded-xl text-left font-body-md text-on-surface border-none" id="v2-task-start-input">
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary">schedule</span>
+                <div class="flex flex-1 items-center gap-2">
+                    <input type="datetime-local" class="flex-1 p-3 bg-surface-container rounded-xl text-left font-body-md text-on-surface border-none" id="v2-task-end-input">
+                </div>
+            </div>
+        </div>
+        <!-- Task Specific Fields -->
+        <div id="v2-task-only-fields" class="space-y-6">
+            <!-- AI Spirit Mode Card -->
+            <div class="p-5 rounded-[24px] bg-primary-container/20 border border-primary-container/30 space-y-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-primary rounded-lg text-on-primary"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">compost</span></div>
+                    <span class="font-bold text-primary text-[16px]">AI Spirit Mode</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input checked class="sr-only peer" type="checkbox">
+                    <div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-primary"></div>
+                </label>
+            </div>
+            <p class="text-on-surface-variant text-[12px] leading-relaxed">Let the spirit guide your focus. I'll analyze the mood of this task and suggest the best moment to begin.</p>
+        </div>
+        <div class="space-y-5">
+            <div class="flex items-start gap-4">
+                <span class="material-symbols-outlined text-primary mt-1">notes</span>
+                <textarea class="w-full bg-surface-container/50 rounded-xl border-0 focus:ring-1 focus:ring-primary p-3 placeholder:text-on-surface-variant/40 resize-none font-body-md" placeholder="과제의 상세 계획이나 정보를 적어주세요..." rows="3" id="v2-task-desc-input"></textarea>
+            </div>
+        </div>
+
+        <!-- 진행률 슬라이더 (자동 평가로 대체되어 숨김 처리) -->
+        <div class="space-y-2 hidden">
+            <label class="flex justify-between text-label-md text-on-surface font-semibold">
+                <span>진행률</span>
+                <span id="v2-task-progress-val" class="text-primary font-bold">0%</span>
+            </label>
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">percent</span>
+                <input type="range" id="v2-task-progress-input" min="0" max="100" value="0" class="flex-1 accent-primary h-2 bg-surface-container rounded-lg appearance-none cursor-pointer">
+            </div>
+        </div>
+
+        <!-- 중간 점검 별점 -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold">중간 점검 별점</label>
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary">star</span>
+                <div class="flex gap-1" id="v2-task-rating-container">
+                    <button type="button" class="rating-star-btn text-outline-variant hover:text-primary transition-colors active:scale-90" data-rating="1"><span class="material-symbols-outlined text-[24px]">star</span></button>
+                    <button type="button" class="rating-star-btn text-outline-variant hover:text-primary transition-colors active:scale-90" data-rating="2"><span class="material-symbols-outlined text-[24px]">star</span></button>
+                    <button type="button" class="rating-star-btn text-outline-variant hover:text-primary transition-colors active:scale-90" data-rating="3"><span class="material-symbols-outlined text-[24px]">star</span></button>
+                    <button type="button" class="rating-star-btn text-outline-variant hover:text-primary transition-colors active:scale-90" data-rating="4"><span class="material-symbols-outlined text-[24px]">star</span></button>
+                    <button type="button" class="rating-star-btn text-outline-variant hover:text-primary transition-colors active:scale-90" data-rating="5"><span class="material-symbols-outlined text-[24px]">star</span></button>
+                </div>
+                <input type="hidden" id="v2-task-rating-input" value="0">
+            </div>
+        </div>
+
+        <!-- 중간 점검일 -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold">중간 점검일</label>
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary">calendar_today</span>
+                <input type="date" id="v2-task-review-date-input" class="flex-1 p-3 bg-surface-container rounded-xl text-left font-body-md text-on-surface border-none">
+            </div>
+        </div>
+
+        <!-- 자기 성찰 -->
+        <div class="space-y-2">
+            <label class="block text-label-md text-on-surface font-semibold">자기 성찰</label>
+            <div class="flex items-start gap-4">
+                <span class="material-symbols-outlined text-primary mt-1">rate_review</span>
+                <textarea class="w-full bg-surface-container/50 rounded-xl border-0 focus:ring-1 focus:ring-primary p-3 placeholder:text-on-surface-variant/40 resize-none font-body-md" placeholder="여기에 자기 성찰 내용을 작성해 주세요..." rows="3" id="v2-task-reflection-input"></textarea>
+            </div>
+        </div>
+        
+        <!-- 삭제 버튼 컨테이너 -->
+        <div id="v2-task-delete-container" class="hidden mt-4 pt-4 border-t border-outline-variant/30 flex justify-center">
+            <button id="v2-task-editor-delete" class="px-6 py-3 w-full rounded-xl bg-error/10 text-error hover:bg-error hover:text-on-error font-bold transition-all active:scale-95 duration-200">
+                일정 삭제하기
+            </button>
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Task Detail Overlay -->
+<div class="fixed inset-0 z-[60] flex flex-col bg-surface shadow-2xl overflow-hidden hidden" id="v2-task-detail-container" style="transform: translateY(100%); transition: transform 0.3s ease-out;">
+    <header class="bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-sm top-0 sticky z-10">
+        <div class="flex items-center justify-between px-5 h-14 w-full max-w-7xl mx-auto">
+            <div class="flex items-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold bg-primary-container text-on-primary-container">진행 중</span></div>
+            <div class="flex items-center gap-1">
+                <button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container rounded-full transition-colors" id="v2-task-detail-back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+                <button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 overflow-y-auto px-5 pt-6 space-y-4 pb-24 max-w-[37.5rem] mx-auto w-full custom-scrollbar">
+        <section class="space-y-2">
+            <h2 class="font-bold text-[24px] text-on-surface leading-tight" id="v2-task-detail-title">과제 제목</h2>
+        </section>
+        <div class="bg-surface-container-low/60 backdrop-blur-2xl rounded-xl shadow-[0_15px_40px_rgba(74,69,62,0.05)] paper-texture border border-white/40 p-4">
+            <h3 class="font-bold text-[14px] text-secondary mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[20px]" data-icon="event_note">event_note</span>진척도</h3>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center"><span class="text-[12px] text-on-surface-variant">타임라인</span><span class="text-[12px] text-outline">D-Day</span></div>
+                    <div class="relative pt-2 pb-6">
+                        <div class="absolute top-4 left-0 w-full h-1.5 bg-surface-container-highest rounded-full"></div>
+                        <div class="absolute top-4 left-0 w-[45%] h-1.5 bg-primary/30 rounded-full"></div>
+                        <div class="relative flex justify-between">
+                            <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-primary/40 mb-1"></div><span class="text-[10px] text-outline" id="v2-task-detail-start"></span></div>
+                            <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-surface-container-highest mb-1"></div><span class="text-[10px] text-tertiary" id="v2-task-detail-end"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-surface-container-lowest rounded-xl shadow-[0_15px_40px_rgba(74,69,62,0.05)] paper-texture border border-white/40 relative overflow-hidden p-4">
+            <div class="absolute top-0 right-0 w-32 h-32 opacity-10 -mr-10 -mt-10"><span class="material-symbols-outlined text-[120px] text-primary">stylus</span></div>
+            <h3 class="font-bold text-[14px] text-secondary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-[20px]">description</span>상세 설명</h3>
+            <div class="notebook-lines text-[14px] text-on-surface-variant leading-8 pt-1" id="v2-task-detail-desc">상세 내용이 없습니다.</div>
+        </div>
+    </main>
+</div>
+
+    
+<!-- Extra Modals & Helpers -->
+<div id="emoji-panel" class="hidden absolute z-[100] bg-surface rounded-xl shadow-lg border border-surface-container-highest w-[17.5rem] p-3 top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
+    <div class="flex gap-2 mb-2 overflow-x-auto pb-1 custom-scrollbar">
+        <button class="emoji-tab active text-[12px] font-bold px-2 py-1" data-cat="emotion">감정</button>
+        <button class="emoji-tab text-[12px] font-bold px-2 py-1 text-on-surface-variant/50" data-cat="nature">자연</button>
+        <button class="emoji-tab text-[12px] font-bold px-2 py-1 text-on-surface-variant/50" data-cat="food">음식</button>
+    </div>
+    <div id="emoji-grid" class="grid grid-cols-6 gap-2 text-center text-xl cursor-pointer"></div>
+</div>
+
+
+    <!-- Essential Scripts for Supabase & Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- Load the existing V1 logic -->
+    <script type="module" src="/app.js?v=5.9.6"></script>
+
+    <script>
+
+        // Task Editor Close Logic
+        const taskEditorCloseBtn = document.getElementById('v2-task-editor-close');
+        if(taskEditorCloseBtn) {
+            taskEditorCloseBtn.addEventListener('click', () => {
+                const sheet = document.getElementById('v2-task-editor-container');
+                const scrim = document.getElementById('v2-editor-scrim');
+                if(sheet && scrim) {
+                    sheet.style.transform = 'translateY(100%)';
+                    scrim.classList.add('opacity-0');
+                    setTimeout(() => {
+                        scrim.classList.add('hidden');
+                        sheet.classList.add('hidden');
+                    }, 400);
+                }
+            });
+        }
+        
+        // Task Detail Close Logic
+        const taskDetailCloseBtn = document.getElementById('v2-task-detail-back-btn');
+        if(taskDetailCloseBtn) {
+            taskDetailCloseBtn.addEventListener('click', () => {
+                const detail = document.getElementById('v2-task-detail-container');
+                if(detail) {
+                    detail.style.transform = 'translateY(100%)';
+                    setTimeout(() => detail.classList.add('hidden'), 300);
+                }
+            });
+        }
+
+        // Ghibli Gender Buttons Interactive Sync
+        const btnFemale = document.getElementById('gender-btn-female');
+        const btnMale = document.getElementById('gender-btn-male');
+        const radioFemale = document.getElementById('gender-female');
+        const radioMale = document.getElementById('gender-male');
+        
+        if(btnFemale && btnMale && radioFemale && radioMale) {
+            btnFemale.addEventListener('click', () => {
+                radioFemale.checked = true;
+                btnFemale.className = "flex-1 py-2.5 rounded-xl bg-white shadow-sm text-primary font-label-md";
+                btnMale.className = "flex-1 py-2.5 rounded-xl text-on-surface-variant font-label-md";
+            });
+            btnMale.addEventListener('click', () => {
+                radioMale.checked = true;
+                btnMale.className = "flex-1 py-2.5 rounded-xl bg-white shadow-sm text-primary font-label-md";
+                btnFemale.className = "flex-1 py-2.5 rounded-xl text-on-surface-variant font-label-md";
+            });
+        }
+    </script>
+
+
+<!-- Elegant Small Day View Overlay -->
+<div class="fixed inset-0 z-[110] hidden flex-col justify-end transition-all duration-300" id="dayViewContainer">
+    <div class="absolute inset-0 bg-surface-dim/40 backdrop-blur-sm" id="dayViewCloseBg"></div>
+    <div class="relative w-full max-w-[31.25rem] mx-auto h-auto max-h-[60vh] bg-surface-container-lowest paper-texture rounded-t-[2rem] border-t border-outline-variant/20 shadow-2xl flex flex-col transform translate-y-full transition-transform duration-500 ease-out" id="dayViewCard">
+        <div class="w-12 h-1.5 bg-outline-variant/40 rounded-full mx-auto mt-4 mb-4"></div>
+        <div class="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold text-on-surface" id="day-view-day-name">Tuesday</h3>
+                    <p class="text-[14px] text-primary font-semibold mt-1" id="day-view-date-text">March 12, 2024</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-sm" id="day-view-add-btn">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                    </button>
+                    <button class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center" id="day-view-close-btn">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Event List -->
+            <div class="space-y-3 mb-6" id="day-view-events-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Full Screen Task Detail/Add Overlay -->
+<div id="v2-task-full-overlay" class="fixed inset-0 z-[200] bg-surface transition-transform duration-300 translate-x-full overflow-y-auto hidden selection:bg-primary/20 pb-20">
+    <header class="bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-sm sticky top-0 z-50">
+        <div class="flex items-center justify-between px-5 h-14 w-full max-w-7xl mx-auto">
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-label-sm font-bold bg-primary-container text-on-primary-container">진행 중</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container rounded-full transition-colors" id="v2-task-full-back-btn">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-container rounded-full transition-colors">
+                    <span class="material-symbols-outlined">more_vert</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-2xl mx-auto px-5 pt-6 space-y-4 pb-24">
+        <section class="space-y-2">
+            <h2 class="font-headline-lg text-[28px] text-on-surface leading-tight">기말 고사 대체 소논문: <br>지브리 세계관 속의 자연주의</h2>
+        </section>
+        
+        <div class="bg-surface-container-low/60 backdrop-blur-2xl rounded-xl shadow-[0_15px_40px_rgba(74,69,62,0.05)] paper-texture border border-white/40 p-4" id="task-progress-panel">
+            <h3 class="font-label-md text-label-md text-secondary mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]" data-icon="event_note">event_note</span>진척도
+            </h3>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">타임라인 (Timeline)</span>
+                        <span class="font-label-sm text-label-sm text-outline">D-24</span>
+                    </div>
+                    <div class="relative pt-2 pb-6">
+                        <div class="absolute top-4 left-0 w-full h-1.5 bg-surface-container-highest rounded-full"></div>
+                        <div class="absolute top-4 left-0 w-[45%] h-1.5 bg-primary/30 rounded-full transition-all duration-1000"></div>
+                        <div class="relative flex justify-between">
+                            <div class="flex flex-col items-center">
+                                <div class="w-3 h-3 rounded-full bg-primary/40 mb-1"></div>
+                                <span class="font-label-sm text-[10px] text-outline">10월 15일</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="w-3 h-3 rounded-full bg-surface-container-highest mb-1"></div>
+                                <span class="font-label-sm text-[10px] text-outline text-tertiary">11월 20일</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">과제 달성률 (Task Achievement)</span>
+                        <span class="font-label-sm text-label-sm font-bold text-primary">65%</span>
+                    </div>
+                    <div class="relative h-2.5 w-full bg-surface-container-highest rounded-full overflow-hidden border border-white/50">
+                        <div class="absolute top-0 left-0 h-full w-[65%] bg-primary rounded-full shadow-[0_0_8px_rgba(74,101,78,0.2)] transition-all duration-1000 ease-out"></div>
+                    </div>
+                    <p class="font-label-sm text-[11px] text-primary/70 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                        일정 대비 안정적인 진행 속도입니다
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-xl shadow-[0_15px_40px_rgba(74,69,62,0.05)] paper-texture border border-white/40 relative overflow-hidden p-4" id="task-description">
+            <div class="absolute top-0 right-0 w-32 h-32 opacity-10 -mr-10 -mt-10">
+                <span class="material-symbols-outlined text-[120px] text-primary" data-icon="stylus">stylus</span>
+            </div>
+            <h3 class="font-label-md text-label-md text-secondary mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+                과제 상세 설명
+            </h3>
+            <div class="notebook-lines font-body-md text-body-md text-on-surface-variant leading-8 pt-1">
+                스튜디오 지브리 애니메이션(특히 '원령공주'와 '이웃집 토토로')에 나타난 인간과 자연의 대립 및 공존 양상을 분석합니다. 동양적 자연주의 관점에서 작품의 배경과 캐릭터 동기를 서술하세요. <br>
+                분량: A4 용지 5매 내외 (글자 크기 11pt, 줄간격 160%)
+            </div>
+        </div>
+
+        <section class="space-y-3" id="task-steps-container">
+            <h3 class="font-label-md text-label-md text-secondary px-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]" data-icon="checklist">checklist</span>
+                진행 단계
+            </h3>
+            <div class="grid gap-2">
+                <label class="group flex items-center gap-4 bg-surface-container-low/40 p-3.5 rounded-xl border border-transparent hover:border-primary/20 transition-all cursor-pointer">
+                    <input checked class="w-6 h-6 rounded-full border-2 border-primary text-primary focus:ring-offset-0 focus:ring-0 cursor-pointer" type="checkbox">
+                    <div class="flex-1">
+                        <p class="font-label-md text-label-md text-on-surface line-through opacity-50">관련 논문 및 문헌 자료 수집</p>
+                        <p class="font-label-sm text-label-sm text-outline">완료: 10월 20일</p>
+                    </div>
+                    <span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                </label>
+                <label class="group flex items-center gap-4 bg-surface-container-low/40 p-3.5 rounded-xl border border-transparent hover:border-primary/20 transition-all cursor-pointer">
+                    <input checked class="w-6 h-6 rounded-full border-2 border-primary text-primary focus:ring-offset-0 focus:ring-0 cursor-pointer" type="checkbox">
+                    <div class="flex-1">
+                        <p class="font-label-md text-label-md text-on-surface line-through opacity-50">작품별 분석 프레임워크 설정</p>
+                        <p class="font-label-sm text-label-sm text-outline">완료: 10월 28일</p>
+                    </div>
+                    <span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                </label>
+                <label class="group flex items-center gap-4 bg-surface-container-low/40 p-3.5 rounded-xl border border-primary/20 bg-primary/5 transition-all cursor-pointer">
+                    <input class="w-6 h-6 rounded-full border-2 border-primary text-primary focus:ring-offset-0 focus:ring-0 cursor-pointer" type="checkbox">
+                    <div class="flex-1">
+                        <p class="font-label-md text-label-md text-on-surface">초안 작성 및 지도교수 면담</p>
+                        <p class="font-label-sm text-label-sm text-primary">진행 중</p>
+                    </div>
+                    <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="pending">pending</span>
+                </label>
+            </div>
+        </section>
+    </main>
+</div>
+
+
+<!-- Chat Detail Overlay -->
+<div class="fixed inset-0 z-[100] bg-background hidden" id="chat-detail-overlay">
+    <div class="fixed inset-0 z-0 watercolor-bg opacity-40 blur-3xl scale-110"></div>
+    <div class="relative z-10 h-full flex flex-col w-full max-w-none bg-background/30 shadow-2xl">
+        <!-- Top App Bar -->
+        <header class="flex justify-between items-center h-16 px-4 z-50 glass-panel shadow-[0_4px_20px_rgba(93,64,55,0.08)]">
+            <div class="flex items-center gap-3">
+                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/50 active:scale-95 transition-all text-primary" data-action="close-chat-detail">
+                    <span class="material-symbols-outlined">arrow_back_ios_new</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <img alt="Ningning AI" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="./angel_mascot.png"/>
+                    <div>
+                        <h1 id="chat-room-title-text" class="font-headline-md text-[18px] leading-tight text-primary">Ningning AI Assistant</h1>
+                        <p class="text-[10px] text-primary/70 uppercase tracking-widest font-bold">Deep Reflection Mode Active</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-variant/50 transition-colors">
+                    <span class="material-symbols-outlined">call</span>
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-variant/50 transition-colors">
+                    <span class="material-symbols-outlined">videocam</span>
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-variant/50 transition-colors">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sentiment Thermometer -->
+        <div class="w-full h-1.5 bg-surface-container-highest relative">
+            <div class="absolute inset-0 sentiment-gradient opacity-60"></div>
+            <div class="absolute h-4 w-4 bg-on-primary border-2 border-tertiary rounded-full -top-1 shadow-md transition-all duration-500 ease-in-out" id="sentiment-indicator" style="left: 65%;"></div>
+            <div class="absolute top-2 right-4 text-[10px] font-label-sm text-tertiary flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                Warm Resonance
+            </div>
+        </div>
+
+        <!-- Chat History -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar" id="chat-history">
+            <div class="flex justify-center my-6">
+                <span class="px-4 py-1 rounded-full bg-surface-container/50 text-on-surface-variant font-label-sm text-[12px] backdrop-blur-sm">Monday, October 23</span>
+            </div>
+            <div class="flex flex-col items-start gap-1 max-w-[85%]">
+                <div class="chat-bubble-partner paper-texture p-4 rounded-2xl rounded-tl-none text-on-surface font-body-md relative">
+                    안녕하세요! 오늘 하루는 어떤 색깔이었나요? 당신의 마음 정원에 꽃을 심듯, 편안하게 이야기를 들려주세요.
+                </div>
+                <span class="text-[10px] text-on-surface-variant/60 ml-1">오후 2:15</span>
+            </div>
+            <div class="flex flex-col items-end gap-1 ml-auto max-w-[85%]">
+                <div class="bg-primary-container text-on-primary-container p-4 rounded-2xl rounded-tr-none font-body-md shadow-[0_4px_12px_rgba(74,101,78,0.15)]">
+                    오늘은 조금 차분한 연보랏빛이었어요. 비가 와서 그런지 마음이 몽글몽글해지는 기분이었거든요.
+                </div>
+                <span class="text-[10px] text-on-surface-variant/60 mr-1">오후 2:18</span>
+            </div>
+            <div class="flex flex-col items-start gap-1 max-w-[85%]">
+                <div class="chat-bubble-partner paper-texture p-2 rounded-2xl rounded-tl-none overflow-hidden">
+                    <img alt="Rainy garden" class="rounded-xl w-full h-48 object-cover mb-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAua68OiNw6AdUSc-I8bpGnOvOx-Nj2pxEqjFq3P0MBzjmhOENFwvOmfPDAD_YmVCoS6SUVwwVLK1ml7AvQaByFxaj2iACGsG_D0fayxRD1xZwYb35NzUcCZJKAFXmWxU3GrD5GceZoxyIcgK60C0ne4eW9W6QLmvMIgR5UY3GIl-BCj1djYuqwFw_8-62HSuYct8DjYw1ahT7yEEKVMj49g3mhvDPllTiizW_OjK9QBk6PI3EhUvy6n4lIHk19fdeAJ2prk9WVtff5"/>
+                    <div class="px-2 pb-2 text-on-surface text-[14px]">
+                        연보랏빛 비 오는 날이라니, 정말 낭만적이네요. 이 그림이 당신의 기분과 닮았을까요?
+                    </div>
+                </div>
+                <span class="text-[10px] text-on-surface-variant/60 ml-1">오후 2:20</span>
+            </div>
+            <div class="space-y-4" id="dynamic-messages"></div>
+        </main>
+
+        <!-- Deep Reflection Input Area -->
+        <footer class="p-4 bg-surface-container-low/90 backdrop-blur-xl rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
+            <div class="flex items-center gap-2 mb-3 px-2">
+                <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                <span class="text-[11px] font-label-md text-primary uppercase tracking-widest">Deep Reflection Mode</span>
+            </div>
+            <div class="flex items-end gap-2 bg-surface p-2 rounded-2xl border border-outline-variant/30 shadow-inner">
+                <button id="chat-attach-btn" class="w-10 h-10 flex items-center justify-center rounded-full text-outline hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined">add_circle</span>
+                </button>
+                <input type="file" id="chat-image-attach-input" accept="image/*" class="hidden">
+                <textarea class="flex-1 py-2 px-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 font-body-md text-on-surface placeholder:text-outline/50" id="message-input-field" placeholder="마음의 소리를 적어보세요..." rows="1"></textarea>
+                <div class="flex gap-1">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-full text-primary/70 hover:bg-primary-container/20 transition-colors">
+                        <span class="material-symbols-outlined">mic</span>
+                    </button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary shadow-lg active:scale-90 transition-all" id="send-btn">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-center mt-2 pb-safe">
+                <div class="w-16 h-1 bg-outline-variant/30 rounded-full"></div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<!-- Invite Friends Overlay -->
+<div class="fixed inset-0 z-[120] pointer-events-none hidden" id="invite-modal">
+    <div class="absolute inset-0 bg-on-surface/20 transition-opacity duration-300 pointer-events-none opacity-0" id="overlay-backdrop" data-action="close-invite"></div>
+    <div class="slide-up absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-4 pb-12 shadow-2xl pointer-events-auto max-w-[37.5rem] mx-auto transform translate-y-full transition-transform duration-300" id="overlay-panel">
+        <div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-6"></div>
+        <h2 class="font-headline-md text-[24px] mb-6 text-center text-primary font-bold">Invite Your Soulmates</h2>
+        <div class="space-y-4">
+            <div class="bg-surface-container-low paper-texture rounded-xl p-5 shadow-sm border border-primary-container/20">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-3xl">account_circle</span>
+                        <div>
+                            <p class="font-label-md text-[14px] text-on-surface">Google 연락처 </p>
+                            <p class="font-label-sm text-[12px] text-on-surface-variant">친구 더 쉽게 찾아요</p>
+                        </div>
+                    </div>
+                    <button id="reauth-google-btn" class="px-4 py-1.5 bg-primary text-on-primary rounded-full font-label-md hover:opacity-90 transition-opacity">연결</button>
+                </div>
+                <!-- Manual Invite Panel -->
+                <div class="space-y-3 pt-3 border-t border-outline-variant/30">
+                    <p class="text-xs text-on-surface-variant">초대할 친구의 이메일을 입력하거나 링크를 복사하세요.</p>
+                    <div class="flex gap-2">
+                        <input type="email" id="manual-email-input" placeholder="example@email.com" class="flex-1 p-2 bg-surface border border-outline-variant rounded-lg text-sm focus:ring-primary focus:border-primary">
+                        <button id="manual-invite-btn" class="px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold text-sm hover:bg-primary/95 transition-colors">초대장 발송</button>
+                    </div>
+                    <button id="copy-share-link-btn" class="w-full py-2 bg-secondary text-on-secondary rounded-lg font-bold text-xs hover:bg-secondary/95 transition-colors">🔗 나만의 1촌 초대 링크 복사하기</button>
+                </div>
+            </div>
+            <!-- Container for rendering contacts -->
+            <div id="contact-list" class="max-h-[350px] overflow-y-auto space-y-2 mt-4"></div>
+        </div>
+        <button id="close-invite-modal" class="mt-8 w-full py-3 text-on-surface-variant font-label-md hover:text-primary transition-colors" data-action="close-invite">Close</button>
+    </div>
+</div>
+
+
+
+
+<div id="v2-floating-chat-container" class="fixed inset-0 pointer-events-none z-[100]"></div>
+<div id="floating-chat-dock" class="fixed bottom-4 right-4 flex gap-2 pointer-events-auto z-[101]"></div>
+
+<!-- [MODAL] 일정 등록 / 상세 보기 모달 -->
+<div id="calendar-event-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card bg-surface paper-texture rounded-[2.5rem] border-4 border-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden watercolor-border"
+        style="max-width: 500px; width: 100%;">
+        <div class="p-8" style="text-align: left;">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <img alt="Mascot" class="w-10 h-10 object-contain floating-cloud" src="/mascot.png"
+                        style="width: 40px; height: 40px; border-radius: 50%;" />
+                    <h3 id="calendar-modal-title" class="text-2xl font-bold font-headline text-on-surface"
+                        style="margin: 0;">New Sweet Event</h3>
+                </div>
+                <button id="close-calendar-modal" type="button"
+                    class="w-10 h-10 rounded-full hover:bg-surface-dim flex items-center justify-center transition-colors text-on-surface-variant"
+                    style="background: none; border: none; cursor: pointer;">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="calendar-event-form" class="space-y-5">
+                <input type="hidden" id="calendar-event-id">
+                <div>
+                    <label for="calendar-event-summary"
+                        class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Event
+                        Title</label>
+                    <input id="calendar-event-summary"
+                        class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface placeholder-on-surface/30"
+                        placeholder="e.g. Nap with the clouds" type="text" required />
+                </div>
+                <div class="grid grid-cols-2 gap-4"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label for="calendar-event-start"
+                            class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Start
+                            Time</label>
+                        <input id="calendar-event-start"
+                            class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface"
+                            type="datetime-local" required />
+                    </div>
+                    <div>
+                        <label for="calendar-event-end"
+                            class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">End
+                            Time</label>
+                        <input id="calendar-event-end"
+                            class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface"
+                            type="datetime-local" required />
+                    </div>
+                </div>
+                <div>
+                    <label for="calendar-event-desc"
+                        class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">Description</label>
+                    <textarea id="calendar-event-desc"
+                        class="w-full bg-white border-2 border-on-surface/5 rounded-2xl px-5 py-4 focus:outline-none focus:border-primary/40 transition-all font-medium text-on-surface placeholder-on-surface/30"
+                        placeholder="일정에 대한 추가 메모" style="height: 100px; resize: none;"></textarea>
+                </div>
+
+                <!-- AI Secretary Advice Frame -->
+                <div class="bg-primary/5 border-2 border-primary/20 rounded-[1.5rem] p-5 mt-4 flex gap-4 relative"
+                    id="calendar-event-advice-group" style="display: none; align-items: flex-start;">
+                    <div class="text-primary" style="color: var(--primary);">
+                        <span class="material-symbols-outlined text-3xl"
+                            style="font-variation-settings: 'FILL' 1;">sparkles</span>
+                    </div>
+                    <div>
+                        <h4 class="text-primary font-bold text-sm mb-1 font-headline"
+                            style="color: var(--primary); margin: 0 0 4px 0;">Cloudie's Suggestion</h4>
+                        <p id="calendar-event-advice-text"
+                            class="text-sm text-on-surface/80 leading-relaxed font-handwritten text-lg leading-tight"
+                            style="margin: 0; font-family: 'Caveat', cursive; font-size: 1.25rem; font-weight: 500;">
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-3" style="display: flex; gap: 12px;">
+                    <button id="delete-calendar-event-btn"
+                        class="w-1/3 bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-2xl shadow-lg transition-all text-base"
+                        type="button" style="display: none; border: none; cursor: pointer;">
+                        Delete
+                    </button>
+                    <button id="save-calendar-event-btn"
+                        class="flex-1 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all text-base"
+                        type="submit" style="border: none; cursor: pointer;">
+                        Confirm Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- [MODAL] 1촌 상세 설정 모달 (모바일 대응) -->
+<div id="friend-settings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 400px; padding: 20px;">
+        <div class="modal-header-premium">
+            <h3 id="friend-settings-modal-title">👥 1촌 설정</h3>
+            <button onclick="document.getElementById('friend-settings-modal').style.display = 'none';"
+                class="close-btn-round">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+            <div class="setting-item-premium"
+                style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 12px;">
+                <div>
+                    <div style="font-weight: 600; color: #2d3436; font-size: 0.95rem;">🤫 스텔스 모드</div>
+                    <div style="font-size: 0.75rem; color: #636e72; margin-top: 2px;">상대방에게 내 온라인 접속 및 감정 기온을 숨깁니다.
+                    </div>
+                </div>
+                <button id="modal-stealth-btn" class="btn sm"
+                    style="padding: 6px 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">설정</button>
+            </div>
+            <div class="setting-item-premium"
+                style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 12px;">
+                <div>
+                    <div style="font-weight: 600; color: #2d3436; font-size: 0.95rem;">🧠 감정 공유</div>
+                    <div style="font-size: 0.75rem; color: #636e72; margin-top: 2px;">상대방과 최근 감정 요약 및 분석을 서로 실시간
+                        공유합니다.</div>
+                </div>
+                <button id="modal-share-btn" class="btn sm"
+                    style="padding: 6px 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">설정</button>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="modal-delete-btn" class="btn"
+                    style="flex: 1; padding: 12px; border-radius: 12px; background: #dfe4ea; color: #ff4757; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;">❌
+                    1촌 삭제</button>
+                <button id="modal-block-btn" class="btn"
+                    style="flex: 1; padding: 12px; border-radius: 12px; background: #ff4757; color: white; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;">🚫
+                    1촌 차단</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- [MODAL] AI 화상 통화 오버레이 -->
+<div id="call-overlay" class="call-overlay hidden">
+    <div class="call-content">
+        <div class="ai-video-container">
+            <div id="ai-video-avatar" class="ai-video-avatar"></div>
+            <div class="call-status-tag">LIVE - CONNECTED</div>
+        </div>
+
+        <div class="user-video-container">
+            <video id="user-video-preview" autoplay playsinline muted></video>
+            <div class="user-label">나</div>
+        </div>
+
+        <div class="call-info">
+            <h2 id="call-ai-name">수석 비서</h2>
+            <p id="call-status-text">통화 중...</p>
+            <div id="ai-speech-bubble" class="ai-speech-bubble hidden"></div>
+        </div>
+
+        <div class="call-controls">
+            <button id="mute-btn" class="control-btn">🎙️</button>
+            <button id="camera-toggle-btn" class="control-btn">📷</button>
+            <button id="end-call-btn" class="control-btn end">📞</button>
+        </div>
+    </div>
+</div>
+
+<!-- 모달 레이어들 (V1 이식) -->
+<div id="camera-modal" class="modal-overlay" style="display: none;">
+    <div class="camera-container">
+        <video id="webcam-view" autoplay playsinline></video>
+        <canvas id="snapshot-canvas" style="display: none;"></canvas>
+        <div class="camera-controls">
+            <button id="camera-close-btn" class="close">✕</button>
+            <div class="camera-actions">
+                <button id="shutter-btn" class="shutter-inner"></button>
+                <button id="record-btn" class="record-inner"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="scrap-choice-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3>🌐 스크랩 방식</h3>
+        <button id="opt-url-snapshot">웹 주소 스캔</button>
+        <button id="opt-area-capture">영역 스캔</button>
+        <button id="close-scrap-choice-btn">닫기</button>
+    </div>
+</div>
+
+<div id="scrap-url-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <input type="url" id="scrap-url-input" placeholder="https://">
+        <button id="btn-do-url-scrap">스캔 시작</button>
+        <button id="close-scrap-url-btn">취소</button>
+    </div>
+</div>
+
+<div id="scrap-crop-modal" class="modal-overlay hidden">
+    <div class="modal-content"
+        style="max-width: 600px; width: 90%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); padding: 25px;">
+        <h3
+            style="margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 8px;">
+            ✂️ 영역 스캔 및 분석</h3>
+        <div class="crop-container"
+            style="max-height: 400px; overflow: hidden; border-radius: 12px; margin-bottom: 20px; background: #f1f2f6; border: 2px dashed #dfe4ea; display: flex; align-items: center; justify-content: center;">
+            <img id="crop-target-img" src="" style="max-width: 100%; display: block;">
+        </div>
+        <div class="button-group" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="close-scrap-crop-btn" class="btn secondary"
+                style="border-radius: 20px; padding: 8px 20px; font-weight: 600; cursor: pointer;">취소</button>
+            <button id="btn-do-area-scrap" class="btn primary"
+                style="border-radius: 20px; padding: 8px 20px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;">분석
+                시작</button>
+        </div>
+    </div>
+</div>
+
+<div id="writing-helper-panel" class="writing-helper-panel hidden">
+    <div class="helper-header">
+        <h4>👼 글쓰기 가이드 천사 (AI 대화형 일기)</h4><button id="close-helper-btn">✕</button>
+    </div>
+    <div id="helper-chat-area" class="helper-chat-area"></div>
+    <div class="helper-footer">
+        <input type="text" id="helper-reply-input" placeholder="오늘 어떤 하루를 보내셨나요? 천사에게 들려주세요...">
+        <div class="helper-footer-btns">
+            <button id="send-helper-reply-btn">이야기 전송</button>
+            <button id="finish-helper-btn">일기 완성하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 인앱 브라우저 제한 안내 오버레이 -->
+<div id="inapp-browser-overlay" class="inapp-overlay hidden">
+    <div class="inapp-card">
+        <span class="inapp-icon">🔒</span>
+        <h3 class="inapp-title">안전한 브라우저로 이동합니다</h3>
+        <p class="inapp-desc">
+            Google 로그인 보안 정책으로 인해 카카오톡, 인스타그램 등 인앱 웹뷰에서의 로그인이 불가능합니다.<br><br>
+            정상적인 이용을 위해 <strong>Chrome, Safari</strong> 등 전용 웹 브라우저에서 열어주시길 바랍니다.
+        </p>
+        <div class="inapp-button-group" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+            <button id="btn-inapp-open-external" class="inapp-btn primary" style="width: 100%;">외부 브라우저로 열기</button>
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button id="btn-inapp-copy-link" class="inapp-btn secondary" style="flex: 1;">링크 복사</button>
+                <button id="btn-inapp-close" class="inapp-btn secondary"
+                    style="flex: 1; background: #dfe4ea; color: #2d3436; border: none; cursor: pointer; border-radius: 12px; font-weight: 600; padding: 10px;">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- [MODAL] 케어모드 음성 대화 오버레이 (대형 UI) -->
+<div id="care-mode-overlay" class="care-mode-overlay hidden"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, #2d3436 0%, #1e272e 100%); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px; box-sizing: border-box; font-family: 'Outfit', 'NanumSquare', sans-serif;">
+    <!-- 상단 헤더: 나가기 버튼 및 상태 -->
+    <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 800px;">
+        <button id="close-care-btn" class="btn sm"
+            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 30px; font-size: 1.1rem; padding: 10px 24px; font-weight: 700; cursor: pointer; transition: background 0.2s;">◀
+            케어모드 종료</button>
+        <div
+            style="display: flex; align-items: center; gap: 8px; color: #10ac84; font-weight: 700; font-size: 1.2rem;">
+            <span class="pulse-indicator"
+                style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #10ac84; animation: pulse 1.5s infinite;"></span>
+            <span>비서 실시간 돌봄 가동 중</span>
+        </div>
+    </div>
+
+    <!-- 중앙 비서 가상 인격 및 대형 자막 -->
+    <div
+        style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; max-width: 800px; width: 100%; margin: auto 0;">
+        <!-- 비서 아바타 (대형 원형) -->
+        <div id="care-avatar"
+            style="width: 180px; height: 180px; border-radius: 50%; background: #6c5ce7; box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4); display: flex; align-items: center; justify-content: center; font-size: 5rem; border: 5px solid rgba(255,255,255,0.15); transition: transform 0.3s ease;">
+            🎩</div>
+        <h2 id="care-ai-title"
+            style="color: white; margin: 10px 0 0 0; font-size: 2.5rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            수석 비서</h2>
+
+        <!-- 실시간 대화 자막 상자 (노안을 위한 특대형 폰트!) -->
+        <div
+            style="background: rgba(0, 0, 0, 0.4); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px; width: 100%; min-height: 180px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: inset 0 4px 20px rgba(0,0,0,0.25);">
+            <p id="care-caption-text"
+                style="color: #ffeaa7; font-size: 2.2rem; font-weight: 700; line-height: 1.5; margin: 0; word-break: keep-all; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                "화면 아래 마이크 버튼을 누르시고 말씀해보세요."</p>
+            <p id="care-transcript-text"
+                style="color: #bdc581; font-size: 1.6rem; font-weight: 600; line-height: 1.4; margin-top: 15px; font-style: italic; display: none;">
+            </p>
+        </div>
+    </div>
+
+    <!-- 하단: 대형 컨트롤 패널 (마이크 버튼) -->
+    <div
+        style="display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 800px; width: 100%;">
+        <p id="care-status-help" style="color: #a4b0be; font-size: 1.2rem; font-weight: 600; margin: 0;">아래의 마이크를
+            터치해 주십시오.</p>
+        <!-- 대형 마이크 터치 버튼 -->
+        <button id="care-mic-btn"
+            style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); border: none; font-size: 3rem; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.35); transition: transform 0.2s, box-shadow 0.2s; outline: none;">🎙️</button>
+    </div>
+</div>
+
+<!-- Google Calendar & Sync Drawer Overlay -->
+<div id="calendar-sync-drawer-overlay" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-none flex justify-end">
+    <!-- Drawer Panel -->
+    <div id="calendar-sync-drawer" class="w-full max-w-md bg-surface h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out border-l border-outline-variant/30">
+        <!-- Drawer Header -->
+        <div class="p-6 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low">
+            <h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2 m-0">
+                <span class="material-symbols-outlined">sync_saved_locally</span>
+                연동 캘린더 현황판
+            </h3>
+            <button id="close-calendar-sync-drawer" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-highest transition-colors">
+                <span class="material-symbols-outlined text-on-surface-variant">close</span>
+            </button>
+        </div>
+        
+        <!-- Drawer Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Connection Status -->
+            <div id="drawer-conn-status" class="bg-white/40 border border-outline-variant/20 p-5 rounded-2xl flex flex-col items-center text-center gap-3">
+                <!-- Icon & Text dynamically filled -->
+            </div>
+            
+            <!-- List of Syncing Calendars -->
+            <div>
+                <h4 class="font-title-sm text-sm text-on-surface font-semibold mb-3">연동된 캘린더 목록</h4>
+                <div id="drawer-calendars-list" class="space-y-2.5">
+                    <!-- Dynamic calendar items -->
+                </div>
+            </div>
+
+            <!-- Deduplication Badge -->
+            <div class="flex items-center gap-2 bg-secondary-container/20 text-secondary border border-secondary/20 p-3.5 rounded-2xl">
+                <span class="material-symbols-outlined text-sm">cleaning_services</span>
+                <span class="text-xs font-semibold">동기화된 중복 일정이 자동 병합 및 정리 중입니다.</span>
+            </div>
+
+            <!-- Sync Guide Accordions (Samsung, Kakao, Apple) -->
+            <div class="space-y-3">
+                <h4 class="font-title-sm text-sm text-on-surface font-semibold">스마트폰 캘린더 동기화 방법</h4>
+                
+                <!-- Samsung Calendar -->
+                <div class="border border-outline-variant/20 rounded-2xl overflow-hidden bg-surface-container-lowest">
+                    <button class="w-full p-4 flex justify-between items-center font-label-md text-xs text-on-surface hover:bg-surface-container-low transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="flex items-center gap-2">📱 삼성 캘린더(스마트폰) 연동 안내</span>
+                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                    </button>
+                    <div class="p-4 pt-0 border-t border-outline-variant/10 text-xs text-on-surface-variant space-y-2 hidden">
+                        <p>1. 스마트폰의 <strong>삼성 캘린더</strong> 앱을 켭니다.</p>
+                        <p>2. 메뉴(☰)에서 <strong>'캘린더 관리'</strong> 또는 <strong>'계정 추가'</strong>를 누릅니다.</p>
+                        <p>3. 연동하신 <strong>구글 계정</strong>을 로그인하고 활성화합니다.</p>
+                        <p>4. 이제 삼성 캘린더에 일정을 적으면 구글을 거쳐 <strong>My AI Planner 비서</strong>에 실시간 반영됩니다!</p>
+                    </div>
+                </div>
+
+                <!-- Kakao Calendar -->
+                <div class="border border-outline-variant/20 rounded-2xl overflow-hidden bg-surface-container-lowest">
+                    <button class="w-full p-4 flex justify-between items-center font-label-md text-xs text-on-surface hover:bg-surface-container-low transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="flex items-center gap-2">💬 카카오톡 캘린더 연동 안내</span>
+                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                    </button>
+                    <div class="p-4 pt-0 border-t border-outline-variant/10 text-xs text-on-surface-variant space-y-2 hidden">
+                        <p>1. 카카오톡의 <strong>캘린더(톡캘린더)</strong> 설정으로 이동합니다.</p>
+                        <p>2. <strong>'캘린더 내보내기'</strong> 또는 <strong>'외부 캘린더 연동'</strong> 메뉴를 선택합니다.</p>
+                        <p>3. 구글 캘린더와 카카오 계정을 연동하도록 승인합니다.</p>
+                        <p>4. 카카오톡 일정 중 구글로 내보낸 일정들이 <strong>My AI Planner 비서</strong>에 자동으로 연동됩니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body></html>

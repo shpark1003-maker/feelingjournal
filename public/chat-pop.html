@@ -177,6 +177,7 @@
         // Initialize Supabase Client
         const supabaseClient = supabase.createClient(SUPABASE_BASE_URL, SUPABASE_ANON_KEY, {
             auth: {
+                storageKey: 'sb-chat-pop-ephemeral-auth-token',
                 persistSession: false,
                 autoRefreshToken: false,
                 detectSessionInUrl: false

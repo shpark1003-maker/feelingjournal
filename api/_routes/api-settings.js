@@ -13,8 +13,7 @@ module.exports = async (req, res) => {
 
         // 1. GET: Load API settings
         if (req.method === 'GET') {
-            const raw = await redis.get(settingsKey);
-            const settings = raw ? JSON.parse(raw) : {
+            let settings = {
                 weatherEnabled: true,
                 newsEnabled: true,
                 nsightEnabled: false,
@@ -24,6 +23,18 @@ module.exports = async (req, res) => {
                 geminiProEnabled: false,
                 geminiProKey: ''
             };
+            
+            if (redis) {
+                try {
+                    const raw = await redis.get(settingsKey);
+                    if (raw) {
+                        settings = JSON.parse(raw);
+                    }
+                } catch (redisErr) {
+                    console.warn('--- [API SETTINGS] Redis get error:', redisErr.message);
+                }
+            }
+            
             return res.json({ success: true, settings });
         }
 
@@ -34,10 +45,15 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: 'Missing settings payload' });
             }
 
-            await redis.set(settingsKey, JSON.stringify(settings));
-
-            // settings 변경 시 브리핑 캐시도 즉각 초기화
-            await redis.del(`user:${user.id}:briefing-cache`);
+            if (redis) {
+                try {
+                    await redis.set(settingsKey, JSON.stringify(settings));
+                    // settings 변경 시 브리핑 캐시도 즉각 초기화
+                    await redis.del(`user:${user.id}:briefing-cache`);
+                } catch (redisErr) {
+                    console.warn('--- [API SETTINGS] Redis set/del error:', redisErr.message);
+                }
+            }
 
             return res.json({ success: true });
         }

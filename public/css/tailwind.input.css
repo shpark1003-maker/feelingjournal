@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom theme colors for Aetheric Sanctuary */
+@layer base {
+  :root {
+    --color-primary: #4a654e;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #8ba88e;
+    --color-on-primary-container: #233d29;
+    --color-secondary: #645e49;
+    --color-on-secondary: #ffffff;
+    --color-surface: #fff8f3;
+    --color-on-surface: #1f1b15;
+    --color-surface-variant: #eae1d7;
+    --color-on-surface-variant: #424842;
+    --color-outline: #737972;
+  }
+}

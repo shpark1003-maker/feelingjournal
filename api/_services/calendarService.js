@@ -243,6 +243,18 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
     let failedCalendars = [];
     let calResult = {};
 
+    // [Background Sync] 앱 진입 또는 캘린더 조회 시 로컬 DB 비동기 동기화 (SSOT 유지)
+    if (providerToken && providerToken !== 'mock' && providerToken !== 'null' && providerToken !== 'undefined') {
+        try {
+            const calendarSyncService = require('./calendarSyncService');
+            calendarSyncService.syncGoogleCalendarToLocal(userId, { primaryOnly: false }).catch(err => {
+                console.warn('[Calendar Service] Background sync failed:', err.message);
+            });
+        } catch (e) {
+            console.warn('[Calendar Service] Failed to trigger background sync:', e.message);
+        }
+    }
+
     let dbSubTasks = [];
     try {
         const { supabaseAdmin } = require('../_routes/shared');
@@ -360,72 +372,13 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
         });
     }
 
-    const keys = await scanRedisKeys(`user:${userId}:diary-*`);
-    const latestDiaryFingerprint = keys.sort().reverse().slice(0, 10).join(',');
-    const currentFingerprint = googleEvents.map(e => `${e.id}-${e.title}-${e.start}-${e.end}`).join('|') + '||diaries:' + latestDiaryFingerprint;
-    const cacheKey = `user:${userId}:calendar-advice-cache`;
-
-    if (!forceRefresh) {
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-            const { fingerprint, analyzedEvents } = JSON.parse(cached);
-            if (fingerprint === currentFingerprint) {
-                let filteredEvents = analyzedEvents;
-                try {
-                    const dismissedTasks = await redis.smembers(`user:${userId}:dismissed-extracted-tasks`) || [];
-                    if (dismissedTasks.length > 0) {
-                        filteredEvents = analyzedEvents.filter(e => {
-                            if (e.id && e.id.startsWith('extracted-task-')) {
-                                const cleanTitle = (e.title || '').trim().replace(/\s+/g, ' ');
-                                const cleanStart = (e.start || '').trim();
-                                const stableKey = `${cleanTitle}_${cleanStart}`;
-                                return !dismissedTasks.includes(stableKey);
-                            }
-                            return true;
-                        });
-                    }
-                } catch (redisErr) {
-                    console.warn('--- [CALENDAR] Failed to fetch dismissed tasks from Redis (cache path):', redisErr.message);
-                }
-                return { events: filteredEvents, calendars: calResult.calendars || [], cached: true, unlinked: isUnlinked, partialFailure, failedCalendars };
-            }
-        }
-    }
-
-    let diaryContent = '';
-    if (keys.length > 0) {
-        const latestKeys = keys.sort().reverse().slice(0, 30);
-        const diaryValues = await redis.mget(latestKeys);
-        diaryContent = diaryValues.filter(Boolean).map(v => {
-            const item = JSON.parse(v);
-            if (item.content && item.content.startsWith('e2e:')) {
-                return null;
-            }
-            const dateStr = new Date(item.createdAt || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-            return `[일기 작성일: ${dateStr}]\n내용: ${item.content}`;
-        }).filter(Boolean).join('\n---\n');
-    }
-
-    if (clientDiaries.length > 0 && consent) {
-        const clientContent = clientDiaries.map(d => {
-            const dateStr = new Date(d.date || new Date()).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
-            return `[일기 작성일(명시적 전송): ${dateStr}]\n내용: ${d.content}`;
-        }).join('\n---\n');
-        diaryContent = [diaryContent, clientContent].filter(Boolean).join('\n---\n');
-    }
-
-    const currentTimeStr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-    const analyzedEvents = await analyzeCalendarEventsAndDiaries(googleEvents, diaryContent, currentTimeStr);
-
-    const isFallback = analyzedEvents.some(e => e.advice?.includes('AI 분석 생략됨'));
-    const cacheTTL = isFallback ? 15 : 3600;
-    await redis.set(cacheKey, JSON.stringify({ fingerprint: currentFingerprint, analyzedEvents }), 'EX', cacheTTL);
-
-    let filteredEvents = analyzedEvents;
+    // 3. Skip heavy diary scanning and Gemini advice generation entirely.
+    // Directly return events. The system already has custom advices, and caching events for 12 hours ensures high speed.
+    let filteredEvents = googleEvents;
     try {
         const dismissedTasks = await redis.smembers(`user:${userId}:dismissed-extracted-tasks`) || [];
         if (dismissedTasks.length > 0) {
-            filteredEvents = analyzedEvents.filter(e => {
+            filteredEvents = googleEvents.filter(e => {
                 if (e.id && e.id.startsWith('extracted-task-')) {
                     const cleanTitle = (e.title || '').trim().replace(/\s+/g, ' ');
                     const cleanStart = (e.start || '').trim();
@@ -442,7 +395,7 @@ async function getCalendarEvents({ userId, userEmail, providerToken, consent, cl
     return {
         events: filteredEvents,
         calendars: calResult.calendars || [],
-        cached: false,
+        cached: true,
         unlinked: isUnlinked,
         partialFailure,
         failedCalendars

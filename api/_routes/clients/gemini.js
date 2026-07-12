@@ -5,56 +5,9 @@ const getGeminiUrl = (model = DEFAULT_MODEL) => {
     return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanApiKey}`;
 };
 
-const callLocalLLM = async (prompt) => {
-    const localUrls = [
-        process.env.LOCAL_LLM_URL, 
-        'http://localhost:11434/v1/chat/completions', 
-        'http://localhost:1234/v1/chat/completions'   
-    ].filter(Boolean);
 
-    for (const url of localUrls) {
-        try {
-            console.log(`--- [LOCAL LLM] Attempting local model at: ${url}`);
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: process.env.LOCAL_LLM_MODEL || 'local-model',
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.7
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const text = data.choices?.[0]?.message?.content;
-                if (text) {
-                    console.log(`--- [LOCAL LLM SUCCESS] Successfully retrieved answer from: ${url}`);
-                    return {
-                        candidates: [{
-                            content: {
-                                parts: [{ text }]
-                            }
-                        }]
-                    };
-                }
-            }
-        } catch (e) {
-            console.warn(`--- [LOCAL LLM WARN] Failed to connect to local model at ${url}: ${e.message}`);
-        }
-    }
-    throw new Error('All Local LLM endpoints failed.');
-};
 
 const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData = null, failFast = false, timeoutMs = 25000, tools = null) => {
-    if (process.env.USE_LOCAL_LLM === 'true') {
-        try {
-            return await callLocalLLM(prompt);
-        } catch (e) {
-            console.warn('--- [LOCAL LLM FAILURE] Direct local LLM failed, falling back to Gemini Cloud...');
-        }
-    }
-
     const modelsToTry = [DEFAULT_MODEL, ...MODEL_FALLBACKS];
     let lastError;
 
@@ -73,7 +26,13 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
 
             const requestBody = {
                 contents: [{ parts }],
-                generationConfig
+                generationConfig,
+                safetySettings: [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+                ]
             };
             if (tools) {
                 requestBody.tools = tools;
@@ -107,13 +66,8 @@ const callGemini = async (prompt, generationConfig = {}, retries = 3, inlineData
         }
     }
 
-    try {
-        console.warn('--- [FALLBACK] Gemini Cloud failed. Falling back to local LLM...');
-        return await callLocalLLM(prompt);
-    } catch (localErr) {
-        console.error('--- [CRITICAL] Both Cloud Gemini and Local LLM fallbacks failed.');
-        throw lastError || localErr;
-    }
+    console.error('--- [CRITICAL] All Gemini Cloud models failed.');
+    throw lastError;
 };
 
 module.exports = {

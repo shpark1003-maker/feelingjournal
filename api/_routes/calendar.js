@@ -63,6 +63,76 @@ module.exports = async (req, res) => {
         const consent = req.body?.aiContextConsent === true;
         const clientDiaries = req.body?.decryptedDiaries || [];
 
+        // Handle GET /list (Phase 4: Fetch Google Calendar List with Caching)
+        if (req.method === 'GET' && (subPath === '/list' || subPath === '/list/')) {
+            if (!providerToken) {
+                return res.json({ success: false, unlinked: true });
+            }
+            try {
+                let cached = null;
+                
+                // Check Cache (if Redis available)
+                if (redis) {
+                    const cacheKey = `user:${user.id}:calendar_list_cache`;
+                    try {
+                        cached = await redis.get(cacheKey);
+                        if (cached) {
+                            return res.json({ success: true, calendars: JSON.parse(cached) });
+                        }
+                    } catch (redisErr) {
+                        console.warn('--- [CALENDAR] Redis cache check failed:', redisErr.message);
+                    }
+                }
+
+                // Fetch user's Google Calendar list
+                const { fetchWithTimeout } = require('../utils/fetchUtils');
+                const listUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+                const listRes = await fetchWithTimeout(listUrl, { headers: { Authorization: `Bearer ${providerToken}` }, failFast: true }, 4000, 1);
+                
+                if (listRes.ok) {
+                    const listData = await listRes.json();
+                    const calendars = listData.items || [];
+                    // Cache for 24 hours (if Redis available)
+                    if (redis) {
+                        try {
+                            const cacheKey = `user:${user.id}:calendar_list_cache`;
+                            await redis.set(cacheKey, JSON.stringify(calendars), 'EX', 86400);
+                        } catch (redisErr) {
+                            console.warn('--- [CALENDAR] Redis cache set failed:', redisErr.message);
+                        }
+                    }
+                    return res.json({ success: true, calendars });
+                } else {
+                    return res.json({ success: false, error: `Google API Error: ${listRes.status}` });
+                }
+            } catch (err) {
+                return res.status(500).json({ success: false, error: err.message });
+            }
+        }
+
+        // Handle POST /sync (Manual Sync)
+        if (req.method === 'POST' && (subPath === '/sync' || subPath === '/sync/')) {
+            try {
+                // Ensure google sync is enabled and get selected calendars
+                const pushRepository = require('../_repositories/pushRepository');
+                const config = await pushRepository.getUserSubscriptions(user.id);
+                const s = config?.settings || {};
+                
+                if (s.googleCalendarEnabled === false) {
+                    return res.status(400).json({ success: false, error: 'Google Calendar sync is disabled.' });
+                }
+
+                const calendarSyncService = require('../_services/calendarSyncService');
+                const syncRes = await calendarSyncService.syncGoogleCalendarToLocal(user.id, {
+                    selectedCalendars: s.selectedGoogleCalendars || []
+                });
+                return res.json(syncRes);
+            } catch (err) {
+                console.error('Manual Sync Error:', err);
+                return res.status(500).json({ success: false, error: err.message });
+            }
+        }
+
         // Handle POST (Create Event or E2E Zero-Knowledge Diary Analysis)
         if (req.method === 'POST') {
             const isAddRoute = subPath === '/add' || subPath === '/add/';
@@ -137,6 +207,48 @@ module.exports = async (req, res) => {
                     endTime,
                     description
                 }, 'primary', user.id);
+
+                // 즉시 로컬 DB에 Upsert 반영 (전체 동기화 없이 빠르고 안정적인 최신화)
+                try {
+                    const { supabaseAdmin } = require('./shared');
+                    if (supabaseAdmin && insertData && insertData.id) {
+                        const eventData = {
+                            user_id: user.id,
+                            title: insertData.summary || '제목 없음',
+                            description: insertData.description || '',
+                            start_time: insertData.start?.dateTime || insertData.start?.date || null,
+                            end_time: insertData.end?.dateTime || insertData.end?.date || null,
+                            is_all_day: !!insertData.start?.date,
+                            location: insertData.location || '',
+                            source: 'external',
+                            external_provider: 'google',
+                            external_calendar_id: 'primary',
+                            external_event_id: insertData.id,
+                            external_etag: insertData.etag || null,
+                            external_updated_at: insertData.updated || insertData.created || null,
+                            last_synced_at: new Date().toISOString(),
+                            sync_status: 'synced',
+                            is_deleted: false,
+                            deleted_at: null,
+                            raw_payload: insertData
+                        };
+                        const { data: existing } = await supabaseAdmin
+                            .from('calendar_events')
+                            .select('id')
+                            .eq('user_id', user.id)
+                            .eq('external_provider', 'google')
+                            .eq('external_calendar_id', 'primary')
+                            .eq('external_event_id', insertData.id)
+                            .maybeSingle();
+                        if (existing && existing.id) {
+                            await supabaseAdmin.from('calendar_events').update(eventData).eq('id', existing.id);
+                        } else {
+                            await supabaseAdmin.from('calendar_events').insert([eventData]);
+                        }
+                    }
+                } catch (upsertErr) {
+                    console.warn('[Calendar Route] Failed to immediately upsert added Google event:', upsertErr.message);
+                }
 
                 // Clear cache
                 await redis.del(`user:${user.id}:calendar-advice-cache`);
@@ -270,9 +382,21 @@ module.exports = async (req, res) => {
                             google_sync_status: 'not_requested'
                         })
                         .eq('google_event_id', id);
+                        
+                    // 즉시 로컬 DB(calendar_events)에서 soft-delete 반영
+                    await supabaseAdmin
+                        .from('calendar_events')
+                        .update({
+                            is_deleted: true,
+                            deleted_at: new Date().toISOString(),
+                            last_synced_at: new Date().toISOString()
+                        })
+                        .eq('user_id', user.id)
+                        .eq('external_provider', 'google')
+                        .eq('external_event_id', id);
                 }
             } catch (dbErr) {
-                console.warn('[Calendar DELETE] Failed to clear DB subtask mapping:', dbErr.message);
+                console.warn('[Calendar DELETE] Failed to clear DB subtask mapping or soft-delete event:', dbErr.message);
             }
 
             try {

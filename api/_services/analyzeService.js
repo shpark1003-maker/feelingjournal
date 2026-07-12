@@ -11,6 +11,7 @@ const {
 } = require('../_routes/shared');
 const { saveDiary } = require('../_repositories/diaryRepository');
 const { getUserNickname, updateUserEmotion } = require('../_repositories/userRepository');
+const { generateBriefing } = require('./briefingService');
 
 async function analyzeDiary({ userId, userEmail, content, richContent, image, title, mediaId, notebookId, aiConsent, providerToken, e2eKey, clientEmotion, clientResponse, createdAt, shared, sharedWith }) {
     const sanitized = sanitizeContent(content);
@@ -175,6 +176,11 @@ ${sanitized || '(이미지 분석 요청)'}
     } catch (dbErr) {
         console.error('--- [ANALYZE DB ERROR] Failed to sync new diary via diaryRepository:', dbErr?.message || dbErr);
     }
+
+    // Phase 2: 브리핑 백그라운드 선생성 트리거 (Fire-and-forget)
+    console.log(`--- [PRE-GENERATION] Triggering background briefing for ${userId} ---`);
+    generateBriefing(userId, providerToken || null, null, [], aiConsent, userEmail, true, true)
+        .catch(err => console.error('--- [PRE-GEN ERROR] ---', err));
 
     // 캐시 초기화
     try {

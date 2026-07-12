@@ -1,4 +1,4 @@
-import { store, API_URL } from '../../state.js';
+import { store, API_URL } from '../state.js';
 
 export const chatApi = {
     async fetchPersona() {

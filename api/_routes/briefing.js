@@ -173,6 +173,9 @@ module.exports = async (req, res) => {
             briefing = briefingResult;
         }
 
+        console.log(`--- [DEBUG] Final Briefing String Length: ${briefing?.length || 0}`);
+        console.log(`--- [DEBUG] Final Briefing String Snippet: ${briefing ? briefing.slice(-100) : ''}`);
+
         // Fetch weather to return to frontend if not already retrieved
         if (!weather && regionOverride !== 'off') {
             try {

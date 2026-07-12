@@ -1,5 +1,6 @@
 const assert = require('assert');
 const shared = require('../api/_routes/shared');
+const { closeRedisClient } = require('./testUtils');
 
 // Create a proxy mock for callGemini since it's destructured on module load
 const originalCallGemini = shared.callGemini;
@@ -12,11 +13,12 @@ shared.callGemini = async (...args) => {
 const { redis } = shared;
 const briefingService = require('../api/_services/briefingService');
 const googleClient = require('../api/_routes/clients/google');
+const VALID_TEST_USER_ID = '22222222-2222-4222-8222-222222222222';
 
 async function runPerformanceTests() {
     console.log('=== STARTING DAILY BRIEFING PERFORMANCE & CACHE TESTS ===\n');
 
-    const testUserId = 'test-perf-user-uuid';
+    const testUserId = VALID_TEST_USER_ID;
     const testRegion = '서울';
     const cacheKey = `user:${testUserId}:briefing-cache`;
 
@@ -139,7 +141,11 @@ async function runPerformanceTests() {
     console.log('=== ALL DAILY BRIEFING PERFORMANCE & CACHE TESTS PASSED! ===');
 }
 
-runPerformanceTests().catch(err => {
-    console.error('Test suite failed:', err);
-    process.exit(1);
-});
+runPerformanceTests()
+    .catch(err => {
+        console.error('Test suite failed:', err);
+        process.exitCode = 1;
+    })
+    .finally(async () => {
+        await closeRedisClient(redis);
+    });

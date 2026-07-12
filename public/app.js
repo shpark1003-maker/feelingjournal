@@ -1,14 +1,149 @@
-import { store, API_URL, initState, assertIds, updateSettings } from './modules/state.js?v=5.8.7';
-
-import { setupNotebooksAndPages, loadNotebooks } from './modules/notebook.js?v=5.8.7';
-import { setupEditor } from './modules/editor.js?v=5.8.7';
-import { loadCalendar } from './modules/calendar.js?v=5.8.7';
-import { setupChatUI, setupChatAssistant, checkFriendSos } from './modules/chat.js?v=5.8.7';
-import { setupPersonaUI, loadPersona, loadBriefing } from './modules/persona.js?v=5.8.7';
-import { initCareMode, populateGuardianSelect, applyCareSettingsToUI } from './modules/care.js?v=5.8.7';
+import { store, API_URL, initState, assertIds, updateSettings } from './modules/state.js';
 
 console.log('App.js is loading as a modern ES Module...');
-window.loadNotebooks = loadNotebooks;
+
+const featureModulePromises = {
+    notebook: null,
+    editor: null,
+    calendar: null,
+    chat: null,
+    persona: null,
+    care: null
+};
+
+function loadNotebookModule() {
+    if (!featureModulePromises.notebook) {
+        featureModulePromises.notebook = import('./modules/notebook.js?v=6');
+    }
+    return featureModulePromises.notebook;
+}
+
+function loadEditorModule() {
+    if (!featureModulePromises.editor) {
+        featureModulePromises.editor = import('./modules/editor.js');
+    }
+    return featureModulePromises.editor;
+}
+
+function loadCalendarModule() {
+    if (!featureModulePromises.calendar) {
+        featureModulePromises.calendar = import('./modules/calendar.js?v=11');
+    }
+    return featureModulePromises.calendar;
+}
+
+function loadChatModule() {
+    if (!featureModulePromises.chat) {
+        featureModulePromises.chat = import('./modules/chat.js?v=8');
+    }
+    return featureModulePromises.chat;
+}
+
+function loadPersonaModule() {
+    if (!featureModulePromises.persona) {
+        featureModulePromises.persona = import('./modules/persona.js');
+    }
+    return featureModulePromises.persona;
+}
+
+function loadCareModule() {
+    if (!featureModulePromises.care) {
+        featureModulePromises.care = import('./modules/care.js');
+    }
+    return featureModulePromises.care;
+}
+
+let materialSymbolsReadyPromise = null;
+const vendorScriptPromises = new Map();
+
+function ensureScriptLoaded(src) {
+    if (vendorScriptPromises.has(src)) return vendorScriptPromises.get(src);
+
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+        const readyPromise = Promise.resolve();
+        vendorScriptPromises.set(src, readyPromise);
+        return readyPromise;
+    }
+
+    const loadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+    });
+
+    vendorScriptPromises.set(src, loadPromise);
+    return loadPromise;
+}
+
+async function ensureNotebookVendorScriptsLoaded() {
+    await ensureScriptLoaded('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js');
+}
+
+async function ensureEditorVendorScriptsLoaded() {
+    await Promise.all([
+        ensureScriptLoaded('https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js'),
+        ensureScriptLoaded('https://cdn.jsdelivr.net/npm/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js'),
+        ensureScriptLoaded('https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js')
+    ]);
+}
+
+async function ensureCalendarVendorScriptsLoaded() {
+    await Promise.all([
+        ensureScriptLoaded('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'),
+        ensureScriptLoaded('/vendor/fullcalendar-locales-all.global.min.js')
+    ]);
+}
+
+function ensureMaterialSymbolsLoaded() {
+    if (materialSymbolsReadyPromise) return materialSymbolsReadyPromise;
+    materialSymbolsReadyPromise = ensureStylesheetLoaded('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+    return materialSymbolsReadyPromise;
+}
+
+async function loadNotebooks(...args) {
+    await ensureNotebookVendorScriptsLoaded();
+    const notebookMod = await loadNotebookModule();
+    return notebookMod.loadNotebooks(...args);
+}
+
+async function loadCalendar(...args) {
+    await ensureCalendarVendorScriptsLoaded();
+    const calendarMod = await loadCalendarModule();
+    return calendarMod.loadCalendar(...args);
+}
+
+async function loadPersona(...args) {
+    const personaMod = await loadPersonaModule();
+    return personaMod.loadPersona(...args);
+}
+
+async function loadBriefing(...args) {
+    const personaMod = await loadPersonaModule();
+    return personaMod.loadBriefing(...args);
+}
+
+async function populateGuardianSelect(...args) {
+    const careMod = await loadCareModule();
+    return careMod.populateGuardianSelect(...args);
+}
+
+async function applyCareSettingsToUI(...args) {
+    const careMod = await loadCareModule();
+    return careMod.applyCareSettingsToUI(...args);
+}
+
+async function checkFriendSos(...args) {
+    const chatMod = await loadChatModule();
+    return chatMod.checkFriendSos(...args);
+}
+
+window.loadNotebooks = (...args) => loadNotebooks(...args);
+window.loadBriefing = (...args) => loadBriefing(...args);
+window.loadCalendar = (...args) => loadCalendar(...args);
 
 /* ==========================================================================
    [IN-APP BROWSER DETECTION & OUTLINK]
@@ -23,6 +158,7 @@ function detectAndHandleInAppBrowser() {
     const isInApp = isKakao || isInstagram || isFacebook || isLine;
 
     if (isInApp) {
+        ensureMaterialSymbolsLoaded();
         console.log('--- [DETECT] In-App Browser Environment Detected! ---');
 
         // Auto-redirect KakaoTalk
@@ -160,7 +296,58 @@ function updateThemeUI(theme) {
     }
 }
 window.applyTheme = applyTheme;
-window.loadBriefing = loadBriefing;
+
+let isJournalShellInitialized = false;
+
+function ensureStylesheetLoaded(href) {
+    const existing = document.querySelector(`link[rel="stylesheet"][href="${href}"]`);
+    if (existing) return Promise.resolve();
+
+    return new Promise(resolve => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => resolve();
+        document.head.appendChild(link);
+    });
+}
+
+async function loadDeferredShellStyles() {
+    await Promise.all([
+        ensureStylesheetLoaded('https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css'),
+        ensureStylesheetLoaded('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css')
+    ]);
+}
+
+async function initializeJournalShell() {
+    if (isJournalShellInitialized) return;
+
+    await loadDeferredShellStyles();
+    await ensureMaterialSymbolsLoaded();
+    await Promise.all([
+        ensureNotebookVendorScriptsLoaded(),
+        ensureEditorVendorScriptsLoaded()
+    ]);
+
+    const [notebookMod, editorMod, chatMod, personaMod, careMod] = await Promise.all([
+        loadNotebookModule(),
+        loadEditorModule(),
+        loadChatModule(),
+        loadPersonaModule(),
+        loadCareModule()
+    ]);
+
+    notebookMod.setupNotebooksAndPages();
+    editorMod.setupEditor();
+    chatMod.setupChatUI();
+    chatMod.setupChatAssistant();
+    personaMod.setupPersonaUI();
+    setupSettingsUI();
+    careMod.initCareMode();
+
+    isJournalShellInitialized = true;
+}
 
 /* ==========================================================================
    [INITIALIZATION]
@@ -216,17 +403,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize all modular subsystems
     setupTabs();
     setupAuth();
-    setupNotebooksAndPages();
-    setupEditor();
-    setupChatUI();
-    setupChatAssistant();
-    setupPersonaUI();
-    setupSettingsUI();
-    initCareMode();
 
     // Check initial user session
-    const { data: { session } } = await store.supabaseClient.auth.getSession();
+    const session = await getValidatedSession();
     if (session) {
+        if (await blockUnverifiedEmailSession(session)) return;
         onUserAuthenticated(session);
     } else {
         showAuthUI();
@@ -256,7 +437,13 @@ function setupAuth() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { data, error } = await store.supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) alert('로그인 실패: ' + error.message);
+        if (error) {
+            alert('로그인 실패: ' + error.message);
+            return;
+        }
+
+        // Defensive gate: block access until email identity is actually verified.
+        await blockUnverifiedEmailSession({ user: data?.user });
     });
 
     signupBtn?.addEventListener('click', async (e) => {
@@ -265,7 +452,13 @@ function setupAuth() {
         const password = document.getElementById('password').value;
         const { data, error } = await store.supabaseClient.auth.signUp({ email, password });
         if (error) alert('회원가입 실패: ' + error.message);
-        else alert('인증 이메일을 확인해 주세요!');
+        else {
+            // Never keep an unverified email session signed in.
+            if (data?.session && isUnverifiedEmailUser(data.user)) {
+                await store.supabaseClient.auth.signOut();
+            }
+            alert('인증 이메일을 확인해 주세요!');
+        }
     });
 
     googleBtn?.addEventListener('click', () => {
@@ -302,19 +495,92 @@ function setupAuth() {
         });
     });
 
-    store.supabaseClient.auth.onAuthStateChange((event, session) => {
+    store.supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
+            if (await blockUnverifiedEmailSession(session)) return;
             onUserAuthenticated(session);
         } else if (event === 'SIGNED_OUT') {
+            stopBackgroundLoops();
             showAuthUI();
         }
     });
 }
 
 let isAppInitialized = false;
+let presenceHeartbeatIntervalId = null;
+let friendSosIntervalId = null;
+
+async function getValidatedSession() {
+    const { data: { session } } = await store.supabaseClient.auth.getSession();
+    if (!session) return null;
+
+    const { data: { user }, error } = await store.supabaseClient.auth.getUser();
+    if (error || !user) {
+        await store.supabaseClient.auth.signOut();
+        return null;
+    }
+
+    session.user = user;
+    return session;
+}
+
+function isUnverifiedEmailUser(user) {
+    if (!user) return false;
+    const provider = user.app_metadata?.provider;
+    const identities = Array.isArray(user.identities) ? user.identities : [];
+
+    const hasEmailIdentity = provider === 'email'
+        || identities.some(identity => identity?.provider === 'email')
+        || !!user.email;
+
+    if (!hasEmailIdentity) return false;
+
+    const emailConfirmed = !!(user.email_confirmed_at || user.confirmed_at);
+    if (emailConfirmed) return false;
+
+    const emailIdentity = identities.find(identity => identity?.provider === 'email');
+    const emailVerifiedFlag = emailIdentity?.identity_data?.email_verified;
+    if (emailVerifiedFlag === true || emailVerifiedFlag === 'true') return false;
+
+    return true;
+}
+
+async function blockUnverifiedEmailSession(session) {
+    let userToValidate = session?.user || null;
+
+    // Always re-fetch latest user state to avoid stale session metadata.
+    const { data: { user: latestUser } } = await store.supabaseClient.auth.getUser();
+    if (latestUser) userToValidate = latestUser;
+
+    if (!isUnverifiedEmailUser(userToValidate)) return false;
+    await store.supabaseClient.auth.signOut();
+    alert('이메일 인증 후 로그인해 주세요. 메일함의 인증 링크를 먼저 눌러야 합니다.');
+    showAuthUI();
+    return true;
+}
+
+function stopBackgroundLoops() {
+    if (presenceHeartbeatIntervalId) {
+        clearInterval(presenceHeartbeatIntervalId);
+        presenceHeartbeatIntervalId = null;
+    }
+
+    if (friendSosIntervalId) {
+        clearInterval(friendSosIntervalId);
+        friendSosIntervalId = null;
+    }
+}
+
+function startBackgroundLoops() {
+    stopBackgroundLoops();
+    sendPresenceHeartbeat();
+    presenceHeartbeatIntervalId = setInterval(sendPresenceHeartbeat, 15000);
+    friendSosIntervalId = setInterval(checkFriendSos, 30000);
+}
 
 async function onUserAuthenticated(session) {
     store.currentUser = session.user;
+    await initializeJournalShell();
     document.body.classList.remove('auth-mode');
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('journal-app').style.display = 'block';
@@ -363,13 +629,13 @@ async function onUserAuthenticated(session) {
     checkFriendSos();
     await loadUserProfileInSettings();
 
+    // [Pre-fetch] 선제적 백그라운드 브리핑 갱신 활성화
+    loadBriefing().catch(err => console.warn('Briefing pre-fetch background trigger failed:', err));
+
     // Start background loops
-    sendPresenceHeartbeat();
-    setInterval(sendPresenceHeartbeat, 15000);
-    setInterval(checkFriendSos, 30000);
+    startBackgroundLoops();
 
     Promise.all([
-        loadBriefing(),
         loadPersona(),
         loadSettings()
     ]).catch(err => {
@@ -392,6 +658,8 @@ async function sendPresenceHeartbeat() {
 
 function showAuthUI() {
     isAppInitialized = false;
+    store.currentUser = null;
+    stopBackgroundLoops();
     document.body.classList.add('auth-mode');
     document.getElementById('auth-container').style.display = 'flex';
     document.getElementById('journal-app').style.display = 'none';
@@ -437,7 +705,8 @@ function setupTabs() {
     const inactiveClasses = ['text-on-surface-variant', 'hover:text-primary', 'p-2'];
 
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
             const tabId = btn.dataset.tab;
 
             tabBtns.forEach(b => {
@@ -468,14 +737,15 @@ function setupTabs() {
                 target.classList.add('active');
                 target.style.display = tabId === 'journal' ? 'flex' : 'block';
 
-                if (tabId === 'calendar') loadCalendar();
+                if (tabId === 'calendar') await loadCalendar();
                 else if (tabId === 'chat') {
-                    // Chat module default summon trigger
-                    import('./modules/chat.js?v=5.7.7').then(chatMod => {
+                    const chatMod = await loadChatModule();
+                    if (!window._chatLoaded) {
+                        window._chatLoaded = true;
                         chatMod.initializeChat();
-                    });
+                    }
                 }
-                else if (tabId === 'persona') loadPersona();
+                else if (tabId === 'persona') await loadPersona();
             }
         });
     });
@@ -715,7 +985,7 @@ async function loadSettings() {
             }
 
             // 안심 케어 모드 설정 UI 반영
-            applyCareSettingsToUI(s);
+            await applyCareSettingsToUI(s);
         }
     } catch (e) {
         console.error('Failed to load settings:', e);

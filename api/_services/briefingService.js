@@ -10,6 +10,53 @@ const {
 
 const crypto = require('crypto');
 
+function looksTruncatedBriefing(text, finishReason) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return true;
+    if (finishReason === 'MAX_TOKENS') return true;
+
+    // If required closing section exists, treat as complete.
+    if (/제목\s*:\s*오늘 가장 먼저 해야 할 일|오늘 가장 먼저 해야 할 일/i.test(trimmed)) {
+        return false;
+    }
+
+    // Abrupt terminal tokens often indicate cut-off generation.
+    if (/[,:;\-]\s*$/.test(trimmed)) return true;
+
+    // Long output without sentence-ending punctuation is likely incomplete.
+    if (trimmed.length >= 220 && !/[.!?…]\s*$/.test(trimmed)) return true;
+
+    return false;
+}
+
+async function completeTruncatedBriefing(originalText) {
+    const continuationPrompt = `아래 데일리 브리핑 문장이 중간에 끊겼습니다. 기존 톤과 내용을 유지하여 자연스럽게 이어서 완성하세요.
+
+규칙:
+1) 기존 문장을 반복하지 말고 이어서 작성
+2) 4~7문장 내에서 간결하게 마무리
+3) 마지막에는 반드시 다음 형식을 포함
+제목: 오늘 가장 먼저 해야 할 일
+내용: [가장 중요한 과제나 일정 1가지]
+
+[끊긴 브리핑 원문]
+${originalText}`;
+
+    try {
+        const continuationData = await callGemini(continuationPrompt, { maxOutputTokens: 1024 }, 1, null, true);
+        const continuationParts = continuationData?.candidates?.[0]?.content?.parts || [];
+        const continuation = continuationParts.map(p => p.text || '').join('').trim();
+        if (!continuation) return originalText;
+
+        const normalizedOriginal = (originalText || '').trim();
+        const normalizedContinuation = continuation.replace(/^\s*[\-–—]*\s*/, '');
+        return `${normalizedOriginal}\n${normalizedContinuation}`.trim();
+    } catch (e) {
+        console.warn('--- [BRIEFING COMPLETION GUARD] Continuation failed, using original text:', e.message);
+        return originalText;
+    }
+}
+
 function stableStringify(obj) {
     if (Array.isArray(obj)) return `[${obj.map(stableStringify).sort().join(',')}]`;
     if (obj !== null && typeof obj === 'object') {
@@ -425,7 +472,8 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
 3. **현재 시간 기반 일정 안내**: 오늘 일정을 안내할 때, 현재 시각(${currentTimeStr})을 기준으로 '이미 지난 일정'보다는 '앞으로 남은 일정'을 우선적으로 소개하여 자연스럽게 브리핑하십시오. 지인의 생일, 기념일은 시간과 무관하게 최우선으로 언급하며 축하 멘트를 남기십시오.
 4. **미래 할 일 리마인드**: 일기에 언급된 할 일은 반드시 작성일 기준으로 날짜를 계산하여 밀리지 않도록 유의하십시오. 날씨는 예보가 '날씨 안내 비활성화됨'일 경우 완전히 생략하십시오.
 5. **어조 및 분량**: 비서로서의 품격을 유지하며, 전체 브리핑은 8~12문장 정도로 상세하게 작성하십시오. 중요한 일정이나 키워드는 **텍스트** 로 강조하십시오.
-6. **오늘 가장 먼저 해야 할 일 (마무리 포맷)**: 브리핑의 맨 마지막에는 어떠한 인사말도 덧붙이지 말고, 의미적으로 다음 형태를 유지하여 브리핑을 끝마치십시오. (기호나 서식은 유연하게 하되, 제목과 1가지 핵심 행동이 명확히 보이도록 할 것)
+6. **응답 잘림 방지**: 응답 텍스트가 도중에 끊어지는 일이 없도록 분량을 조절하여 반드시 **완전한 문장**으로 서술을 마무리지으십시오.
+7. **오늘 가장 먼저 해야 할 일 (마무리 포맷)**: 브리핑의 맨 마지막에는 어떠한 인사말도 덧붙이지 말고, 의미적으로 다음 형태를 유지하여 브리핑을 끝마치십시오. (기호나 서식은 유연하게 하되, 제목과 1가지 핵심 행동이 명확히 보이도록 할 것)
 
 제목: 오늘 가장 먼저 해야 할 일
 내용: [가장 중요한 과제나 일정 1가지]
@@ -451,12 +499,18 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
     // failFast를 true로 설정하여 429 딜레이 발생 시 기다리지 않고 즉시 다음 모델(Fallback)로 넘어가도록 처리
     let data;
     try {
-        data = await callGemini(briefingPrompt, { maxOutputTokens: 2048 }, 2, null, true);
+        data = await callGemini(briefingPrompt, { maxOutputTokens: 4096 }, 2, null, true);
     } catch (apiErr) {
         console.error('--- [BRIEFING GEMINI ERROR] ---', apiErr.message);
     }
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-    const briefing = parts.map(p => p.text).join('') || '사용자님, 현재 AI 비서의 집중력이 잠시 흩어졌습니다. (API 할당량 초과 또는 네트워크 지연)\n조금 뒤에 다시 새로고침을 해주시면, 꼼꼼하게 다시 브리핑을 준비해 드릴게요!';
+    const candidate = data?.candidates?.[0] || null;
+    const parts = candidate?.content?.parts || [];
+    const finishReason = candidate?.finishReason || '';
+    const rawBriefing = parts.map(p => p.text || '').join('') || '사용자님, 현재 AI 비서의 집중력이 잠시 흩어졌습니다. (API 할당량 초과 또는 네트워크 지연)\n조금 뒤에 다시 새로고침을 해주시면, 꼼꼼하게 다시 브리핑을 준비해 드릴게요!';
+
+    const briefing = looksTruncatedBriefing(rawBriefing, finishReason)
+        ? await completeTruncatedBriefing(rawBriefing)
+        : rawBriefing;
 
     const resultObj = {
         briefing,

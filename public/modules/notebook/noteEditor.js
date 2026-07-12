@@ -1,4 +1,4 @@
-import { API_URL, store, assertIds } from '../../state.js';
+import { API_URL, store, assertIds } from '../state.js';
 import { notebookState } from './notebookState.js';
 import { notebookApi } from './notebookApi.js';
 

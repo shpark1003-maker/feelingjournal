@@ -390,7 +390,7 @@ function startPushDispatcher() {
     }
     
     console.log('--- [PUSH DISPATCHER] Background worker initialized. Running every 60s. ---');
-    setInterval(dispatchPushNotifications, 60000);
+    global.pushDispatcherInterval = setInterval(dispatchPushNotifications, 60000);
 }
 
 module.exports = {

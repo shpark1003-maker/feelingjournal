@@ -1,6 +1,9 @@
 <!DOCTYPE html><html class="light" lang="en"><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Aetheric Sanctuary - Welcome Home</title>
 <!-- Stitch Live Theme Integration -->
 <script src="/modules/stitch-theme.js"></script>
@@ -21,18 +24,15 @@
         });
     }
 </script>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind CSS - Production Build -->
+<link rel="stylesheet" id="tailwind-stylesheet" href="./css/tailwind.css?v=1.0.2">
 <!-- Google Fonts -->
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="./style.css?v=5.7.7">
 <link rel="stylesheet" href="/css/floating_chat.css?v=5.7.7">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;family=Cinzel+Decorative:wght@700&amp;family=Pinyon+Script&amp;family=Uncial+Antiqua&amp;family=MedievalSharp&amp;family=Grenze+Gotisch:wght@700&amp;display=swap" rel="stylesheet">
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
-        tailwind.config = {
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
@@ -205,8 +205,8 @@
         /* Task & Calendar specific styles */
         .notebook-lines { background-image: linear-gradient(#e1d9cf 1px, transparent 1px); background-size: 100% 2rem; }
         .task-card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
-        .task-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
-        .task-expandable[aria-expanded="true"] .task-details { max-height: 500px; opacity: 1; margin-top: 12px; }
+        .task-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out; opacity: 0; }
+        .task-expandable[aria-expanded="true"] .task-details { max-height: 3000px; opacity: 1; margin-top: 12px; }
         .task-expandable[aria-expanded="true"] .expand-icon { transform: rotate(180deg); }
 
         /* In-place overlay transition animation */
@@ -321,7 +321,7 @@
 <!-- Aura Glow -->
 <div class="absolute inset-0 bg-primary/10 rounded-full blur-3xl group-hover:blur-[48px] transition-all duration-1000"></div>
 <!-- Angel Image (Ghibli Style) -->
-<img alt="Aetheric Sanctuary Angel Mascot" class="relative z-10 w-full h-full object-contain transform group-hover:translate-y-[-8px] transition-transform duration-700 ease-in-out" src="./angel_mascot.png">
+<img alt="Aetheric Sanctuary Angel Mascot" class="relative z-10 w-full h-full object-contain transform group-hover:translate-y-[-8px] transition-transform duration-700 ease-in-out" src="./optimized/angel_mascot-512.webp" srcset="./optimized/angel_mascot-256.webp 256w, ./optimized/angel_mascot-512.webp 512w" sizes="224px" width="224" height="224" fetchpriority="high" decoding="async">
 </div>
 <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Welcome Home</h1>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-[17.5rem]">Step back into your digital sanctuary and find your peace.</p>
@@ -333,14 +333,20 @@
         <div class="space-y-1">
             <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="email">Email Address</label>
             <div class="relative">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">mail</span>
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-outline/60" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 7L12 13L20 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                </svg>
                 <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="email" placeholder="hello@forest.com" type="email" required/>
             </div>
         </div>
         <div class="space-y-1">
             <label class="font-label-sm text-on-surface-variant ml-2 block text-xs" for="password">Password</label>
             <div class="relative">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/60 text-lg">lock</span>
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-outline/60" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                    <path d="M8 10V8C8 5.8 9.8 4 12 4C14.2 4 16 5.8 16 8V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
                 <input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 focus:border-primary/40 focus:ring-0 rounded-xl transition-all outline-none text-body-md text-on-surface" id="password" placeholder="••••••••" type="password" required/>
             </div>
         </div>
@@ -374,7 +380,9 @@
         </button>
         <!-- Kakao Login Button -->
         <button class="w-full h-12 bg-[#FAE100] border border-[#FAE100] text-[#3C1E1E] rounded-xl font-bold flex items-center justify-center gap-3 hover:brightness-95 transition-all duration-300 active:scale-95 text-sm" id="kakao-login-btn">
-            <span class="material-symbols-outlined text-[#3C1E1E] text-[18px] scale-90" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+            <svg class="text-[#3C1E1E]" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 6H19C20.1 6 21 6.9 21 8V14C21 15.1 20.1 16 19 16H13L9 20V16H5C3.9 16 3 15.1 3 14V8C3 6.9 3.9 6 5 6Z" fill="currentColor"></path>
+            </svg>
             <span>Continue with Kakao</span>
         </button>
     </div>
@@ -387,21 +395,14 @@
                 @2026 inspired by Moveon
             </p>
 <p class="font-label-sm text-[11px] text-outline/50 text-center tracking-wide flex items-center justify-center gap-1">
-    <span class="material-symbols-outlined text-[13px] leading-none" style="font-variation-settings: 'FILL' 1;">lock</span>
+    <svg class="text-outline/50" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+        <path d="M8 10V8C8 5.8 9.8 4 12 4C14.2 4 16 5.8 16 8V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    </svg>
     모든 내용은 로컬에 암호화해 저장되며, AI가 읽은 콘텐츠는 분석 후 자동 폐기됩니다.
 </p>
 </div>
 </footer>
-
-<script>
-        // Subtle interaction enhancements
-        const loginBtn = document.getElementById('google-login-btn');
-        if (loginBtn) {
-            loginBtn.addEventListener('mousedown', () => loginBtn.classList.add('scale-95'));
-            loginBtn.addEventListener('mouseup', () => loginBtn.classList.remove('scale-95'));
-            loginBtn.addEventListener('mouseleave', () => loginBtn.classList.remove('scale-95'));
-        }
-    </script>
 
 </div>
 <div id="journal-app" class="min-h-screen w-full font-body-md text-on-surface selection:bg-primary-container/30 journal-bg" style="display:none">
@@ -410,7 +411,7 @@
 <header class="fixed top-0 w-full z-50 px-margin-mobile h-14 bg-surface/80 backdrop-blur-md flex flex-col justify-center border-b border-outline-variant/20">
 <div class="flex justify-between items-center w-full">
 <div class="flex items-center gap-3">
-<h1 class="flex items-center gap-1.5" style="user-select: none; background: none; -webkit-text-fill-color: initial; -webkit-background-clip: initial;">
+<h1 class="flex items-center gap-1.5" style="user-select: none; background: none; background-clip: initial; -webkit-text-fill-color: initial; -webkit-background-clip: initial;">
     <span class="text-2xl leading-none" style="transform: rotate(-15deg); display: inline-block; filter: drop-shadow(1px 2px 2px rgba(74,101,78,0.15)); margin-right: 1px;">🪶</span>
     <span style="font-family: 'Uncial Antiqua', cursive; font-size: 1.45rem; font-weight: 700; color: #4A654E; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), 1px 2px 3px rgba(74,101,78,0.15); letter-spacing: 0.02em; display: inline-block;">My AI Planner</span>
 </h1>
@@ -427,7 +428,7 @@
 <main id="journal-view" class="tab-content active pt-2 pb-28 px-margin-mobile md:px-margin-desktop max-w-[75rem] mx-auto min-h-screen watercolor-bg">
 <div class="flex flex-col md:flex-row gap-10 lg:gap-10 items-start w-full">
 <!-- AI Briefing Section (Cloud Wisdom) -->
-<aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-[3.75rem]">
+<aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-[3.75rem] max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
 <section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
 <div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
 <!-- Cloud illustration decoration in the bottom right -->
@@ -442,7 +443,7 @@
 <span class="font-label-sm text-primary uppercase tracking-wider" id="briefing-title-text">Cloud Wisdom</span>
 </div>
 <div id="briefing-weather-widget" class="flex items-center gap-2 text-sm text-on-surface-variant font-label-md bg-white/50 px-3 py-1 rounded-full border border-white/20 hidden">
-<img id="briefing-weather-icon" class="w-12 h-12 object-contain" src="./weather_sunny.png" alt="날씨">
+<img id="briefing-weather-icon" class="w-12 h-12 object-contain" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="날씨" width="48" height="48" loading="lazy" decoding="async">
 <span id="briefing-weather-temp" class="font-bold text-[13px]">15°C</span>
 </div>
 </div>
@@ -650,8 +651,8 @@
     <section class="p-4 space-y-2" id="chats-view">
         <div class="space-y-2" id="chat-room-list">
             <!-- AI Chat Room Entry -->
-            <div data-action="open-chat-ai" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
-                <img id="v2-chat-list-ai-avatar" class="w-12 h-12 rounded-full object-cover" src="./angel_mascot.png" alt="AI"/>
+            <div data-action="open-chat-ai" onclick="void(0)" class="bg-white/40 backdrop-blur-sm p-4 rounded-xl flex items-center gap-4 hover:bg-white/60 cursor-pointer transition-all border border-transparent hover:border-primary-container/30">
+                <img id="v2-chat-list-ai-avatar" class="w-12 h-12 rounded-full object-cover" src="./optimized/angel_mascot-128.webp" alt="AI" width="48" height="48" loading="lazy" decoding="async"/>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline">
                         <h3 class="font-bold truncate text-primary" id="v2-chat-list-ai-name">✨ 비서와 대화</h3>
@@ -681,7 +682,7 @@
     <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
     <div class="flex flex-col sm:flex-row items-center gap-4">
     <div class="relative">
-    <img id="user-profile-avatar" alt="User Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform" src="./angel_mascot.png">
+    <img id="user-profile-avatar" alt="User Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform" src="./optimized/angel_mascot-128.webp" width="64" height="64" loading="lazy" decoding="async">
     <button id="user-profile-avatar-btn" class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow-md hover:scale-110 transition-transform">
     <span class="material-symbols-outlined text-[10px]">edit</span>
     </button>
@@ -772,7 +773,7 @@
         <div class="flex flex-col items-center mb-2">
             <div class="relative mb-2">
                 <div id="ai-avatar-preview" class="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md bg-surface-container flex items-center justify-center">
-                    <img alt="Assistant Avatar" class="w-full h-full object-cover" src="./angel_mascot.png">
+                    <img alt="Assistant Avatar" class="w-full h-full object-cover" src="./optimized/angel_mascot-128.webp" width="96" height="96" loading="lazy" decoding="async">
                 </div>
                 <button id="upload-avatar-btn" type="button" class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow-md hover:scale-110 transition-transform">
                     <span class="material-symbols-outlined text-[10px]">photo_camera</span>
@@ -1112,6 +1113,30 @@
 
             <!-- Free APIs Section -->
             <div id="api-free-section" class="space-y-3">
+                <!-- Google Calendar Sync API Card -->
+                <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm flex flex-col justify-between" id="google-calendar-card">
+                    <div class="flex items-center justify-between">
+                        <div class="text-left">
+                            <strong class="text-xs text-on-surface block font-bold">Google Calendar 연동 (단방향/양방향 동기화)</strong>
+                            <span class="text-[10px] text-on-surface-variant/85">구글 일정을 불러오고 수정사항을 반영합니다.</span>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input class="toggle-checkbox hidden api-toggle" id="api-google-calendar-toggle" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="api-google-calendar-toggle"></label>
+                        </div>
+                    </div>
+                    <!-- Calendar list container (hidden by default) -->
+                    <div id="google-calendar-list-container" class="hidden mt-3 border-t border-white/40 pt-2 text-xs">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-on-surface-variant">동기화할 캘린더 선택 (소유/쓰기 권한 캘린더만 Write-back)</span>
+                            <button id="google-calendar-sync-now-btn" type="button" class="text-[10px] bg-primary/10 hover:bg-primary/20 text-primary px-2 py-1 rounded-full active:scale-95 transition-colors">지금 동기화</button>
+                        </div>
+                        <div id="google-calendar-list" class="max-h-32 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                            <!-- JS will populate checkboxes here -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Weather API Card -->
                 <div class="bg-white/45 p-3.5 rounded-xl border border-white/40 shadow-sm flex items-center justify-between">
                     <div class="text-left">
@@ -1207,7 +1232,7 @@
             <div class="space-y-4">
                 <!-- FAQ Item 1 -->
                 <div class="faq-item border-b border-outline-variant/30 pb-3">
-                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.arrow').classList.toggle('rotate-180');">
                         <span class="text-body-md text-on-surface font-bold">Q. 내 일기가 AI 학습 데이터로 사용되나요?</span>
                         <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
                     </button>
@@ -1218,7 +1243,7 @@
                 
                 <!-- FAQ Item 2 -->
                 <div class="faq-item border-b border-outline-variant/30 pb-3">
-                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="const content = this.nextElementSibling; content.classList.toggle('hidden'); const icon = this.querySelector('.arrow'); icon.classList.toggle('rotate-180');">
+                    <button type="button" class="w-full flex items-center justify-between text-left focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.arrow').classList.toggle('rotate-180');">
                         <span class="text-body-md text-on-surface font-bold">Q. E2E 종단간 암호화란 무엇인가요?</span>
                         <span class="material-symbols-outlined arrow transition-transform text-outline text-[20px]">expand_more</span>
                     </button>
@@ -1255,210 +1280,6 @@
 <span class="font-label-sm">설정</span>
 </a>
 </nav>
-<script>
-        document.querySelectorAll('button, a').forEach(el => {
-            el.addEventListener('click', (e) => {
-                if(el.tagName === 'A' && el.getAttribute('href') === '#') {
-                    e.preventDefault();
-                }
-            });
-        });
-
-        window.addEventListener('scroll', () => {
-            const scroll = window.pageYOffset;
-            document.body.style.backgroundPositionY = (scroll * 0.1) + 'px';
-        });
-
-        // ==========================================
-        // [MODULE 6] V2 UI Sync to Hidden Fields
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sync weather toggle
-            const toggleWeather = document.getElementById('toggle-weather');
-            const weatherOn = document.getElementById('weather-on');
-            const weatherOff = document.getElementById('weather-off');
-
-            if (toggleWeather && weatherOn && weatherOff) {
-                // Initialize weather toggle from hidden radio checked state
-                toggleWeather.checked = !weatherOff.checked;
-
-                toggleWeather.addEventListener('change', () => {
-                    if (toggleWeather.checked) {
-                        weatherOn.checked = true;
-                        weatherOff.checked = false;
-                    } else {
-                        weatherOn.checked = false;
-                        weatherOff.checked = true;
-                    }
-                });
-            }
-
-            // Sync briefing time
-            const briefingHourUp = document.getElementById('briefing-hour-up');
-            const briefingHourDown = document.getElementById('briefing-hour-down');
-            const briefingHourText = document.getElementById('briefing-hour-text');
-            const briefingMinuteUp = document.getElementById('briefing-minute-up');
-            const briefingMinuteDown = document.getElementById('briefing-minute-down');
-            const briefingMinuteText = document.getElementById('briefing-minute-text');
-            const briefingAmBtn = document.getElementById('briefing-am-btn');
-            const briefingPmBtn = document.getElementById('briefing-pm-btn');
-            const briefingTimeInput = document.getElementById('briefing-time-input');
-
-            function updateBriefingTimeInputFromUI() {
-                if (!briefingHourText || !briefingMinuteText || !briefingTimeInput) return;
-                let hour = parseInt(briefingHourText.textContent, 10);
-                const minute = briefingMinuteText.textContent;
-                const isPM = briefingPmBtn && briefingPmBtn.classList.contains('bg-primary');
-                
-                if (isPM && hour < 12) {
-                    hour += 12;
-                } else if (!isPM && hour === 12) {
-                    hour = 0;
-                }
-                
-                const formattedHour = String(hour).padStart(2, '0');
-                briefingTimeInput.value = `${formattedHour}:${minute}`;
-            }
-
-            function updateBriefingUIFromInput() {
-                if (!briefingTimeInput || !briefingTimeInput.value) return;
-                const [fullHour, minute] = briefingTimeInput.value.split(':');
-                let hour = parseInt(fullHour, 10);
-                let isPM = false;
-                
-                if (hour >= 12) {
-                    isPM = true;
-                    if (hour > 12) hour -= 12;
-                } else if (hour === 0) {
-                    hour = 12;
-                }
-                
-                if (briefingHourText) briefingHourText.textContent = String(hour).padStart(2, '0');
-                if (briefingMinuteText) briefingMinuteText.textContent = minute;
-                
-                if (isPM) {
-                    if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
-                    if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
-                } else {
-                    if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
-                    if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
-                }
-            }
-
-            // Add briefing click handlers
-            if (briefingHourUp && briefingHourDown && briefingHourText) {
-                briefingHourUp.addEventListener('click', () => {
-                    let h = parseInt(briefingHourText.textContent, 10);
-                    h = h % 12 + 1;
-                    briefingHourText.textContent = String(h).padStart(2, '0');
-                    updateBriefingTimeInputFromUI();
-                });
-                briefingHourDown.addEventListener('click', () => {
-                    let h = parseInt(briefingHourText.textContent, 10);
-                    h = h - 1;
-                    if (h < 1) h = 12;
-                    briefingHourText.textContent = String(h).padStart(2, '0');
-                    updateBriefingTimeInputFromUI();
-                });
-                briefingMinuteUp.addEventListener('click', () => {
-                    let m = parseInt(briefingMinuteText.textContent, 10);
-                    m = (m + 10) % 60;
-                    briefingMinuteText.textContent = String(m).padStart(2, '0');
-                    updateBriefingTimeInputFromUI();
-                });
-                briefingMinuteDown.addEventListener('click', () => {
-                    let m = parseInt(briefingMinuteText.textContent, 10);
-                    m = (m - 10 + 60) % 60;
-                    briefingMinuteText.textContent = String(m).padStart(2, '0');
-                    updateBriefingTimeInputFromUI();
-                });
-                if (briefingAmBtn) {
-                    briefingAmBtn.addEventListener('click', () => {
-                        briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
-                        if (briefingPmBtn) briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
-                        updateBriefingTimeInputFromUI();
-                    });
-                }
-                if (briefingPmBtn) {
-                    briefingPmBtn.addEventListener('click', () => {
-                        briefingPmBtn.className = 'px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold shadow-sm';
-                        if (briefingAmBtn) briefingAmBtn.className = 'px-3 py-1 rounded-lg bg-surface-variant/40 text-on-surface-variant text-xs font-bold';
-                        updateBriefingTimeInputFromUI();
-                    });
-                }
-                
-                setInterval(updateBriefingUIFromInput, 200);
-            }
-
-            // Sync alarm checkboxes (alarm-10, alarm-30, alarm-60)
-            const alarmHourText = document.getElementById('v2-alarm-hour-text');
-            const alarmMinuteText = document.getElementById('v2-alarm-minute-text');
-            const alarmHourUp = document.getElementById('v2-alarm-hour-up');
-            const alarmHourDown = document.getElementById('v2-alarm-hour-down');
-            const alarmMinuteUp = document.getElementById('v2-alarm-minute-up');
-            const alarmMinuteDown = document.getElementById('v2-alarm-minute-down');
-            const alarm10 = document.getElementById('alarm-10');
-            const alarm30 = document.getElementById('alarm-30');
-            const alarm60 = document.getElementById('alarm-60');
-
-            function updateAlarmInputsFromUI() {
-                if (!alarmHourText || !alarmMinuteText) return;
-                const hour = parseInt(alarmHourText.textContent, 10);
-                const minute = parseInt(alarmMinuteText.textContent, 10);
-                const totalMinutes = hour * 60 + minute;
-                
-                if (alarm10) alarm10.checked = (totalMinutes === 10);
-                if (alarm30) alarm30.checked = (totalMinutes === 30);
-                if (alarm60) alarm60.checked = (totalMinutes === 60);
-            }
-
-            function updateAlarmUIFromInputs() {
-                if (!alarmHourText || !alarmMinuteText) return;
-                if (alarm60 && alarm60.checked) {
-                    alarmHourText.textContent = '01';
-                    alarmMinuteText.textContent = '00';
-                } else if (alarm30 && alarm30.checked) {
-                    alarmHourText.textContent = '00';
-                    alarmMinuteText.textContent = '30';
-                } else if (alarm10 && alarm10.checked) {
-                    alarmHourText.textContent = '00';
-                    alarmMinuteText.textContent = '10';
-                }
-            }
-
-            if (alarmHourUp && alarmHourDown && alarmHourText) {
-                alarmHourUp.addEventListener('click', () => {
-                    let h = parseInt(alarmHourText.textContent, 10);
-                    h = (h + 1) % 24;
-                    alarmHourText.textContent = String(h).padStart(2, '0');
-                    updateAlarmInputsFromUI();
-                });
-                alarmHourDown.addEventListener('click', () => {
-                    let h = parseInt(alarmHourText.textContent, 10);
-                    h = (h - 1 + 24) % 24;
-                    alarmHourText.textContent = String(h).padStart(2, '0');
-                    updateAlarmInputsFromUI();
-                });
-                alarmMinuteUp.addEventListener('click', () => {
-                    let m = parseInt(alarmMinuteText.textContent, 10);
-                    m = (m + 10) % 60;
-                    alarmMinuteText.textContent = String(m).padStart(2, '0');
-                    updateAlarmInputsFromUI();
-                });
-                alarmMinuteDown.addEventListener('click', () => {
-                    let m = parseInt(alarmMinuteText.textContent, 10);
-                    m = (m - 10 + 60) % 60;
-                    alarmMinuteText.textContent = String(m).padStart(2, '0');
-                    updateAlarmInputsFromUI();
-                });
-                
-                setInterval(updateAlarmUIFromInputs, 200);
-            }
-        });
-    </script>
-
-
-
 </div>
 
 <!-- Editor Overlay: Sliding up from the bottom -->
@@ -1524,7 +1345,7 @@
 <button id="emoji-picker-btn" class="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors">😀</button>
 </div>
 <div class="relative cursor-pointer" id="writing-helper-btn">
-<img alt="Mascot" class="w-8 h-8 rounded-full border-2 border-white shadow-sm ring-1 ring-primary/20" src="./angel_mascot.png">
+<img alt="Mascot" class="w-8 h-8 rounded-full border-2 border-white shadow-sm ring-1 ring-primary/20" src="./optimized/angel_mascot-128.webp" width="32" height="32" loading="lazy" decoding="async">
 <div class="absolute -top-1 -right-1 bg-primary text-on-primary rounded-full p-0.5">
 <span class="material-symbols-outlined text-[10px] block" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
 </div>
@@ -1679,20 +1500,6 @@
         <!-- Dynamically populated -->
     </div>
 
-<script>
-    // Tab Interaction for Gallery
-    document.querySelectorAll('.active-tab, #tab-shared, #tab-mine').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const filterTabs = tab.parentElement.querySelectorAll('button');
-            filterTabs.forEach(t => {
-                t.classList.remove('active-tab');
-                t.classList.add('text-on-surface-variant');
-            });
-            tab.classList.remove('text-on-surface-variant');
-            tab.classList.add('active-tab');
-        });
-    });
-</script>
 </main>
     <!-- Bottom Selection Action Bar -->
     <div class="fixed bottom-0 left-0 right-0 max-w-[50rem] mx-auto bg-surface-container-high border-t border-outline-variant/30 py-3 px-6 shadow-2xl flex justify-between items-center z-20 translate-y-full transition-transform duration-300 hidden" id="v2-gallery-select-bar">
@@ -2102,71 +1909,11 @@
 
     <!-- Essential Scripts for Supabase & Logic -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.8.7"></script>
-
-    <script>
-
-        // Task Editor Close Logic
-        const taskEditorCloseBtn = document.getElementById('v2-task-editor-close');
-        if(taskEditorCloseBtn) {
-            taskEditorCloseBtn.addEventListener('click', () => {
-                const sheet = document.getElementById('v2-task-editor-container');
-                const scrim = document.getElementById('v2-editor-scrim');
-                if(sheet && scrim) {
-                    sheet.style.transform = 'translateY(100%)';
-                    scrim.classList.add('opacity-0');
-                    setTimeout(() => {
-                        scrim.classList.add('hidden');
-                        sheet.classList.add('hidden');
-                    }, 400);
-                }
-            });
-        }
-        
-        // Task Detail Close Logic
-        const taskDetailCloseBtn = document.getElementById('v2-task-detail-back-btn');
-        if(taskDetailCloseBtn) {
-            taskDetailCloseBtn.addEventListener('click', () => {
-                const detail = document.getElementById('v2-task-detail-container');
-                if(detail) {
-                    detail.style.transform = 'translateY(100%)';
-                    setTimeout(() => detail.classList.add('hidden'), 300);
-                }
-            });
-        }
-
-        // Ghibli Gender Buttons Interactive Sync
-        const btnFemale = document.getElementById('gender-btn-female');
-        const btnMale = document.getElementById('gender-btn-male');
-        const radioFemale = document.getElementById('gender-female');
-        const radioMale = document.getElementById('gender-male');
-        
-        if(btnFemale && btnMale && radioFemale && radioMale) {
-            btnFemale.addEventListener('click', () => {
-                radioFemale.checked = true;
-                btnFemale.className = "flex-1 py-2.5 rounded-xl bg-white shadow-sm text-primary font-label-md";
-                btnMale.className = "flex-1 py-2.5 rounded-xl text-on-surface-variant font-label-md";
-            });
-            btnMale.addEventListener('click', () => {
-                radioMale.checked = true;
-                btnMale.className = "flex-1 py-2.5 rounded-xl bg-white shadow-sm text-primary font-label-md";
-                btnFemale.className = "flex-1 py-2.5 rounded-xl text-on-surface-variant font-label-md";
-            });
-        }
-    </script>
-
+    <script type="module" src="/app.js?v=5.9.17"></script>
+    <script type="module" src="/modules/indexBoot.js?v=1"></script>
 
 <!-- Elegant Small Day View Overlay -->
 <div class="fixed inset-0 z-[110] hidden flex-col justify-end transition-all duration-300" id="dayViewContainer">
@@ -2313,7 +2060,7 @@
 <!-- Chat Detail Overlay -->
 <div class="fixed inset-0 z-[100] bg-background hidden" id="chat-detail-overlay">
     <div class="fixed inset-0 z-0 watercolor-bg opacity-40 blur-3xl scale-110"></div>
-    <div class="relative z-10 h-screen flex flex-col w-full max-w-none bg-background/30 shadow-2xl">
+    <div class="relative z-10 h-full flex flex-col w-full max-w-none bg-background/30 shadow-2xl">
         <!-- Top App Bar -->
         <header class="flex justify-between items-center h-16 px-4 z-50 glass-panel shadow-[0_4px_20px_rgba(93,64,55,0.08)]">
             <div class="flex items-center gap-3">
@@ -2321,7 +2068,7 @@
                     <span class="material-symbols-outlined">arrow_back_ios_new</span>
                 </button>
                 <div class="flex items-center gap-2">
-                    <img alt="Ningning AI" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="./angel_mascot.png"/>
+                    <img alt="Ningning AI" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="./optimized/angel_mascot-128.webp" width="40" height="40" loading="lazy" decoding="async"/>
                     <div>
                         <h1 id="chat-room-title-text" class="font-headline-md text-[18px] leading-tight text-primary">Ningning AI Assistant</h1>
                         <p class="text-[10px] text-primary/70 uppercase tracking-widest font-bold">Deep Reflection Mode Active</p>
@@ -2370,7 +2117,7 @@
             </div>
             <div class="flex flex-col items-start gap-1 max-w-[85%]">
                 <div class="chat-bubble-partner paper-texture p-2 rounded-2xl rounded-tl-none overflow-hidden">
-                    <img alt="Rainy garden" class="rounded-xl w-full h-48 object-cover mb-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAua68OiNw6AdUSc-I8bpGnOvOx-Nj2pxEqjFq3P0MBzjmhOENFwvOmfPDAD_YmVCoS6SUVwwVLK1ml7AvQaByFxaj2iACGsG_D0fayxRD1xZwYb35NzUcCZJKAFXmWxU3GrD5GceZoxyIcgK60C0ne4eW9W6QLmvMIgR5UY3GIl-BCj1djYuqwFw_8-62HSuYct8DjYw1ahT7yEEKVMj49g3mhvDPllTiizW_OjK9QBk6PI3EhUvy6n4lIHk19fdeAJ2prk9WVtff5"/>
+                    <img alt="Rainy garden" class="rounded-xl w-full h-48 object-cover mb-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAua68OiNw6AdUSc-I8bpGnOvOx-Nj2pxEqjFq3P0MBzjmhOENFwvOmfPDAD_YmVCoS6SUVwwVLK1ml7AvQaByFxaj2iACGsG_D0fayxRD1xZwYb35NzUcCZJKAFXmWxU3GrD5GceZoxyIcgK60C0ne4eW9W6QLmvMIgR5UY3GIl-BCj1djYuqwFw_8-62HSuYct8DjYw1ahT7yEEKVMj49g3mhvDPllTiizW_OjK9QBk6PI3EhUvy6n4lIHk19fdeAJ2prk9WVtff5" loading="lazy" decoding="async"/>
                     <div class="px-2 pb-2 text-on-surface text-[14px]">
                         연보랏빛 비 오는 날이라니, 정말 낭만적이네요. 이 그림이 당신의 기분과 닮았을까요?
                     </div>
@@ -2456,7 +2203,7 @@
         <div class="p-8" style="text-align: left;">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-3">
-                    <img alt="Mascot" class="w-10 h-10 object-contain floating-cloud" src="/mascot.png"
+                    <img alt="Mascot" class="w-10 h-10 object-contain floating-cloud" src="/optimized/mascot-128.webp" loading="lazy" decoding="async"
                         style="width: 40px; height: 40px; border-radius: 50%;" />
                     <h3 id="calendar-modal-title" class="text-2xl font-bold font-headline text-on-surface"
                         style="margin: 0;">New Sweet Event</h3>

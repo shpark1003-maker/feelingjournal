@@ -1,5 +1,5 @@
-import { store, API_URL, assertIds } from './state.js?v=5.7.7';
-import { loadPages } from './notebook.js?v=5.7.7';
+import { store, API_URL, assertIds } from './state.js';
+import { loadPages } from './notebook.js';
 
 let cropperInstance = null;
 let cameraStream = null;
@@ -292,8 +292,20 @@ export function setupEditor() {
         const recContainer = document.getElementById('v2-share-recommended-friends');
         if (!listContainer) return;
 
+        if (!store.currentUser) {
+            if (recWrapper) recWrapper.classList.add('hidden');
+            window.v2RenderSelectedSharees();
+            return;
+        }
+
         try {
             const token = await store.getSessionToken();
+            if (!token) {
+                if (recWrapper) recWrapper.classList.add('hidden');
+                window.v2RenderSelectedSharees();
+                return;
+            }
+
             const res = await fetch(`${API_URL}/friends/sos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });

@@ -42,6 +42,13 @@ export const store = {
 
 window.store = store;
 
+export const calendarState = {
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth(),
+    events: [],
+    selectedDateStr: null
+};
+
 // 4. Deep Merge 헬퍼 함수
 export function deepMerge(target, source) {
     const output = { ...target };
@@ -92,7 +99,7 @@ export async function initState() {
     }
 }
 
-import { registerDailyBriefingPush } from './pushClient.js?v=5.7.7';
+import { registerDailyBriefingPush } from './pushClient.js';
 
 // 6. 설정 업데이트 및 Rollback 트랜잭션 함수
 export async function updateSettings(newSettings) {

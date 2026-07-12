@@ -55,6 +55,15 @@
           "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
+    },
+    {
+      "source": "/css/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, max-age=0"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -70,6 +79,10 @@
     {
       "path": "/api/cron-push",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron-calendar-sync",
+      "schedule": "0 12 * * *"
     }
   ]
 }

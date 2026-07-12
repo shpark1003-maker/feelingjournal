@@ -4,9 +4,15 @@
   "description": "AI Emotion Journal with Gemini API",
   "main": "server-local.js",
   "scripts": {
+    "postinstall": "npm run css:build",
+    "prestart": "npm run css:build",
     "start": "node server-local.js",
-    "dev": "node --watch server-local.js",
-    "test:consent": "node test/ai_consent.test.js"
+    "dev": "node ./scripts/dev-with-css.js",
+    "inspect:run": "powershell -ExecutionPolicy Bypass -File ./scripts/run_inspection.ps1",
+    "test:consent": "node test/ai_consent.test.js",
+    "probe:runtime:auth": "node scripts/phaseA_runtime_probe_auth.js",
+    "css:build": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css",
+    "css:watch": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --watch"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -27,6 +33,12 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.7",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "sharp": "^0.35.3",
+    "tailwindcss": "^3.4.1",
     "vercel": "^54.18.1"
   }
 }

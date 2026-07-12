@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const { closeRedisClient } = require('./testUtils');
 
 // Mock shared modules before importing routes
 const shared = require('../api/_routes/shared');
@@ -35,7 +36,41 @@ require.cache[briefingServicePath] = {
     }
 };
 
+const diaryRepositoryPath = path.resolve(__dirname, '../api/_repositories/diaryRepository.js');
+require.cache[diaryRepositoryPath] = {
+    id: diaryRepositoryPath,
+    filename: diaryRepositoryPath,
+    loaded: true,
+    exports: {
+        saveDiary: async () => ({
+            title: '테스트 일기',
+            content: '테스트 일기 본문',
+            richContent: null,
+            response: '',
+            createdAt: new Date().toISOString(),
+            emotion: '기쁨',
+            mediaId: null,
+            notebookId: 'nb-1',
+            shared: false,
+            sharedWith: []
+        }),
+        getDiary: async () => null
+    }
+};
+
+const userRepositoryPath = path.resolve(__dirname, '../api/_repositories/userRepository.js');
+require.cache[userRepositoryPath] = {
+    id: userRepositoryPath,
+    filename: userRepositoryPath,
+    loaded: true,
+    exports: {
+        getUserNickname: async () => '테스트 사용자',
+        updateUserEmotion: async () => true
+    }
+};
+
 const analyzeHandler = require('../api/_routes/analyze');
+const VALID_TEST_USER_ID = '11111111-1111-4111-8111-111111111111';
 
 async function runTests() {
     console.log('--- STARTING AUTOMATED UNIT TESTS ---');
@@ -64,7 +99,7 @@ async function runTests() {
     // 2. Mock Request / Response for Backend Router tests
     console.log('\n[TEST 2] Testing backend Router (aiConsent = false)...');
     
-    const mockUser = { id: 'test-user-id', email: 'test@example.com' };
+    const mockUser = { id: VALID_TEST_USER_ID, email: 'test@example.com' };
     
     // Stub Supabase User check on request
     const originalGetUser = shared.supabase.auth.getUser;
@@ -152,7 +187,11 @@ async function runTests() {
     console.log('\n--- ALL UNIT TESTS COMPLETED SUCCESSFULLY! ---');
 }
 
-runTests().catch(err => {
-    console.error('Test failed with error:', err);
-    process.exit(1);
-});
+runTests()
+    .catch(err => {
+        console.error('Test failed with error:', err);
+        process.exitCode = 1;
+    })
+    .finally(async () => {
+        await closeRedisClient(shared.redis);
+    });

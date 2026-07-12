@@ -115,6 +115,39 @@ routes.forEach(route => {
 // 백그라운드 스케줄러(구글 캘린더 자동 푸시 등) 시작
 startPushDispatcher();
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
+
+// 우아한 종료(Graceful Shutdown) 처리
+const gracefulShutdown = () => {
+    console.log('Shutting down gracefully...');
+    
+    // 백그라운드 작업 정리
+    if (global.pushDispatcherInterval) {
+        clearInterval(global.pushDispatcherInterval);
+        console.log('Push dispatcher stopped');
+    }
+    
+    server.close(async () => {
+        console.log('HTTP server closed');
+        try {
+            if (redis) {
+                await redis.quit();
+                console.log('Redis connection closed');
+            }
+        } catch (err) {
+            console.error('Error closing Redis:', err);
+        }
+        process.exit(0);
+    });
+    
+    // 10초 후에도 닫히지 않으면 강제 종료
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);

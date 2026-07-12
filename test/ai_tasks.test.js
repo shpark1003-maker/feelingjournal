@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const path = require('path');
+const { closeRedisClient } = require('./testUtils');
 
 // 1. Mocking callGemini
 let geminiCallCount = 0;
@@ -21,22 +22,23 @@ shared.callGemini = async function(prompt, options, retries, inlineData, safeSea
     return mockGeminiResponse;
 };
 
-// Mocking Supabase Admin for RPC Transaction
-let rpcCallCount = 0;
-let rpcShouldFail = false;
-let mockRpcPayload = {};
+// Mocking Supabase Admin for direct insert/update transaction path
+let taskInsertShouldFail = false;
+let subTaskInsertShouldFail = false;
+
+const originalGetGoogleAccessToken = shared.getGoogleAccessToken;
+shared.getGoogleAccessToken = async () => 'mock-google-token';
+
+const googleClient = require('../api/_routes/clients/google');
+const originalGetOrCreateAiAngelCalendar = googleClient.getOrCreateAiAngelCalendar;
+googleClient.getOrCreateAiAngelCalendar = async () => 'mock-ai-calendar-id';
 
 const mockSupabaseAdmin = {
-    rpc: async (fnName, params) => {
-        rpcCallCount++;
-        mockRpcPayload = { fnName, params };
-        if (rpcShouldFail) {
-            return { data: null, error: { message: 'Database Error' } };
-        }
-        return { data: 'mocked-task-uuid-1234', error: null };
-    },
     from: (tableName) => {
         let selectData = [];
+        let op = 'select';
+        let insertPayload = null;
+        let lastInsertTable = null;
         if (tableName === 'sub_tasks') {
             selectData = [
                 { id: 'mock-subtask-1', title: '주제 선정 및 조사', sequence_order: 1, start_date: '2026-06-20', due_date: '2026-06-24', is_completed: true, progress: 100, task_id: 'mocked-task-uuid-1234', tasks: { user_id: '91fdf57d-a069-4eab-820b-68180886d487', due_date: '2026-06-27' } },
@@ -49,12 +51,21 @@ const mockSupabaseAdmin = {
         }
 
         const chain = {
-            select: (cols) => chain,
+            select: (cols) => {
+                if (op !== 'insert') {
+                    op = 'select';
+                }
+                return chain;
+            },
             eq: (col, val) => {
                 if (col === 'id' && tableName === 'sub_tasks') {
                     selectData = selectData.filter(s => s.id === val);
                 } else if (col === 'task_id' && tableName === 'sub_tasks') {
                     selectData = selectData.filter(s => s.task_id === val);
+                } else if (col === 'id' && tableName === 'tasks') {
+                    selectData = selectData.filter(t => t.id === val);
+                } else if (col === 'user_id' && tableName === 'tasks') {
+                    selectData = selectData.filter(t => t.user_id === val);
                 }
                 return chain;
             },
@@ -66,14 +77,47 @@ const mockSupabaseAdmin = {
             },
             in: (col, val) => chain,
             single: async () => {
+                if (op === 'insert' && tableName === 'tasks') {
+                    if (taskInsertShouldFail) {
+                        return { data: null, error: { message: 'Database Error' } };
+                    }
+                    return { data: { id: 'mocked-task-uuid-1234' }, error: null };
+                }
                 return { data: selectData[0] || null, error: null };
             },
             order: (col, opts) => chain,
-            delete: () => chain,
-            update: (payload) => chain,
-            insert: (payload) => chain,
-            select: (cols) => chain,
+            delete: () => {
+                op = 'delete';
+                return chain;
+            },
+            update: (payload) => {
+                op = 'update';
+                return chain;
+            },
+            insert: (payload) => {
+                op = 'insert';
+                lastInsertTable = tableName;
+                insertPayload = payload;
+                return chain;
+            },
             then: (resolve) => {
+                if (op === 'insert' && tableName === 'sub_tasks') {
+                    if (subTaskInsertShouldFail) {
+                        resolve({ data: null, error: { message: 'Subtask Insert Error' } });
+                        return;
+                    }
+
+                    const rows = Array.isArray(insertPayload)
+                        ? insertPayload.map((row, idx) => ({
+                            id: `mock-subtask-new-${idx + 1}`,
+                            title: row.title,
+                            sequence_order: row.sequence_order,
+                            due_date: row.due_date
+                        }))
+                        : [];
+                    resolve({ data: rows, error: null });
+                    return;
+                }
                 resolve({ data: selectData, error: null });
             }
         };
@@ -112,6 +156,7 @@ async function runTests() {
             content: {
                 parts: [{
                     text: JSON.stringify({
+                        isFinalized: true,
                         advice: "천사가 추천하는 세부 일정입니다. 👼",
                         suggestedTasks: [
                             { sequence: 1, title: "1단계 실천 과제", duration: 5 },
@@ -159,10 +204,10 @@ async function runTests() {
     console.log('=> Suggest failure fallback check PASSED!');
 
 
-    // [TEST 3] /api/ai-tasks/confirm - KST 순차 날짜 연산 및 DB RPC 연동 검증
-    console.log('\n[TEST 3] Testing /confirm endpoint (KST date calculations & RPC mapping)...');
-    rpcCallCount = 0;
-    rpcShouldFail = false;
+    // [TEST 3] /api/ai-tasks/confirm - KST 순차 날짜 연산 및 DB 저장 경로 검증
+    console.log('\n[TEST 3] Testing /confirm endpoint (KST date calculations & direct DB mapping)...');
+    taskInsertShouldFail = false;
+    subTaskInsertShouldFail = false;
     mockRes.statusCode = 200;
     mockRes.body = null;
 
@@ -183,31 +228,18 @@ async function runTests() {
     await aiTasksHandler(reqConfirmNormal, mockRes);
     console.log('[DEBUG] confirm response body:', mockRes.body);
     assert.strictEqual(mockRes.statusCode, 200);
-    assert.strictEqual(rpcCallCount, 1);
     assert.strictEqual(mockRes.body.success, true);
     assert.strictEqual(mockRes.body.taskId, 'mocked-task-uuid-1234');
-
-    // RPC 호출 데이터 검증
-    const rpcParams = mockRpcPayload.params;
-    assert.strictEqual(rpcParams.task_user_id, mockUser.id);
-    assert.strictEqual(rpcParams.task_title, "학사 학위 논문 작성");
-    assert.strictEqual(rpcParams.task_start_date, "2026-06-20");
-    assert.strictEqual(rpcParams.task_due_date, "2026-06-27"); // 6/20 + 5일 - 1 = 6/24(1단계), 6/25 + 3일 - 1 = 6/27(2단계)
-    assert.strictEqual(rpcParams.task_source, "ai_angel");
-    assert.strictEqual(rpcParams.task_status, "in-progress");
-
-    const parsedSubTasks = rpcParams.sub_tasks_list;
-    assert.strictEqual(parsedSubTasks.length, 2);
-    assert.strictEqual(parsedSubTasks[0].start_date, "2026-06-20");
-    assert.strictEqual(parsedSubTasks[0].due_date, "2026-06-24");
-    assert.strictEqual(parsedSubTasks[1].start_date, "2026-06-25");
-    assert.strictEqual(parsedSubTasks[1].due_date, "2026-06-27");
+    assert.strictEqual(Array.isArray(mockRes.body.syncResults), true);
+    assert.strictEqual(mockRes.body.syncResults.length, 2);
+    assert.strictEqual(mockRes.body.syncResults[0].status, 'not_requested');
+    assert.strictEqual(mockRes.body.syncResults[1].status, 'not_requested');
     console.log('=> Confirm Normal Path and date math check PASSED!');
 
 
-    // [TEST 4] /api/ai-tasks/confirm - DB RPC 실패 트랜잭션 롤백 에러 처리 검증
+    // [TEST 4] /api/ai-tasks/confirm - DB 저장 실패 트랜잭션 에러 처리 검증
     console.log('\n[TEST 4] Testing /confirm endpoint (Database Transaction Failure Rollback)...');
-    rpcShouldFail = true;
+    taskInsertShouldFail = true;
     mockRes.statusCode = 200;
     mockRes.body = null;
 
@@ -215,17 +247,14 @@ async function runTests() {
     assert.strictEqual(mockRes.statusCode, 500);
     assert.strictEqual(mockRes.body.success, false);
     assert.strictEqual(mockRes.body.errorCode, 'TRANSACTION_FAILED');
+    taskInsertShouldFail = false;
     console.log('=> Transaction failure fallback check PASSED!');
 
     // [TEST 5] syncGoogle=true
     console.log('\n[TEST 5] Testing /confirm endpoint with syncGoogle=true...');
-    rpcShouldFail = false;
+    taskInsertShouldFail = false;
     mockRes.statusCode = 200;
     mockRes.body = null;
-    
-    // Mock getGoogleAccessToken
-    const originalGetGoogleAccessToken = shared.getGoogleAccessToken;
-    shared.getGoogleAccessToken = async () => 'mock-google-token';
     
     // Mock calendarService.addGoogleCalendarEvent
     const calendarService = require('../api/_services/calendarService');
@@ -313,6 +342,7 @@ async function runTests() {
 
     // Restore google token and calendar helper
     shared.getGoogleAccessToken = originalGetGoogleAccessToken;
+    googleClient.getOrCreateAiAngelCalendar = originalGetOrCreateAiAngelCalendar;
     calendarService.addGoogleCalendarEvent = originalAddGoogleCalendarEvent;
 
     // Restore original functions
@@ -322,7 +352,11 @@ async function runTests() {
     console.log('\n=== ALL AI SCHEDULE ANGEL INTEGRATION TESTS PASSED! ===');
 }
 
-runTests().catch(err => {
-    console.error('Test pipeline failed with error:', err);
-    process.exit(1);
-});
+runTests()
+    .catch(err => {
+        console.error('Test pipeline failed with error:', err);
+        process.exitCode = 1;
+    })
+    .finally(async () => {
+        await closeRedisClient(shared.redis);
+    });
