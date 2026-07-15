@@ -314,7 +314,7 @@
 <div class="watercolor-blob bg-primary-container w-64 h-64 -top-20 -left-20"></div>
 <div class="watercolor-blob bg-surface-container-highest w-72 h-72 -bottom-20 -right-20"></div>
 <!-- Main Content Shell -->
-<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile pt-12 pb-8 ghibli-entrance">
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile pt-8 md:pt-12 pb-8 ghibli-entrance">
 <!-- Top Section: Mascot -->
 <div class="w-full max-w-sm flex flex-col items-center text-center mb-10">
 <div class="relative w-56 h-56 mb-8 group">
@@ -430,7 +430,7 @@
 <!-- AI Briefing Section (Cloud Wisdom) -->
 <aside class="w-full md:w-[20rem] lg:w-[22.5rem] shrink-0 sticky top-[3.75rem] max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
 <section class="mb-gutter animate-in fade-in slide-in-from-bottom-4 duration-700" id="ai-briefing-section">
-<div class="bg-surface-container-low paper-texture rounded-xl p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
+<div class="bg-surface-container-low paper-texture rounded-xl p-5 md:p-6 soft-shadow border border-outline-variant/30 relative overflow-hidden" id="briefing-card">
 <!-- Cloud illustration decoration in the bottom right -->
 <div class="absolute bottom-[-10px] right-[-10px] text-primary/10 pointer-events-none select-none opacity-40">
     <svg width="100" height="70" viewBox="0 0 100 70" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -511,7 +511,7 @@
 
 <div id="calendar-view" class="tab-content w-full max-w-[62.5rem] mx-auto pt-6 px-margin-mobile relative">
     <!-- Monthly Grid Calendar Section -->
-    <section class="bg-surface-container-low rounded-xl p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-outline-variant/30" id="calendar-container">
+    <section class="bg-surface-container-low rounded-xl p-4 md:p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-outline-variant/30" id="calendar-container">
         <div class="flex justify-between items-center mb-4">
             <h2 id="calendar-month-year-text" class="font-headline-md text-[1.125rem] text-on-surface">2024년 5월</h2>
             <div class="flex gap-1">
@@ -679,7 +679,7 @@
 
     <!-- User Profile Section -->
     <section>
-    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30">
     <div class="flex flex-col sm:flex-row items-center gap-4">
     <div class="relative">
     <img id="user-profile-avatar" alt="User Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform" src="./optimized/angel_mascot-128.webp" width="64" height="64" loading="lazy" decoding="async">
@@ -704,7 +704,7 @@
 
     <!-- Integrations Section -->
     <section>
-    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30">
     <h3 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
         <span class="material-symbols-outlined text-[18px]">link</span>
         연동 서비스 관리
@@ -731,7 +731,7 @@
 
     <!-- Theme Settings -->
     <section id="theme-settings-section">
-    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30">
     <div class="flex items-center gap-2.5 mb-3">
     <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">palette</span>
     <h3 class="font-bold text-sm text-primary">테마 설정</h3>
@@ -759,7 +759,7 @@
     </section>
     
     <section id="ai-assistant-settings">
-    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+    <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30 relative">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
@@ -863,7 +863,7 @@
     </section>
     <!-- AI Personality Learning Center -->
     <section>
-        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-sm text-secondary flex items-center gap-2">
                     <span class="material-symbols-outlined text-[20px]">psychology</span>
@@ -893,7 +893,7 @@
 
     <!-- Briefing & Schedule Settings -->
     <section>
-        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30 relative">
             <!-- Hidden compatibility fields for Module 6 -->
             <input type="time" id="briefing-time-input" class="hidden" value="08:00">
             <input type="radio" id="weather-on" name="weather-toggle" class="hidden" checked>
@@ -1010,7 +1010,7 @@
     </section>
     <!-- Safe Care Mode -->
     <section id="safe-care-settings">
-        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30 relative">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-tertiary text-[20px]">health_and_safety</span>
@@ -1094,7 +1094,7 @@
 
     <!-- AI Capabilities (API Integration Corner) -->
     <section id="api-integration-settings">
-        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-5 custom-shadow border border-surface-variant/30 relative">
+        <div class="card bg-white/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 custom-shadow border border-surface-variant/30 relative">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-primary text-[20px]">extension</span>
@@ -1223,7 +1223,7 @@
 
     <!-- Privacy & Security FAQ Section -->
     <section id="privacy-policy-faq-section" class="mt-8">
-        <div class="bg-surface-container-highest rounded-2xl p-5 custom-shadow border-l-[6px] border-tertiary">
+        <div class="bg-surface-container-highest rounded-2xl p-4 md:p-5 custom-shadow border-l-[6px] border-tertiary">
             <div class="flex items-center gap-3 mb-6">
                 <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">security</span>
                 <h3 class="font-headline-md text-headline-md text-tertiary">개인정보 및 보안 FAQ</h3>

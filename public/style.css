@@ -51,7 +51,7 @@ body.auth-mode {
     padding: 20px;
 }
 
-.container {
+.legacy-container {
     width: 100%;
     max-width: 1100px;
     background: var(--card-bg);
@@ -206,7 +206,7 @@ textarea:focus {
     animation: fadeIn 1s ease-out;
 }
 
-.auth-card {
+.legacy-auth-card {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -469,7 +469,7 @@ textarea:focus {
     border-radius: 10px;
 }
 
-.message {
+.legacy-message {
     max-width: 100% !important;
     padding: 0 !important;
     border-radius: 0 !important;
@@ -481,7 +481,7 @@ textarea:focus {
     animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.message-sender {
+.legacy-message-sender {
     display: block;
     font-size: 0.75rem;
     font-weight: 500;
@@ -489,21 +489,21 @@ textarea:focus {
     margin-bottom: 3px;
 }
 
-.message.sent {
+.legacy-message.sent {
     align-self: flex-end;
     background: transparent !important;
     color: #1a1a1a;
     margin-right: 5px;
 }
 
-.message.received {
+.legacy-message.received {
     align-self: flex-start;
     background: transparent !important;
     color: #1a1a1a;
     margin-left: 5px;
 }
 
-.message-info {
+.legacy-message-info {
     font-size: 0.6rem;
     color: #666;
     margin-top: 2px;
@@ -511,7 +511,7 @@ textarea:focus {
     opacity: 0.8;
 }
 
-.message.sent .message-info {
+.legacy-message.sent .legacy-message-info {
     text-align: right;
     margin-right: 2px;
 }
@@ -594,8 +594,8 @@ textarea:focus {
 /* Mobile Responsiveness Updates */
 @media (max-width: 480px) {
 
-    .container,
-    .auth-card {
+    .legacy-container,
+    .legacy-auth-card {
         padding: 25px;
     }
 
@@ -638,7 +638,7 @@ textarea:focus {
     margin-top: 15px;
 }
 
-.btn.sm {
+.legacy-btn.sm {
     padding: 8px 15px;
     font-size: 0.85rem;
     border-radius: 8px;
@@ -973,7 +973,7 @@ textarea:focus {
 
 .editor-
 
-.btn-icon-label {
+.legacy-btn-icon-label {
     background: none;
     border: none;
     padding: 8px 16px;
@@ -987,7 +987,7 @@ textarea:focus {
     font-weight: 500;
 }
 
-.btn-icon-label:hover {
+.legacy-btn-icon-label:hover {
     background: #f3f2f1;
 }
 
@@ -1419,7 +1419,7 @@ textarea:focus {
     max-width: 100%;
 }
 
-.btn-close-modal {
+.legacy-btn-close-modal {
     width: 100%;
     padding: 12px;
     background: #f3f2f1;
@@ -1429,7 +1429,7 @@ textarea:focus {
     font-weight: 600;
 }
 
-.btn-close-modal:hover {
+.legacy-btn-close-modal:hover {
     background: #edebe9;
 }
 
@@ -1543,7 +1543,7 @@ textarea:focus {
     font-size: 1.1rem;
 }
 
-.btn-invite-action {
+.legacy-btn-invite-action {
     background: #FFD43B;
     color: #333;
     font-weight: 700;
@@ -2289,19 +2289,19 @@ textarea:focus {
 /* =========================================
    AI 비서 채팅 스타일 & SOS 알림
    ========================================= */
-.message.received.ai-message {
+.legacy-message.received.ai-message {
     background: linear-gradient(135deg, #f0f4ff 0%, #f9f0ff 100%);
     border-left: 4px solid #667eea;
     border-radius: 4px 15px 15px 15px;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
 }
 
-.message.received.ai-message .message-sender {
+.legacy-message.received.ai-message .legacy-message-sender {
     color: #667eea;
     font-weight: 800;
 }
 
-.message.received.ai-message .message-content {
+.legacy-message.received.ai-message .legacy-message-content {
     font-style: italic;
     color: #444;
 }
@@ -2526,7 +2526,7 @@ textarea:focus {
     font-size: 0.95rem;
 }
 
-.btn-premium-save {
+.legacy-btn-premium-save {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
@@ -2538,7 +2538,7 @@ textarea:focus {
     transition: all 0.3s;
 }
 
-.btn-premium-save:hover {
+.legacy-btn-premium-save:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
@@ -2589,7 +2589,7 @@ textarea:focus {
     margin-bottom: 10px;
 }
 
-.btn-text-icon {
+.legacy-btn-text-icon {
     background: #f0f4ff;
     color: #667eea;
     border: none;
@@ -2600,7 +2600,7 @@ textarea:focus {
     transition: background 0.2s;
 }
 
-.btn-text-icon:hover {
+.legacy-btn-text-icon:hover {
     background: #e0e8ff;
 }
 
@@ -2944,7 +2944,7 @@ textarea:focus {
     padding-top: 10px;
 }
 
-.btn-text-link {
+.legacy-btn-text-link {
     background: none;
     border: none;
     color: #667eea;
@@ -2954,7 +2954,7 @@ textarea:focus {
     padding: 5px;
 }
 
-.btn-text-link.gray {
+.legacy-btn-text-link.gray {
     color: #999;
 }
 
@@ -3022,7 +3022,7 @@ body {
     align-items: flex-start;
 }
 
-#journal-app.container {
+#journal-app.legacy-container {
     max-width: 1600px;
     display: flex;
     flex-direction: column;
@@ -3103,7 +3103,7 @@ body {
         padding: 10px;
     }
 
-    #journal-app.container {
+    #journal-app.legacy-container {
         padding: 16px;
     }
 
@@ -3191,7 +3191,7 @@ body {
     transform: rotate(90deg);
 }
 
-.card-inner {
+.legacy-card-inner {
     background: #f8f9ff;
     padding: 20px;
     border-radius: 15px;
@@ -3551,7 +3551,7 @@ body {
     gap: 10px;
 }
 
-.btn-icon-circle {
+.legacy-btn-icon-circle {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -3564,7 +3564,7 @@ body {
     transition: all 0.2s;
 }
 
-.btn-icon-circle:hover {
+.legacy-btn-icon-circle:hover {
     background: #f0f0f0;
     transform: scale(1.1);
 }
@@ -3631,7 +3631,7 @@ body {
 /* ==========================================================================
    1촌 감성 온도계 & 예보 배너 프리미엄 스타일 (Glassmorphism & Neon Glow)
    ========================================================================== */
-.friend-banner.card {
+.friend-banner.legacy-card {
     background: rgba(255, 255, 255, 0.7) !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -3642,7 +3642,7 @@ body {
     animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.friend-banner.card:hover {
+.friend-banner.legacy-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.6) !important;
@@ -4047,7 +4047,7 @@ body.ghibli-theme {
     padding: 16px 12px !important; /* 조금 더 넓게 사용하도록 여백 축소 */
 }
 
-body.ghibli-theme .container {
+body.ghibli-theme .legacy-container {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -4209,7 +4209,7 @@ body.ghibli-theme .container {
 }
 
 .ghibli-theme .ghibli-panel,
-.ghibli-theme .card,
+.ghibli-theme .legacy-card,
 .ghibli-theme .editor-section-premium,
 .ghibli-theme .settings-container {
     background: rgba(255, 252, 242, 0.78) !important; /* 뒷배경 지브리 이미지가 은은하게 투과되도록 투명도 조정 */
@@ -4222,7 +4222,7 @@ body.ghibli-theme .container {
     margin-bottom: 24px !important;
 }
 
-.ghibli-theme #persona-view .card {
+.ghibli-theme #persona-view .legacy-card {
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -4268,7 +4268,7 @@ body.ghibli-theme .container {
 
 /* Buttons */
 .ghibli-theme button.primary,
-.ghibli-theme .btn.primary,
+.ghibli-theme .legacy-btn.primary,
 .ghibli-theme #save-persona-btn,
 .ghibli-theme #save-settings-btn,
 .ghibli-theme #save-care-settings-btn,
@@ -4285,7 +4285,7 @@ body.ghibli-theme .container {
 }
 
 .ghibli-theme button.primary:hover,
-.ghibli-theme .btn.primary:hover,
+.ghibli-theme .legacy-btn.primary:hover,
 .ghibli-theme #save-persona-btn:hover,
 .ghibli-theme #save-settings-btn:hover,
 .ghibli-theme #save-care-settings-btn:hover,
@@ -4296,7 +4296,7 @@ body.ghibli-theme .container {
 }
 
 .ghibli-theme button.secondary,
-.ghibli-theme .btn.secondary,
+.ghibli-theme .legacy-btn.secondary,
 .ghibli-theme #generate-avatar-btn,
 .ghibli-theme #upload-avatar-btn,
 .ghibli-theme #test-voice-btn {
@@ -4312,7 +4312,7 @@ body.ghibli-theme .container {
 }
 
 .ghibli-theme button.secondary:hover,
-.ghibli-theme .btn.secondary:hover,
+.ghibli-theme .legacy-btn.secondary:hover,
 .ghibli-theme #generate-avatar-btn:hover,
 .ghibli-theme #upload-avatar-btn:hover,
 .ghibli-theme #test-voice-btn:hover {
@@ -5163,7 +5163,7 @@ body.ghibli-theme.auth-mode .creature-float {
         min-height: 100vh;
     }
 
-    .container {
+    .legacy-container {
         padding: 12px 10px !important;
         border-radius: 16px !important;
         width: 100% !important;
@@ -5549,7 +5549,7 @@ body.ghibli-theme.auth-mode .creature-float {
         font-size: 0.95rem !important;
     }
 
-    .chat-header-actions .btn-icon-circle {
+    .chat-header-actions .legacy-btn-icon-circle {
         width: 32px !important;
         height: 32px !important;
         font-size: 0.9rem !important;
@@ -5603,19 +5603,19 @@ body.ghibli-theme.auth-mode .creature-float {
     }
 
     /* 말풍선 공통 */
-    .message-bubble,
-    .message-content,
+    .legacy-message-bubble,
+    .legacy-message-content,
     .msg-bubble,
-    .message-text,
-    .message p,
-    .message {
+    .legacy-message-text,
+    .legacy-message p,
+    .legacy-message {
         max-width: 80% !important;
         font-size: 0.88rem !important;
         line-height: 1.4 !important;
     }
 
-    .message-content,
-    .message-bubble {
+    .legacy-message-content,
+    .legacy-message-bubble {
         padding: 8px 12px !important;
         border-radius: 12px !important;
     }
@@ -6151,7 +6151,7 @@ body {
 }
 
 /* Settings view card premium aesthetics for default (pink/light) theme */
-#persona-view .card {
+#persona-view .legacy-card {
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -6163,7 +6163,7 @@ body {
     box-shadow: none !important;
     transition: none !important;
 }
-#persona-view section:last-of-type .card {
+#persona-view section:last-of-type .legacy-card {
     border-bottom: none !important;
 }
 
