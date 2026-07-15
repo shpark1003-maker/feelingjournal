@@ -5,7 +5,8 @@ const {
     scanRedisKeys,
     getLiveWeather,
     supabaseAdmin,
-    fetchGoogleCalendarEvents
+    fetchGoogleCalendarEvents,
+    getKstDateKey
 } = require('../_routes/shared');
 
 const crypto = require('crypto');
@@ -65,7 +66,10 @@ function stableStringify(obj) {
     return JSON.stringify(obj);
 }
 
-async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '', forceRefresh = false, skipIfUnchanged = false, forceRefreshCalendar = false) {
+async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '', forceRefresh = false, skipIfUnchanged = false, forceRefreshCalendar = false, options = {}) {
+    const { skipCacheSave = false } = options;
+
+    const dateStr = getKstDateKey();
     const lockKey = `user:${userId}:briefing-prebuild-lock`;
     if (skipIfUnchanged) {
         const isLocked = await redis.set(lockKey, 'LOCKED', 'NX', 'EX', 120);
@@ -76,42 +80,69 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
     }
 
     try {
-        const cacheKey = `user:${userId}:briefing-cache`;
-        let cachedData = null;
+        const cacheKey = `user:${userId}:briefing:${dateStr}`;
+        const legacyKey = `user:${userId}:briefing-cache`;
         
         if (clientDiaries.length === 0) {
+            let cachedData = null;
             try {
                 const cached = await redis.get(cacheKey);
                 if (cached) {
-                    if (cached === 'GENERATING') {
-                        console.log('--- [CACHE] GENERATING (plain string) detected in service layer, skipping cache.');
-                    } else {
-                        try {
-                            const parsed = JSON.parse(cached);
-                            if (parsed && typeof parsed === 'object' && parsed.briefing) {
-                                if (parsed.briefing === 'GENERATING') {
-                                    console.log('--- [CACHE] GENERATING (JSON) detected in service layer, skipping cache.');
-                                } else {
-                                    cachedData = parsed;
-                                    if (!forceRefresh) {
-                                        console.log('--- [CACHE] Returning cached briefing from core.');
-                                        return parsed;
-                                    }
-                                }
-                            }
-                        } catch (jsonErr) {
-                            cachedData = { briefing: cached, weather: null, updatedAt: Date.now() };
-                            if (!forceRefresh) {
-                                console.log('--- [CACHE] Returning cached briefing from core (string fallback).');
-                                return cachedData;
+                    cachedData = JSON.parse(cached);
+                }
+            } catch (e) {}
+
+            // Legacy Migration
+            if (!cachedData) {
+                try {
+                    const legacyStr = await redis.get(legacyKey);
+                    if (legacyStr && legacyStr !== 'GENERATING') {
+                        const legacyData = JSON.parse(legacyStr);
+                        if (legacyData && legacyData.briefing && legacyData.briefing !== 'GENERATING') {
+                            const isToday = legacyData.briefingDate === dateStr || 
+                                (legacyData.updatedAtMs && getKstDateKey(legacyData.updatedAtMs) === dateStr) ||
+                                (legacyData.updatedAt && getKstDateKey(legacyData.updatedAt) === dateStr);
+                            
+                            if (isToday) {
+                                cachedData = {
+                                    schemaVersion: 2,
+                                    briefingDate: dateStr,
+                                    briefing: legacyData.briefing,
+                                    updatedAtMs: Date.now(),
+                                    dataHash: legacyData.dataHash || 'legacy',
+                                    source: 'legacy-migrated',
+                                    weather: legacyData.weather || null
+                                };
+                                await redis.set(cacheKey, JSON.stringify(cachedData), 'EX', 129600);
                             }
                         }
                     }
+                } catch (e) {}
+            }
+
+            if (cachedData && cachedData.briefing && !forceRefresh) {
+                // Return cached data with stale status if requested by frontend GET
+                const revisionKey = `user:${userId}:briefing-revision:${dateStr}`;
+                const isDirty = await redis.exists(revisionKey);
+                if (isDirty) {
+                    cachedData.fromCache = true;
+                    cachedData.isStale = true;
+                    
+                    // checking if anyone holds the build lock
+                    const buildLock = await redis.get(`user:${userId}:briefing-build-lock:${dateStr}`);
+                    if (buildLock) {
+                        cachedData.refreshStatus = 'in_progress';
+                    } else {
+                        cachedData.refreshStatus = 'not_started';
+                    }
                 }
-            } catch (error) {
-                console.error('Briefing Cache Error:', error.message);
+                console.log('--- [CACHE] Returning cached briefing ---');
+                return cachedData;
             }
         }
+    } catch (error) {
+        console.error('Briefing Cache Error:', error.message);
+    }
 
     const nowKST = new Date();
     const todayKSTStr = new Date(nowKST.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -512,26 +543,28 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
         ? await completeTruncatedBriefing(rawBriefing)
         : rawBriefing;
 
+
     const resultObj = {
+        schemaVersion: 2,
+        briefingDate: getKstDateKey(),
         briefing,
         weather: weatherObj || null,
-        updatedAt: Date.now(),
+        updatedAtMs: Date.now(),
         dataHash: currentDataHash,
         calendarIncluded: !contextEvents.full.includes('일정 정보 없음'),
         source: skipIfUnchanged ? 'pre_generated' : 'on_demand'
     };
 
-    if (clientDiaries.length === 0 && briefing) {
-        const isFallback = briefing.includes('API 할당량 초과') || briefing.includes('바쁘네요') || briefing.includes('준비하지 못했습니다');
-        const cacheTTL = isFallback ? 15 : 3600;
+    if (!skipCacheSave && clientDiaries.length === 0 && briefing && !briefing.includes('할당량 초과')) {
+        const dateStr = getKstDateKey();
         try {
-            await redis.set(cacheKey, JSON.stringify(resultObj), 'EX', cacheTTL);
+            await redis.set(`user:${userId}:briefing:${dateStr}`, JSON.stringify(resultObj), 'EX', 129600);
         } catch (cacheSetErr) {
             console.error('Briefing Cache Write Error:', cacheSetErr.message);
         }
     }
 
-    return resultObj;
+        return resultObj;
     
     } finally {
         if (skipIfUnchanged) {
@@ -541,6 +574,66 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
     }
 }
 
+
+async function commitBriefingData(userId, dateStr, readyData, ownerToken, revisionAtStart) {
+    const lockKey = `user:${userId}:briefing-build-lock:${dateStr}`;
+    const revisionKey = `user:${userId}:briefing-revision:${dateStr}`;
+    const cacheKey = `user:${userId}:briefing:${dateStr}`;
+    
+    const luaScript = `
+        if redis.call("get", KEYS[1]) ~= ARGV[1] then
+            return -1 -- lock owner mismatch
+        end
+        local currentRevision = redis.call("get", KEYS[2])
+        if (currentRevision or "__NONE__") ~= ARGV[2] then
+            return -2 -- revision changed
+        end
+        local ok = redis.call("set", KEYS[3], ARGV[3], "EX", ARGV[4])
+        if not ok then
+            return -3 -- set failed
+        end
+        if currentRevision then
+            redis.call("del", KEYS[2])
+        end
+        redis.call("del", KEYS[1])
+        return 1
+    `;
+    
+    try {
+        const result = await redis.eval(
+            luaScript,
+            3,
+            lockKey, revisionKey, cacheKey,
+            ownerToken, revisionAtStart, JSON.stringify(readyData), 129600
+        );
+        return result;
+    } catch (e) {
+        console.error('Lua Commit Error:', e);
+        return -3;
+    }
+}
+
+async function invalidateTodayBriefing(userId, { reason, mode = 'dirty' }) {
+    const dateStr = getKstDateKey();
+    const cacheKey = `user:${userId}:briefing:${dateStr}`;
+    const revisionKey = `user:${userId}:briefing-revision:${dateStr}`;
+    
+    const newRevision = crypto.randomUUID();
+    
+    await redis.del(`user:${userId}:briefing-cache`); // legacy
+    
+    if (mode === 'disable') {
+        await redis.del(cacheKey);
+    } else if (mode === 'purge') {
+        await redis.del(cacheKey);
+        await redis.set(revisionKey, newRevision, 'EX', 172800);
+    } else {
+        await redis.set(revisionKey, newRevision, 'EX', 172800);
+    }
+}
+
 module.exports = {
-    generateBriefing
+    generateBriefing,
+    commitBriefingData,
+    invalidateTodayBriefing
 };

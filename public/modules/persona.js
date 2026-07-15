@@ -484,7 +484,11 @@ export async function loadBriefing() {
         const savedFortune = localStorage.getItem('todayFortune_' + today);
         
         let fortuneHtml = '';
-        if (savedFortune) {
+        
+        const showMinigame = store.settings?.showMinigame !== false;
+        if (!showMinigame) {
+            fortuneHtml = '';
+        } else if (savedFortune) {
             try {
                 const result = JSON.parse(savedFortune);
                 fortuneHtml = `
@@ -1070,5 +1074,87 @@ export async function loadApiSettings() {
         }
     } catch (err) {
         console.warn('Failed to load API settings:', err);
+    }
+}
+
+
+export async function triggerBriefingPrefetch() {
+    try {
+        const token = await store.getSessionToken();
+        if (!token) return;
+        
+        const now = new Date();
+        const nowKST = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        const dateStr = nowKST.toISOString().split('T')[0];
+        const storageKey = `briefing-prefetch:${dateStr}`;
+        
+        let lastPrefetch = sessionStorage.getItem(storageKey);
+        let retries = 0;
+
+        if (lastPrefetch) {
+            try { 
+                const data = JSON.parse(lastPrefetch); 
+                if (data) {
+                    const status = data.status;
+                    const time = data.time || 0;
+                    retries = data.retries || 0;
+                    const elapsed = Date.now() - time;
+                    
+                    if (status === 'ready' || status === 'disabled') return;
+                    if (status === 'accepted' && elapsed < 3 * 60 * 1000) return;
+                    if (status === 'generating' && elapsed < 60 * 1000) return;
+                    
+                    // 지수 백오프 및 상한
+                    const baseDelay = Math.min(300000, 15000 * Math.pow(2, retries));
+                    const jitteredDelay = baseDelay * (0.8 + Math.random() * 0.4);
+                    
+                    if (status === 'error' && elapsed < jitteredDelay) return;
+                    if (status === 'auth_error') return;
+                    
+                    if (retries >= 3) {
+                        console.warn('Briefing prefetch max retries reached.');
+                        return;
+                    }
+                }
+            } catch(e){}
+        }
+        
+        const res = await fetch(`${API_URL}/briefing/prefetch`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.status === 401 || res.status === 403) {
+            sessionStorage.setItem(storageKey, JSON.stringify({ status: 'auth_error', time: Date.now(), retries }));
+            return;
+        }
+        
+        if (res.status === 429) {
+            const retryAfter = res.headers.get('Retry-After');
+            const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 15000;
+            sessionStorage.setItem(storageKey, JSON.stringify({ status: 'error', time: Date.now() + waitMs - 15000, retries: retries + 1 }));
+            return;
+        }
+        
+        if (!res.ok) {
+            sessionStorage.setItem(storageKey, JSON.stringify({ status: 'error', time: Date.now(), retries: retries + 1 }));
+            return;
+        }
+        
+        const json = await res.json();
+        sessionStorage.setItem(storageKey, JSON.stringify({ status: json.status, time: Date.now(), retries }));
+    } catch (err) {
+        console.warn('Briefing prefetch error:', err);
+        const now = new Date();
+        const dateStr = new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const storageKey = `briefing-prefetch:${dateStr}`;
+        
+        let retries = 0;
+        try { 
+            const data = JSON.parse(sessionStorage.getItem(storageKey));
+            if (data) retries = (data.retries || 0) + 1;
+        } catch(e) {}
+        
+        sessionStorage.setItem(storageKey, JSON.stringify({ status: 'error', time: Date.now(), retries }));
     }
 }

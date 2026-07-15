@@ -27,6 +27,7 @@ const routes = [
     { path: '/api/news', handler: news, auth: true },
     { path: '/api/analyze', handler: analyze, auth: true },
     { path: '/api/auth', handler: auth, auth: false },
+    { path: '/api/briefing/prefetch', handler: require('./briefing_prefetch'), auth: true },
     { path: '/api/briefing', handler: briefing, auth: true },
     { path: '/api/calendar', handler: calendar, auth: true },
     { path: '/api/chat', handler: chat, auth: true },

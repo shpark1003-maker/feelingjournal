@@ -177,44 +177,20 @@ ${sanitized || '(이미지 분석 요청)'}
         console.error('--- [ANALYZE DB ERROR] Failed to sync new diary via diaryRepository:', dbErr?.message || dbErr);
     }
 
-    // Phase 2: 브리핑 백그라운드 선생성 트리거 (Fire-and-forget)
-    console.log(`--- [PRE-GENERATION] Triggering background briefing for ${userId} ---`);
-    generateBriefing(userId, providerToken || null, null, [], aiConsent, userEmail, true, true)
-        .catch(err => console.error('--- [PRE-GEN ERROR] ---', err));
+    // Phase 2: 브리핑 무효화 헬퍼 호출 (더티 플래그 세팅)
+    const { invalidateTodayBriefing } = require('./briefingService');
+    try {
+        await invalidateTodayBriefing(userId, { reason: 'diary_analyzed', mode: 'dirty' });
+        console.log(`--- [PRE-GEN] Invalidated today briefing for user ${userId} (mode: dirty) ---`);
+    } catch (invErr) {
+        console.error('--- [PRE-GEN ERROR] Failed to invalidate briefing ---', invErr);
+    }
 
     // 캐시 초기화
     try {
         await redis.del(`user:${userId}:calendar-advice-cache`);
-        await redis.del(`user:${userId}:briefing-cache`);
-        
-        // 백그라운드 데일리 브리핑 선행 빌드 (중복 빌드 방지 락 적용)
-        const briefingBuildLockKey = `user:${userId}:briefing-build-lock`;
-        const hasBuildLock = await redis.get(briefingBuildLockKey);
-        if (!hasBuildLock) {
-            await redis.set(briefingBuildLockKey, '1', 'EX', 120); // 2분 락
-            console.log(`--- [PRE-GEN LOCK] Build lock acquired for user ${userId} ---`);
-
-            const briefingService = require('./briefingService');
-            briefingService.generateBriefing(userId, providerToken, null, [], false, userEmail, true)
-                .then(() => {
-                    console.log(`--- [PRE-GEN SUCCESS] Pre-generated daily briefing for user ${userId} ---`);
-                })
-                .catch((err) => {
-                    console.error(`--- [PRE-GEN ERROR] Failed to pre-generate briefing for user ${userId}:`, err.message);
-                })
-                .finally(async () => {
-                    try {
-                        await redis.del(briefingBuildLockKey);
-                        console.log(`--- [PRE-GEN LOCK] Build lock released for user ${userId} ---`);
-                    } catch (lockErr) {
-                        console.error('Failed to release pre-gen build lock:', lockErr.message);
-                    }
-                });
-        } else {
-            console.log(`--- [PRE-GEN BYPASS] Pre-generation already in progress for user ${userId} ---`);
-        }
     } catch (cacheErr) {
-        console.error('Failed to clear advice/briefing caches or start pre-generation:', cacheErr);
+        console.error('Cache delete error:', cacheErr);
     }
 
     // 1촌 감정 상태 공유

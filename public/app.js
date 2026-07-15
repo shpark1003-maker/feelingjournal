@@ -698,7 +698,7 @@ async function onUserAuthenticated(session) {
     await loadUserProfileInSettings();
 
     // [Pre-fetch] 선제적 백그라운드 브리핑 갱신 활성화
-    loadBriefing().catch(err => console.warn('Briefing pre-fetch background trigger failed:', err));
+    triggerBriefingPrefetch().catch(err => console.warn('Briefing prefetch trigger failed:', err));
 
     // Start background loops
     startBackgroundLoops();

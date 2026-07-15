@@ -49,110 +49,93 @@ module.exports = async (req, res) => {
         let briefingResult = null;
         let isSWRApplied = false;
 
-        const cacheKey = `user:${user.id}:briefing-cache`;
 
-        // SWR (Stale-While-Revalidate) Check
+        const { getKstDateKey } = require('./utils/dateUtils');
+        const dateStr = getKstDateKey();
+        const cacheKey = `user:${user.id}:briefing:${dateStr}`;
+        const lockKey = `user:${user.id}:briefing-build-lock:${dateStr}`;
+        const revisionKey = `user:${user.id}:briefing-revision:${dateStr}`;
+
+        // SWR Check
         if (Array.isArray(clientDiaries) && clientDiaries.length === 0) {
             try {
-                let cached = null;
+                // We rely on generateBriefing doing the cache check and returning it if skipCacheSave=true is not passed.
+                // Wait, generateBriefing returns cached data if found.
+                // So we can just call it!
+                // But wait, if it's NOT found, generateBriefing will GENERATE IT SYNCHRONOUSLY, which takes 30s!
+                // We want to return 'generating' instead of waiting if it's missing!
                 
-                if (redis) {
-                    try {
-                        cached = await redis.get(cacheKey);
-                    } catch (redisErr) {
-                        console.warn('--- [BRIEFING] Redis get error:', redisErr.message);
+                const cachedStr = await redis.get(cacheKey);
+                if (cachedStr) {
+                    const parsed = JSON.parse(cachedStr);
+                    const isDirty = await redis.exists(revisionKey);
+                    if (isDirty) {
+                        parsed.fromCache = true;
+                        parsed.isStale = true;
+                        const hasLock = await redis.exists(lockKey);
+                        parsed.refreshStatus = hasLock ? 'in_progress' : 'not_started';
                     }
-                }
-                
-                if (cached) {
-                    if (cached === 'GENERATING') {
-                        console.log(`--- [BRIEFING] Still generating in background for user ${user.id} ---`);
+                    parsed.status = 'ready';
+                    parsed.success = true;
+                    return res.json(parsed);
+                } else {
+                    // Check legacy cache
+                    const legacyStr = await redis.get(`user:${user.id}:briefing-cache`);
+                    if (legacyStr && legacyStr !== 'GENERATING') {
+                        try {
+                            const parsed = JSON.parse(legacyStr);
+                            if (parsed && parsed.briefing && parsed.briefing !== 'GENERATING') {
+                                // Just call generateBriefing to let it handle migration
+                                briefingResult = await briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, false, false, forceRefreshCalendar);
+                                isSWRApplied = true;
+                                briefingResult.success = true;
+                                briefingResult.status = 'ready';
+                                return res.json(briefingResult);
+                            }
+                        } catch(e){}
+                    }
+
+                    // Not in cache, check if generating
+                    const hasLock = await redis.exists(lockKey);
+                    if (hasLock) {
+                        return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                    } else {
+                        // Not generating and no cache. We should probably return 'generating' and the frontend will prefetch, or we can trigger runBackground here as a fallback!
+                        // The design says prefetch handles it. We return generating and let frontend poll, but frontend won't poll if it's not generating?
+                        // Frontend loadBriefing will keep polling if status === 'generating'.
+                        // But wait! If we return 'generating' here, we didn't start the job!
+                        // So we should trigger prefetch if not generating.
+                        const { waitUntil } = require('@vercel/functions');
+                        const crypto = require('crypto');
+                        const ownerToken = crypto.randomUUID();
+                        const ttl = Number(process.env.VERCEL_FUNCTION_MAX_DURATION_SECONDS || 60) + 30;
+                        const isLocked = await redis.set(lockKey, ownerToken, 'NX', 'EX', ttl);
+                        if (isLocked) {
+                            const revisionAtStart = (await redis.get(revisionKey)) || '__NONE__';
+                            const bgTask = async () => {
+                                try {
+                                    const resultObj = await briefingService.generateBriefing(user.id, providerToken, regionOverride, [], consent, user.email, true, false, false, { skipCacheSave: true });
+                                    if (!resultObj || resultObj.briefing === 'GENERATING' || resultObj.briefing.includes('할당량 초과')) {
+                                        const script = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
+                                        await redis.eval(script, 1, lockKey, ownerToken);
+                                        return;
+                                    }
+                                    await briefingService.commitBriefingData(user.id, dateStr, resultObj, ownerToken, revisionAtStart);
+                                } catch (e) {
+                                    const script = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
+                                    await redis.eval(script, 1, lockKey, ownerToken);
+                                }
+                            };
+                            
+                            if (typeof waitUntil === 'function') {
+                                try { waitUntil(bgTask()); } catch(e){}
+                            } else {
+                                setTimeout(() => bgTask().catch(()=>null), 0);
+                            }
+                        }
+                        
                         return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                     }
-
-                    let parsed = null;
-                    try {
-                        parsed = JSON.parse(cached);
-                    } catch (e) {
-                        parsed = { briefing: cached, weather: null, updatedAt: Date.now() };
-                    }
-
-                    if (parsed && typeof parsed === 'object') {
-                        if (parsed.briefing === 'GENERATING') {
-                            return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
-                        }
-
-                        briefingResult = parsed;
-                        isSWRApplied = true;
-
-                        // Return the response immediately
-                        res.json({ success: true, status: 'ready', briefing: parsed.briefing, weather: parsed.weather, fromCache: true });
-
-                        // Check if the cache is older than 5 minutes (300000 ms)
-                        const cacheAge = Date.now() - (parsed.updatedAt || 0);
-                        if (cacheAge > 5 * 60 * 1000) {
-                            if (redis) {
-                                const swrLockKey = `user:${user.id}:briefing-swr-lock`;
-                                try {
-                                    const hasLock = await redis.get(swrLockKey);
-                                    
-                                    if (!hasLock) {
-                                        await redis.set(swrLockKey, '1', 'EX', 120); // 2분 락
-                                        console.log(`--- [SWR LOCK] SWR lock acquired for user ${user.id} ---`);
-
-                                        // Trigger refresh in background
-                                        briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true, false, forceRefreshCalendar)
-                                            .then(() => {
-                                                console.log(`--- [SWR REFRESH SUCCESS] Cache refreshed in background for user ${user.id} ---`);
-                                            })
-                                            .catch((err) => {
-                                                console.error(`--- [SWR REFRESH ERROR] Failed to refresh cache in background:`, err.message);
-                                            })
-                                            .finally(async () => {
-                                                try {
-                                                    if (redis) {
-                                                        await redis.del(swrLockKey);
-                                                        console.log(`--- [SWR LOCK] SWR lock released for user ${user.id} ---`);
-                                                    }
-                                                } catch (lockErr) {
-                                                    console.error('Failed to release SWR lock:', lockErr.message);
-                                                }
-                                            });
-                                    } else {
-                                        console.log(`--- [SWR BYPASS] Refresh already in progress for user ${user.id} ---`);
-                                    }
-                                } catch (redisErr) {
-                                    console.warn('--- [SWR] Redis lock error:', redisErr.message);
-                                }
-                            }
-                        }
-                        return;
-                    }
-                } else {
-                    // No cache found: set state to 'GENERATING' and trigger asynchronous fetch in background!
-                    console.log(`--- [BRIEFING ASYNC TRIGGER] Initiating background briefing generation for user ${user.id} ---`);
-                    
-                    if (redis) {
-                        try {
-                            await redis.set(cacheKey, JSON.stringify({ briefing: 'GENERATING', updatedAt: Date.now() }), 'EX', 20); // 20초 동안 임시 저장
-                        } catch (redisErr) {
-                            console.warn('--- [BRIEFING] Redis set error:', redisErr.message);
-                        }
-                    }
-
-                    briefingService.generateBriefing(user.id, providerToken, regionOverride, clientDiaries, consent, user.email, true, false, forceRefreshCalendar)
-                        .then(() => {
-                            console.log(`--- [ASYNC BRIEFING SUCCESS] Background generation finished for user ${user.id} ---`);
-                        })
-                        .catch((err) => {
-                            console.error(`--- [ASYNC BRIEFING ERROR] Background generation failed for user ${user.id}:`, err.message);
-                            // Clear generating status on failure to allow retry
-                            if (redis) {
-                                redis.del(cacheKey).catch(() => {});
-                            }
-                        });
-
-                    return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
                 }
             } catch (cacheErr) {
                 console.warn('--- [BRIEFING SWR ERROR] Redis read failed, falling back to synchronous fetch:', cacheErr.message);
