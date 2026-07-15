@@ -48,9 +48,9 @@ module.exports = async function(req, res) {
     }
 
     const dateStr = getKstDateKey();
-    const cacheKey = \`user:\${userId}:briefing:\${dateStr}\`;
-    const lockKey = \`user:\${userId}:briefing-build-lock:\${dateStr}\`;
-    const revisionKey = \`user:\${userId}:briefing-revision:\${dateStr}\`;
+    const cacheKey = `user:${userId}:briefing:${dateStr}`;
+    const lockKey = `user:${userId}:briefing-build-lock:${dateStr}`;
+    const revisionKey = `user:${userId}:briefing-revision:${dateStr}`;
 
     try {
         // AI 동의 여부 확인
@@ -101,18 +101,18 @@ module.exports = async function(req, res) {
                 if (!resultObj || resultObj.briefing === 'GENERATING' || resultObj.briefing.includes('할당량 초과')) {
                     // Gemini 호출 실패나 임시 응답 -> 캐시 커밋 안 함 (락은 TTL 만료로 해제하거나 직접 해제)
                     // 직접 해제 (Lua를 쓰지 않고 소유자 검증 후 해제만 수행해도 되나 원자성을 위해 Lua 사용)
-                    const unlockScript = \`if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end\`;
+                    const unlockScript = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
                     await redis.eval(unlockScript, 1, lockKey, ownerToken);
                     return;
                 }
 
                 // Lua 다중 조건 커밋
                 const commitResult = await commitBriefingData(userId, dateStr, resultObj, ownerToken, revisionAtStart);
-                console.log(\`--- [PREFETCH COMMIT] User: \${userId}, Result: \${commitResult} ---\`);
+                console.log(`--- [PREFETCH COMMIT] User: ${userId}, Result: ${commitResult} ---`);
             } catch (err) {
-                console.error(\`--- [PREFETCH TASK ERROR] \${err.message} ---\`);
+                console.error(`--- [PREFETCH TASK ERROR] ${err.message} ---`);
                 // 에러 시 락 즉시 반환
-                const unlockScript = \`if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end\`;
+                const unlockScript = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
                 await redis.eval(unlockScript, 1, lockKey, ownerToken);
             }
         };
@@ -121,7 +121,7 @@ module.exports = async function(req, res) {
         const isRegistered = runBackground(backgroundTask);
         if (!isRegistered) {
             // waitUntil 등록 실패 복구 (즉시 락 해제 및 5xx)
-            const unlockScript = \`if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end\`;
+            const unlockScript = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
             await redis.eval(unlockScript, 1, lockKey, ownerToken);
             return res.status(500).json({ error: 'Failed to start background task' });
         }

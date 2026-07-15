@@ -564,14 +564,7 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
         }
     }
 
-        return resultObj;
-    
-    } finally {
-        if (skipIfUnchanged) {
-            // Keep the lock for 10 seconds to prevent rapid overlapping retries
-            redis.expire(`user:${userId}:briefing-prebuild-lock`, 10).catch(() => {});
-        }
-    }
+    return resultObj;
 }
 
 
