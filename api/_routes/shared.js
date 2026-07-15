@@ -22,6 +22,7 @@ const { refreshGoogleAccessToken, getGoogleAccessToken, fetchGoogleCalendarEvent
 const { sanitizeContent, safeParseJsonArray, extractEventJson } = require('./utils/pureUtils');
 const { isSafeUrl, sendError } = require('./utils/httpUtils');
 const { fetchWithTimeout } = require('./utils/fetchUtils');
+const { getKstDateKey } = require('./utils/dateUtils');
 
 const { verifyUser } = require('./middleware/auth');
 
@@ -81,6 +82,6 @@ module.exports = {
     refreshGoogleAccessToken,
     getGoogleAccessToken,
     fetchGoogleCalendarEvents,
-    clearGoogleCalendarCache
+    clearGoogleCalendarCache,
+    getKstDateKey
 };
-
