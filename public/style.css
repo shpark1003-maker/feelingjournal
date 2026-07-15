@@ -1,18 +1,4 @@
-:root {
-    --primary-gradient: linear-gradient(135deg, #cfbcff 0%, #6750a4 100%);
-    --primary-color: #cfbcff;
-    --secondary-color: #c5c0ff;
-    --tertiary-color: #e7c365;
-    --bg-color: #141218;
-    --card-bg: rgba(255, 255, 255, 0.08);
-    --text-main: #e6e0e9;
-    --text-muted: #cbc4d2;
-    --accent-color: #cfbcff;
-    --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.3);
-    --shadow-strong: 0 0 15px rgba(108, 92, 231, 0.5);
-    --border-radius: 20px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Phase 1: Unused dark theme root variables removed */
 
 /* AI Learning Center Styles */
 .video-dropzone:hover {
@@ -51,16 +37,11 @@ html {
     }
 }
 
-body {
-    font-family: 'Noto Sans KR', 'Outfit', sans-serif;
-    background: var(--bg-color);
-    background-image:
-        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    color: var(--text-main);
+/* Phase 2: Global body background removed for FOUC prevention & Tailwind integration */
+html[data-theme="aetheric-light"] body {
+    background: #fbf2e8 !important;
+    color: #433e37 !important;
+    background-image: none !important;
 }
 
 body.auth-mode {
