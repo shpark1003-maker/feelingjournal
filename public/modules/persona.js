@@ -479,16 +479,43 @@ export async function loadBriefing() {
         card.style.display = 'block';
         card.classList.remove('hidden');
 
-        // [1. Loading State] Premium Skeleton Loader
+        // [1. Loading State & Fortune Game]
+        const today = new Date().toISOString().split('T')[0];
+        const savedFortune = localStorage.getItem('todayFortune_' + today);
+        
+        let fortuneHtml = '';
+        if (savedFortune) {
+            try {
+                const result = JSON.parse(savedFortune);
+                fortuneHtml = `
+                    <div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm relative overflow-hidden mb-3">
+                        <div class="absolute top-0 left-0 w-full h-1" style="background: linear-gradient(to right, transparent, ${result.color}, transparent); opacity: 0.5;"></div>
+                        <div class="text-4xl mb-2 inline-block">🔖</div>
+                        <h4 class="font-bold text-lg mb-1" style="color: ${result.color}">${result.title}</h4>
+                        <p class="text-xs text-on-surface-variant text-center leading-relaxed">${result.text}</p>
+                    </div>
+                `;
+            } catch(e) {}
+        } else {
+            fortuneHtml = `
+                <div id="fortune-game-container" class="mb-3">
+                    <div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm">
+                        <div class="text-xs text-on-surface-variant mb-3 font-semibold tracking-wider">오늘의 기운을 확인해보세요</div>
+                        <button onclick="window.playFortuneGame && window.playFortuneGame()" class="px-6 py-2 bg-primary text-on-primary rounded-full shadow-md hover:opacity-90 transition flex items-center gap-2 font-bold text-sm">
+                            오늘의 운세 뽑기 🎋
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         content.innerHTML = `
-            <div class="animate-pulse space-y-3 py-2">
+            ${fortuneHtml}
+            <div class="animate-pulse space-y-3 py-2 border-t border-dashed border-outline-variant/30 pt-3">
                 <div class="flex items-center gap-3 text-primary">
                     <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
-                    <span class="font-medium text-[13px]">${aiName}가 오늘의 일정을 분석하여 브리핑을 준비하고 있습니다...</span>
+                    <span class="font-medium text-[13px]">${aiName}가 오늘의 브리핑을 준비하고 있습니다...</span>
                 </div>
-                <div class="h-3 bg-primary/10 rounded-full w-3/4"></div>
-                <div class="h-3 bg-primary/10 rounded-full w-5/6"></div>
-                <div class="h-3 bg-primary/10 rounded-full w-2/3"></div>
             </div>
         `;
 
