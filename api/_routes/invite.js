@@ -49,34 +49,30 @@ module.exports = async (req, res) => {
             if (emailConfigured && transporter) {
                 const mailOptions = {
                     from: `"Feeling Journal" <${process.env.EMAIL_USER}>`,
+                    replyTo: req.user.email,
                     to: email,
-                    subject: `✨ ${inviterName}님이 당신을 Feeling Journal 채팅방에 초대했습니다!`,
+                    subject: `[Feeling Journal] ${inviterName}님이 초대했습니다.`,
                     html: `
-                        <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 15px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <span style="font-size: 40px;">💌</span>
-                            </div>
-                            <h2 style="color: #667eea; text-align: center; margin-top: 0;">감성 채팅 초대장</h2>
-                            <p style="font-size: 1.1rem; line-height: 1.6; color: #333; text-align: center;">
-                                안녕하세요! <b>${inviterName}</b>님이 당신을<br>
-                                <b>Feeling Journal</b> 실시간 감성 채팅방에 초대했습니다.
+                        <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: #333;">
+                                안녕하세요,<br><br>
+                                <b>${inviterName}</b>(${req.user.email})님이 당신을 <b>Feeling Journal</b> 채팅방에 초대했습니다.
                             </p>
-                            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center;">
-                                <p style="margin: 0; color: #666; font-size: 0.95rem;">
-                                    "함께 하루를 기록하고 서로의 감성을 나누어 보아요."
-                                </p>
-                            </div>
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="${shareLink}" 
-                                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(102,126,234,0.3);">
-                                   지금 채팅방 입장하기
+                            <p style="font-size: 1rem; color: #555;">
+                                아래 링크를 클릭하여 채팅방에 바로 입장하실 수 있습니다:
+                            </p>
+                            <p>
+                                <a href="${shareLink}" style="color: #4a90e2; text-decoration: underline;">
+                                    ${shareLink}
                                 </a>
-                            </div>
-                            <p style="font-size: 0.85rem; color: #999; text-align: center; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-                                본 메일은 사용자의 요청에 의해 발송된 자동 초대장입니다.
+                            </p>
+                            <p style="font-size: 0.85rem; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+                                본 메일은 ${inviterName}님의 요청에 의해 발송된 초대 메일입니다.<br>
+                                초대를 원치 않으시거나 모르는 분의 메일이라면 이 메일을 무시하셔도 됩니다.
                             </p>
                         </div>
-                    `
+                    `,
+                    text: `안녕하세요,\n\n${inviterName}(${req.user.email})님이 당신을 Feeling Journal 채팅방에 초대했습니다.\n\n아래 링크를 통해 채팅방에 바로 입장하실 수 있습니다:\n${shareLink}\n\n본 메일은 ${inviterName}님의 요청에 의해 발송된 초대 메일입니다.\n초대를 원치 않으시거나 모르는 분의 메일이라면 이 메일을 무시하셔도 됩니다.`
                 };
 
                 try {

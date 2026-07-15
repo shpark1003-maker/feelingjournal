@@ -8,7 +8,9 @@ import {
     openV2Gallery,
     closeV2Gallery,
     setupDirectFragmentUpload,
-    setupGallerySharing
+    setupGallerySharing,
+    v2QuickAddPage,
+    deleteV2Page
 } from './noteEditor.js';
 
 export async function loadNotebooks() {

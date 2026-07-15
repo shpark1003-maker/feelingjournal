@@ -2,6 +2,16 @@ import { API_URL, store, assertIds } from '../state.js';
 import { notebookState } from './notebookState.js';
 import { notebookApi } from './notebookApi.js';
 
+async function refreshNotebookData() {
+    const notebookListMod = await import('./notebookList.js');
+    return notebookListMod.loadNotebooks();
+}
+
+async function refreshNotebookSelect() {
+    const notebookListMod = await import('./notebookList.js');
+    return notebookListMod.populateV2NotebookSelect();
+}
+
 export async function addNewPage() {
     if (store.quillEditor) {
         store.quillEditor.root.innerHTML = '';
@@ -35,10 +45,9 @@ export async function addNewPage() {
 
     const v2Editor = document.getElementById('v2-editor-container');
     if (v2Editor) {
-        populateV2NotebookSelect().then(() => {
-            const select = document.getElementById('v2-notebook-select');
-            if (select && store.currentNotebookId) select.value = store.currentNotebookId;
-        });
+        await refreshNotebookSelect();
+        const select = document.getElementById('v2-notebook-select');
+        if (select && store.currentNotebookId) select.value = store.currentNotebookId;
         openV2Editor();
     }
 }
@@ -79,6 +88,7 @@ export function v2QuickAddPage(nbId) {
     store.currentNotebookId = nbId;
     addNewPage();
 }
+window.v2QuickAddPage = v2QuickAddPage;
 
 export async function deleteV2Page(pageId) {
     if (!confirm('이 일기 페이지를 정말 삭제하시겠습니까?')) return;
@@ -105,7 +115,7 @@ export async function deleteV2Page(pageId) {
                 const resultArea = document.getElementById('analysis-result-area');
                 if (resultArea) resultArea.classList.add('hidden');
             }
-            await loadNotebooks();
+            await refreshNotebookData();
         } else {
             alert('삭제 실패: ' + data.error);
         }
@@ -257,7 +267,7 @@ export function setupDirectFragmentUpload() {
                 alert('기억 조각이 성공적으로 등록되었습니다.');
                 closeModal();
                 // Reload Notebooks list and gallery fragments
-                await loadNotebooks();
+                await refreshNotebookData();
             } else {
                 alert('저장 실패: ' + (data.error || '알 수 없는 오류'));
             }
@@ -403,7 +413,7 @@ export function setupGallerySharing() {
             
             // Reset state
             toggleSelectMode(false);
-            await loadNotebooks();
+            await refreshNotebookData();
         } catch (err) {
             console.error(err);
             alert('삭제 과정 중 오류가 발생했습니다.');
@@ -645,7 +655,7 @@ export function setupGallerySharing() {
 
             closeShareModal();
             toggleSelectMode(false);
-            await loadNotebooks();
+            await refreshNotebookData();
         } catch (err) {
             console.error(err);
             alert('공유 일괄 요청 중 심각한 오류가 발생했습니다.');

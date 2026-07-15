@@ -13,7 +13,7 @@ const featureModulePromises = {
 
 function loadNotebookModule() {
     if (!featureModulePromises.notebook) {
-        featureModulePromises.notebook = import('./modules/notebook.js?v=6');
+        featureModulePromises.notebook = import('./modules/notebook.js?v=7');
     }
     return featureModulePromises.notebook;
 }
@@ -438,7 +438,20 @@ function setupAuth() {
         const password = document.getElementById('password').value;
         const { data, error } = await store.supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
-            alert('로그인 실패: ' + error.message);
+            console.error('[AUTH] signIn error:', error);
+            if (error.message.includes('Email not confirmed')) {
+                const { error: resendError } = await store.supabaseClient.auth.resend({
+                    type: 'signup',
+                    email: email,
+                });
+                if (resendError) {
+                    alert('이메일 인증이 완료되지 않았습니다. 메일함을 확인해 주세요.');
+                } else {
+                    alert('이메일 인증이 완료되지 않았습니다. 인증 메일을 다시 전송했으니 확인해 주세요!');
+                }
+            } else {
+                alert('로그인 실패: ' + error.message);
+            }
             return;
         }
 
@@ -487,7 +500,19 @@ function setupAuth() {
             
             if (error) {
                 console.error('[AUTH] signUp error:', error);
-                alert('회원가입 실패: ' + error.message);
+                if (error.message.includes('already registered')) {
+                    const { error: resendError } = await store.supabaseClient.auth.resend({
+                        type: 'signup',
+                        email: email,
+                    });
+                    if (resendError) {
+                        alert('이미 가입된 이메일입니다. 로그인하거나 비밀번호 찾기를 이용해 주세요.');
+                    } else {
+                        alert('가입이 진행 중인 이메일입니다. 인증 메일을 다시 전송했으니 확인해 주세요!');
+                    }
+                } else {
+                    alert('회원가입 실패: ' + error.message);
+                }
             } else {
                 // Never keep an unverified email session signed in.
                 if (data?.session && isUnverifiedEmailUser(data.user)) {
