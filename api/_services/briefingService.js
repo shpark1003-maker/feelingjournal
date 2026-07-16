@@ -47,7 +47,7 @@ async function completeTruncatedBriefing(originalText) {
     const continuationPrompt = `아래 데일리 브리핑 문장이 중간에 끊겼습니다. 기존 톤과 내용을 유지하여 자연스럽게 이어서 완성하세요.
 
 규칙:
-1) 기존 문장을 반복하지 말고 이어서 작성
+1) 기존 문장을 반복하지 말고 끊긴 부분부터 바로 이어서 작성
 2) 4~7문장 내에서 간결하게 마무리
 3) 마지막에는 반드시 다음 형식을 포함
 제목: 오늘 가장 먼저 해야 할 일
@@ -64,7 +64,15 @@ ${originalText}`;
 
         const normalizedOriginal = (originalText || '').trim();
         const normalizedContinuation = continuation.replace(/^\s*[\-–—]*\s*/, '');
-        return `${normalizedOriginal}\n${normalizedContinuation}`.trim();
+        
+        // If the LLM completely ignored the instruction and regenerated from the beginning,
+        // we can detect it by checking if it starts with the same prefix.
+        const originalPrefix = normalizedOriginal.substring(0, 15);
+        if (originalPrefix.length >= 10 && normalizedContinuation.includes(originalPrefix)) {
+            return normalizedContinuation; // Just use the newly generated complete version
+        }
+
+        return `${normalizedOriginal} ${normalizedContinuation}`.trim();
     } catch (e) {
         console.warn('--- [BRIEFING COMPLETION GUARD] Continuation failed, using original text:', e.message);
         return originalText;
