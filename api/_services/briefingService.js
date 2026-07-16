@@ -66,10 +66,18 @@ ${originalText}`;
         const normalizedContinuation = continuation.replace(/^\s*[\-–—]*\s*/, '');
         
         // If the LLM completely ignored the instruction and regenerated from the beginning,
-        // we can detect it by checking if it starts with the same prefix.
-        const originalPrefix = normalizedOriginal.substring(0, 15);
-        if (originalPrefix.length >= 10 && normalizedContinuation.includes(originalPrefix)) {
+        // it will include the end of the original text somewhere in its output.
+        // We check if the last 15 characters of the original text appear in the continuation.
+        const originalLength = normalizedOriginal.length;
+        const lastPart = originalLength > 15 ? normalizedOriginal.substring(originalLength - 15) : normalizedOriginal;
+        
+        if (lastPart.length >= 5 && normalizedContinuation.includes(lastPart)) {
             return normalizedContinuation; // Just use the newly generated complete version
+        }
+
+        // Also if original text is extremely short, it's safer to just take the new generation
+        if (originalLength < 100) {
+            return normalizedContinuation;
         }
 
         return `${normalizedOriginal} ${normalizedContinuation}`.trim();
