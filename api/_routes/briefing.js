@@ -55,16 +55,20 @@ module.exports = async (req, res) => {
         const cacheKey = `user:${user.id}:briefing:${dateStr}`;
         const lockKey = `user:${user.id}:briefing-build-lock:${dateStr}`;
         const revisionKey = `user:${user.id}:briefing-revision:${dateStr}`;
+        const startedKey = `user:${user.id}:briefing-refresh-status:${dateStr}`;
+
+        if (await briefingService.isBriefingDisabled(user.id)) {
+            return res.json({
+                success: true,
+                status: 'ready',
+                disabled: true,
+                briefing: 'AI 감정 분석 제공이 비활성화되어 요약 브리핑 생성을 건너뜁니다. 설정에서 동의를 다시 켜면 자동으로 최신 브리핑을 준비합니다.'
+            });
+        }
 
         // SWR Check
         if (Array.isArray(clientDiaries) && clientDiaries.length === 0) {
             try {
-                // We rely on generateBriefing doing the cache check and returning it if skipCacheSave=true is not passed.
-                // Wait, generateBriefing returns cached data if found.
-                // So we can just call it!
-                // But wait, if it's NOT found, generateBriefing will GENERATE IT SYNCHRONOUSLY, which takes 30s!
-                // We want to return 'generating' instead of waiting if it's missing!
-                
                 const cachedStr = await redis.get(cacheKey);
                 if (cachedStr) {
                     const parsed = JSON.parse(cachedStr);
@@ -73,7 +77,12 @@ module.exports = async (req, res) => {
                         parsed.fromCache = true;
                         parsed.isStale = true;
                         const hasLock = await redis.exists(lockKey);
-                        parsed.refreshStatus = hasLock ? 'in_progress' : 'not_started';
+                        if (hasLock) {
+                            const started = await redis.get(startedKey);
+                            parsed.refreshStatus = started ? 'started' : 'in_progress';
+                        } else {
+                            parsed.refreshStatus = 'not_started';
+                        }
                     }
                     parsed.status = 'ready';
                     parsed.success = true;
@@ -98,43 +107,22 @@ module.exports = async (req, res) => {
                     // Not in cache, check if generating
                     const hasLock = await redis.exists(lockKey);
                     if (hasLock) {
-                        return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                        const started = await redis.get(startedKey);
+                        return res.json({
+                            success: true,
+                            status: 'generating',
+                            refreshStatus: started ? 'started' : 'in_progress',
+                            retryAfterMs: 3000,
+                            briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩"
+                        });
                     } else {
-                        // Not generating and no cache. We should probably return 'generating' and the frontend will prefetch, or we can trigger runBackground here as a fallback!
-                        // The design says prefetch handles it. We return generating and let frontend poll, but frontend won't poll if it's not generating?
-                        // Frontend loadBriefing will keep polling if status === 'generating'.
-                        // But wait! If we return 'generating' here, we didn't start the job!
-                        // So we should trigger prefetch if not generating.
-                        const { waitUntil } = require('@vercel/functions');
-                        const crypto = require('crypto');
-                        const ownerToken = crypto.randomUUID();
-                        const ttl = Number(process.env.VERCEL_FUNCTION_MAX_DURATION_SECONDS || 60) + 30;
-                        const isLocked = await redis.set(lockKey, ownerToken, 'NX', 'EX', ttl);
-                        if (isLocked) {
-                            const revisionAtStart = (await redis.get(revisionKey)) || '__NONE__';
-                            const bgTask = async () => {
-                                try {
-                                    const resultObj = await briefingService.generateBriefing(user.id, providerToken, regionOverride, [], consent, user.email, true, false, false, { skipCacheSave: true });
-                                    if (!resultObj || resultObj.briefing === 'GENERATING' || resultObj.briefing.includes('할당량 초과')) {
-                                        const script = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
-                                        await redis.eval(script, 1, lockKey, ownerToken);
-                                        return;
-                                    }
-                                    await briefingService.commitBriefingData(user.id, dateStr, resultObj, ownerToken, revisionAtStart);
-                                } catch (e) {
-                                    const script = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
-                                    await redis.eval(script, 1, lockKey, ownerToken);
-                                }
-                            };
-                            
-                            if (typeof waitUntil === 'function') {
-                                try { waitUntil(bgTask()); } catch(e){}
-                            } else {
-                                setTimeout(() => bgTask().catch(()=>null), 0);
-                            }
-                        }
-                        
-                        return res.json({ success: true, status: 'generating', retryAfterMs: 3000, briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩" });
+                        return res.json({
+                            success: true,
+                            status: 'generating',
+                            refreshStatus: 'not_started',
+                            retryAfterMs: 3000,
+                            briefing: "AI 비서가 브리핑을 준비하고 있습니다. 🎩"
+                        });
                     }
                 }
             } catch (cacheErr) {

@@ -965,6 +965,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="bg-white/40 rounded-xl overflow-hidden border border-white/50">
+                    <div class="flex justify-between items-center p-3.5">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-on-surface-variant text-base">stadia_controller</span>
+                            <div>
+                                <span class="font-label-md text-xs font-semibold block">로딩 중 미니게임</span>
+                                <span class="text-[10px] text-on-surface-variant/80">브리핑 로딩 화면에서 오늘의 운세 미니게임 표시</span>
+                            </div>
+                        </div>
+                        <div class="relative inline-block w-11 h-5.5">
+                            <input checked class="toggle-checkbox hidden" id="toggle-minigame" type="checkbox">
+                            <label class="toggle-label block overflow-hidden h-5.5 rounded-full bg-outline-variant cursor-pointer relative" for="toggle-minigame"></label>
+                        </div>
+                    </div>
+                </div>
                 <div class="space-y-2">
                     <button class="w-full flex items-center justify-between text-on-surface-variant font-label-sm ml-1 text-xs group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
                         <span>관심 뉴스</span>
@@ -1912,7 +1927,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <!-- Load the existing V1 logic -->
-    <script type="module" src="/app.js?v=5.9.18"></script>
+    <script type="module" src="/app.js?v=5.9.19"></script>
     <script type="module" src="/modules/indexBoot.js?v=1"></script>
 
 <!-- Elegant Small Day View Overlay -->
@@ -2562,5 +2577,115 @@
     </div>
 </div>
 
+<!-- Fortune Game SVG Assets -->
+<svg style="display: none;">
+  <!-- 천사 (Angel) -->
+  <symbol id="fortune-angel" viewBox="0 0 200 200">
+    <!-- Portal -->
+    <g id="angel-portal" class="fortune-portal" transform="scale(1, 0)">
+      <ellipse cx="100" cy="180" rx="80" ry="15" fill="#1e272e" opacity="0.6"/>
+      <ellipse cx="100" cy="180" rx="60" ry="10" fill="#485460" />
+    </g>
+    
+    <!-- Character Group -->
+    <g id="angel-character" class="fortune-character" transform="translate(0, 100) scale(1, 0)">
+      <!-- Left Wing -->
+      <g id="angel-wing-left" transform="translate(60, 100)">
+        <path d="M0,0 C-30,-40 -60,-20 -40,20 C-20,40 -10,30 0,0 Z" fill="#ffffff" stroke="#dcdde1" stroke-width="2"/>
+      </g>
+      <!-- Right Wing -->
+      <g id="angel-wing-right" transform="translate(140, 100)">
+        <path d="M0,0 C30,-40 60,-20 40,20 C20,40 10,30 0,0 Z" fill="#ffffff" stroke="#dcdde1" stroke-width="2"/>
+      </g>
+      <!-- Body -->
+      <path d="M70,160 L130,160 L120,90 L80,90 Z" fill="#f5f6fa" stroke="#dcdde1" stroke-width="2"/>
+      <!-- Halo -->
+      <ellipse cx="100" cy="45" rx="25" ry="8" fill="none" stroke="#fbc531" stroke-width="4"/>
+      <!-- Head -->
+      <circle cx="100" cy="70" r="25" fill="#ffeaa7" stroke="#eccc68" stroke-width="2"/>
+      <!-- Face -->
+      <g id="angel-face">
+        <path d="M90,65 Q95,60 100,65" fill="none" stroke="#2d3436" stroke-width="2" stroke-linecap="round"/>
+        <path d="M110,65 Q105,60 100,65" fill="none" stroke="#2d3436" stroke-width="2" stroke-linecap="round"/>
+        <path d="M95,75 Q100,85 105,75" fill="none" stroke="#ff7675" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <!-- Trumpet -->
+      <g id="angel-trumpet" transform="translate(100, 85) rotate(-20)">
+        <path d="M0,0 L40,-10 L45,15 L0,10 Z" fill="#fbc531"/>
+      </g>
+    </g>
+
+    <!-- Flag / Message -->
+    <g id="angel-flag" class="fortune-message" transform="scale(0)">
+      <rect x="50" y="20" width="100" height="40" rx="5" fill="#ff4757" />
+      <text x="100" y="45" fill="white" font-weight="bold" font-size="20" text-anchor="middle" id="angel-text">대길</text>
+    </g>
+  </symbol>
+
+  <!-- 마법사 (Wizard) -->
+  <symbol id="fortune-wizard" viewBox="0 0 200 200">
+    <g id="wizard-portal" class="fortune-portal" transform="scale(1, 0)">
+      <ellipse cx="100" cy="180" rx="70" ry="15" fill="#2f3640" opacity="0.8"/>
+    </g>
+    
+    <g id="wizard-character" class="fortune-character" transform="translate(0, 100) scale(1, 0)">
+      <!-- Body -->
+      <path d="M60,160 L140,160 L120,80 L80,80 Z" fill="#8c7ae6" stroke="#7158e2" stroke-width="2"/>
+      <!-- Wand -->
+      <g id="wizard-wand" transform="translate(130, 90) rotate(15)">
+        <rect x="-3" y="-30" width="6" height="60" fill="#cd84f1"/>
+        <polygon points="0,-40 10,-30 0,-20 -10,-30" fill="#fbc531"/>
+      </g>
+      <!-- Head -->
+      <circle cx="100" cy="80" r="25" fill="#ffeaa7" stroke="#eccc68" stroke-width="2"/>
+      <!-- Hat -->
+      <path d="M60,70 L140,70 L100,10 Z" fill="#8c7ae6" stroke="#7158e2" stroke-width="2"/>
+      <!-- Face -->
+      <g id="wizard-face">
+        <circle cx="92" cy="80" r="3" fill="#2d3436"/>
+        <circle cx="108" cy="80" r="3" fill="#2d3436"/>
+        <path d="M95,90 Q100,95 105,90" fill="none" stroke="#2d3436" stroke-width="2"/>
+      </g>
+    </g>
+    
+    <g id="wizard-message" class="fortune-message" transform="scale(0)">
+      <path d="M50,20 L150,20 L150,60 L110,60 L100,75 L90,60 L50,60 Z" fill="#ffffff" stroke="#dcdde1" stroke-width="2"/>
+      <text x="100" y="45" fill="#2d3436" font-weight="bold" font-size="16" text-anchor="middle" id="wizard-text">조심하세요</text>
+    </g>
+  </symbol>
+
+  <!-- 요정 (Fairy) -->
+  <symbol id="fortune-fairy" viewBox="0 0 200 200">
+    <g id="fairy-portal" class="fortune-portal" transform="scale(1, 0)">
+      <ellipse cx="100" cy="180" rx="60" ry="12" fill="#44bd32" opacity="0.4"/>
+    </g>
+    
+    <g id="fairy-character" class="fortune-character" transform="translate(0, 100) scale(1, 0)">
+      <!-- Left Wing (Butterfly style) -->
+      <g id="fairy-wing-left" transform="translate(70, 100)">
+        <path d="M0,0 C-40,-30 -50,10 -20,20 C-40,40 -20,60 0,20 Z" fill="#00a8ff" opacity="0.6"/>
+      </g>
+      <!-- Right Wing -->
+      <g id="fairy-wing-right" transform="translate(130, 100)">
+        <path d="M0,0 C40,-30 50,10 20,20 C40,40 20,60 0,20 Z" fill="#00a8ff" opacity="0.6"/>
+      </g>
+      <!-- Body -->
+      <path d="M80,150 L120,150 L110,90 L90,90 Z" fill="#4cd137"/>
+      <!-- Head -->
+      <circle cx="100" cy="75" r="20" fill="#ffeaa7"/>
+      <!-- Face -->
+      <g id="fairy-face">
+        <path d="M92,75 Q95,72 98,75" fill="none" stroke="#2d3436" stroke-width="2"/>
+        <path d="M102,75 Q105,72 108,75" fill="none" stroke="#2d3436" stroke-width="2"/>
+        <circle cx="100" cy="85" r="2" fill="#ff7675"/>
+      </g>
+    </g>
+    
+    <g id="fairy-message" class="fortune-message" transform="scale(0)">
+      <rect x="60" y="25" width="80" height="30" rx="15" fill="#4cd137" />
+      <text x="100" y="45" fill="white" font-weight="bold" font-size="14" text-anchor="middle" id="fairy-text">평온한 하루</text>
+    </g>
+  </symbol>
+</svg>
 <script src="/fortune.js"></script>
 </body></html>

@@ -12,6 +12,7 @@ const {
 
 const pushRepository = require('../_repositories/pushRepository');
 const pushService = require('../_services/pushService');
+const { invalidateTodayBriefing } = require('../_services/briefingService');
 
 // 1. 푸시 알림 및 브리핑 설정 정보 조회 엔드포인트
 router.get('/subscribe', verifyUser, async (req, res) => {
@@ -65,6 +66,9 @@ router.post('/subscribe', verifyUser, async (req, res) => {
             return sendError(res, 400, '알림 설정이 필요합니다.');
         }
 
+        const prevConfig = await pushRepository.getUserSubscriptions(user.id);
+        const prevSettings = prevConfig?.settings || {};
+
         // Upsert를 통해 다중 기기/브라우저 구독 정보가 덮어씌워지지 않고 중복 없이 축적되도록 설정
         const config = await pushRepository.upsertSubscription(
             user.id,
@@ -73,6 +77,23 @@ router.post('/subscribe', verifyUser, async (req, res) => {
             user.email,
             providerToken
         );
+
+        // 브리핑 캐시 무효화 정책
+        // - aiConsent: true -> false => disable
+        // - aiConsent: false -> true => purge
+        // - weatherRegion 변경 => purge
+        const prevConsent = typeof prevSettings.aiConsent === 'boolean' ? prevSettings.aiConsent : null;
+        const incomingConsent = typeof settings.aiConsent === 'boolean' ? settings.aiConsent : null;
+        const prevRegion = prevSettings.weatherRegion || '서울';
+        const nextRegion = settings.weatherRegion || prevRegion;
+
+        if (incomingConsent === false && prevConsent !== false) {
+            await invalidateTodayBriefing(user.id, { reason: 'ai_consent_disabled', mode: 'disable' });
+        } else if (incomingConsent === true && prevConsent === false) {
+            await invalidateTodayBriefing(user.id, { reason: 'ai_consent_enabled', mode: 'purge' });
+        } else if (nextRegion !== prevRegion) {
+            await invalidateTodayBriefing(user.id, { reason: 'weather_region_changed', mode: 'purge' });
+        }
 
         // Supabase Profiles 테이블 동기화 (예약 발송 시간, 기상 정보 설정 지역)
         try {

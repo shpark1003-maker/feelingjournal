@@ -6396,20 +6396,126 @@ body {
     box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.4) !important;
 }
 
-/* Fortune Game Animations */
-@keyframes shake-cylinder {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-15deg); }
-    75% { transform: rotate(15deg); }
+/* Fortune Game Animations (SVG) */
+
+.fortune-portal {
+    transform-origin: 100px 180px;
 }
-.animate-shake-cylinder {
-    animation: shake-cylinder 0.3s ease-in-out infinite;
+.fortune-character {
+    transform-origin: 100px 180px;
 }
-@keyframes pop-stick {
+.fortune-message {
+    transform-origin: 100px 40px;
+}
+
+/* Animations */
+@keyframes portal-appear {
+    0% { transform: scale(0, 0); opacity: 0; }
+    50% { transform: scale(1.2, 1.2); opacity: 1; }
+    100% { transform: scale(1, 1); opacity: 1; }
+}
+
+@keyframes character-rise {
+    0% { transform: translate(0, 100px) scale(1, 0); opacity: 0; }
+    70% { transform: translate(0, -10px) scale(1, 1.05); opacity: 1; }
+    100% { transform: translate(0, 0) scale(1, 1); opacity: 1; }
+}
+
+@keyframes message-pop {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes float-idle {
+    0%, 100% { transform: translate(0, 0) scale(1, 1); }
+    50% { transform: translate(0, -5px) scale(1, 1); }
+}
+
+@keyframes wing-flap-left {
+    0%, 100% { transform: translate(60px, 100px) rotate(0deg); }
+    50% { transform: translate(60px, 100px) rotate(-15deg); }
+}
+
+@keyframes wing-flap-right {
+    0%, 100% { transform: translate(140px, 100px) rotate(0deg); }
+    50% { transform: translate(140px, 100px) rotate(15deg); }
+}
+
+@keyframes fairy-wing-left {
+    0%, 100% { transform: translate(70px, 100px) rotate(0deg); }
+    50% { transform: translate(70px, 100px) rotate(-30deg); }
+}
+
+@keyframes fairy-wing-right {
+    0%, 100% { transform: translate(130px, 100px) rotate(0deg); }
+    50% { transform: translate(130px, 100px) rotate(30deg); }
+}
+
+@keyframes wand-shake {
+    0%, 100% { transform: translate(130px, 90px) rotate(15deg); }
+    25% { transform: translate(130px, 90px) rotate(25deg); }
+    75% { transform: translate(130px, 90px) rotate(5deg); }
+}
+
+/* Play States */
+.play-intro .fortune-portal {
+    animation: portal-appear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.play-character .fortune-character {
+    animation: character-rise 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.play-character .fortune-portal {
+    transform: scale(1, 1);
+}
+
+.play-message .fortune-character {
+    transform: translate(0, 0) scale(1, 1);
+    animation: float-idle 2s ease-in-out infinite;
+}
+.play-message .fortune-portal {
+    transform: scale(1, 1);
+}
+.play-message .fortune-message {
+    animation: message-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Continuous character specific animations while message is shown */
+.play-message #angel-wing-left { animation: wing-flap-left 0.5s ease-in-out infinite; transform-origin: top right; }
+.play-message #angel-wing-right { animation: wing-flap-right 0.5s ease-in-out infinite; transform-origin: top left; }
+.play-message #fairy-wing-left { animation: fairy-wing-left 0.2s ease-in-out infinite; transform-origin: bottom right; }
+.play-message #fairy-wing-right { animation: fairy-wing-right 0.2s ease-in-out infinite; transform-origin: bottom left; }
+.play-message #wizard-wand { animation: wand-shake 0.6s ease-in-out infinite; transform-origin: bottom center; }
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .fortune-portal, .fortune-character, .fortune-message {
+        animation: none !important;
+        transition: none !important;
+    }
+    .play-intro .fortune-portal,
+    .play-character .fortune-character,
+    .play-message .fortune-message {
+        transform: scale(1) translate(0, 0) !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Fast Cache State (Skip animation) */
+.fast-cache .fortune-portal,
+.fast-cache .fortune-character,
+.fast-cache .fortune-message {
+    transform: scale(1) translate(0, 0) !important;
+    opacity: 1 !important;
+    animation: none !important;
+}
+
+/* Briefing Transitioning */
+#briefing-content-container.transitioning-in {
+    animation: briefing-slide-up 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes briefing-slide-up {
     0% { transform: translateY(20px); opacity: 0; }
-    50% { transform: translateY(-10px); opacity: 1; }
     100% { transform: translateY(0); opacity: 1; }
-}
-.animate-pop-stick {
-    animation: pop-stick 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }

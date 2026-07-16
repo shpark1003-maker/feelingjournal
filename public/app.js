@@ -41,7 +41,7 @@ function loadChatModule() {
 
 function loadPersonaModule() {
     if (!featureModulePromises.persona) {
-        featureModulePromises.persona = import('./modules/persona.js');
+        featureModulePromises.persona = import('./modules/persona.js?v=9');
     }
     return featureModulePromises.persona;
 }
@@ -124,6 +124,11 @@ async function loadPersona(...args) {
 async function loadBriefing(...args) {
     const personaMod = await loadPersonaModule();
     return personaMod.loadBriefing(...args);
+}
+
+async function triggerBriefingPrefetch(...args) {
+    const personaMod = await loadPersonaModule();
+    return personaMod.triggerBriefingPrefetch(...args);
 }
 
 async function populateGuardianSelect(...args) {
@@ -703,11 +708,18 @@ async function onUserAuthenticated(session) {
     // Start background loops
     startBackgroundLoops();
 
-    Promise.all([
+    Promise.allSettled([
         loadPersona(),
         loadSettings()
-    ]).catch(err => {
-        console.error('Failed to parallel load initial modules:', err);
+    ]).then(results => {
+        const failures = results.filter(result => result.status === 'rejected');
+        if (failures.length > 0) {
+            console.error('Failed to parallel load initial modules:', failures.map(result => result.reason));
+        }
+
+        return loadBriefing();
+    }).catch(err => {
+        console.error('Failed to start briefing load:', err);
     });
 }
 
@@ -878,6 +890,7 @@ function setupSettingsUI() {
     const fixedBtn = document.getElementById('weather-fixed-btn');
     const fixedInputContainer = document.getElementById('weather-fixed-input-container');
     const locationInput = document.getElementById('weather-location-input');
+    const minigameToggle = document.getElementById('toggle-minigame');
 
     if (gpsBtn && fixedBtn && fixedInputContainer) {
         gpsBtn.onclick = null;
@@ -933,7 +946,8 @@ function setupSettingsUI() {
                         briefingTime: config.briefingTime
                     },
                     weatherRegion: regionValue,
-                    newsCategories: config.newsCategories
+                    newsCategories: config.newsCategories,
+                    showMinigame: minigameToggle ? !!minigameToggle.checked : true
                 });
 
                 let msg = '설정 정보가 성공적으로 저장되었습니다.';
@@ -1019,6 +1033,7 @@ async function loadSettings() {
             const gpsBtn = document.getElementById('weather-gps-btn');
             const fixedBtn = document.getElementById('weather-fixed-btn');
             const fixedInputContainer = document.getElementById('weather-fixed-input-container');
+            const minigameToggle = document.getElementById('toggle-minigame');
 
             if (s.weatherRegion === 'off') {
                 if (weatherOff) weatherOff.checked = true;
@@ -1050,6 +1065,10 @@ async function loadSettings() {
                         span.classList.add('bg-surface-container-highest', 'text-on-surface-variant', 'border', 'border-outline-variant/30');
                     }
                 });
+            }
+
+            if (minigameToggle) {
+                minigameToggle.checked = s.showMinigame !== false;
             }
 
             // 안심 케어 모드 설정 UI 반영

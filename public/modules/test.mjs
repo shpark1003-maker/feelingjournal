@@ -1,15 +1,5 @@
 import { store, API_URL, assertIds, updateSettings } from './state.js';
 
-async function parseJsonSafely(res, contextLabel) {
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.toLowerCase().includes('application/json')) {
-        const text = await res.text();
-        const snippet = (text || '').slice(0, 120).replace(/\s+/g, ' ').trim();
-        throw new Error(`${contextLabel}: expected JSON but received ${contentType || 'unknown'} (${res.status}). ${snippet}`);
-    }
-    return res.json();
-}
-
 export async function loadPersona() {
     assertIds('Persona', [
         'ai-name', 'ai-age', 'ai-relationship', 'ai-personality', 'ai-voice-select', 'test-voice-btn', 
@@ -21,16 +11,10 @@ export async function loadPersona() {
     const token = await store.getSessionToken();
     if (!token) return;
 
-    let data;
-    try {
-        const res = await fetch(`${API_URL}/persona`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        data = await parseJsonSafely(res, 'loadPersona');
-    } catch (err) {
-        console.warn('Failed to load persona payload:', err);
-        return;
-    }
+    const res = await fetch(`${API_URL}/persona`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
     if (data.success && data.persona) {
         const p = data.persona;
         if (p.gender) {
@@ -108,41 +92,33 @@ export function setupPersonaUI() {
             avatarUrl: store.currentAvatarUrl
         };
 
-        try {
-            const token = await store.getSessionToken();
-            const res = await fetch(`${API_URL}/persona`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ persona })
-            });
+        const token = await store.getSessionToken();
+        const res = await fetch(`${API_URL}/persona`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ persona })
+        });
 
-            const saveResult = await parseJsonSafely(res, 'savePersona');
-            if (saveResult.success) {
-                alert(`${aiName}의 성격과 모습이 반영되었습니다.`);
-                renderPersonaAvatar(persona);
-                store.currentAvatarName = aiName;
+        if ((await res.json()).success) {
+            alert(`${aiName}의 성격과 모습이 반영되었습니다.`);
+            renderPersonaAvatar(persona);
+            store.currentAvatarName = aiName;
 
-                const friendNameEl = document.getElementById('friend-list-ai-name');
-                if (friendNameEl) friendNameEl.innerText = `${aiName} 비서`;
+            const friendNameEl = document.getElementById('friend-list-ai-name');
+            if (friendNameEl) friendNameEl.innerText = `${aiName} 비서`;
 
-                const chatTitleEl = document.getElementById('chat-room-title-text');
-                if (chatTitleEl && (chatTitleEl.innerText.includes('와 대화') || chatTitleEl.innerText.includes('비서'))) {
-                    chatTitleEl.innerText = `✨ ${aiName}와 대화`;
-                }
-                
-                const listName = document.getElementById('v2-chat-list-ai-name');
-                if (listName) {
-                    listName.innerText = `✨ ${aiName}와 대화`;
-                }
-            } else {
-                alert('비서 설정 저장 실패: ' + (saveResult.error || '알 수 없는 오류'));
+            const chatTitleEl = document.getElementById('chat-room-title-text');
+            if (chatTitleEl && (chatTitleEl.innerText.includes('와 대화') || chatTitleEl.innerText.includes('비서'))) {
+                chatTitleEl.innerText = `✨ ${aiName}와 대화`;
             }
-        } catch (err) {
-            console.error('Failed to save persona:', err);
-            alert('비서 설정 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+            
+            const listName = document.getElementById('v2-chat-list-ai-name');
+            if (listName) {
+                listName.innerText = `✨ ${aiName}와 대화`;
+            }
         }
     });
 

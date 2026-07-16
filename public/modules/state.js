@@ -30,7 +30,8 @@ export const store = {
         },
         weatherRegion: '서울',
         newsCategories: ['business'],
-        aiConsent: null
+        aiConsent: null,
+        showMinigame: true
     },
     
     // 3. 상태 취득/변경용 간결한 도우미 API
@@ -89,7 +90,8 @@ export async function initState() {
                 },
                 weatherRegion: s.weatherRegion || '서울',
                 newsCategories: s.newsCategories || ['business'],
-                aiConsent: s.aiConsent !== undefined ? s.aiConsent : null
+                 aiConsent: s.aiConsent !== undefined ? s.aiConsent : null,
+                 showMinigame: s.showMinigame !== false
             };
             store.settings = deepMerge(store.settings, normalizedSettings);
             console.log('--- [STATE] Successfully loaded and normalized settings ---', store.settings);
@@ -139,7 +141,8 @@ export async function updateSettings(newSettings) {
             careModeEnabled: store.settings.care.enabled,
             careGuardianEmail: store.settings.care.guardianEmail,
             careGuardianName: store.settings.care.guardianName,
-            aiConsent: store.settings.aiConsent
+            aiConsent: store.settings.aiConsent,
+            showMinigame: store.settings.showMinigame
         };
 
         const res = await fetch(`${API_URL}/subscribe`, {

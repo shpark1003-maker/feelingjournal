@@ -10,6 +10,7 @@
     "dev": "node ./scripts/dev-with-css.js",
     "inspect:run": "powershell -ExecutionPolicy Bypass -File ./scripts/run_inspection.ps1",
     "test:consent": "node test/ai_consent.test.js",
+    "test:briefing-contract": "node test/briefing_prefetch_contract.test.js",
     "probe:runtime:auth": "node scripts/phaseA_runtime_probe_auth.js",
     "css:build": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css",
     "css:watch": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --watch"

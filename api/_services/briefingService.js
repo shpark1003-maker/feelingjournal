@@ -11,6 +11,19 @@ const {
 
 const crypto = require('crypto');
 
+function getDisableKey(userId) {
+    return `user:${userId}:briefing:disable`;
+}
+
+async function isBriefingDisabled(userId) {
+    try {
+        return (await redis.get(getDisableKey(userId))) === '1';
+    } catch (e) {
+        console.warn('[Briefing] Failed to read disable flag:', e.message);
+        return false;
+    }
+}
+
 function looksTruncatedBriefing(text, finishReason) {
     const trimmed = (text || '').trim();
     if (!trimmed) return true;
@@ -68,6 +81,19 @@ function stableStringify(obj) {
 
 async function generateBriefing(userId, providerToken, regionOverride, clientDiaries = [], consent = false, userEmail = '', forceRefresh = false, skipIfUnchanged = false, forceRefreshCalendar = false, options = {}) {
     const { skipCacheSave = false } = options;
+
+    if (await isBriefingDisabled(userId)) {
+        return {
+            schemaVersion: 2,
+            briefingDate: getKstDateKey(),
+            briefing: 'AI 감정 분석 제공이 비활성화되어 요약 브리핑 생성을 건너뜁니다. 설정에서 동의를 다시 켜면 자동으로 최신 브리핑을 준비합니다.',
+            weather: null,
+            updatedAtMs: Date.now(),
+            dataHash: 'disabled',
+            source: 'disabled',
+            disabled: true
+        };
+    }
 
     const dateStr = getKstDateKey();
     const lockKey = `user:${userId}:briefing-prebuild-lock`;
@@ -274,6 +300,10 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
 
     // diariesPromise: 최근 일기만 조회 (contextEventsPromise 의존성 제거하여 완전 병렬화)
     const diariesPromise = (async () => {
+        if (!consent) {
+            return { recentDiaries: 'AI 분석 비동의로 일기 컨텍스트 제외', diarySortedKeys: [] };
+        }
+
         const pattern = `user:${userId}:diary-*`;
         const keys = await scanRedisKeys(pattern);
         let recentDiaries = '일기 기록 없음';
@@ -390,7 +420,7 @@ async function generateBriefing(userId, providerToken, regionOverride, clientDia
 
     // 회상 매칭 — Promise.all 완료 후 수행 (contextEvents가 확정된 상태)
     let reminiscenceMemory = '특별한 과거 회상 없음';
-    if (diarySortedKeys.length > 3) {
+    if (consent && diarySortedKeys.length > 3) {
         try {
             const historyKeys = diarySortedKeys.slice(0, 15);
             const historyValues = await redis.mget(historyKeys);
@@ -530,14 +560,19 @@ ${lowProgressWarningStr ? `7. [달성률 저조 경고]:\n${lowProgressWarningSt
     // failFast를 true로 설정하여 429 딜레이 발생 시 기다리지 않고 즉시 다음 모델(Fallback)로 넘어가도록 처리
     let data;
     try {
-        data = await callGemini(briefingPrompt, { maxOutputTokens: 4096 }, 2, null, true);
+        data = await callGemini(briefingPrompt, { maxOutputTokens: 1536 }, 2, null, true);
     } catch (apiErr) {
         console.error('--- [BRIEFING GEMINI ERROR] ---', apiErr.message);
+        throw apiErr;
     }
     const candidate = data?.candidates?.[0] || null;
     const parts = candidate?.content?.parts || [];
     const finishReason = candidate?.finishReason || '';
-    const rawBriefing = parts.map(p => p.text || '').join('') || '사용자님, 현재 AI 비서의 집중력이 잠시 흩어졌습니다. (API 할당량 초과 또는 네트워크 지연)\n조금 뒤에 다시 새로고침을 해주시면, 꼼꼼하게 다시 브리핑을 준비해 드릴게요!';
+    const rawBriefing = parts.map(p => p.text || '').join('').trim();
+
+    if (!rawBriefing) {
+        throw new Error('Briefing model returned empty response');
+    }
 
     const briefing = looksTruncatedBriefing(rawBriefing, finishReason)
         ? await completeTruncatedBriefing(rawBriefing)
@@ -610,6 +645,7 @@ async function invalidateTodayBriefing(userId, { reason, mode = 'dirty' }) {
     const dateStr = getKstDateKey();
     const cacheKey = `user:${userId}:briefing:${dateStr}`;
     const revisionKey = `user:${userId}:briefing-revision:${dateStr}`;
+    const disableKey = getDisableKey(userId);
     
     const newRevision = crypto.randomUUID();
     
@@ -617,10 +653,14 @@ async function invalidateTodayBriefing(userId, { reason, mode = 'dirty' }) {
     
     if (mode === 'disable') {
         await redis.del(cacheKey);
+        await redis.del(revisionKey);
+        await redis.set(disableKey, '1', 'EX', 172800);
     } else if (mode === 'purge') {
+        await redis.del(disableKey);
         await redis.del(cacheKey);
         await redis.set(revisionKey, newRevision, 'EX', 172800);
     } else {
+        await redis.del(disableKey);
         await redis.set(revisionKey, newRevision, 'EX', 172800);
     }
 }
@@ -628,5 +668,6 @@ async function invalidateTodayBriefing(userId, { reason, mode = 'dirty' }) {
 module.exports = {
     generateBriefing,
     commitBriefingData,
-    invalidateTodayBriefing
+    invalidateTodayBriefing,
+    isBriefingDisabled
 };
