@@ -1,0 +1,14 @@
+name: Cron Push Notifications
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # 매 10분마다 실행
+  workflow_dispatch: # 수동 실행 버튼 추가
+
+jobs:
+  ping-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Vercel Cron API
+        run: |
+          curl -X GET https://feelingjournal.vercel.app/api/cron-push
